@@ -18,7 +18,7 @@ DEFINES += SAILFISH=1
 SOURCES += src/harbour-starfish.cpp \
     src/Sc2LinksDotCom.cpp \
     src/DistinctModel.cpp \
-    src/ColumnModel.cpp
+    src/SqlVodModel.cpp
 
 DISTFILES += qml/harbour-starfish.qml \
     qml/cover/CoverPage.qml \
@@ -32,6 +32,8 @@ DISTFILES += qml/harbour-starfish.qml \
     harbour-starfish.desktop \
     media/*.png \
     media/foo
+
+DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 
 media.path = /usr/share/$${TARGET}/media
 media.files = media/*
@@ -53,9 +55,10 @@ TRANSLATIONS += translations/harbour-starfish-de.ts
 HEADERS += \
     src/Sc2LinksDotCom.h \
     src/DistinctModel.h \
-    src/ColumnModel.h
+    src/SqlVodModel.h
 
-QT *= network
+
+QT *= network sql
 
 #RESOURCES += \
 #    icons.qrc

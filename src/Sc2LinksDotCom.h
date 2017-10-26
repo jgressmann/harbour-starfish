@@ -12,6 +12,7 @@
 #include <QSet>
 #include <QVector>
 
+class QSqlDatabase;
 class QNetworkAccessManager;
 class QNetworkRequest;
 class QNetworkReply;
@@ -86,27 +87,31 @@ class VodModel //: public QAbstractTableModel {
         : public QAbstractItemModel {
     Q_OBJECT
     Q_ENUMS(Status)
-    //Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
+    Q_ENUMS(Error)
     Q_PROPERTY(QDateTime lastUpdated READ lastUpdated NOTIFY lastUpdatedChanged)
-    //Q_PROPERTY(QAbstractTableModel model READ model NOTIFY modelChanged)
+
 //    Q_PROPERTY(QQmlListProperty<Tournament> tournaments READ tournaments NOTIFY tournamentsChanged)
 //    Q_PROPERTY(QQmlListProperty<Vod> vods READ vods NOTIFY vodsChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(Error error READ error NOTIFY errorChanged)
+    Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
 
 public:
     enum Status {
-        Uninitialized,
-        VodFetchingInProgress,
-        VodFetchingComplete
-
+        Status_Uninitialized,
+        Status_Ready,
+        Status_VodFetchingInProgress,
+        Status_VodFetchingComplete,
+        Status_Error,
     };
 
-
-
-//    enum Game {
-//        GameBroodwar,
-//        GameSc2
-//    };
+    enum Error {
+        Error_None,
+        Error_CouldntCreateSqlTables,
+        Error_CouldntStartTransaction,
+        Error_CouldntEndTransaction,
+        Error_SqlTableManipError,
+    };
 
     enum Key {
         VodDate = 0,
@@ -122,19 +127,7 @@ public:
         VodIcon,
     };
 
-//    enum VodRoles {
-//           DateRole = Qt::UserRole + 1 + VodDate,
-//           Side1Role,
-//            Side2Role,
-//            VodUrlRole, //
-//            VodTournamentRole, // GSL, Homestory Cup
-//            VodSeasonRole,  // Season 1, XII
-//            VodStageRole, // RO16, Day 1, etc
-//            VodMatchNumberRole, // Match in best of X
-//            VodMatchCountRole, // Best of X
-//            VodGame, // Broodwar, Sc2
-//            VodIcon,
-//       };
+
 
 public:
     ~VodModel();
@@ -156,6 +149,10 @@ public: //
 //    QAbstractTableModel* model() const { return const_cast<VodModel*>(this); }
     QQmlListProperty<Vod> vods() const;
     Status status() const { return m_Status; }
+    Error error() const { return m_Error; }
+    QString errorString() const;
+    void setDatabase(QSqlDatabase* db);
+    QSqlDatabase* database() const { return m_Database; }
 
 public: // Vod
     QDateTime played(int index) const;
@@ -175,7 +172,9 @@ signals:
 //    void tournamentsChanged();
 //    void modelChanged();
     void vodsChanged();
-    void statusChanged(Status newValue);
+    void statusChanged();
+    void errorChanged();
+    void errorStringChanged(QString newValue);
 
 public slots:
     void poll();
@@ -196,6 +195,10 @@ private:
     static bool tryGetDate(QString& inoutSrc, QDateTime* date);
     static bool tryGetIcon(const QString& title, QString* iconPath);
     static QHash<int, QByteArray>  makeRoleNames();
+    void createTablesIfNecessary();
+    void setStatus(Status value);
+    void setError(Error value);
+    void updateStatus();
 
 
     struct Item {
@@ -249,6 +252,7 @@ private:
     QNetworkAccessManager* m_Manager;
     QDateTime m_lastUpdated;
     Status m_Status;
+    Error m_Error;
 //    ItemList m_BackItemLists[2];
 //    AtomicItemListPtr m_FrontItemList;
 //        ItemList m_BackVodLists[2];
@@ -264,7 +268,7 @@ private:
 //    m_RequestToTournamentMap
 //    QHash<QNetworkReply*, int> m_RequestToTournamentMap;
 //    int m_PendingRequests;
-
+    QSqlDatabase* m_Database;
 private:
     static const QByteArray ms_UserAgent;
     static const QHash<int, QByteArray> ms_RoleNames;

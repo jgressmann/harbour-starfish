@@ -27,21 +27,13 @@
     </message>
 </context>
 <context>
-    <name>main</name>
+    <name>VodModel</name>
     <message>
-        <source>Use mock socket.</source>
+        <source>couldn&apos;t create database tables</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Select UI &lt;style&gt;.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>style</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Don&apos;t run in full screen mode.</source>
+        <source>dunno what happened TT</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

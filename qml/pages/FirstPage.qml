@@ -149,6 +149,13 @@ Page {
             }
         }
 
+        SqlVodModel {
+            id: distinctGames
+            vodModel: Sc2LinksDotCom
+            columns: ["game"]
+            select: "select distinct game from vods"
+        }
+
         Rectangle {
             color: "red"
             anchors { left: parent.left; right: parent.right; top: title.bottom; bottom: parent.bottom; }
@@ -157,7 +164,7 @@ Page {
         SilicaGridView {
             id: column
 
-            model: games
+            model: distinctGames
 //            anchors { left: parent.left; right: parent.right; top: title.bottom; bottom: parent.bottom; }
             anchors.fill: parent
             delegate: Component {
