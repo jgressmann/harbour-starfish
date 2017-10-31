@@ -16,6 +16,13 @@
     </message>
 </context>
 <context>
+    <name>GamesPage</name>
+    <message>
+        <source>Games</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SecondPage</name>
     <message>
         <source>Nested Page</source>
@@ -27,6 +34,29 @@
     </message>
 </context>
 <context>
+    <name>StartPage</name>
+    <message>
+        <source>Something went wrong TT</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Data is being loaded...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There seems to be nothing here</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Games</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>VodModel</name>
     <message>
         <source>couldn&apos;t create database tables</source>
@@ -34,6 +64,18 @@
     </message>
     <message>
         <source>dunno what happened TT</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Broodwar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>StarCraft II</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>unknown game</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -23,6 +23,7 @@ public:
     void setColumns(const QStringList& newValue);
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
     QHash<int,QByteArray> roleNames() const Q_DECL_OVERRIDE;
+    Q_INVOKABLE QVariant at(int row, int role) const;
 signals:
     void selectChanged(QString newvalue);
     void vodModelChanged(VodModel* newvalue);

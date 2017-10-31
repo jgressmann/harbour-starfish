@@ -31,7 +31,18 @@ DISTFILES += qml/harbour-starfish.qml \
     translations/*.ts \
     harbour-starfish.desktop \
     media/*.png \
-    media/foo
+    media/foo \
+    qml/pages/StartPage.qml \
+    qml/pages/GamesPage.qml \
+    qml/pages/Game.qml \
+    qml/pages/FilteredItem.qml \
+    qml/pages/FilterPage.qml \
+    qml/pages/SelectionPage.qml \
+    qml/Global.qml \
+    qml/qmldir \
+    qml/pages/TournamentPage.qml \
+    qml/pages/StageItem.qml \
+    qml/pages/MatchItem.qml
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 

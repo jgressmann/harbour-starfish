@@ -7,6 +7,7 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QSqlRecord>
 #include <vector>
 #include <string>
 #include <utility>
@@ -657,9 +658,11 @@ VodModel::addVods(QByteArray& data) {
     QList<QVariantList> args;
     args.reserve(32);
 
-    for (int stageStart = 0, stageFound = stageRegex.indexIn(soup, stageStart);
+    for (int stageIndex = 0, stageStart = 0, stageFound = stageRegex.indexIn(soup, stageStart);
          stageFound != -1;
-         stageStart = stageFound + stageRegex.cap(0).length(), stageFound = stageRegex.indexIn(soup, stageStart)) {
+         stageStart = stageFound + stageRegex.cap(0).length(),
+            stageFound = stageRegex.indexIn(soup, stageStart),
+            ++stageIndex) {
 
         QString stageTitle = stageRegex.cap(1);
         stageTitle = stageTitle.remove(tags).trimmed();
@@ -714,27 +717,30 @@ VodModel::addVods(QByteArray& data) {
 
             args.push_back(QVariantList());
             QVariantList& arg = args.last();
-            arg.reserve(5);
+            arg.reserve(6);
             arg << matchNumber
                 << date
                 << (sides.size() == 2 ? sides[0].trimmed() : QString())
                 << (sides.size() == 2 ? sides[1].trimmed() : QString())
-                << matchRegex.cap(1);
+                << matchRegex.cap(1)
+                << stageIndex;
 
         }
 
         // fix match numbers
         for (int i = 1; i < matchNumber; ++i) {
             //target[target.size()-i].matchCount = matchNumber;
-            soaItem.matchCount.append(matchNumber);
+            soaItem.matchCount.append(matchNumber-1);
 
             QVariantList& arg = args[i-1];
 
 
             QSqlQuery q(*m_Database);
             if (!q.prepare(
-"INSERT INTO vods (played, side1, side2, url, tournament, title, season, stage, match_number, match_count, game, year) "
-"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+"INSERT INTO vods ("
+"played, side1, side2, url, tournament, title, season, stage_name,"
+"match_number, match_count, game, year, stage_index) "
+"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 qCritical() << "failed to prepare vod insert" << q.lastError();
                 continue;
             }
@@ -748,9 +754,10 @@ VodModel::addVods(QByteArray& data) {
             q.bindValue(6, season);
             q.bindValue(7, stageTitle);
             q.bindValue(8, arg[0]);
-            q.bindValue(9, matchNumber);
+            q.bindValue(9, matchNumber-1);
             q.bindValue(10, game);
             q.bindValue(11, year);
+            q.bindValue(12, arg[5]);
 
             if (!q.exec()) {
                 qCritical() << "failed to exec vod insert" << q.lastError();
@@ -998,11 +1005,12 @@ VodModel::createTablesIfNecessary() {
         "    tournament TEXT,             "
         "    title TEXT,                  "
         "    season INTEGER,              "
-        "    stage TEXT,                  "
+        "    stage_name TEXT,             "
         "    match_number INTEGER,        "
         "    match_count INTEGER,         "
         "    game INTEGER,                "
-        "    year INTEGER                 "
+        "    year INTEGER,                "
+        "    stage_index INTEGER          "
         ")                                ",
     };
 
@@ -1048,11 +1056,79 @@ void
 VodModel::updateStatus() {
     if (m_Status == Status_Uninitialized) {
         if (m_Database && m_Manager) {
-            setStatus(Status_Ready);
+            QSqlQuery q(*m_Database);
+            if (q.exec("SELECT COUNT(*) as count from vods") && q.next()) {
+                //int i = q.record().indexOf("count");
+                //QVariant value = q.value(i);
+                QVariant value = q.value(0);
+                if (value.toInt() > 0) {
+                    setStatus(Status_VodFetchingComplete);
+                } else {
+                    setStatus(Status_Ready);
+                }
+            } else {
+                setStatus(Status_Error);
+                setError(Error_SqlTableManipError);
+            }
         }
-    } else if (m_Status == Status_Ready) {
+    } else {
         if (!m_Database || ! m_Manager) {
             setStatus(Status_Uninitialized);
+//            setError(Error_None);
         }
     }
+}
+
+QString
+VodModel::mediaPath(const QString& str) const {
+    return str;
+}
+
+QString
+VodModel::dataDir() const {
+    return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR));
+}
+
+QString
+VodModel::label(const QString& key, const QVariant& value) const {
+    if (value.isValid()) {
+        if (key == QStringLiteral("game")) {
+            int game = value.toInt();
+            switch (game) {
+            case Game::Broodwar:
+                return tr("Broodwar");
+            case Game::Sc2:
+                return tr("StarCraft II");
+            default:
+                return tr("unknown game");
+            }
+        } else if (key == QStringLiteral("year")) {
+            return value.toString();
+        } else if (key == QStringLiteral("tournament")) {
+            return value.toString();
+        }
+
+        return value.toString();
+    }
+
+    return tr(key.toLocal8Bit().data());
+}
+
+QString
+VodModel::icon(const QString& key, const QVariant& value) const {
+    if (key == QStringLiteral("game")) {
+        int game = value.toInt();
+        switch (game) {
+        case Game::Broodwar:
+            return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/bw.png");
+        case Game::Sc2:
+            return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/sc2.png");
+        default:
+            return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/game.png");
+        }
+    }
+
+    //return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/default.png");
+    return QStringLiteral("image://theme/icon-m-sailfish");
+
 }

@@ -95,6 +95,8 @@ class VodModel //: public QAbstractTableModel {
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
+    Q_PROPERTY(QString dataDir READ dataDir NOTIFY dataDirChanged)
+
 
 public:
     enum Status {
@@ -142,7 +144,11 @@ public: // QAbstractTableModel
     QHash<int, QByteArray> roleNames() const;
     QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const;
     QModelIndex parent(const QModelIndex &child) const;
+
 public: //
+    Q_INVOKABLE QString mediaPath(const QString& str) const;
+    Q_INVOKABLE QString label(const QString& key, const QVariant& value) const;
+    Q_INVOKABLE QString icon(const QString& key, const QVariant& value) const;
     QDateTime lastUpdated() const;
     void setNetworkAccessManager(QNetworkAccessManager* manager);
 //    QQmlListProperty<Tournament> tournaments() const;
@@ -153,6 +159,7 @@ public: //
     QString errorString() const;
     void setDatabase(QSqlDatabase* db);
     QSqlDatabase* database() const { return m_Database; }
+    QString dataDir() const;
 
 public: // Vod
     QDateTime played(int index) const;
@@ -175,6 +182,7 @@ signals:
     void statusChanged();
     void errorChanged();
     void errorStringChanged(QString newValue);
+    void dataDirChanged(QString newValue);
 
 public slots:
     void poll();

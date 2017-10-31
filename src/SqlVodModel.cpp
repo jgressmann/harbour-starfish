@@ -1,6 +1,8 @@
 #include "SqlVodModel.h"
 #include "Sc2LinksDotCom.h"
 #include <QSqlQuery>
+#include <QSqlError>
+#include <QDebug>
 
 
 // https://wiki.qt.io/How_to_Use_a_QSqlQueryModel_in_QML
@@ -47,6 +49,11 @@ SqlVodModel::data(const QModelIndex &modelIndex, int role) const {
     return QSqlQueryModel::data(remappedIndex, Qt::DisplayRole);
 }
 
+QVariant
+SqlVodModel::at(int row, int column) const {
+    return QSqlQueryModel::data(index(row, column), Qt::DisplayRole);
+}
+
 QHash<int,QByteArray>
 SqlVodModel::roleNames() const {
     return m_RoleNames;
@@ -62,6 +69,7 @@ SqlVodModel::setSelect(QString newValue) {
         m_Select = newValue;
         emit selectChanged(m_Select);
         m_Dirty = true;
+        statusChanged();
     }
 }
 
@@ -84,7 +92,7 @@ SqlVodModel::setVodModel(VodModel* newValue) {
 
         if (m_VodModel) {
             connect(m_VodModel, SIGNAL(statusChanged()), this, SLOT(statusChanged()));
-
+            statusChanged();
         }
     }
 }
@@ -108,15 +116,19 @@ SqlVodModel::tryConfigureModel() {
        !m_Select.isEmpty() &&
        !m_Columns.empty()) {
 
-        beginResetModel();
         setQuery(m_Select, *m_VodModel->database());
-//        m_RoleNames.clear();
+//        QSqlError error = lastError();
+//        if (error.isValid()) {
+//            qWarning() << error;
+//            return false;
+//        }
+
+        beginResetModel();
         for (int i = 0; i < m_Columns.count(); ++i) {
             setHeaderData(0, Qt::Horizontal, m_Columns[i]);
-//            m_RoleNames[Qt::UserRole + i + 1] = m_Columns[i].toLocal8Bit();
         }
-
         endResetModel();
+
         return true;
     }
 
@@ -137,4 +149,5 @@ SqlVodModel::setColumns(const QStringList& newValue) {
         m_RoleNames[Qt::UserRole + i + 1] = m_Columns[i].toLocal8Bit();
     }
     emit columnsChanged();
+    statusChanged();
 }
