@@ -32,7 +32,7 @@ DISTFILES += qml/harbour-starfish.qml \
     media/*.png \
     media/foo \
     qml/pages/StartPage.qml \
-    qml/pages/FilteredItem.qml \
+    qml/pages/FilterItem.qml \
     qml/pages/FilterPage.qml \
     qml/pages/SelectionPage.qml \
     qml/Global.qml \

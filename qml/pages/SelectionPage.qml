@@ -14,36 +14,11 @@ Page {
         id: listModel
     }
 
-    function computeRemainingKeys() {
-        var result = []
 
-        for (var i = 0; i < Global.filterKeys.length; ++i) {
-            var key = Global.filterKeys[i]
-            if (key in filters) {
-                continue
-            }
 
-            result.push(key)
-        }
-
-        return result
-    }
-
-    function hasIcon(key) {
-        return key in {
-            "game": 1,
-            "tournament": 1,
-        }
-    }
-
-    function sortKey(key) {
-        return {
-            "year": -1,
-        }[key] || 1
-    }
 
     Component.onCompleted: {
-        remainingKeys = computeRemainingKeys()
+        remainingKeys = Global.remainingKeys(filters)
         console.debug("remaining keys " + remainingKeys.join(", "))
 
         var entries = []
@@ -96,13 +71,35 @@ Page {
                     }
 
                     onClicked: {
-                        pageStack.push(Qt.resolvedUrl("FilterPage.qml"), {
-                            title: label,
-                            filters: filters,
-                            key: key,
-                            showImage: hasIcon(key),
-                            sorted: sortKey(key),
-                        })
+                        console.debug("selection item click " + key)
+                        // see if we have a single value left, then go straight to tournament
+                        var myFilters = Global.clone(filters)
+                        var myKey = key
+                        while (true) {
+                            var sql = "select distinct "+ myKey +" from vods" + Global.whereClause(myFilters)
+                            var values = Global.values(sql)
+                            if (values.length === 1) {
+                                myFilters[myKey] = values[0]
+                                var rem = Global.remainingKeys(myFilters)
+                                if (0 === rem.length) {
+                                    // exhausted all filter keys, show tournament
+                                    pageStack.push(Qt.resolvedUrl("TournamentPage.qml"), {
+                                        filters: myFilters
+                                    })
+                                    break
+                                } else {
+                                    myKey = rem[0]
+                                }
+                            } else {
+                                // more than 1 value, show filter page
+                                pageStack.push(Qt.resolvedUrl("FilterPage.qml"), {
+                                    title: label,
+                                    filters: myFilters,
+                                    key: myKey,
+                                })
+                                break
+                            }
+                        }
                     }
                 }
             }

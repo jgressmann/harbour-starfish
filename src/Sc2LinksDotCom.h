@@ -59,8 +59,8 @@ public:
 
 public: //
     Q_INVOKABLE QString mediaPath(const QString& str) const;
-    Q_INVOKABLE QString label(const QString& key, const QVariant& value) const;
-    Q_INVOKABLE QString icon(const QString& key, const QVariant& value) const;
+    Q_INVOKABLE QString label(const QString& key, const QVariant& value = QVariant()) const;
+    Q_INVOKABLE QString icon(const QString& key, const QVariant& value = QVariant()) const;
     QDateTime lastUpdated() const;
     void setNetworkAccessManager(QNetworkAccessManager* manager);
     Status status() const { return m_Status; }

@@ -9,8 +9,11 @@ Page {
     property string title: undefined
     property var filters: undefined
     property string key: undefined
-    property bool ascending: true
+    property bool ascending: Global.sortKey(key) === 1
     property bool grid: false
+    property bool _grid: grid && Global.hasIcon(key)
+
+
 
     SqlVodModel {
         id: sqlModel
@@ -38,13 +41,14 @@ Page {
             id: listView
             anchors.fill: parent
             model: sqlModel
-            visible: !grid
+            visible: !_grid
             header: PageHeader {
                 title: page.title
             }
 
-            delegate: FilteredItem {
+            delegate: FilterItem {
                 width: listView.width
+                height: 128
                 key: page.key
                 value: sqlModel.data(sqlModel.index(index, 0), 0)
                 filters: page.filters
@@ -65,7 +69,7 @@ Page {
             id: gridView
             anchors.fill: parent
             model: sqlModel
-            visible: grid
+            visible: _grid
             header: PageHeader {
                 title: page.title
             }
@@ -73,7 +77,7 @@ Page {
             cellWidth: width / 2;
             cellHeight: height / (Global.gridItemsPerPage / 2)
 
-            delegate: FilteredItem {
+            delegate: FilterItem {
                 key: page.key
                 value: sqlModel.data(sqlModel.index(index, 0), 0)
                 filters: page.filters

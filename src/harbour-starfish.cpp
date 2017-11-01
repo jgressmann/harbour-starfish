@@ -13,14 +13,7 @@
 #include <QSqlDatabase>
 #include <QStandardPaths>
 #include <QSqlError>
-//#include <QTcpSocket>
-//#ifndef SAILFISH
-//#include <QCommandLineParser>
-//#include <QQmlFileSelector>
-//#include "Style.h"
-//#endif
 #include "Sc2LinksDotCom.h"
-#include "DistinctModel.h"
 #include "SqlVodModel.h"
 #include <sailfishapp.h>
 

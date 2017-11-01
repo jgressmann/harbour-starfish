@@ -3,7 +3,7 @@ import QtQuick 2.0
 import org.duckdns.jgressmann 1.0
 
 Item {
-    readonly property var filterKeys:["game", "tournament", "year"]
+    readonly property var filterKeys: ["game", "tournament", "year"]
     readonly property int gridItemsPerPage: 8
 
     function whereClause(filters) {
@@ -51,10 +51,31 @@ Item {
         return str
     }
 
-    function rowCount(filters) {
-        var where = whereClause(filters)
-        var uniqueTuples = "select distinct " + filterKeys.join(",") + " from vods" + where
-        var sql = "select count(*) as count from (" + uniqueTuples  + ")"
+    function values(sql) {
+        console.debug(sql)
+
+        _model.select = sql;
+
+        var result = []
+        var rows = _model.rowCount()
+        console.debug(sql + ": " + rows + " rows")
+        for (var i = 0; i < rows; ++i) {
+            var cell = _model.data(_model.index(i, 0), 0)
+            result.push(cell)
+        }
+
+        return result
+    }
+
+    function rowCount(sqlOrDict) {
+        var sql = ""
+        if (typeof(sqlOrDict) === "string") {
+            sql = sqlOrDict
+        } else {
+            var where = whereClause(sqlOrDict)
+            var uniqueTuples = "select distinct " + filterKeys.join(",") + " from vods" + where
+            sql = "select count(*) as count from (" + uniqueTuples  + ")"
+        }
         console.debug(sql)
 
 
@@ -92,6 +113,50 @@ Item {
         return result
     }
 
+    function showIcon(key) {
+        return key !== "year"
+    }
+
+//    function singleRemainingKey(filters) {
+//        var rem = undefined
+//        for (var key in filters) {
+//            var index = filterKeys.indexOf(key)
+//            if (index === -1) {
+//                rem = key
+//                break
+//            }
+//        }
+
+//        return rem
+//    }
+
+    function remainingKeys(filters) {
+        var result = []
+
+        for (var i = 0; i < filterKeys.length; ++i) {
+            var key = filterKeys[i]
+            if (key in filters) {
+                continue
+            }
+
+            result.push(key)
+        }
+
+        return result
+    }
+
+    function hasIcon(key) {
+        return key in {
+            "game": 1,
+            "tournament": 1,
+        }
+    }
+
+    function sortKey(key) {
+        return {
+            "year": -1,
+        }[key] || 1
+    }
 
 
     SqlVodModel {
