@@ -12,7 +12,7 @@ Page {
         id: sqlModel
         vodModel: Sc2LinksDotCom
         columns: ["title", "stage_name", "stage_index" ]
-        select: "select " + columns.join(",") + " from vods " + Global.whereClause(filters) + " order by stage_index"
+        select: "select distinct " + columns.join(",") + " from vods " + Global.whereClause(filters) + " order by stage_index"
     }
 
     SilicaFlickable {
@@ -36,8 +36,13 @@ Page {
             delegate: Component {
                 StageItem {
                     width: listView.width
-                    stage: sqlModel.at(index, 1)
-                    filters: Global.merge(page.filters, { "stage_index": sqlModel.at(index, 2) })
+                    //stageName: sqlModel.at(index, 1)
+                    stageName: {
+                        var i = index
+                        return sqlModel.data(sqlModel.index(i, 1), 0)
+                    }
+//                    stageIndex: sqlModel.at(index, 1)
+                    filters: Global.merge(page.filters, { "stage_index": sqlModel.data(sqlModel.index(index, 2), 0) })
                 }
             }
 

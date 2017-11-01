@@ -55,9 +55,10 @@ Page {
                 {
                     title: qsTr("Games"),
                     filters: [],
-                    key: "game"
+                    key: "game",
+                    grid: true,
                 })
-            //pageStack.navigateForward(PageStackAction.Animated)
+
             _done = true
         }
     }
@@ -84,7 +85,9 @@ Page {
            font.pixelSize: Theme.fontSizeLarge
            color: Theme.highlightColor
            onVisibleChanged: {
-
+                if (visible) {
+                    console.debug("error: " + Sc2LinksDotCom.errorString)
+                }
            }
         }
 

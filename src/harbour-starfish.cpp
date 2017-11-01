@@ -86,12 +86,8 @@ main(int argc, char *argv[]) {
     db.setDatabaseName(databaseFilePath);
     if (db.open()) {
         QNetworkAccessManager m;
-        qmlRegisterType<DistinctModel>(NAMESPACE, 1, 0, "DistinctModel");
         qmlRegisterType<SqlVodModel>(NAMESPACE, 1, 0, "SqlVodModel");
-        qmlRegisterUncreatableType<Vod>(NAMESPACE, 1, 0, "Vod", "shim");
         qmlRegisterSingletonType<VodModel>(NAMESPACE, 1, 0, "Sc2LinksDotCom", (QObject* (*)(QQmlEngine*, QJSEngine*))makeModel<VodModel>);
-
-
 
         s_NetworkAccessManager = &m;
         s_Database = &db;

@@ -16,9 +16,9 @@
     </message>
 </context>
 <context>
-    <name>GamesPage</name>
+    <name>MatchItem</name>
     <message>
-        <source>Games</source>
+        <source> vs. </source>
         <translation type="unfinished"></translation>
     </message>
 </context>

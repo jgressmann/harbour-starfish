@@ -4,6 +4,7 @@ import org.duckdns.jgressmann 1.0
 
 Item {
     readonly property var filterKeys:["game", "tournament", "year"]
+    readonly property int gridItemsPerPage: 8
 
     function whereClause(filters) {
         var where = ""
@@ -17,7 +18,7 @@ Item {
                     where += " where "
                 }
 
-                where += skey + "=" + value
+                where += skey + "='" + value + "'"
             }
         }
 
@@ -29,10 +30,10 @@ Item {
         str = _replaceWhileChange(str, ";", "")
         str = _replaceWhileChange(str, "'", "\\'")
         str = _replaceWhileChange(str, "\"", "\\\"")
-        var index = str.indexOf(" ")
-        if (index >= 0) {
-            str = "\"" + str + "\""
-        }
+//        var index = str.indexOf(" ")
+//        if (index >= 0) {
+//            str = "\"" + str + "\""
+//        }
 
         return str
     }

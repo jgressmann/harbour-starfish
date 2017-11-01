@@ -1,71 +1,41 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import org.duckdns.jgressmann 1.0
-import ".."
+//import org.duckdns.jgressmann 1.0
+//import ".."
 
-Column {
+BackgroundItem {
     id: root
+
+    property alias stageName: label.text
+//    property int stageIndex: -1
     property var filters: undefined
-    property alias stage: header.text
 
-    SqlVodModel {
-        id: sqlModel
-        vodModel: Sc2LinksDotCom
-        columns: ["side1", "side2", "played", "url", "match_count", "match_number"]
-        select: "select " + columns.join(",") + " from vods " + Global.whereClause(filters) + " order by match_number asc"
-    }
-
-    Component.onCompleted: {
-        console.debug(stage + " sql: " + sqlModel.select)
-        var count = sqlModel.data(sqlModel.index(0, 4), 0)
-        console.debug(stage + " rows: " + count)
-    }
-
-//    SilicaFlickable {
-//        anchors.fill: parent
-
-//        // Why is this necessary?
-//        contentWidth: parent.width
-//        contentHeight: header.height + (sqlModel.data(sqlModel.index(0, 4), 0)+1) * Theme.fontSizeLarge+ Theme.paddingLarge
-
-
-//    }
-
-    SectionHeader {
-        id: header
-        //text: "Text styling"
-    }
-
-    SilicaListView {
-        id: listView
-//        anchors.fill: parent
-        width: parent.width
-
-        model: sqlModel
-//            header: PageHeader {
-//                title: sqlModel.data(0, 0)
-//            }
-
-        delegate: MatchItem {
-//                    height: Theme.fontSizeMedium + Theme.paddingSmall
-            width: listView.width
-            side1_: side1
-            side2_: side2
-            matchNumber: match_number
-            matchCount: match_count
-            url_: url
-            Component.onCompleted: {
-                console.debug(side1 +" vs " + side2 + " match " + match_number + "/"+ match_count)
-            }
+    Column {
+        x: Theme.paddingLarge
+        width: parent.width - 2*Theme.paddingLarge
+//        height: label.height + separator.height + Theme.paddingSmall
+        Label {
+            id: label
+//            height: parent.height
+            //anchors { left: image.right; right: parent.right; }
+            width: parent.width
+//            text:  Sc2LinksDotCom.label(key, value)
+            verticalAlignment: Text.AlignVCenter
+            font.pixelSize: Theme.fontSizeLarge
+            truncationMode: TruncationMode.Fade
         }
 
+//        Separator {
+//            id: separator
+//            width: parent.width
 
-        ViewPlaceholder {
-            enabled: listView.count === 0
-            text: "nothing here"
-        }
+//        }
     }
 
-
+    onClicked: {
+        pageStack.push(Qt.resolvedUrl("StagePage.qml"), {
+            filters: filters
+        })
+    }
 }
 

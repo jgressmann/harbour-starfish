@@ -9,7 +9,8 @@ Page {
     property string title: undefined
     property var filters: undefined
     property string key: undefined
-    property int sorted: 0
+    property bool ascending: true
+    property bool grid: false
 
     SqlVodModel {
         id: sqlModel
@@ -18,23 +19,7 @@ Page {
         select: {
             var sql = "select distinct "+ key +" from vods"
             sql += Global.whereClause(filters)
-//            if (filters) {
-//                var where = ""
-//                for (var dictKey in filters) {
-//                    if (where.length > 0) {
-//                        where += " and "
-//                    } else {
-//                        where += " where "
-//                    }
-
-//                    where += dictKey + "=\"" + filters[dictKey] + "\""
-//                }
-
-//                sql += where
-//            }
-            if (sorted !== 0) {
-                sql += " order by " + key + " " + (sorted > 0 ? "asc" : "desc")
-            }
+            sql += " order by " + key + " " + (ascending ? "asc" : "desc")
             console.debug(title + ": " + sql)
             return sql
         }
@@ -53,16 +38,17 @@ Page {
             id: listView
             anchors.fill: parent
             model: sqlModel
+            visible: !grid
             header: PageHeader {
                 title: page.title
             }
 
             delegate: FilteredItem {
-                id: filteredItem
                 width: listView.width
                 key: page.key
-                value: sqlModel.at(index, 0)
+                value: sqlModel.data(sqlModel.index(index, 0), 0)
                 filters: page.filters
+                grid: page.grid
 
                 Component.onCompleted: {
                     console.debug("filter page key: "+key+" index: " + index + " value: " + value)
@@ -71,6 +57,37 @@ Page {
 
             ViewPlaceholder {
                 enabled: listView.count === 0
+                text: "nothing here"
+            }
+        }
+
+        SilicaGridView {
+            id: gridView
+            anchors.fill: parent
+            model: sqlModel
+            visible: grid
+            header: PageHeader {
+                title: page.title
+            }
+
+            cellWidth: width / 2;
+            cellHeight: height / (Global.gridItemsPerPage / 2)
+
+            delegate: FilteredItem {
+                key: page.key
+                value: sqlModel.data(sqlModel.index(index, 0), 0)
+                filters: page.filters
+                grid: page.grid
+                height: gridView.cellHeight
+                width: gridView.cellWidth
+
+                Component.onCompleted: {
+                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
+                }
+            }
+
+            ViewPlaceholder {
+                enabled: gridView.count === 0
                 text: "nothing here"
             }
         }

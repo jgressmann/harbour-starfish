@@ -45,68 +45,37 @@ QString romanNumeralFor(int n, int markCount = 0) {
     }
     return QString::fromStdString(result);
 }
-/*VodDate,
-        VodSide1, // Taeja, Poland
-        VodSide2, // MVP, France
-        VodUrl, //
-        VodTournament, // GSL, Homestory Cup
-        VodSeason,  // Season 1, XII
-        VodStage, // RO16, Day 1, etc
-        VodMatchNumber, // Match in best of X
-        VodMatchCount, // Best of X
-        */
 
-
-
-
-const char *VodStrings[] = {
-    QT_TR_NOOP("date"),
-    QT_TR_NOOP("side1"),
-    QT_TR_NOOP("side2"),
-    QT_TR_NOOP("url"),
-    QT_TR_NOOP("tournament"),
-    QT_TR_NOOP("season"),
-    QT_TR_NOOP("stage"),
-    QT_TR_NOOP("match_number"),
-    QT_TR_NOOP("match_count"),
-    QT_TR_NOOP("game"),
-    QT_TR_NOOP("icon"),
+const QString EnglishWordSeasons[] = {
+    QStringLiteral("season one"),
+    QStringLiteral("season two"),
+    QStringLiteral("season three"),
+    QStringLiteral("season four"),
+    QStringLiteral("season five"),
+    QStringLiteral("season six"),
+    QStringLiteral("season seven"),
+    QStringLiteral("season eight"),
+    QStringLiteral("season nine"),
+    QStringLiteral("season ten"),
 };
 
-const QLatin1String EnglishWordSeasons[] = {
-    QLatin1String("season one"),
-    QLatin1String("season two"),
-    QLatin1String("season three"),
-    QLatin1String("season four"),
-    QLatin1String("season five"),
-    QLatin1String("season six"),
-    QLatin1String("season seven"),
-    QLatin1String("season eight"),
-    QLatin1String("season nine"),
-    QLatin1String("season ten"),
-};
 
-const QLatin1String GameIcons[] = {
-    QLatin1String("bw.png"),
-    QLatin1String("sc2.png"),
-};
-
-const QString BaseUrl = QLatin1String("https://sc2links.com/");
-const QString EntryUrl = QLatin1String("https://sc2links.com/tournament.php");
+const QString BaseUrl = QStringLiteral("https://sc2links.com/");
+const QString EntryUrl = QStringLiteral("https://sc2links.com/tournament.php");
 
 
-const QRegExp aHrefRegex(QLatin1String("<a\\s+href=[\"'](tournament.php\\?tournament=[^\"']+)[\"'][^>]*>"), Qt::CaseInsensitive);
-const QRegExp dateRegex(QLatin1String("\\d{4}-\\d{2}-\\d{2}"));
-const QRegExp fuzzyYearRegex(QLatin1String("(?:\\s*\\S+\\s+|\\s*)(\\d{4})(?:\\s*|\\s+\\S+\\s*)"));
-const QRegExp yearRegex(QLatin1String("\\d{4}"));
+const QRegExp aHrefRegex(QStringLiteral("<a\\s+href=[\"'](tournament.php\\?tournament=[^\"']+)[\"'][^>]*>"), Qt::CaseInsensitive);
+const QRegExp dateRegex(QStringLiteral("\\d{4}-\\d{2}-\\d{2}"));
+const QRegExp fuzzyYearRegex(QStringLiteral("(?:\\s*\\S+\\s+|\\s*)(\\d{4})(?:\\s*|\\s+\\S+\\s*)"));
+const QRegExp yearRegex(QStringLiteral("\\d{4}"));
 // <h2 style="padding:0;color:#DB5C04;"><b>Afreeca Starleague S4 (BW) 2017</b></h2>
 const QRegExp titleRegex("<h2[^>]*><b>(.*)</b></h2>");
-const QRegExp tags(QLatin1String("<[^>]+>"));
-const QRegExp stageRegex(QLatin1String("<table[^>]*><p\\s+class=['\"]head_title['\"][^>]*>(.*)</p>(.*)</table>"));
+const QRegExp tags(QStringLiteral("<[^>]+>"));
+const QRegExp stageRegex(QStringLiteral("<table[^>]*><p\\s+class=['\"]head_title['\"][^>]*>(.*)</p>(.*)</table>"));
 
 /// <tr><td><a href='https://youtu.be/toURJRI
 // <tr><td><a href='https://youtu.be/e9eCGElQJIM?t=817' target='_blank' style='padding:5px 0 5px 5px;width:175px;float:left;'> Match 1</a>&nbsp;<span style='padding:5px;float:right;'>2017-10-15</span>&nbsp;&nbsp; <span id='rall'><a href='javascript:void(0);' id='handover'>Reveal Match</a><span class='activespan'>&nbsp;<span class='r1'><img width='9' height='9' src='images/box1.jpg'>&nbsp;<b>Larva</b></span><span class='r2'> vs </span><span class='r3'><img width='9' height='9' src='images/box2.jpg'>&nbsp;<b>Rain</b></span></span></span></td></tr>
-const QRegExp matchRegex(QLatin1String("<tr><td><a href=['\"]([^'\"]+)['\"][^>]*>\\s*Match\\s+(\\d+)</a>(.*)</td></tr>"));
+const QRegExp matchRegex(QStringLiteral("<tr><td><a href=['\"]([^'\"]+)['\"][^>]*>\\D+(\\d+)\\s*</a>(.*)</td></tr>"));
 
 typedef QHash<QString, QString> TournamentToIconMapType;
 const TournamentToIconMapType TournamentToIconMap;
@@ -140,91 +109,14 @@ int s_StaticsInitialized = InitializeStatics();
 
 } // anon
 
-Vod::~Vod() {
-
-}
-
-Vod::Vod(int index, VodModel* parent)
-    : QObject(parent)
-    , m_Index(index) {
-
-}
-
-const VodModel*
-Vod::model() const {
-    return static_cast<const VodModel*>(parent());
-}
-
-QDateTime Vod::played() const {
-    return model()->played(m_Index);
-}
-QString Vod::side1() const{
-    return model()->side1(m_Index);
-}
-QString Vod::side2() const{
-    return model()->side2(m_Index);
-}
-QUrl Vod::url() const{
-    return model()->url(m_Index);
-}
-QString Vod::tournament() const{
-    return model()->tournament(m_Index);
-}
-int Vod::season() const{
-    return model()->season(m_Index);
-}
-QString Vod::stage() const{
-    return model()->stage(m_Index);
-}
-int Vod::matchNumber() const{
-    return model()->matchNumber(m_Index);
-}
-int Vod::matchCount() const {
-    return model()->matchCount(m_Index);
-}
-Game::GameType Vod::game() const {
-    return model()->game(m_Index);
-}
-QString Vod::icon() const{
-    return model()->icon(m_Index);
-}
-//-----------------------------------------------------------------------------------
-
-int
-VodModel::SoaItem::size() const {
-    return url.size();
-}
-
-void
-VodModel::SoaItem::clear() {
-    played.clear();
-    side1.clear();
-    side2.clear();
-    url.clear();
-    tournament.clear();
-    season.clear();
-    stage.clear();
-    matchNumber.clear();
-    matchCount.clear();
-    game.clear();
-    year.clear();
-    icon.clear();
-}
-
-//-----------------------------------------------------------------------------------
-
 const QByteArray VodModel::ms_UserAgent("MyAppName/1.0 (Nokia; Qt)");
-const QHash<int, QByteArray> VodModel::ms_RoleNames = VodModel::makeRoleNames();
 
 VodModel::~VodModel() {
     setNetworkAccessManager(Q_NULLPTR);
 }
 
 VodModel::VodModel(QObject *parent)
-    //: QAbstractTableModel(parent)
-//    : QObject(parent)
-    //: QAbstractListModel(parent)
-    : QAbstractItemModel(parent)
+    : QObject(parent)
     , m_Lock(QMutex::Recursive) {
 
     m_Database = Q_NULLPTR;
@@ -235,9 +127,6 @@ VodModel::VodModel(QObject *parent)
     connect(&m_Timer, SIGNAL(timeout()), this, SLOT(poll()));
     m_Timer.setInterval(30000);
     m_Timer.setTimerType(Qt::CoarseTimer);
-
-
-    m_FronIndex = 0;
 }
 
 void
@@ -274,9 +163,6 @@ VodModel::poll() {
         setStatus(Status_Error);
         return;
     }
-
-
-    m_BackItems[(m_FronIndex + 1) % 2].clear();
 
     QNetworkRequest request;
     request.setUrl(QUrl(EntryUrl));
@@ -315,9 +201,7 @@ void
 VodModel::requestFinished(QNetworkReply* reply) {
     QMutexLocker guard(&m_Lock);
     reply->deleteLater();
-//    if (reply->attribute(AbortedAttribute).toBool()) {
-//        return;
-//    }
+
     switch (reply->error()) {
     case QNetworkReply::OperationCanceledError:
         break;
@@ -357,46 +241,42 @@ VodModel::requestFinished(QNetworkReply* reply) {
     if (m_PendingRequests.remove(reply)) {
         if (m_PendingRequests.isEmpty()) {
 
-            int previousIndex = m_FronIndex;
-            int newIndex = (previousIndex + 1) % 2;
-
-
-            SoaItem& previous = m_BackItems[previousIndex];
-            SoaItem& current = m_BackItems[newIndex];
-            int previousSize = previous.size();
-            int currentSize = current.size();
-            int diff = currentSize - previousSize;
-            bool changed = true;
-            if (diff > 0) {
-                changed = previousSize > 0;
-                beginInsertRows(QModelIndex(), previousSize, currentSize-1);
-                m_FronIndex = newIndex;
-                endInsertRows();
-            } else if (diff == 0) {
-                changed = previousSize > 0;
-                m_FronIndex = newIndex;
-            } else {
-                beginRemoveRows(QModelIndex(), currentSize, previousSize-1);
-                m_FronIndex = newIndex;
-                endRemoveRows();
-            }
-
-            if (changed) {
-                emit dataChanged(createIndex(0, 0, Q_NULLPTR), createIndex(currentSize-1, (int)_countof(VodStrings)-1, Q_NULLPTR));
-            }
-
-            setStatus(Status_VodFetchingComplete);
-
-            m_lastUpdated = QDateTime::currentDateTime();
-            emit lastUpdatedChanged(m_lastUpdated);
-            qDebug("poll finished");
-
             QSqlQuery q(*m_Database);
             if (!q.exec("COMMIT TRANSACTION")) {
                 setError(Error_CouldntEndTransaction);
                 setStatus(Status_Error);
                 return;
             }
+
+            if (!q.exec("select count(*) from vods") || !q.next()) {
+                setError(Error_SqlTableManipError);
+                setStatus(Status_Error);
+                return;
+            }
+
+            qDebug() << q.value(0).toInt() << "rows";
+
+            if (!q.exec("select distinct game from vods")) {
+                setError(Error_SqlTableManipError);
+                setStatus(Status_Error);
+                return;
+            }
+
+            qDebug() << "games";
+            while (q.next()) {
+                qDebug() << q.value(0).toInt();
+
+            }
+
+            //m_Database->close();
+            //m_Database->open();
+
+
+            setStatus(Status_VodFetchingComplete);
+
+            m_lastUpdated = QDateTime::currentDateTime();
+            emit lastUpdatedChanged(m_lastUpdated);
+            qDebug("poll finished");
 
             m_Timer.start();
         }
@@ -405,188 +285,9 @@ VodModel::requestFinished(QNetworkReply* reply) {
 
 
 
-int
-VodModel::rowCount(const QModelIndex &parent) const {
-//    Q_UNUSED(parent);
-    if (parent.isValid()) {
-        return 0;
-    }
-
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    return item.size();
-}
-
-int
-VodModel::columnCount(const QModelIndex &parent) const {
-    Q_UNUSED(parent);
-    return (int)_countof(VodStrings);
-}
-
-QVariant
-VodModel::data(const QModelIndex &index, int role) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-
-    if (!index.isValid() || index.column() >= (int)_countof(VodStrings) ||
-        index.row() >= item.size()) {
-        return QVariant();
-    }
-
-    int c = 0;
-    if (role >= Qt::UserRole + 1) {
-        c = role - Qt::UserRole - 1;
-    }
-
-    if (c >= (int)_countof(VodStrings)) {
-        return QVariant();
-    }
-
-    int r = index.row();
-    switch (c) {
-    case VodDate:
-        return item.played[r];
-    case VodSide1:
-        return item.side1[r];
-    case VodSide2:
-        return item.side2[r];
-    case VodUrl:
-        return item.url[r];
-    case VodTournament:
-        return item.tournament[r];
-    case VodSeason:
-        return item.season[r];
-    case VodStage:
-        return item.stage[r];
-    case VodMatchNumber:
-        return item.matchNumber[r];
-    case VodMatchCount:
-        return item.matchCount[r];
-    case VodGame:
-        return item.game[r];
-    case VodIcon:
-        return item.icon[r];
-    default:
-        break;
-    }
-
-    return QVariant();
-}
-
-QVariant
-VodModel::headerData(int section, Qt::Orientation orientation, int role) const {
-    if (orientation == Qt::Horizontal) {
-        if (section >= 0 && section <= (int)_countof(VodStrings)) {
-            return QString(VodStrings[section]);
-        }
-    }
-
-    return QVariant();
-}
-
 QDateTime
 VodModel::lastUpdated() const {
-    return QDateTime();
-}
-
-QDateTime
-VodModel::played(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return QDateTime();
-    }
-
-    return item.played[index];
-}
-QString
-VodModel::side1(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return QString();
-    }
-
-    return item.side1[index];
-}
-QString
-VodModel::side2(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return QString();
-    }
-
-    return item.side2[index];
-}
-
-QUrl
-VodModel::url(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return QString();
-    }
-
-    return item.url[index];
-}
-
-QString
-VodModel::tournament(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return QString();
-    }
-
-    return item.tournament[index];
-}
-int
-VodModel::season(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return 0;
-    }
-
-    return item.season[index];
-}
-QString
-VodModel::stage(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return QString();
-    }
-
-    return item.stage[index];
-}
-int
-VodModel::matchNumber(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return 0;
-    }
-
-    return item.matchNumber[index];
-}
-int
-VodModel::matchCount(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return 0;
-    }
-
-    return item.matchCount[index];
-}
-Game::GameType
-VodModel::game(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return Game::Unknown;
-    }
-
-    return item.game[index];
-}
-QString
-VodModel::icon(int index) const {
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (index < 0 || index >= item.size()) {
-        return QString();
-    }
-
-    return item.icon[index];
+    return m_lastUpdated;
 }
 
 void
@@ -594,36 +295,19 @@ VodModel::parseReply(QByteArray& data) {
     Q_ASSERT(aHrefRegex.isValid());
 
     QString soup = QString::fromUtf8(data);
-    for (int start = 0, found = aHrefRegex.indexIn(soup, start);
-         found != -1;
-         start = found + aHrefRegex.cap(0) .length(), found = aHrefRegex.indexIn(soup, start)) {
+    for (int start = 0, x = 0, found = aHrefRegex.indexIn(soup, start);
+         found != -1 && x < 3;
+         start = found + aHrefRegex.cap(0) .length(), found = aHrefRegex.indexIn(soup, start), ++x) {
 
         QString link = aHrefRegex.cap(1);
 
-//        QString content = aHrefRegex.cap(2);
-//        QString cleaned = content;
-//        cleaned.replace(tags, QString());
-//        cleaned = cleaned.trimmed();
-//        int year = 0;
-//        int firstSpace = cleaned.indexOf(QChar(' '));
-//        if (firstSpace >= 0) {
-//            QString firstPart = cleaned.left(firstSpace);
-//            bool ok = false;
-//            int i = firstPart.toInt(&ok);
-//            if (ok) {
-//                year = i;
-//                cleaned = cleaned.right(cleaned.length()-firstSpace).trimmed();
-//            }
-//        }
-//        qDebug() << link << content << year << cleaned;
+        qDebug() << "fetching" << BaseUrl + link;
 
         QNetworkRequest request(BaseUrl + link);
         request.setRawHeader("User-Agent", ms_UserAgent);
         QNetworkReply* reply = m_Manager->get(request);
-//        reply->setAttribute(QNetworkRequest::User, QVariant(targetPtr));
-        //m_RequestToTournamentMap.insert(m_Manager->get(request), index);
-        m_PendingRequests.insert(reply);
-        break;
+       m_PendingRequests.insert(reply);
+//        break;
     }
 
 }
@@ -643,17 +327,13 @@ VodModel::addVods(QByteArray& data) {
     title = fullTitle;
     int year = 0;
     int season = 0;
-    QString icon;
-    Game::GameType game = Game::Sc2;
+    Game game = Game_Sc2;
     tryGetYear(title, &year);
     tryGetSeason(title, &season);
     tryGetGame(title, &game);
     title = title.trimmed();
-    if (!tryGetIcon(title, &icon)) {
-        icon = GameIcons[game];
-    }
 
-    SoaItem& soaItem = m_BackItems[(m_FronIndex.load() + 1) % 2];
+
 
     QList<QVariantList> args;
     args.reserve(32);
@@ -668,7 +348,7 @@ VodModel::addVods(QByteArray& data) {
         stageTitle = stageTitle.remove(tags).trimmed();
 
         QString stageData = stageRegex.cap(2);
-//        qDebug() << stageTitle << stageData;
+        //qDebug() << stageTitle << stageData;
 
         args.clear();
         int matchNumber = 1;
@@ -680,40 +360,15 @@ VodModel::addVods(QByteArray& data) {
             QString junk = matchRegex.cap(3);
             junk.remove(tags);
 
-            junk.replace(QLatin1String("&nbsp;"), QLatin1String(" "));
+            junk.replace(QStringLiteral("&nbsp;"), QStringLiteral(" "));
 
 
             QDateTime date;
             tryGetDate(junk, &date);
 
-            junk.replace(QLatin1String("reveal match"), QString(), Qt::CaseInsensitive);
-            QStringList sides = junk.split(QLatin1String("vs"));
-
-//            target.push_back(Item());
-
-//            Item& item = target.last();
-//            item.game = game;
-//            item.matchCount = 0;
-//            item.matchNumber = matchNumber++;
-//            item.played = date;
-//            item.season = season;
-//            item.side1 = sides.size() == 2 ? sides[0].trimmed() : QString();
-//            item.side2 = sides.size() == 2 ? sides[1].trimmed() : QString();
-//            item.stage = stageTitle;
-//            item.tournament = title;
-//            item.url = matchRegex.cap(1);
-//            item.year = year;
-            soaItem.game.append(game);
-            soaItem.icon.append(icon);
-            soaItem.matchNumber.append(matchNumber);
-            soaItem.played.append(date);
-            soaItem.season.append(season);
-            soaItem.side1.append(sides.size() == 2 ? sides[0].trimmed() : QString());
-            soaItem.side2.append(sides.size() == 2 ? sides[1].trimmed() : QString());
-            soaItem.stage.append(stageTitle);
-            soaItem.tournament.append(title);
-            soaItem.url.append(matchRegex.cap(1));
-            soaItem.year.append(year);
+            junk.replace(QStringLiteral("reveal match"), QString(), Qt::CaseInsensitive);
+            junk.replace(QStringLiteral("reveal episode"), QString(), Qt::CaseInsensitive);
+            QStringList sides = junk.split(QStringLiteral("vs"));
 
             args.push_back(QVariantList());
             QVariantList& arg = args.last();
@@ -729,8 +384,6 @@ VodModel::addVods(QByteArray& data) {
 
         // fix match numbers
         for (int i = 1; i < matchNumber; ++i) {
-            //target[target.size()-i].matchCount = matchNumber;
-            soaItem.matchCount.append(matchNumber-1);
 
             QVariantList& arg = args[i-1];
 
@@ -738,7 +391,7 @@ VodModel::addVods(QByteArray& data) {
             QSqlQuery q(*m_Database);
             if (!q.prepare(
 "INSERT INTO vods ("
-"played, side1, side2, url, tournament, title, season, stage_name,"
+"match_date, side1, side2, url, tournament, title, season, stage_name,"
 "match_number, match_count, game, year, stage_index) "
 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 qCritical() << "failed to prepare vod insert" << q.lastError();
@@ -835,7 +488,7 @@ VodModel::tryGetDate(QString& inoutSrc, QDateTime* date) {
     int i = dateRegex.indexIn(inoutSrc);
     if (i >= 0) {
         QStringRef subString(&inoutSrc, i, 10);
-        *date = QDateTime::fromString(subString.toString(), QLatin1String("yyyy-MM-dd"));
+        *date = QDateTime::fromString(subString.toString(), QStringLiteral("yyyy-MM-dd"));
         inoutSrc.remove(i, 10);
         return true;
     }
@@ -844,139 +497,16 @@ VodModel::tryGetDate(QString& inoutSrc, QDateTime* date) {
 }
 
 bool
-VodModel::tryGetGame(QString& inoutSrc, Game::GameType* game) {
-    int index = inoutSrc.indexOf(QLatin1String("(bw)"), 0, Qt::CaseInsensitive);
+VodModel::tryGetGame(QString& inoutSrc, Game* game) {
+    int index = inoutSrc.indexOf(QStringLiteral("(bw)"), 0, Qt::CaseInsensitive);
     if (index >= 0) {
         inoutSrc.remove(index, 4);
-        *game = Game::Broodwar;
+        *game = Game_Broodwar;
         return true;
     }
 
     return false;
 }
-
-//QQmlListProperty<Tournament>
-//VodModel::tournaments() const
-//{
-//    return QQmlListProperty<Tournament>((QObject*)const_cast<VodModel*>(this), NULL, tournamentListCount, tournamentListAt);
-//}
-
-//int
-//VodModel::tournamentListCount(QQmlListProperty<Tournament>* l) {
-//    Q_ASSERT(l);
-//    Q_ASSERT(l->object);
-
-//    VodModel* self = static_cast<VodModel*>(l->object);
-
-////    QMutexLocker g(&self->m_Lock);
-
-//    TournamentList* t = self->m_FrontTournaments.loadAcquire();
-
-//    return t->size();
-//}
-
-//Tournament*
-//VodModel::tournamentListAt(QQmlListProperty<Tournament>* l, int index) {
-//    Q_ASSERT(l);
-//    Q_ASSERT(l->object);
-
-//    VodModel* self = static_cast<VodModel*>(l->object);
-
-////    QMutexLocker g(&self->m_Lock);
-
-//    TournamentList* t = self->m_FrontTournaments.loadAcquire();
-
-//    if (index < 0 || index >= t->size())
-//    {
-//        return Q_NULLPTR;
-//    }
-
-//    return (*t)[index];
-//}
-
-QQmlListProperty<Vod>
-VodModel::vods() const
-{
-    return QQmlListProperty<Vod>((QObject*)const_cast<VodModel*>(this), NULL, vodListCount, vodListAt);
-}
-
-
-int
-VodModel::vodListCount(QQmlListProperty<Vod>* l) {
-    Q_ASSERT(l);
-    Q_ASSERT(l->object);
-
-    VodModel* self = static_cast<VodModel*>(l->object);
-
-    const SoaItem& soaItem = self->m_BackItems[self->m_FronIndex.load()];
-
-    return soaItem.size();
-}
-
-Vod*
-VodModel::vodListAt(QQmlListProperty<Vod>* l, int index) {
-    Q_ASSERT(l);
-    Q_ASSERT(l->object);
-
-    VodModel* self = static_cast<VodModel*>(l->object);
-
-    return new Vod(index, self);
-}
-
-
-QHash<int, QByteArray>
-VodModel::makeRoleNames() {
-    QHash<int, QByteArray> roles;
-    const char* Roles[] = {
-        "played",
-        "side1",
-        "side2",
-        "url",
-        "tournament",
-        "season",
-        "stage",
-        "matchNumber",
-        "matchCount",
-        "game",
-        "icon",
-    };
-
-    for (size_t i = 0; i < _countof(Roles); ++i) {
-        roles[Qt::UserRole + 1 + i] = Roles[i];
-    }
-
-    return roles;
-}
-
-QHash<int, QByteArray>
-VodModel::roleNames() const {
-    return ms_RoleNames;
-}
-
-QModelIndex
-VodModel::index(int row, int column, const QModelIndex& parent) const {
-    if (parent.isValid()) {
-        return QModelIndex();
-    }
-
-    if (column < 0 || column >= (int)_countof(VodStrings)) {
-        return QModelIndex();
-    }
-
-    const SoaItem& item = m_BackItems[m_FronIndex.load()];
-    if (row < 0 || row >= item.size()) {
-        return QModelIndex();
-    }
-
-    return createIndex(row, column, Q_NULLPTR);
-}
-
-QModelIndex
-VodModel::parent(const QModelIndex &child) const {
-    Q_UNUSED(child);
-    return QModelIndex();
-}
-
 void
 VodModel::setDatabase(QSqlDatabase* db) {
     m_Database = db;
@@ -984,7 +514,6 @@ VodModel::setDatabase(QSqlDatabase* db) {
     updateStatus();
 
     if (m_Database) {
-
         createTablesIfNecessary();
         if (Status_Ready == m_Status) {
             poll();
@@ -998,7 +527,7 @@ VodModel::createTablesIfNecessary() {
 
     static char const* const queries[] = {
         "CREATE TABLE IF NOT EXISTS vods ("
-        "    played INTEGER,              "
+        "    match_date INTEGER,          "
         "    side1 TEXT,                  "
         "    side2 TEXT,                  "
         "    url TEXT,                    "
@@ -1057,18 +586,23 @@ VodModel::updateStatus() {
     if (m_Status == Status_Uninitialized) {
         if (m_Database && m_Manager) {
             QSqlQuery q(*m_Database);
-            if (q.exec("SELECT COUNT(*) as count from vods") && q.next()) {
-                //int i = q.record().indexOf("count");
-                //QVariant value = q.value(i);
-                QVariant value = q.value(0);
-                if (value.toInt() > 0) {
-                    setStatus(Status_VodFetchingComplete);
+
+            if (q.exec("SELECT name FROM sqlite_master WHERE type=table AND name=vods") && q.next()) {
+                if (q.exec("SELECT COUNT(*) as count from vods") && q.next()) {
+                    //int i = q.record().indexOf("count");
+                    //QVariant value = q.value(i);
+                    QVariant value = q.value(0);
+                    if (value.toInt() > 0) {
+                        setStatus(Status_VodFetchingComplete);
+                    } else {
+                        setStatus(Status_Ready);
+                    }
                 } else {
-                    setStatus(Status_Ready);
+                    setStatus(Status_Error);
+                    setError(Error_SqlTableManipError);
                 }
             } else {
-                setStatus(Status_Error);
-                setError(Error_SqlTableManipError);
+                setStatus(Status_Ready);
             }
         }
     } else {
@@ -1095,9 +629,9 @@ VodModel::label(const QString& key, const QVariant& value) const {
         if (key == QStringLiteral("game")) {
             int game = value.toInt();
             switch (game) {
-            case Game::Broodwar:
+            case Game_Broodwar:
                 return tr("Broodwar");
-            case Game::Sc2:
+            case Game_Sc2:
                 return tr("StarCraft II");
             default:
                 return tr("unknown game");
@@ -1119,9 +653,9 @@ VodModel::icon(const QString& key, const QVariant& value) const {
     if (key == QStringLiteral("game")) {
         int game = value.toInt();
         switch (game) {
-        case Game::Broodwar:
+        case Game_Broodwar:
             return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/bw.png");
-        case Game::Sc2:
+        case Game_Sc2:
             return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/sc2.png");
         default:
             return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/game.png");

@@ -18,26 +18,6 @@ SqlVodModel::SqlVodModel(QObject* parent)
     m_Dirty = false;
 }
 
-//int
-//SqlVodModel::rowCount(const QModelIndex &parent) const {
-//    if (m_Dirty) {
-//        SqlVodModel* self = const_cast<SqlVodModel*>(this);
-//        self->m_Dirty = !SqlVodModel*tryConfigureModel();
-//    }
-
-//    return QSqlQueryModel::rowCount(parent);
-//}
-
-//void
-//SqlVodModel::queryChange() {
-////    if (m_Dirty) {
-////        SqlVodModel* self = const_cast<SqlVodModel*>(this);
-////        self->m_Dirty = !self->tryConfigureModel();
-////    }
-
-//    QSqlQueryModel::queryChange();
-//}
-
 QVariant
 SqlVodModel::data(const QModelIndex &modelIndex, int role) const {
     if (role < Qt::UserRole) {
@@ -49,11 +29,6 @@ SqlVodModel::data(const QModelIndex &modelIndex, int role) const {
     return QSqlQueryModel::data(remappedIndex, Qt::DisplayRole);
 }
 
-QVariant
-SqlVodModel::at(int row, int column) const {
-    return QSqlQueryModel::data(index(row, column), Qt::DisplayRole);
-}
-
 QHash<int,QByteArray>
 SqlVodModel::roleNames() const {
     return m_RoleNames;
@@ -63,6 +38,7 @@ QString
 SqlVodModel::select() const {
     return m_Select;
 }
+
 void
 SqlVodModel::setSelect(QString newValue) {
     if (m_Select != newValue) {
@@ -96,7 +72,6 @@ SqlVodModel::setVodModel(VodModel* newValue) {
         }
     }
 }
-
 void
 SqlVodModel::statusChanged() {
     if (m_Dirty) {
@@ -104,8 +79,29 @@ SqlVodModel::statusChanged() {
     } else {
         auto status = m_VodModel->status();
         if (status == VodModel::Status_VodFetchingComplete) {
+//            tryConfigureModel();
             beginResetModel();
+            setQuery(m_Select, *m_VodModel->database()); // without this line there is no update in rowCount
             endResetModel();
+//            qDebug() << m_Select << ":" << rowCount() << "rows" << columnCount() << "cols";
+
+//            QSqlQuery q(*m_VodModel->database());
+//            if (!q.exec("select count(*) from vods") || !q.next()) {
+//                return;
+//            }
+
+//            qDebug() << q.value(0).toInt() << "rows";
+
+//            if (!q.exec("select distinct game from vods")) {
+//                return;
+//            }
+
+//            qDebug() << "games:";
+//            while (q.next()) {
+//                qDebug() << q.value(0).toInt();
+
+//            }
+
         }
     }
 }

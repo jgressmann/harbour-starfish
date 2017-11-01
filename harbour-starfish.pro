@@ -17,7 +17,6 @@ DEFINES += SAILFISH=1
 
 SOURCES += src/harbour-starfish.cpp \
     src/Sc2LinksDotCom.cpp \
-    src/DistinctModel.cpp \
     src/SqlVodModel.cpp
 
 DISTFILES += qml/harbour-starfish.qml \
@@ -33,8 +32,6 @@ DISTFILES += qml/harbour-starfish.qml \
     media/*.png \
     media/foo \
     qml/pages/StartPage.qml \
-    qml/pages/GamesPage.qml \
-    qml/pages/Game.qml \
     qml/pages/FilteredItem.qml \
     qml/pages/FilterPage.qml \
     qml/pages/SelectionPage.qml \
@@ -42,7 +39,8 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/qmldir \
     qml/pages/TournamentPage.qml \
     qml/pages/StageItem.qml \
-    qml/pages/MatchItem.qml
+    qml/pages/MatchItem.qml \
+    qml/pages/StagePage.qml
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 
@@ -65,7 +63,6 @@ TRANSLATIONS += translations/harbour-starfish-de.ts
 
 HEADERS += \
     src/Sc2LinksDotCom.h \
-    src/DistinctModel.h \
     src/SqlVodModel.h
 
 
