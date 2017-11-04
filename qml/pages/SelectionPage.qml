@@ -78,9 +78,9 @@ Page {
                         while (true) {
                             var sql = "select distinct "+ myKey +" from vods" + Global.whereClause(myFilters)
                             var values = Global.values(sql)
+                            var rem = Global.remainingKeys(myFilters)
                             if (values.length === 1) {
                                 myFilters[myKey] = values[0]
-                                var rem = Global.remainingKeys(myFilters)
                                 if (0 === rem.length) {
                                     // exhausted all filter keys, show tournament
                                     pageStack.push(Qt.resolvedUrl("TournamentPage.qml"), {
@@ -93,7 +93,7 @@ Page {
                             } else {
                                 // more than 1 value, show filter page
                                 pageStack.push(Qt.resolvedUrl("FilterPage.qml"), {
-                                    title: label,
+                                    title: Sc2LinksDotCom.label(rem[0], undefined),
                                     filters: myFilters,
                                     key: myKey,
                                 })

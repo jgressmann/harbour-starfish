@@ -20,8 +20,6 @@ Page {
 
         // Why is this necessary?
         contentWidth: parent.width
-//        contentHeight: 1000
-
 
         VerticalScrollDecorator {}
 
