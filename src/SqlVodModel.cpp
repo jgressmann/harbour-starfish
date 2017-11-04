@@ -77,7 +77,10 @@ SqlVodModel::statusChanged() {
     if (m_Dirty) {
         m_Dirty = !tryConfigureModel();
     } else {
+        //beginResetModel();
         setQuery(m_Select, *m_VodModel->database()); // without this line there is no update in rowCount
+        //endResetModel();
+
         return;
         auto status = m_VodModel->status();
         if (status == VodModel::Status_VodFetchingComplete) {
@@ -115,22 +118,27 @@ SqlVodModel::tryConfigureModel() {
        !m_Columns.empty()) {
 
         setQuery(m_Select, *m_VodModel->database());
-//        QSqlError error = lastError();
-//        if (error.isValid()) {
-//            qWarning() << error;
-//            return false;
-//        }
-
         beginResetModel();
         for (int i = 0; i < m_Columns.count(); ++i) {
             setHeaderData(0, Qt::Horizontal, m_Columns[i]);
         }
         endResetModel();
+//        refresh();
 
         return true;
     }
 
     return false;
+}
+
+void
+SqlVodModel::refresh() {
+    beginResetModel();
+    setQuery(m_Select, *m_VodModel->database());
+    for (int i = 0; i < m_Columns.count(); ++i) {
+        setHeaderData(0, Qt::Horizontal, m_Columns[i]);
+    }
+    endResetModel();
 }
 
 QStringList

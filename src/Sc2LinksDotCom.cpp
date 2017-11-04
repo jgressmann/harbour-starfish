@@ -540,6 +540,21 @@ VodModel::parseLevel2(QNetworkReply* reply) {
         }
 
         m_AddedVods = true;
+        qDebug() << "add"
+                 << m->matchDate
+                 << m->side1
+                 << m->side2
+                 << m->url
+                 << t->name
+                 << t->fullName
+                 << t->season
+                 << s->name
+                 << m->matchNumber
+                 << s->matches.size()
+                 << t->game
+                 << t->year
+                 << s->index
+                 << false;
 
     } else {
         qWarning() << "no vod url found in" << reply->request().url();

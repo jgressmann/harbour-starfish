@@ -5,48 +5,51 @@ import org.duckdns.jgressmann 1.0
 Page {
     id: page
 
-    readonly property int vodCount: _vodCount.data(_vodCount.index(0, 0), 0)
-    readonly property bool areVodsAvailable: {
-        var status = Sc2LinksDotCom.status
-        return Sc2LinksDotCom.Status_VodFetchingComplete === status ||
-                (Sc2LinksDotCom.Status_VodFetchingInProgress === status && vodCount > 0)
-    }
-
+    readonly property int vodCount: _vodCount
+    property int _vodCount: 0
     property bool _done: false
 
-    Connections {
-        target: Sc2LinksDotCom
-        onStatusChanged: modelStatusChanged()
-    }
 
     SqlVodModel {
-        id: _vodCount
+        id: _model
         columns: ["count"]
         select: "select count(*) as count from vods"
         vodModel: Sc2LinksDotCom
+        onModelReset: {
+            console.debug("sql model reset")
+            _vodCount = data(index(0, 0), 0)
+            modelStatusChanged()
+        }
+
+        Component.onCompleted: {
+            _vodCount = data(index(0, 0), 0)
+        }
     }
 
     Timer {
-        interval: 100
-        running: !_done && !pageStack.busy
-        onTriggered: {
-            modelStatusChanged()
-        }
+        id: timer
+        interval: 1000
+//        repeat: true
+        running: true
+//        onTriggered: modelStatusChanged()
         onRunningChanged: {
             console.debug("timer enabled: " + running)
         }
     }
 
-
     function modelStatusChanged() {
 //        var status = Sc2LinksDotCom.
 //        if (Sc2LinksDotCom.Status_Error ==
         console.debug("start page status " + Sc2LinksDotCom.status)
+        console.debug("start page vod count " + vodCount)
+        console.debug("start page vod count call " + _model.data(_model.index(0, 0), 0))
 
-        if (areVodsAvailable) {
+
+        if (vodCount > 0 && !busyIndicator.running) {
             console.debug("start page vods are here!")
             //pageStack.completeAnimation()
             //pageStack.replace()
+
             pageStack.replace(
                 Qt.resolvedUrl("FilterPage.qml"),
                 {
@@ -55,8 +58,8 @@ Page {
                     key: "game",
                     grid: true,
                 })
-
-            _done = true
+        } else {
+//            timer.start()
         }
     }
 
@@ -74,76 +77,81 @@ Page {
             }
         }
 
-        // error label
-        Label {
-           text: qsTr("Something went wrong TT")
-           anchors.centerIn: parent
-           visible: Sc2LinksDotCom.status === Sc2LinksDotCom.Status_Error
-           font.pixelSize: Theme.fontSizeLarge
-           color: Theme.highlightColor
-           onVisibleChanged: {
-                if (visible) {
-                    console.debug("error: " + Sc2LinksDotCom.errorString)
-                }
-           }
+        BusyIndicator {
+            id: busyIndicator
+            size: BusyIndicatorSize.Large
+            anchors.centerIn: parent
+            running: timer.running
+            onRunningChanged: modelStatusChanged()
         }
 
-        // download in progress
-        Column {
-            anchors.verticalCenter: parent.verticalCenter
-            width: parent.width
-            visible: !areVodsAvailable && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingInProgress
-
-//            Image {
-//               source: "image://theme/icon-l-transfer"
-//               anchors.horizontalCenter: parent.horizontalCenter
-//            }
-
-//            ProgressBar {
-//                value: Sc2LinksDotCom.vodFetchingProgress
-//                width: parent.width
-//                valueText: Math.round(100*value)
-//                label: qsTr("Data is being loaded...")
-//            }
-
-            ProgressCircle {
-                borderWidth: Theme.paddingMedium
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: Theme.itemSizeHuge
-                height: Theme.itemSizeHuge
-                value: Sc2LinksDotCom.vodFetchingProgress
-            }
-
-            Row {
-                height: Theme.paddingLarge
-            }
-
+        Item {
+            anchors.fill: parent
+            visible: !busyIndicator.running
+            // error label
             Label {
-                text: qsTr("Data is being loaded...")
-                anchors.horizontalCenter: parent.horizontalCenter
-                font.pixelSize: Theme.fontSizeLarge
-                color: Theme.highlightColor
+               text: qsTr("Something went wrong TT")
+               anchors.centerIn: parent
+               visible: Sc2LinksDotCom.status === Sc2LinksDotCom.Status_Error
+               font.pixelSize: Theme.fontSizeLarge
+               color: Theme.highlightColor
+               onVisibleChanged: {
+                    if (visible) {
+                        console.debug("error: " + Sc2LinksDotCom.errorString)
+                    }
+               }
+            }
+
+            // download in progress
+            Column {
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width
+                visible: vodCount === 0 && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingInProgress
+
+    //            Image {
+    //               source: "image://theme/icon-l-transfer"
+    //               anchors.horizontalCenter: parent.horizontalCenter
+    //            }
+
+    //            ProgressBar {
+    //                value: Sc2LinksDotCom.vodFetchingProgress
+    //                width: parent.width
+    //                valueText: Math.round(100*value)
+    //                label: qsTr("Data is being loaded...")
+    //            }
+
+                ProgressCircle {
+                    borderWidth: Theme.paddingMedium
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: Theme.itemSizeHuge
+                    height: Theme.itemSizeHuge
+                    value: Sc2LinksDotCom.vodFetchingProgress
+                }
+
+                Rectangle {
+                    height: Theme.paddingLarge
+                    width: parent.width
+                    color: "transparent"
+                }
+
+                Label {
+                    text: qsTr("Data is being loaded...")
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    font.pixelSize: Theme.fontSizeLarge
+                    color: Theme.highlightColor
+                }
+            }
+
+            // no content label
+            Label {
+               text: qsTr("There seems to be nothing here")
+               anchors.centerIn: parent
+               visible: vodCount === 0 && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingComplete
+               font.pixelSize: Theme.fontSizeLarge
+               color: Theme.highlightColor
+
             }
         }
-
-        // no content label
-        Label {
-           text: qsTr("There seems to be nothing here")
-           anchors.centerIn: parent
-           visible: !areVodsAvailable && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingComplete
-           font.pixelSize: Theme.fontSizeLarge
-           color: Theme.highlightColor
-           onVisibleChanged: {
-
-           }
-        }
-
-        // vods avaialbe
-//        Image {
-//            anchors.centerIn: parent
-//            source: Sc2LinksDotCom.dataDir + "/media/sc2.png"
-//            visible: areVodsAvailable
-//        }
     }
 }
 

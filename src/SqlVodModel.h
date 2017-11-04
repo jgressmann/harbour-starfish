@@ -34,6 +34,7 @@ private slots:
 
 private:
     bool tryConfigureModel();
+    void refresh();
 
 private:
     QHash<int, QByteArray> m_RoleNames;
