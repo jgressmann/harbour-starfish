@@ -69,7 +69,7 @@ const QRegExp tournamentPageStageNameRegex(QStringLiteral("<h3>([^>]+)</h3>\\s*<
 const QRegExp tournamentPageStageContent(QStringLiteral("<h3>([^>]+)</h3>\\s*(<h5>.*)<h"));
 // <a  href="https://www.sc2links.com/match/?match=40754"><div class="match">Match 1</div></a>
 const QRegExp tournamentPageMatchRegex(QStringLiteral("<h5>\\s*<a\\s+href=['\"](https://www.sc2links.com/match/\\?match=\\d+)['\"][^>]*><div\\s+class\\s*=\\s*['\"]match['\"]\\s*>(\\w+)\\s+(\\d+)</div>\\s*</a>.*<div\\s+class=['\"]date['\"]\\s*>([^>]+)</div>\\s*</h5>"));
-const QRegExp iFrameRegex(QStringLiteral("<iframe\\s+(?:[^>]+\\s+)*src=['\"]https://www.youtube.com/embed/([^'\"]+)['\"][^>]*>"));
+const QRegExp iFrameRegex(QStringLiteral("<iframe\\s+(?:[^>]+\\s+)*src=['\"]([^'\"]+)['\"][^>]*>"));
 
 const QRegExp dateRegex(QStringLiteral("\\d{4}-\\d{2}-\\d{2}"));
 const QRegExp fuzzyYearRegex(QStringLiteral(".*(\\d{4}).*"));
@@ -141,7 +141,7 @@ VodModel::poll() {
         qWarning("Not initialized");
         return;
     case Status_VodFetchingInProgress:
-        qWarning("Poll in progress");
+        qWarning("Poll alreay in progress");
         return;
     default:
         qWarning() << "Error: " << qPrintable(errorString());
@@ -150,18 +150,7 @@ VodModel::poll() {
 
     QMutexLocker guard(&m_Lock);
 
-    QSqlQuery q(*m_Database);
-    if (!q.exec("BEGIN TRANSACTION")) {
-        setError(Error_CouldntStartTransaction);
-        setStatus(Status_Error);
-        return;
-    }
 
-    if (!q.exec("DELETE FROM vods")) {
-        setError(Error_SqlTableManipError);
-        setStatus(Status_Error);
-        return;
-    }
 
     QNetworkReply* reply = makeRequest(EntryUrl);
     m_PendingRequests.insert(reply, 0);
@@ -257,9 +246,22 @@ VodModel::requestFinished(QNetworkReply* reply) {
 
     if (m_PendingRequests.isEmpty()) {
 
+        QSqlQuery q(*m_Database);
+        if (!q.exec("BEGIN TRANSACTION")) {
+            setError(Error_CouldntStartTransaction);
+            setStatus(Status_Error);
+            return;
+        }
+
+        if (!q.exec("DELETE FROM vods")) {
+            setError(Error_SqlTableManipError);
+            setStatus(Status_Error);
+            return;
+        }
+
         insertVods();
 
-        QSqlQuery q(*m_Database);
+        //QSqlQuery q(*m_Database);
         if (!q.exec("COMMIT TRANSACTION")) {
             setError(Error_CouldntEndTransaction);
             setStatus(Status_Error);
@@ -317,7 +319,7 @@ VodModel::parseLevel0(QNetworkReply* reply) {
     QString soup = QString::fromUtf8(reply->readAll());
 //    qDebug() << soup;
     for (int start = 0, x = 0, found = aHrefRegex.indexIn(soup, start);
-         found != -1 && x < 1;
+         found != -1 && x < 3;
          start = found + aHrefRegex.cap(0).length(), found = aHrefRegex.indexIn(soup, start), ++x) {
 
         QString link = aHrefRegex.cap(1);
@@ -417,6 +419,8 @@ VodModel::parseLevel2(QNetworkReply* reply) {
     if (index >= 0) {
         QString url = iFrameRegex.cap(1);
         m->url = url;
+    } else {
+        qWarning() << "no vod url found in" << reply->request().url();
     }
 }
 
