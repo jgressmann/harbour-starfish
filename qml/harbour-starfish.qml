@@ -5,7 +5,12 @@ import "pages"
 
 ApplicationWindow
 {
-    initialPage: Component { StartPage { } }
+    initialPage: Component {
+        StartPage { }
+//        YoutubePage {
+//            url: "https://www.youtube.com/watch?v=Q7l6nQxfYvY"
+//        }
+    }
     cover: Qt.resolvedUrl("cover/CoverPage.qml")
     allowedOrientations: defaultAllowedOrientations
 }

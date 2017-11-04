@@ -13,6 +13,9 @@
 #include <QSqlDatabase>
 #include <QStandardPaths>
 #include <QSqlError>
+#include <QWebSettings>
+
+
 #include "Sc2LinksDotCom.h"
 #include "SqlVodModel.h"
 #include <sailfishapp.h>
@@ -64,6 +67,9 @@ main(int argc, char *argv[]) {
     QScopedPointer<QGuiApplication> appPtr(SailfishApp::application(argc, argv));
     QGuiApplication& app = *appPtr;
 
+    QWebSettings::globalSettings()->setAttribute(QWebSettings::PluginsEnabled, true);
+    QWebSettings::globalSettings()->setAttribute(QWebSettings::AutoLoadImages, true);
+
 #ifdef SAILFISH_DATADIR
     //QString databaseFilePath(QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/db.sqlite"));
     //QString databaseFilePath(QStandardPaths::writableLocation((QStandardPaths::AppLocalDataLocation)) + QStringLiteral("/db.sqlite"));
@@ -74,7 +80,7 @@ main(int argc, char *argv[]) {
     if (!dir.exists()) {
         dir.mkpath(dir.path());
     }
-    QString databaseFilePath = dir.absoluteFilePath("db.sqlite");
+    QString databaseFilePath = dir.absoluteFilePath("vods.sqlite");
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(databaseFilePath);
     if (db.open()) {

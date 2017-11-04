@@ -25,12 +25,8 @@ Page {
         vodModel: Sc2LinksDotCom
     }
 
-    function initPage() {
-        modelStatusChanged()
-    }
-
     Timer {
-        interval: 1000
+        interval: 100
         running: !_done && !pageStack.busy
         onTriggered: {
             modelStatusChanged()
@@ -94,7 +90,7 @@ Page {
         // download in progress
         Column {
             anchors.centerIn: parent
-            visible: !areVodsAvailable && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingInProgress
+            visible: vodCount.rowCount() === 0 && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingInProgress
             onVisibleChanged: {
             }
             Image {
@@ -121,11 +117,11 @@ Page {
         }
 
         // vods avaialbe
-        Image {
-            anchors.centerIn: parent
-            source: Sc2LinksDotCom.dataDir + "/media/sc2.png"
-            visible: areVodsAvailable
-        }
+//        Image {
+//            anchors.centerIn: parent
+//            source: Sc2LinksDotCom.dataDir + "/media/sc2.png"
+//            visible: areVodsAvailable
+//        }
     }
 }
 

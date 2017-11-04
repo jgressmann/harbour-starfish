@@ -11,6 +11,7 @@
 #include <QAtomicPointer>
 #include <QSet>
 #include <QVector>
+#include <QLinkedList>
 
 class QSqlDatabase;
 class QNetworkAccessManager;
@@ -84,8 +85,8 @@ private slots:
     void requestFinished(QNetworkReply* reply);
 
 private:
-    void parseReply(QByteArray& data);
-    void addVods(QByteArray& data);
+//    void parseReply(QByteArray& data);
+//    void addVods(QByteArray& data);
     static bool tryGetSeason(QString& inoutSrc, int* season);
     static bool tryGetYear(QString& inoutSrc, int* year);
     static bool tryGetGame(QString& inoutSrc, Game* game);
@@ -95,7 +96,33 @@ private:
     void setStatus(Status value);
     void setError(Error value);
     void updateStatus();
+    void parseLevel0(QNetworkReply* reply);
+    void parseLevel1(QNetworkReply* reply);
+    void parseLevel2(QNetworkReply* reply);
+    QNetworkReply* makeRequest(const QUrl& url) const;
+    void insertVods();
 
+    struct MatchData {
+        QUrl url;
+        QString side1, side2;
+        QDate matchDate;
+        int matchNumber;
+    };
+
+    struct StageData {
+        QString name;
+        QLinkedList<MatchData> matches;
+    };
+
+    struct TournamentData {
+        QString name;
+        QString fullName;
+        int year;
+        int season;
+        Game game;
+        bool isShow;
+        QLinkedList<StageData> stages;
+    };
 
 private:
     mutable QMutex m_Lock;
@@ -104,7 +131,11 @@ private:
     QDateTime m_lastUpdated;
     Status m_Status;
     Error m_Error;
-    QSet<QNetworkReply*> m_PendingRequests;
+    QHash<QNetworkReply*, int> m_PendingRequests;
+    QLinkedList<TournamentData> m_Tournaments;
+    QHash<QNetworkReply*, TournamentData*> m_RequestStage;
+    QHash<QNetworkReply*, StageData*> m_RequestMatch;
+    QHash<QNetworkReply*, MatchData*> m_RequestVod;
     QSqlDatabase* m_Database;
 
 private:

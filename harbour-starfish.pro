@@ -21,8 +21,6 @@ SOURCES += src/harbour-starfish.cpp \
 
 DISTFILES += qml/harbour-starfish.qml \
     qml/cover/CoverPage.qml \
-    qml/pages/FirstPage.qml \
-    qml/pages/SecondPage.qml \
     rpm/harbour-starfish.changes.in \
     rpm/harbour-starfish.changes.run.in \
     rpm/harbour-starfish.spec \
@@ -40,7 +38,8 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/pages/TournamentPage.qml \
     qml/pages/StageItem.qml \
     qml/pages/MatchItem.qml \
-    qml/pages/StagePage.qml
+    qml/pages/StagePage.qml \
+    qml/pages/YoutubePage.qml
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 
@@ -66,7 +65,10 @@ HEADERS += \
     src/SqlVodModel.h
 
 
-QT *= network sql
+QT *= network sql webkit
 
-#RESOURCES += \
-#    icons.qrc
+
+RESOURCES += \
+    misc.qrc
+
+OTHER_FILES += youtube.html

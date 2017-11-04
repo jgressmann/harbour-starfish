@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-//import org.duckdns.jgressmann 1.0
 import ".."
 
 BackgroundItem {
@@ -17,6 +16,7 @@ BackgroundItem {
     Column {
         x: Theme.paddingLarge
         width: parent.width - 2*Theme.paddingLarge
+
         Label {
             width: parent.width
             text: Qt.formatDate(matchDate)
@@ -34,10 +34,11 @@ BackgroundItem {
     }
 
     onClicked: {
-        Qt.openUrlExternally(url_)
+        //Qt.openUrlExternally(url_)
         console.debug(url_)
+        pageStack.push(Qt.resolvedUrl("YoutubePage.qml"), {
+            url: url_
+        })
     }
-
-
 }
 

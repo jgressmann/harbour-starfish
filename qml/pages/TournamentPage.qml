@@ -38,8 +38,12 @@ Page {
                     width: listView.width
                     //stageName: sqlModel.at(index, 1)
                     stageName: {
-                        var i = index
-                        return sqlModel.data(sqlModel.index(i, 1), 0)
+                        console.debug("tournament page stage name index: " + index)
+                        if (index >= 0) {
+                            return sqlModel.data(sqlModel.index(index, 1), 0)
+                        }
+
+                        return "fix me"
                     }
 //                    stageIndex: sqlModel.at(index, 1)
                     filters: Global.merge(page.filters, { "stage_index": sqlModel.data(sqlModel.index(index, 2), 0) })

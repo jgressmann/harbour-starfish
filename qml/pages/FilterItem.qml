@@ -26,8 +26,8 @@ BackgroundItem {
                 y: parent.y + (parent.height - sourceSize.height) * 0.5
                 id: imageList
                 source: Sc2LinksDotCom.icon(key, value)
-//                sourceSize.width: 96
-//                sourceSize.height: 96
+                sourceSize.width: 96
+                sourceSize.height: 96
                 fillMode: Image.PreserveAspectFit
                 visible: showImage
             }
@@ -55,10 +55,12 @@ BackgroundItem {
             Image {
                 id: imageGrid
                 //x: Theme.paddingLarge
+//                width: 256
+//                height: 256
                 anchors.horizontalCenter: parent.horizontalCenter
                 source: Sc2LinksDotCom.icon(key, value)
-    //            sourceSize.width: 256
-    //            sourceSize.height: 256
+                sourceSize.width: 256
+                sourceSize.height: 256
                 fillMode: Image.PreserveAspectFit
             }
 
