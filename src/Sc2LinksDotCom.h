@@ -1,23 +1,19 @@
 #pragma once
 
-#include <QAbstractTableModel>
 #include <QDateTime>
 #include <QMutex>
-#include <QTimer>
 #include <QList>
 #include <QDateTime>
 #include <QUrl>
-#include <QQmlListProperty>
-#include <QAtomicPointer>
 #include <QSet>
-#include <QVector>
 #include <QLinkedList>
+#include <QObject>
+#include <QVariant>
 
 class QSqlDatabase;
 class QNetworkAccessManager;
 class QNetworkRequest;
 class QNetworkReply;
-
 
 class VodModel : public QObject {
 
@@ -26,7 +22,6 @@ class VodModel : public QObject {
     Q_ENUMS(Error)
     Q_ENUMS(Game)
     Q_PROPERTY(QDateTime lastUpdated READ lastUpdated NOTIFY lastUpdatedChanged)
-
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
@@ -44,6 +39,7 @@ public:
         Status_Ready,
         Status_VodFetchingInProgress,
         Status_VodFetchingComplete,
+        Status_VodFetchingBeingCancelled,
         Status_Error,
     };
 
@@ -60,7 +56,6 @@ public:
     explicit VodModel(QObject *parent = Q_NULLPTR);
 
 public: //
-    Q_INVOKABLE QString mediaPath(const QString& str) const;
     Q_INVOKABLE QString label(const QString& key, const QVariant& value = QVariant()) const;
     Q_INVOKABLE QString icon(const QString& key, const QVariant& value = QVariant()) const;
     QDateTime lastUpdated() const;
@@ -79,18 +74,17 @@ signals:
     void errorStringChanged(QString newValue);
     void dataDirChanged(QString newValue);
     void vodFetchingProgressChanged(qreal newValue);
-    void vodsAdded();
+    void vodsChanged();
 
 
 public slots:
     void poll();
+    void reset();
 
 private slots:
     void requestFinished(QNetworkReply* reply);
 
 private:
-//    void parseReply(QByteArray& data);
-//    void addVods(QByteArray& data);
     static bool tryGetSeason(QString& inoutSrc, int* season);
     static bool tryGetYear(QString& inoutSrc, int* year);
     static bool tryGetGame(QString& inoutSrc, Game* game);
@@ -107,6 +101,8 @@ private:
     void insertVods();
     void setVodFetchingProgress(qreal value);
     void updateVodFetchingProgress();
+    void setStatusFromRowCount();
+    void clearVods();
 
     struct TournamentData;
     struct StageData;
@@ -142,7 +138,6 @@ private:
 
 private:
     mutable QMutex m_Lock;
-    QTimer m_Timer;
     QNetworkAccessManager* m_Manager;
     QDateTime m_lastUpdated;
     Status m_Status;

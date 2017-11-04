@@ -44,6 +44,9 @@ Page {
         console.debug("start page vod count " + vodCount)
         console.debug("start page vod count call " + _model.data(_model.index(0, 0), 0))
 
+//        if (vodCount == 0 && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_Ready) {
+//            Sc2LinksDotCom.poll()
+//        }
 
         if (vodCount > 0 && !busyIndicator.running) {
             console.debug("start page vods are here!")
@@ -71,9 +74,15 @@ Page {
 
         PullDownMenu {
             MenuItem {
-                text: qsTr("Refresh")
-                onClicked: listView.scrollToBottom()
-                visible: Sc2LinksDotCom.status === Sc2LinksDotCom.Status_Ready || Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingComplete
+                text: qsTr("Fetch vods")
+                onClicked: Sc2LinksDotCom.poll()
+                enabled: Sc2LinksDotCom.status === Sc2LinksDotCom.Status_Ready || Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingComplete
+            }
+
+            MenuItem {
+                text: qsTr("Reset database")
+                onClicked: Sc2LinksDotCom.reset()
+                enabled: Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingComplete || Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingInProgress
             }
         }
 
@@ -147,6 +156,16 @@ Page {
                text: qsTr("There seems to be nothing here")
                anchors.centerIn: parent
                visible: vodCount === 0 && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingComplete
+               font.pixelSize: Theme.fontSizeLarge
+               color: Theme.highlightColor
+
+            }
+
+            // no content label
+            Label {
+               text: qsTr("Pull down to fetch vods")
+               anchors.centerIn: parent
+               visible: vodCount === 0 && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_Ready
                font.pixelSize: Theme.fontSizeLarge
                color: Theme.highlightColor
 

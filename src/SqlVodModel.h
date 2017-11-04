@@ -30,7 +30,7 @@ signals:
     void columnsChanged();
 
 private slots:
-    void statusChanged();
+    void update();
 
 private:
     bool tryConfigureModel();

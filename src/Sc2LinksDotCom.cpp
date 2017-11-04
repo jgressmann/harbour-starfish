@@ -126,10 +126,6 @@ VodModel::VodModel(QObject *parent)
     m_TotalUrlsToFetched = 0;
     m_CurrentUrlsToFetched = 0;
     m_AddedVods = false;
-
-    connect(&m_Timer, SIGNAL(timeout()), this, SLOT(poll()));
-    m_Timer.setInterval(30000);
-    m_Timer.setTimerType(Qt::CoarseTimer);
 }
 
 void
@@ -180,8 +176,7 @@ VodModel::setNetworkAccessManager(QNetworkAccessManager *manager) {
     QMutexLocker guard(&m_Lock);
     if (m_Manager != manager) {
         if (m_Manager) {
-            m_Timer.stop();
-//            deleteCurrentRequest();
+//            m_Timer.stop();
             disconnect(m_Manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(requestFinished(QNetworkReply*)));
         }
 
@@ -191,9 +186,6 @@ VodModel::setNetworkAccessManager(QNetworkAccessManager *manager) {
 
         if (m_Manager) {
             connect(m_Manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(requestFinished(QNetworkReply*)));
-            if (Status_Ready == m_Status) {
-                poll();
-            }
         }
     }
 }
@@ -202,135 +194,114 @@ void
 VodModel::requestFinished(QNetworkReply* reply) {
     QMutexLocker guard(&m_Lock);
     reply->deleteLater();
-    QHash<QNetworkReply*, int>::iterator it = m_PendingRequests.find(reply);
+    const int level = m_PendingRequests.value(reply, -1);
+    m_PendingRequests.remove(reply);
 
-    switch (reply->error()) {
-    case QNetworkReply::OperationCanceledError:
-        break;
-    case QNetworkReply::NoError: {
-        // Get the http status code
-        int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        if (v >= 200 && v < 300) // Success
-        {
-            // Here we got the final reply
-            switch (it.value()) {
-            case 0:
-                parseLevel0(reply);
-                break;
-            case 1:
-                parseLevel1(reply);
-                break;
-            case 2:
-                parseLevel2(reply);
-                break;
-            default:
-                qWarning() << "Unhandled level" << it.value();
-                break;
+    if (m_Status == Status_VodFetchingInProgress) {
+        switch (reply->error()) {
+        case QNetworkReply::OperationCanceledError:
+            break;
+        case QNetworkReply::NoError: {
+            // Get the http status code
+            int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            if (v >= 200 && v < 300) // Success
+            {
+                // Here we got the final reply
+                switch (level) {
+                case 0:
+                    parseLevel0(reply);
+                    break;
+                case 1:
+                    parseLevel1(reply);
+                    break;
+                case 2:
+                    parseLevel2(reply);
+                    break;
+                default:
+                    qCritical() << "Unhandled level" << level;
+                    break;
+                }
+            }
+            else if (v >= 300 && v < 400) // Redirection
+            {
+                // Get the redirection url
+                QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+                // Because the redirection url can be relative,
+                // we have to use the previous one to resolve it
+                newUrl = reply->url().resolved(newUrl);
+
+                m_PendingRequests.insert(makeRequest(newUrl), level);
+                ++m_TotalUrlsToFetched;
+            } else  {
+                qDebug() << "Http status code:" << v;
+            }
+        } break;
+        default:
+            qDebug() << "Network request failed: " << reply->errorString();
+            break;
+        }
+
+        m_RequestStage.remove(reply);
+        m_RequestMatch.remove(reply);
+        m_RequestVod.remove(reply);
+
+        ++m_CurrentUrlsToFetched;
+        updateVodFetchingProgress();
+
+
+        if (m_PendingRequests.isEmpty()) {
+            if (m_TournamentRequestQueue.empty()) {
+                m_Tournaments.clear();
+                Q_ASSERT(m_RequestStage.empty());
+                Q_ASSERT(m_RequestMatch.empty());
+                Q_ASSERT(m_RequestVod.empty());
+
+                QSqlQuery q(*m_Database);
+                if (!q.exec("select count(*) from vods") || !q.next()) {
+                    setError(Error_SqlTableManipError);
+                    setStatus(Status_Error);
+                    return;
+                }
+
+                qDebug() << q.value(0).toInt() << "rows";
+
+                if (!q.exec("select distinct game from vods")) {
+                    setError(Error_SqlTableManipError);
+                    setStatus(Status_Error);
+                    return;
+                }
+
+                qDebug() << "games";
+                while (q.next()) {
+                    qDebug() << q.value(0).toInt();
+
+                }
+
+                setStatus(Status_VodFetchingComplete);
+
+                m_lastUpdated = QDateTime::currentDateTime();
+                emit lastUpdatedChanged(m_lastUpdated);
+                qDebug("poll finished");
+            } else {
+                if (m_AddedVods) {
+                    m_AddedVods = false;
+                    emit vodsChanged();
+                }
+
+                TournamentRequestData requestData = m_TournamentRequestQueue.first();
+                m_TournamentRequestQueue.pop_front();
+
+                QNetworkReply* reply = makeRequest(requestData.url);
+                m_RequestStage.insert(reply, requestData.tournament);
+                m_PendingRequests.insert(reply, 1);
+                ++m_TotalUrlsToFetched;
+
+                qDebug() << "fetch" << requestData.tournament->name << requestData.tournament->year << requestData.tournament->game << requestData.tournament->season;
             }
         }
-        else if (v >= 300 && v < 400) // Redirection
-        {
-            // Get the redirection url
-            QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
-            // Because the redirection url can be relative,
-            // we have to use the previous one to resolve it
-            newUrl = reply->url().resolved(newUrl);
-
-            m_PendingRequests.insert(makeRequest(newUrl), it.value());
-            ++m_TotalUrlsToFetched;
-        } else  {
-            qDebug() << "Http status code:" << v;
-        }
-    } break;
-    default:
-        qDebug() << "Network request failed: " << reply->errorString();
-        break;
-    }
-
-    m_PendingRequests.erase(it);
-    m_RequestStage.remove(reply);
-    m_RequestMatch.remove(reply);
-    m_RequestVod.remove(reply);
-
-    ++m_CurrentUrlsToFetched;
-    updateVodFetchingProgress();
-
-
-    if (m_PendingRequests.isEmpty()) {
-        if (m_TournamentRequestQueue.empty()) {
-
-    //        QSqlQuery q(*m_Database);
-    //        if (!q.exec("BEGIN TRANSACTION")) {
-    //            setError(Error_CouldntStartTransaction);
-    //            setStatus(Status_Error);
-    //            return;
-    //        }
-
-    //        if (!q.exec("DELETE FROM vods")) {
-    //            setError(Error_SqlTableManipError);
-    //            setStatus(Status_Error);
-    //            return;
-    //        }
-
-    //        insertVods();
-
-            //QSqlQuery q(*m_Database);
-
-            // TODO: check for busy in case of reader
-    //        if (!q.exec("COMMIT TRANSACTION")) {
-    //            setError(Error_CouldntEndTransaction);
-    //            setStatus(Status_Error);
-    //            return;
-    //        }
-
-            m_Tournaments.clear();
-            Q_ASSERT(m_RequestStage.empty());
-            Q_ASSERT(m_RequestMatch.empty());
-            Q_ASSERT(m_RequestVod.empty());
-
-            QSqlQuery q(*m_Database);
-            if (!q.exec("select count(*) from vods") || !q.next()) {
-                setError(Error_SqlTableManipError);
-                setStatus(Status_Error);
-                return;
-            }
-
-            qDebug() << q.value(0).toInt() << "rows";
-
-            if (!q.exec("select distinct game from vods")) {
-                setError(Error_SqlTableManipError);
-                setStatus(Status_Error);
-                return;
-            }
-
-            qDebug() << "games";
-            while (q.next()) {
-                qDebug() << q.value(0).toInt();
-
-            }
-
-            setStatus(Status_VodFetchingComplete);
-
-            m_lastUpdated = QDateTime::currentDateTime();
-            emit lastUpdatedChanged(m_lastUpdated);
-            qDebug("poll finished");
-
-            m_Timer.start();
-        } else {
-            if (m_AddedVods) {
-                m_AddedVods = false;
-                emit vodsAdded();
-            }
-
-            TournamentRequestData requestData = m_TournamentRequestQueue.first();
-            m_TournamentRequestQueue.pop_front();
-
-            QNetworkReply* reply = makeRequest(requestData.url);
-            m_RequestStage.insert(reply, requestData.tournament);
-            m_PendingRequests.insert(reply, 1);
-            ++m_TotalUrlsToFetched;
-
-            qDebug() << "fetch" << requestData.tournament->name << requestData.tournament->year << requestData.tournament->game << requestData.tournament->season;
+    } else {
+        if (m_PendingRequests.isEmpty()) {
+            updateStatus();
         }
     }
 }
@@ -609,137 +580,6 @@ VodModel::insertVods() {
     }
 }
 
-//void
-//VodModel::parseReply(QByteArray& data) {
-//    Q_ASSERT(aHrefRegex.isValid());
-
-//    QString soup = QString::fromUtf8(data);
-//    for (int start = 0, x = 0, found = aHrefRegex.indexIn(soup, start);
-//         found != -1 && x < 3;
-//         start = found + aHrefRegex.cap(0) .length(), found = aHrefRegex.indexIn(soup, start), ++x) {
-
-//        QString link = aHrefRegex.cap(1);
-
-//        qDebug() << "fetching" << BaseUrl + link;
-
-//        QNetworkRequest request(BaseUrl + link);
-//        request.setRawHeader("User-Agent", ms_UserAgent);
-//        QNetworkReply* reply = m_Manager->get(request);
-//       m_PendingRequests.insert(reply);
-////        break;
-//    }
-
-//}
-
-//void
-//VodModel::addVods(QByteArray& data) {
-//    QString soup = QString::fromUtf8(data);
-//    int index = titleRegex.indexIn(soup);
-//    if (index == -1) {
-//        return;
-//    }
-
-
-//    QString title = titleRegex.cap(1);
-//    title.replace(tags, QString());
-//    QString fullTitle = title.trimmed();
-//    title = fullTitle;
-//    int year = 0;
-//    int season = 0;
-//    Game game = Game_Sc2;
-//    tryGetYear(title, &year);
-//    tryGetSeason(title, &season);
-//    tryGetGame(title, &game);
-//    title = title.trimmed();
-
-
-
-//    QList<QVariantList> args;
-//    args.reserve(32);
-
-//    for (int stageIndex = 0, stageStart = 0, stageFound = stageRegex.indexIn(soup, stageStart);
-//         stageFound != -1;
-//         stageStart = stageFound + stageRegex.cap(0).length(),
-//            stageFound = stageRegex.indexIn(soup, stageStart),
-//            ++stageIndex) {
-
-//        QString stageTitle = stageRegex.cap(1);
-//        stageTitle = stageTitle.remove(tags).trimmed();
-
-//        QString stageData = stageRegex.cap(2);
-//        //qDebug() << stageTitle << stageData;
-
-//        args.clear();
-//        int matchNumber = 1;
-//        for (int matchStart = 0, matchFound = tournamentPageMatchRegex.indexIn(stageData, matchStart);
-//             matchFound != -1;
-//             matchStart = matchFound + tournamentPageMatchRegex.cap(0).length(), matchFound = tournamentPageMatchRegex.indexIn(stageData, matchStart), ++matchNumber) {
-
-//            QString matchNumberString = tournamentPageMatchRegex.cap(2);
-//            QString junk = tournamentPageMatchRegex.cap(3);
-//            junk.remove(tags);
-
-//            junk.replace(QStringLiteral("&nbsp;"), QStringLiteral(" "));
-
-
-//            QDateTime date;
-//            tryGetDate(junk, &date);
-
-//            junk.replace(QStringLiteral("reveal match"), QString(), Qt::CaseInsensitive);
-//            junk.replace(QStringLiteral("reveal episode"), QString(), Qt::CaseInsensitive);
-//            QStringList sides = junk.split(QStringLiteral("vs"));
-
-//            args.push_back(QVariantList());
-//            QVariantList& arg = args.last();
-//            arg.reserve(6);
-//            arg << matchNumber
-//                << date
-//                << (sides.size() == 2 ? sides[0].trimmed() : QString())
-//                << (sides.size() == 2 ? sides[1].trimmed() : QString())
-//                << tournamentPageMatchRegex.cap(1)
-//                << stageIndex;
-
-//        }
-
-//        // fix match numbers
-//        for (int i = 1; i < matchNumber; ++i) {
-
-//            QVariantList& arg = args[i-1];
-
-
-//            QSqlQuery q(*m_Database);
-//            if (!q.prepare(
-//"INSERT INTO vods ("
-//"match_date, side1, side2, url, tournament, title, season, stage_name,"
-//"match_number, match_count, game, year, stage_index) "
-//"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-//                qCritical() << "failed to prepare vod insert" << q.lastError();
-//                continue;
-//            }
-
-//            q.bindValue(0, arg[1]);
-//            q.bindValue(1, arg[2]);
-//            q.bindValue(2, arg[3]);
-//            q.bindValue(3, arg[4]);
-//            q.bindValue(4, title);
-//            q.bindValue(5, fullTitle);
-//            q.bindValue(6, season);
-//            q.bindValue(7, stageTitle);
-//            q.bindValue(8, arg[0]);
-//            q.bindValue(9, matchNumber-1);
-//            q.bindValue(10, game);
-//            q.bindValue(11, year);
-//            q.bindValue(12, arg[5]);
-//            q.bindValue(13, false);
-
-//            if (!q.exec()) {
-//                qCritical() << "failed to exec vod insert" << q.lastError();
-//                continue;
-//            }
-//        }
-//    }
-//}
-
 bool
 VodModel::tryGetYear(QString& inoutSrc, int* year) {
     Q_ASSERT(fuzzyYearRegex.isValid());
@@ -847,14 +687,11 @@ void
 VodModel::setDatabase(QSqlDatabase* db) {
     m_Database = db;
 
-    updateStatus();
-
     if (m_Database) {
         createTablesIfNecessary();
-        if (Status_Ready == m_Status) {
-            poll();
-        }
     }
+
+    updateStatus();
 }
 
 void
@@ -919,40 +756,41 @@ VodModel::errorString() const {
 }
 
 void
-VodModel::updateStatus() {
-    if (m_Status == Status_Uninitialized) {
-        if (m_Database && m_Manager) {
-            QSqlQuery q(*m_Database);
-
-            if (q.exec("SELECT name FROM sqlite_master WHERE type=table AND name=vods") && q.next()) {
-                if (q.exec("SELECT COUNT(*) as count from vods") && q.next()) {
-                    //int i = q.record().indexOf("count");
-                    //QVariant value = q.value(i);
-                    QVariant value = q.value(0);
-                    if (value.toInt() > 0) {
-                        setStatus(Status_VodFetchingComplete);
-                    } else {
-                        setStatus(Status_Ready);
-                    }
-                } else {
-                    setStatus(Status_Error);
-                    setError(Error_SqlTableManipError);
-                }
-            } else {
-                setStatus(Status_Ready);
-            }
+VodModel::setStatusFromRowCount() {
+    QSqlQuery q(*m_Database);
+    if (q.exec("SELECT COUNT(*) as count from vods") && q.next()) {
+        //int i = q.record().indexOf("count");
+        //QVariant value = q.value(i);
+        QVariant value = q.value(0);
+        if (value.toInt() > 0) {
+            setStatus(Status_VodFetchingComplete);
+        } else {
+            setStatus(Status_Ready);
         }
     } else {
-        if (!m_Database || ! m_Manager) {
-            setStatus(Status_Uninitialized);
-//            setError(Error_None);
-        }
+        setStatus(Status_Error);
+        setError(Error_SqlTableManipError);
     }
 }
 
-QString
-VodModel::mediaPath(const QString& str) const {
-    return str;
+void
+VodModel::updateStatus() {
+    if (!m_Database || ! m_Manager) {
+        setStatus(Status_Uninitialized);
+        setError(Error_None);
+    } else {
+        if (m_Status == Status_Uninitialized) {
+            QSqlQuery q(*m_Database);
+
+            if (q.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='vods'") && q.next()) {
+                setStatusFromRowCount();
+            } else {
+                setStatus(Status_Ready);
+            }
+        } else if (m_Status == Status_VodFetchingBeingCancelled) {
+            setStatusFromRowCount();
+        }
+    }
 }
 
 QString
@@ -1025,5 +863,60 @@ VodModel::updateVodFetchingProgress() {
         setVodFetchingProgress(progress);
     } else {
         setVodFetchingProgress(0);
+    }
+}
+
+void
+VodModel::clearVods() {
+
+    QSqlQuery q(*m_Database);
+    if (!q.exec("BEGIN TRANSACTION")) {
+        setError(Error_CouldntStartTransaction);
+        setStatus(Status_Error);
+        return;
+    }
+
+    if (!q.exec("DELETE FROM vods")) {
+        setError(Error_SqlTableManipError);
+        setStatus(Status_Error);
+        return;
+    }
+
+    if (!q.exec("COMMIT TRANSACTION")) {
+        setError(Error_CouldntEndTransaction);
+        setStatus(Status_Error);
+        return;
+    }
+
+    emit vodsChanged();
+}
+
+void
+VodModel::reset() {
+    QMutexLocker g(&m_Lock);
+    switch (m_Status) {
+    case Status_Error:
+        qWarning() << "Error, refusing to reset";
+        break;
+    case Status_Uninitialized:
+        qDebug() << "Status uninitialized, nothing to do";
+        break;
+    case Status_Ready:
+        qDebug() << "Status ready, nothing to do";
+        break;
+    case Status_VodFetchingComplete:
+        clearVods();
+        break;
+    case Status_VodFetchingBeingCancelled:
+        qWarning() << "Already cancelling Status vod fetching begin cancelled";
+        break;
+    case Status_VodFetchingInProgress:
+        qDebug() << "cancelling vod fetching in progress";
+        m_Status = Status_VodFetchingBeingCancelled;
+        clearVods();
+        break;
+    default:
+        qCritical() << "unhandled status" << m_Status;
+        break;
     }
 }

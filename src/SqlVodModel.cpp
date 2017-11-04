@@ -45,7 +45,7 @@ SqlVodModel::setSelect(QString newValue) {
         m_Select = newValue;
         emit selectChanged(m_Select);
         m_Dirty = true;
-        statusChanged();
+        update();
     }
 }
 
@@ -60,20 +60,20 @@ SqlVodModel::setVodModel(VodModel* newValue) {
         m_Dirty = true;
 
         if (m_VodModel) {
-            disconnect(m_VodModel, SIGNAL(vodsAdded()), this, SLOT(statusChanged()));
+            disconnect(m_VodModel, SIGNAL(vodsChanged()), this, SLOT(update()));
         }
 
         m_VodModel = newValue;
         emit vodModelChanged(m_VodModel);
 
         if (m_VodModel) {
-            connect(m_VodModel, SIGNAL(vodsAdded()), this, SLOT(statusChanged()));
-            statusChanged();
+            connect(m_VodModel, SIGNAL(vodsChanged()), this, SLOT(update()));
+            update();
         }
     }
 }
 void
-SqlVodModel::statusChanged() {
+SqlVodModel::update() {
     if (m_Dirty) {
         m_Dirty = !tryConfigureModel();
     } else {
@@ -155,5 +155,5 @@ SqlVodModel::setColumns(const QStringList& newValue) {
         m_RoleNames[Qt::UserRole + i + 1] = m_Columns[i].toLocal8Bit();
     }
     emit columnsChanged();
-    statusChanged();
+    update();
 }

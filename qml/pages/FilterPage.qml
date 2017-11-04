@@ -37,6 +37,20 @@ Page {
 
         VerticalScrollDecorator {}
 
+        PullDownMenu {
+            MenuItem {
+                text: qsTr("Refresh")
+                onClicked: Sc2LinksDotCom.poll()
+                enabled: Sc2LinksDotCom.status === Sc2LinksDotCom.Status_Ready || Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingComplete
+            }
+
+            MenuItem {
+                text: qsTr("Reset database")
+                onClicked: Sc2LinksDotCom.reset()
+                enabled: Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingComplete || Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingInProgress
+            }
+        }
+
         SilicaListView {
             id: listView
             anchors.fill: parent
