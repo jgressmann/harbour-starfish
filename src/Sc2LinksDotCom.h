@@ -31,6 +31,7 @@ class VodModel : public QObject {
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
     Q_PROPERTY(QString dataDir READ dataDir NOTIFY dataDirChanged)
+    Q_PROPERTY(qreal vodFetchingProgress READ vodFetchingProgress NOTIFY vodFetchingProgressChanged)
 public:
     enum Game {
         Game_Unknown,
@@ -70,12 +71,15 @@ public: //
     void setDatabase(QSqlDatabase* db);
     QSqlDatabase* database() const { return m_Database; }
     QString dataDir() const;
+    qreal vodFetchingProgress() const;
 signals:
     void lastUpdatedChanged(QDateTime newValue);
     void statusChanged();
     void errorChanged();
     void errorStringChanged(QString newValue);
     void dataDirChanged(QString newValue);
+    void vodFetchingProgressChanged(qreal newValue);
+    void vodsAdded();
 
 
 public slots:
@@ -101,8 +105,13 @@ private:
     void parseLevel2(QNetworkReply* reply);
     QNetworkReply* makeRequest(const QUrl& url) const;
     void insertVods();
+    void setVodFetchingProgress(qreal value);
+    void updateVodFetchingProgress();
 
+    struct TournamentData;
+    struct StageData;
     struct MatchData {
+        StageData* parent;
         QUrl url;
         QString side1, side2;
         QDate matchDate;
@@ -110,8 +119,10 @@ private:
     };
 
     struct StageData {
+        TournamentData* parent;
         QString name;
         QLinkedList<MatchData> matches;
+        int index;
     };
 
     struct TournamentData {
@@ -124,6 +135,11 @@ private:
         QLinkedList<StageData> stages;
     };
 
+    struct TournamentRequestData {
+        TournamentData* tournament;
+        QUrl url;
+    };
+
 private:
     mutable QMutex m_Lock;
     QTimer m_Timer;
@@ -131,12 +147,17 @@ private:
     QDateTime m_lastUpdated;
     Status m_Status;
     Error m_Error;
+    QList<TournamentRequestData> m_TournamentRequestQueue;
     QHash<QNetworkReply*, int> m_PendingRequests;
     QLinkedList<TournamentData> m_Tournaments;
     QHash<QNetworkReply*, TournamentData*> m_RequestStage;
     QHash<QNetworkReply*, StageData*> m_RequestMatch;
     QHash<QNetworkReply*, MatchData*> m_RequestVod;
     QSqlDatabase* m_Database;
+    qreal m_VodFetchingProgress;
+    int m_TotalUrlsToFetched;
+    int m_CurrentUrlsToFetched;
+    bool m_AddedVods;
 
 private:
     static const QByteArray ms_UserAgent;

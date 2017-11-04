@@ -5,10 +5,11 @@ import org.duckdns.jgressmann 1.0
 Page {
     id: page
 
+    readonly property int vodCount: _vodCount.data(_vodCount.index(0, 0), 0)
     readonly property bool areVodsAvailable: {
         var status = Sc2LinksDotCom.status
         return Sc2LinksDotCom.Status_VodFetchingComplete === status ||
-                (Sc2LinksDotCom.Status_VodFetchingInProgress === status && vodCount.data(vodCount.index(0, 0), 0) > 0)
+                (Sc2LinksDotCom.Status_VodFetchingInProgress === status && vodCount > 0)
     }
 
     property bool _done: false
@@ -19,7 +20,7 @@ Page {
     }
 
     SqlVodModel {
-        id: vodCount
+        id: _vodCount
         columns: ["count"]
         select: "select count(*) as count from vods"
         vodModel: Sc2LinksDotCom
@@ -89,18 +90,39 @@ Page {
 
         // download in progress
         Column {
-            anchors.centerIn: parent
-            visible: vodCount.rowCount() === 0 && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingInProgress
-            onVisibleChanged: {
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width
+            visible: !areVodsAvailable && Sc2LinksDotCom.status === Sc2LinksDotCom.Status_VodFetchingInProgress
+
+//            Image {
+//               source: "image://theme/icon-l-transfer"
+//               anchors.horizontalCenter: parent.horizontalCenter
+//            }
+
+//            ProgressBar {
+//                value: Sc2LinksDotCom.vodFetchingProgress
+//                width: parent.width
+//                valueText: Math.round(100*value)
+//                label: qsTr("Data is being loaded...")
+//            }
+
+            ProgressCircle {
+                borderWidth: Theme.paddingMedium
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: Theme.itemSizeHuge
+                height: Theme.itemSizeHuge
+                value: Sc2LinksDotCom.vodFetchingProgress
             }
-            Image {
-               source: "image://theme/icon-l-transfer"
+
+            Row {
+                height: Theme.paddingLarge
             }
+
             Label {
-               text: qsTr("Data is being loaded...")
-               width: parent.width
-               color: Theme.highlightColor
-               horizontalAlignment: Text.AlignHCenter
+                text: qsTr("Data is being loaded...")
+                anchors.horizontalCenter: parent.horizontalCenter
+                font.pixelSize: Theme.fontSizeLarge
+                color: Theme.highlightColor
             }
         }
 

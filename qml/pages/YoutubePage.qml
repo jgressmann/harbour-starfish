@@ -1,81 +1,50 @@
 import QtQuick 2.0
-import QtWebKit 3.0
-import QtWebKit.experimental 1.0
 import Sailfish.Silica 1.0
 import org.duckdns.jgressmann 1.0
 import ".."
+import Qt5Mozilla 1.0
+
+
 
 Page {
     id: root
     property string url: ""
 
-    onUrlChanged: {
-        var i = (url || "").indexOf("v=")
-        if (i === -1) {
-            webView.opacity = 0
-        } else {
-            currentVideo.vId = url.substring(i + 2)
-            console.debug("vid: " + currentVideo.vId)
-        }
-    }
 
-    property QtObject videoStatus: QtObject {
-        property int initial: -1
-        property int ready: 0
-        property int playing: 1
-        property int paused: 2
-    }
-
-    QtObject {
-        id: currentVideo
-        property string vId: ""
-        property string title: ""
-        property int status: videoStatus.initial
-    }
-
-    readonly property int padding: 20
-
-    Rectangle {
-        id: content
+    SilicaFlickable {
         anchors.fill: parent
-        color: "black"
-        focus: true
-        WebView {
-            id: webView
+
+        // Why is this necessary?
+        contentWidth: parent.width
+        contentHeight: parent.height
+        Rectangle {
+            id: content
             anchors.fill: parent
-            opacity: 0
+            color: "black"
+            focus: true
 
+            QmlMozView {
+                id: webViewport
+                objectName: "webViewport"
+                clip: false
+                visible: true
+                focus: true
+                active: true
 
-            url: "qrc:///youtube.html?" + currentVideo.vId
-            //url: "http://www.teamliquid.net"
-            //url: "https://www.youtube.com"
-            experimental.userAgent:"Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36"
-            //unsupported codec experimental.userAgent:"Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36"
-            //Behavior on opacity { NumberAnimation { duration: 200 } }
-
-            onLoadingChanged: {
-                console.debug("loading: " + loadRequest.status)
-                switch (loadRequest.status)
-                {
-                case WebView.LoadSucceededStatus:
-                    console.debug("loading succeeded")
-                    opacity = 1
-                    return
-                case WebView.LoadStartedStatus:
-                case WebView.LoadStoppedStatus:
-                    break
-                case WebView.LoadFailedStatus:
-                    topInfo.text = "Failed to load the requested video"
-                    break
+                anchors.fill: parent
+                Connections {
+                    target: webViewport
+                    onViewInitialized: {
+                        print("QmlMozView Initialized");
+    //                        if (startURL.length != 0 && createParentID == 0) {
+    //                            webViewport.load(startURL)
+    //                        }
+    //                        else if (createParentID == 0) {
+    //                            webViewport.load("about:blank")
+    //                        }
+                        webViewport.load(root.url)
+                    }
                 }
-                opacity = 0
-            }
-            onTitleChanged: {
-                currentVideo.status = 1 * title
-//                if (title == videoStatus.paused || title == videoStatus.ready)
-//                    panel.state = "list"
-//                else if (title == videoStatus.playing)
-//                    panel.state = "hidden"
             }
         }
     }

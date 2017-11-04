@@ -15,9 +15,12 @@ TARGET = harbour-starfish
 CONFIG *= sailfishapp
 DEFINES += SAILFISH=1
 
+INCLUDEPATH += src/core
+
 SOURCES += src/harbour-starfish.cpp \
     src/Sc2LinksDotCom.cpp \
-    src/SqlVodModel.cpp
+    src/SqlVodModel.cpp \
+
 
 DISTFILES += qml/harbour-starfish.qml \
     qml/cover/CoverPage.qml \
@@ -65,10 +68,33 @@ HEADERS += \
     src/SqlVodModel.h
 
 
-QT *= network sql webkit
+QT *= network sql
 
 
 RESOURCES += \
     misc.qrc
 
 OTHER_FILES += youtube.html
+
+isEmpty(DEFAULT_COMPONENT_PATH) {
+  DEFINES += DEFAULT_COMPONENTS_PATH=\"\\\"/usr/lib/mozembedlite/\\\"\"
+} else {
+  DEFINES += DEFAULT_COMPONENTS_PATH=\"\\\"$$DEFAULT_COMPONENT_PATH\\\"\"
+}
+
+
+
+contains(CONFIG,qdeclarative-boostable):contains(MEEGO_EDITION,harmattan) {
+    DEFINES += HARMATTAN_BOOSTER
+}
+
+
+#isEmpty(QTEMBED_LIB) {
+#  contains(QT_MAJOR_VERSION, 5) {
+#    PKGCONFIG += qt5embedwidget
+#  } else {
+#    PKGCONFIG += qtembedwidget
+#  }
+#} else {
+#  LIBS+=$$QTEMBED_LIB
+#}

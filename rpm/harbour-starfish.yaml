@@ -1,3 +1,6 @@
+
+
+
 Name: harbour-starfish
 Summary: Get your StarCraft II/Broodwar action going!
 Version: 0.1
@@ -25,6 +28,50 @@ PkgConfigBR:
   - Qt5Core
   - Qt5Qml
   - Qt5Quick
+  - qt5embedwidget >= %{min_qtmozembed_version}
+
+
+#uildRequires:  pkgconfig(Qt5Core)
+#BuildRequires:  pkgconfig(Qt5Qml)
+#BuildRequires:  pkgconfig(Qt5Gui)
+#BuildRequires:  pkgconfig(Qt5Quick)
+#BuildRequires:  pkgconfig(qt5embedwidget) >= %{min_qtmozembed_version}
+#BuildRequires:  pkgconfig(Qt5DBus)
+#BuildRequires:  pkgconfig(Qt5Concurrent)
+#BuildRequires:  pkgconfig(Qt5Sql)
+#BuildRequires:  pkgconfig(nemotransferengine-qt5)
+#BuildRequires:  pkgconfig(mlite5)
+#BuildRequires:  pkgconfig(qdeclarative5-boostable)
+#BuildRequires:  pkgconfig(sailfishwebengine) >= %{min_sailfishwebengine_version}
+#BuildRequires:  qt5-qttools
+#BuildRequires:  qt5-qttools-linguist
+#BuildRequires:  oneshot
+#BuildRequires:  gtest-devel
+#BuildRequires:  libgmock-devel
+#
+#Requires: sailfishsilica-qt5 >= 0.22.13
+#Requires: jolla-ambient >= 0.7.12
+#Requires: xulrunner-qt5 >= %{min_xulrunner_version}
+#Requires: embedlite-components-qt5 >= %{min_embedlite_components_version}
+#Requires: qtmozembed-qt5 >= %{min_qtmozembed_version}
+#Requires: sailfish-browser-settings = %{version}
+#Requires: sailfish-components-webview-qt5 >= %{min_sailfishwebengine_version}
+#Requires: sailfish-components-webview-qt5-popups >= %{min_sailfishwebengine_version}
+#Requires: sailfish-components-webview-qt5-pickers >= %{min_sailfishwebengine_version}
+#Requires: qt5-plugin-imageformat-ico
+#Requires: qt5-plugin-imageformat-gif
+#Requires: qt5-plugin-position-geoclue
+#Requires: mapplauncherd >= 4.1.17
+#Requires: mapplauncherd-booster-browser
+#Requires: desktop-file-utils
+#Requires: qt5-qtgraphicaleffects
+#Requires: nemo-qml-plugin-contextkit-qt5
+#Requires: nemo-qml-plugin-connectivity
+#Requires: nemo-qml-plugin-policy-qt5 >= 0.0.4
+#Requires: sailfish-components-media-qt5
+#Requires: sailfish-components-pickers-qt5 >= 0.1.7
+#Requires: nemo-qml-plugin-notifications-qt5 >= 1.0.12
+
 
 # Build dependencies without a pkgconfig setup can be listed here
 # PkgBR:
@@ -33,6 +80,8 @@ PkgConfigBR:
 # Runtime dependencies which are not automatically detected
 Requires:
   - sailfishsilica-qt5 >= 0.10.9
+  - embedlite-components-qt5 >= %{min_embedlite_components_version}
+  - qtmozembed-qt5 >= %{min_qtmozembed_version}
 
 # All installed files
 Files:

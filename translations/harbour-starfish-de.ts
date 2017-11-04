@@ -18,6 +18,14 @@
 <context>
     <name>StartPage</name>
     <message>
+        <source>Games</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Something went wrong TT</source>
         <translation type="unfinished"></translation>
     </message>
@@ -27,14 +35,6 @@
     </message>
     <message>
         <source>There seems to be nothing here</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Games</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Refresh</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

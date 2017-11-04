@@ -60,14 +60,14 @@ SqlVodModel::setVodModel(VodModel* newValue) {
         m_Dirty = true;
 
         if (m_VodModel) {
-            disconnect(m_VodModel, SIGNAL(statusChanged()), this, SLOT(statusChanged()));
+            disconnect(m_VodModel, SIGNAL(vodsAdded()), this, SLOT(statusChanged()));
         }
 
         m_VodModel = newValue;
         emit vodModelChanged(m_VodModel);
 
         if (m_VodModel) {
-            connect(m_VodModel, SIGNAL(statusChanged()), this, SLOT(statusChanged()));
+            connect(m_VodModel, SIGNAL(vodsAdded()), this, SLOT(statusChanged()));
             statusChanged();
         }
     }
@@ -77,6 +77,8 @@ SqlVodModel::statusChanged() {
     if (m_Dirty) {
         m_Dirty = !tryConfigureModel();
     } else {
+        setQuery(m_Select, *m_VodModel->database()); // without this line there is no update in rowCount
+        return;
         auto status = m_VodModel->status();
         if (status == VodModel::Status_VodFetchingComplete) {
 //            tryConfigureModel();

@@ -6,6 +6,10 @@
 Name:       harbour-starfish
 
 # >> macros
+%global min_xulrunner_version 38.8.0.5
+%global min_qtmozembed_version 1.13.28
+%global min_embedlite_components_version 1.9.26
+%global min_sailfishwebengine_version 0.0.12
 # << macros
 
 %{!?qtc_qmake:%define qtc_qmake %qmake}
@@ -21,10 +25,13 @@ URL:        http://example.org/
 Source0:    %{name}-%{version}.tar.bz2
 Source100:  harbour-starfish.yaml
 Requires:   sailfishsilica-qt5 >= 0.10.9
+Requires:   embedlite-components-qt5 >= %{min_embedlite_components_version}
+Requires:   qtmozembed-qt5 >= %{min_qtmozembed_version}
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5Quick)
+BuildRequires:  pkgconfig(qt5embedwidget) >= %{min_qtmozembed_version}
 BuildRequires:  desktop-file-utils
 
 %description

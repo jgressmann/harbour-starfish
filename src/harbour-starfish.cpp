@@ -13,12 +13,16 @@
 #include <QSqlDatabase>
 #include <QStandardPaths>
 #include <QSqlError>
-#include <QWebSettings>
 
 
 #include "Sc2LinksDotCom.h"
 #include "SqlVodModel.h"
+
 #include <sailfishapp.h>
+#ifdef __arm
+#include "quickmozview.h"
+#include "qmozcontext.h"
+#endif
 
 #define NAMESPACE "org.duckdns.jgressmann"
 
@@ -51,7 +55,26 @@ RunMobile(QGuiApplication& app)
 
     view.engine()->addImportPath("qrc:/qml");
     view.setSource(SailfishApp::pathTo(QStringLiteral("qml/harbour-starfish.qml")));
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
+    view.setDefaultAlphaBuffer(true);
+    //view.rootContext()->setContextProperty("startURL", QVariant(urlstring));
+//    view.rootContext()->setContextProperty("createParentID", QVariant(0));
+//    view.rootContext()->setContextProperty("MozContext", QMozContext::instance());
 
+#ifdef __arm
+
+    QString componentPath(DEFAULT_COMPONENTS_PATH);
+    qDebug() << "Load components from:" << componentPath + QString("/components") + QString("/EmbedLiteBinComponents.manifest");
+    QMozContext::instance()->addComponentManifest(componentPath + QString("/components") + QString("/EmbedLiteBinComponents.manifest"));
+    qDebug() << "Load components from:" << componentPath + QString("/components") + QString("/EmbedLiteJSComponents.manifest");
+    QMozContext::instance()->addComponentManifest(componentPath + QString("/components") + QString("/EmbedLiteJSComponents.manifest"));
+    qDebug() << "Load components from:" << componentPath + QString("/chrome") + QString("/EmbedLiteJSScripts.manifest");
+    QMozContext::instance()->addComponentManifest(componentPath + QString("/chrome") + QString("/EmbedLiteJSScripts.manifest"));
+    qDebug() << "Load components from:" << componentPath + QString("/chrome") + QString("/EmbedLiteOverrides.manifest");
+    QMozContext::instance()->addComponentManifest(componentPath + QString("/chrome") + QString("/EmbedLiteOverrides.manifest"));
+
+    QTimer::singleShot(0, QMozContext::instance(), SLOT(runEmbedding()));
+#endif
     view.show();
 
     return app.exec();
@@ -67,8 +90,6 @@ main(int argc, char *argv[]) {
     QScopedPointer<QGuiApplication> appPtr(SailfishApp::application(argc, argv));
     QGuiApplication& app = *appPtr;
 
-    QWebSettings::globalSettings()->setAttribute(QWebSettings::PluginsEnabled, true);
-    QWebSettings::globalSettings()->setAttribute(QWebSettings::AutoLoadImages, true);
 
 #ifdef SAILFISH_DATADIR
     //QString databaseFilePath(QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/db.sqlite"));
@@ -76,7 +97,7 @@ main(int argc, char *argv[]) {
 #else
     //QString databaseFilePath(QStandardPaths::writableLocation((QStandardPaths::AppLocalDataLocation)) + QStringLiteral("/db.sqlite"));
 #endif
-    QDir dir(QStandardPaths::writableLocation((QStandardPaths::AppLocalDataLocation)));
+    QDir dir(QStandardPaths::writableLocation((QStandardPaths::AppDataLocation)));
     if (!dir.exists()) {
         dir.mkpath(dir.path());
     }
