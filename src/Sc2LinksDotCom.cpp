@@ -158,6 +158,7 @@ VodModel::poll() {
     m_TotalUrlsToFetched = 1;
     m_CurrentUrlsToFetched = 0;
     m_AddedVods = false;
+    setVodFetchingProgressDescription(tr("Fetching list of tournaments"));
     updateVodFetchingProgress();
     qDebug("poll started");
 }
@@ -281,6 +282,7 @@ VodModel::requestFinished(QNetworkReply* reply) {
 
                 m_lastUpdated = QDateTime::currentDateTime();
                 emit lastUpdatedChanged(m_lastUpdated);
+                setVodFetchingProgressDescription(QString());
                 qDebug("poll finished");
             } else {
                 if (m_AddedVods) {
@@ -295,6 +297,7 @@ VodModel::requestFinished(QNetworkReply* reply) {
                 m_RequestStage.insert(reply, requestData.tournament);
                 m_PendingRequests.insert(reply, 1);
                 ++m_TotalUrlsToFetched;
+                setVodFetchingProgressDescription(tr("Fetching data for ") + requestData.tournament->fullName);
 
                 qDebug() << "fetch" << requestData.tournament->name << requestData.tournament->year << requestData.tournament->game << requestData.tournament->season;
             }
@@ -914,9 +917,53 @@ VodModel::reset() {
         qDebug() << "cancelling vod fetching in progress";
         m_Status = Status_VodFetchingBeingCancelled;
         clearVods();
+        setVodFetchingProgressDescription(tr("Cancelling VOD fetching"));
         break;
     default:
         qCritical() << "unhandled status" << m_Status;
         break;
     }
+}
+
+void
+VodModel::cancelPoll() {
+    QMutexLocker g(&m_Lock);
+    switch (m_Status) {
+    case Status_Error:
+        qWarning() << "Error, refusing to cancel";
+        break;
+    case Status_Uninitialized:
+        qDebug() << "Status uninitialized, nothing to do";
+        break;
+    case Status_Ready:
+        qDebug() << "Status ready, nothing to do";
+        break;
+    case Status_VodFetchingComplete:
+        qDebug() << "Fetch complete, nothing to do";
+        break;
+    case Status_VodFetchingBeingCancelled:
+        qWarning() << "Already cancelling vod fetching";
+        break;
+    case Status_VodFetchingInProgress:
+        m_Status = Status_VodFetchingBeingCancelled;
+        setVodFetchingProgressDescription(tr("Cancelling VOD fetching"));
+        break;
+    default:
+        qCritical() << "unhandled status" << m_Status;
+        break;
+    }
+}
+
+
+void
+VodModel::setVodFetchingProgressDescription(const QString& newValue) {
+    if (newValue != m_VodFetchingProgressDescription) {
+        m_VodFetchingProgressDescription = newValue;
+        emit vodFetchingProgressDescriptionChanged(m_VodFetchingProgressDescription);
+    }
+}
+
+QString
+VodModel::vodFetchingProgressDescription() const {
+    return m_VodFetchingProgressDescription;
 }

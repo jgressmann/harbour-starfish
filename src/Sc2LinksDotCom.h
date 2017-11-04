@@ -27,6 +27,7 @@ class VodModel : public QObject {
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
     Q_PROPERTY(QString dataDir READ dataDir NOTIFY dataDirChanged)
     Q_PROPERTY(qreal vodFetchingProgress READ vodFetchingProgress NOTIFY vodFetchingProgressChanged)
+    Q_PROPERTY(QString vodFetchingProgressDescription READ vodFetchingProgressDescription NOTIFY vodFetchingProgressDescriptionChanged)
 public:
     enum Game {
         Game_Unknown,
@@ -67,6 +68,7 @@ public: //
     QSqlDatabase* database() const { return m_Database; }
     QString dataDir() const;
     qreal vodFetchingProgress() const;
+    QString vodFetchingProgressDescription() const;
 signals:
     void lastUpdatedChanged(QDateTime newValue);
     void statusChanged();
@@ -75,10 +77,12 @@ signals:
     void dataDirChanged(QString newValue);
     void vodFetchingProgressChanged(qreal newValue);
     void vodsChanged();
+    void vodFetchingProgressDescriptionChanged(QString newValue);
 
 
 public slots:
     void poll();
+    void cancelPoll();
     void reset();
 
 private slots:
@@ -103,6 +107,7 @@ private:
     void updateVodFetchingProgress();
     void setStatusFromRowCount();
     void clearVods();
+    void setVodFetchingProgressDescription(const QString& newValue);
 
     struct TournamentData;
     struct StageData;
@@ -153,6 +158,7 @@ private:
     int m_TotalUrlsToFetched;
     int m_CurrentUrlsToFetched;
     bool m_AddedVods;
+    QString m_VodFetchingProgressDescription;
 
 private:
     static const QByteArray ms_UserAgent;
