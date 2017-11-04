@@ -8,7 +8,7 @@ Page {
     readonly property bool areVodsAvailable: {
         var status = Sc2LinksDotCom.status
         return Sc2LinksDotCom.Status_VodFetchingComplete === status ||
-                (Sc2LinksDotCom.Status_VodFetchingInProgress === status && vodCount.rowCount() > 0)
+                (Sc2LinksDotCom.Status_VodFetchingInProgress === status && vodCount.data(vodCount.index(0, 0), 0) > 0)
     }
 
     property bool _done: false
