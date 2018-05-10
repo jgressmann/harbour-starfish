@@ -57,9 +57,7 @@ public: //
     QSqlDatabase database() const { return m_Database; }
     Q_INVOKABLE void fetchMetaData(qint64 rowid);
     Q_INVOKABLE void fetchMetaDataFromCache(qint64 rowid);
-    Q_INVOKABLE void fetchThumbnails();
     Q_INVOKABLE void fetchThumbnail(qint64 rowid);
-//    Q_INVOKABLE QString thumbnail(qint64 rowid);
     Q_INVOKABLE QString title(qint64 rowid);
     Q_INVOKABLE void fetchVod(qint64 rowid, int formatIndex);
     Q_INVOKABLE void cancelFetchVod(qint64 rowid);

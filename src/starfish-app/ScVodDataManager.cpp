@@ -1371,32 +1371,6 @@ ScVodDataManager::onDownloadFailed(qint64 token, int serviceErrorCode) {
     qDebug() << token << serviceErrorCode;
 }
 
-void
-ScVodDataManager::fetchThumbnails() {
-
-    RETURN_IF_ERROR;
-
-    QMutexLocker g(&m_Lock);
-    QSqlQuery q(m_Database);
-
-    if (!q.prepare(
-                "SELECT ROWID, url FROM vods")) {
-        qCritical() << "failed to prepare query to fetch thumbnails" << q.lastError();
-        return;
-    }
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query to fetch thumbnails" << q.lastError();
-        return;
-    }
-
-    while (q.next()) {
-        auto rowid = qvariant_cast<qint64>(q.value(0));
-//        auto url = q.value(1).toString();
-//        fetchThumbnail(rowid, url);
-        fetchThumbnail(rowid);
-    }
-}
 
 void
 ScVodDataManager::fetchMetaData(qint64 rowid) {
@@ -1947,15 +1921,6 @@ ScVodDataManager::cancelFetchMetaData(qint64 rowid) {
 }
 
 
-//QString
-//ScVodDataManager::thumbnail(qint64 rowid) {
-//    auto path = m_ThumbnailDir + QString::number(rowid);
-//    if (QFileInfo::exists(path)) {
-//        return path;
-//    }
-
-//    return QStringLiteral("image://theme/icon-m-sailfish");
-//}
 
 void
 ScVodDataManager::pruneVodCacheToLimit() {
@@ -2135,9 +2100,18 @@ ScVodDataManager::parseUrl(const QString& url, QString* cannonicalUrl, QString* 
     Q_ASSERT(outUrlType);
     Q_ASSERT(outStartOffset);
     Q_ASSERT(cannonicalUrl);
-    if (url.contains(QStringLiteral("youtube.com"))) {
+
+    QString x = url;
+
+    if (x.startsWith(QStringLiteral("https://youtu.be/"))) {
+        // rewrite to facilitate parsing
+        // https://youtu.be/FuoK-Z3mTC4?start=22
+        x = QStringLiteral("https://www.youtube.com/embed/") + x.mid(17);
+    }
+
+    if (x.contains(QStringLiteral("youtube.com"))) {
         *outUrlType = UT_Youtube;
-        QUrl u(url);
+        QUrl u(x);
         // https://www.youtube.com/embed/zoFJFDl5s1Q?start=525
         // https://www.youtube.com/embed/Z-xZG0--jRo
         // https://www.youtube.com/watch?v=FuoK-Z3mTC4
@@ -2156,9 +2130,9 @@ ScVodDataManager::parseUrl(const QString& url, QString* cannonicalUrl, QString* 
         }
 
         *cannonicalUrl = QStringLiteral("https://www.youtube.com/watch?v=") + *outVideoId;
-    } else if (url.contains(QStringLiteral("twitch.tv"))) {
+    } else if (x.contains(QStringLiteral("twitch.tv"))) {
         *outUrlType = UT_Twitch;
-        QUrl u(url);
+        QUrl u(x);
         //https://player.twitch.tv/?video=v123892734&autoplay=false&time=01h15m50s"
         QUrlQuery q(u);
         *outVideoId = q.queryItemValue(QStringLiteral("video"));
@@ -2168,7 +2142,7 @@ ScVodDataManager::parseUrl(const QString& url, QString* cannonicalUrl, QString* 
         *outUrlType = UT_Unknown;
         *outStartOffset = 0;
         outVideoId->clear();
-        *cannonicalUrl = url;
+        *cannonicalUrl = x;
     }
 }
 
