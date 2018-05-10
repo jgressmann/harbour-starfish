@@ -73,7 +73,7 @@ DISTFILES += qml/harbour-starfish.qml \
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 
 media.path = /usr/share/$${TARGET}/media
-media.files = media/sc2.png media/bw.png
+media.files = media/sc2.png media/bw.png media/random.png
 INSTALLS += media
 
 xml.path = /usr/share/$${TARGET}/xml
@@ -81,15 +81,14 @@ xml.files = xml/*
 INSTALLS += xml
 
 gzicons.target = icons.json.gz
-#gzicons.path = /usr/share/$${TARGET}/$$xicons.target
 gzicons.commands = cat $$PWD/icons.json | gzip --best > $$PWD/$$gzicons.target
 
 QMAKE_EXTRA_TARGETS += gzicons
 
-icons.files = $$gzicons.target
-icons.path = /usr/share/$${TARGET}
-icons.depends = gzicons
-INSTALLS += icons
+misc.files = $$gzicons.target ../../COPYING
+misc.path = /usr/share/$${TARGET}
+misc.depends = gzicons
+INSTALLS += misc
 
 
 
