@@ -11,7 +11,7 @@ PullDownMenu {
     }
 
     MenuItem {
-        text: "Settings"
+        text: qsTr("Settings")
         onClicked: pageStack.push(Qt.resolvedUrl("pages/SettingsPage.qml"))
     }
 
@@ -39,75 +39,10 @@ PullDownMenu {
 
     MenuItem {
         text: qsTr("Fetch new VODs")
-//        enabled: !!Global.scraper && Global.scraper.canStartFetch
-//        onClicked: Global.scraper.startFetch()
         enabled: vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
         onClicked: vodDatabaseDownloader.downloadNew()
     }
 
 
 
-
-//    MenuItem {
-//        text: qsTr("Play video file")
-
-//        property string filePath
-////        onClicked: {
-////            var dialog = pageStack.push(filePickerPage)
-////            dialog.accepted.connect(function() {
-////                if (filePath) {
-////                    console.debug("open vod page for")
-////                    pageStack.push(Qt.resolvedUrl(
-////                                       "pages/VodPage.qml", {
-////                                           source: filePath
-////                                       }))
-////                }
-////            })
-////        }
-
-//        onClicked: pageStack.push(filePickerPage)
-
-//        Component {
-//             id: filePickerPage
-//             FilePickerPage {
-////                 nameFilters: [ '*.pdf', '*.doc' ]
-//                 onSelectedContentPropertiesChanged: {
-//                     var filePath = selectedContentProperties.filePath
-//                     if (filePath) {
-//                         console.debug("open vod page for " + filePath)
-//                         pageStack.replace(Qt.resolvedUrl(
-//                                            "pages/VodPage.qml",
-//                                            {
-//                                                source: filePath
-//                                            },
-//                                            PageStackAction.Immediate))
-//                     }
-//                 }
-//             }
-//         }
-//    }
-
-//        Component {
-//             id: videoPickerPage
-//             FilePickerPage {
-//                 onSelectedContentPropertiesChanged: {
-//                     page.selectedVideo = selectedContentProperties.filePath
-//                 }
-//             }
-//         }
-
-//    MenuItem {
-//        text: qsTr("Fetch thumbnails")
-//        onClicked: Sc2LinksDotCom.fetchThumbnails()
-//    }
-
-//    MenuItem {
-//        text: qsTr("Load 2017")
-//        onClicked: Sc2LinksDotCom.loadFromXml(2017)
-//    }
-
-//    MenuItem {
-//        text: qsTr("Vacuum")
-//        onClicked: Sc2LinksDotCom.vacuum()
-//    }
 }
