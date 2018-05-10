@@ -171,14 +171,14 @@ BasePage {
         if (PageStatus.Activating === status) {
             sqlModel.select = "select " + sqlModel.columns.join(",") + " from vods where id=" + settingPlaybackRowId.value
             continueVodFromRowId.updateVisible()
-            console.debug("entry page rows=" + sqlModel.rowCount())
-            console.debug("entry page offset=" + settingPlaybackOffset.value + " url=" + settingPlaybackUrl.value)
-            console.debug("entry page match visible=" + continueVodFromRowId.visible)
+//            console.debug("entry page rows=" + sqlModel.rowCount())
+//            console.debug("entry page offset=" + settingPlaybackOffset.value + " url=" + settingPlaybackUrl.value)
+//            console.debug("entry page match visible=" + continueVodFromRowId.visible)
         }
     }
 
-    Component.onCompleted: {
-        console.debug("entry page rowid=" + settingPlaybackRowId.value + " offset=" + settingPlaybackOffset.value + " url=" + settingPlaybackUrl.value)
-    }
+//    Component.onCompleted: {
+//        console.debug("entry page rowid=" + settingPlaybackRowId.value + " offset=" + settingPlaybackOffset.value + " url=" + settingPlaybackUrl.value)
+//    }
 }
 
