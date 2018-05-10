@@ -58,12 +58,6 @@ ApplicationWindow {
         }
 
         ConfigurationValue {
-            id: settingCacheMaxSize
-            key: "/cache/max_size"
-            defaultValue: 10.0
-        }
-
-        ConfigurationValue {
             id: settingNetworkMaxConcurrentMetaDataDownloads
             key: "/network/max_concurrent_meta_data_downloads"
             defaultValue: 4
@@ -111,7 +105,6 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
-        VodDataManager.vodCacheLimit = settingCacheMaxSize.value
         VodDataManager.vodman.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
     }

@@ -35,12 +35,11 @@ Page {
     Component.onCompleted: {
         console.debug("broadband format=" + settingBroadbandDefaultFormat.value)
         console.debug("mobile format=" + settingMobileDefaultFormat.value)
-        console.debug("max cache size (GB)=" + settingCacheMaxSize.value)
+        console.debug("max meta data downloads=" + settingNetworkMaxConcurrentMetaDataDownloads.value)
     }
 
     Component.onDestruction: {
         settings.sync()
-        VodDataManager.vodCacheLimit = settingCacheMaxSize.value * 1e9
     }
 
 
@@ -128,48 +127,6 @@ Page {
                 settingExternalMediaPlayer.value = checked
             }
         }
-
-//        Column {
-//            width: parent.width
-////            spacing: Theme.paddingSmall
-
-//            TextField {
-//                id: cacheMaxSizeTextField
-//                width: parent.width
-//                inputMethodHints: Qt.ImhFormattedNumbersOnly
-//                label: "Max cache size in GB"
-////                placeholderText: "File name template for VODs"
-////                horizontalAlignment: Theme.
-//                text: settingCacheMaxSize.value.toFixed(1)
-//                EnterKey.iconSource: "image://theme/icon-m-enter-next"
-//                EnterKey.onClicked: focus = false
-//                validator: DoubleValidator {
-//                    notation: DoubleValidator.StandardNotation
-//                    bottom: -1
-//                    decimals: 1
-//                }
-
-//                onTextChanged: {
-//                    console.debug("text: " + text)
-//                    if (acceptableInput) {
-//                        var number = parseFloat(text)
-//                        console.debug("number: " + number)
-//                        if (typeof(number) === "number") {
-//                            settingCacheMaxSize.value = number
-//                        }
-//                    }
-//                }
-//            }
-
-//            Label {
-//                x: Theme.horizontalPageMargin
-//                width: parent.width-2*x
-//                text: "A value of -1 allows the cache to grow indefinitely."
-//                wrapMode: Text.Wrap
-//                font.pixelSize: Theme.fontSizeTiny
-//                color: Theme.highlightColor
-//            }
-//        }
     }
 
     SilicaFlickable {

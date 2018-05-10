@@ -124,7 +124,6 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     m_ThumbnailDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/thumbnails/";
     m_VodDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/vods/";
     m_IconDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/icons/";
-    m_VodCacheLimit = -1;
     m_Status = Status_Ready;
     m_Error = Error_None;
     m_SuspendedVodsChangedEventCount = 0;
@@ -170,14 +169,6 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     r.url = s_IconsUrl;
     auto reply = m_Manager->get(Sc::makeRequest(r.url));
     m_IconRequests.insert(reply, r);
-}
-
-void ScVodDataManager::setVodCacheLimit(qint64 value) {
-    QMutexLocker guard(&m_Lock);
-    if (m_VodCacheLimit != value) {
-        m_VodCacheLimit = value;
-        emit vodCacheLimitChanged();
-    }
 }
 
 void
@@ -1680,8 +1671,6 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex) {
     const auto vodUrl = q.value(0).toString();
     const auto urlShareId = qvariant_cast<qint64>(q.value(1));
 
-    pruneVodCacheToLimit();
-
     auto metaDataFilePath = m_MetaDataDir + QString::number(urlShareId);
     if (QFileInfo::exists(metaDataFilePath)) {
         QFile file(metaDataFilePath);
@@ -1920,12 +1909,6 @@ ScVodDataManager::cancelFetchMetaData(qint64 rowid) {
     }
 }
 
-
-
-void
-ScVodDataManager::pruneVodCacheToLimit() {
-
-}
 
 void
 ScVodDataManager::vacuum() {

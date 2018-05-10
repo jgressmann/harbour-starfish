@@ -22,7 +22,6 @@ class ScVodDataManager : public QObject {
     Q_OBJECT
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
-    Q_PROPERTY(qint64 vodCacheLimit READ vodCacheLimit WRITE setVodCacheLimit NOTIFY vodCacheLimitChanged)
     Q_PROPERTY(ScVodman* vodman READ vodman CONSTANT)
 public:
 
@@ -63,9 +62,6 @@ public: //
     Q_INVOKABLE void cancelFetchVod(qint64 rowid);
     Q_INVOKABLE void cancelFetchMetaData(qint64 rowid);
     Q_INVOKABLE void queryVodFiles(qint64 rowid);
-    qint64 vodCacheLimit() const { return m_VodCacheLimit; }
-    void setVodCacheLimit(qint64 value);
-
     Q_INVOKABLE void deleteVod(qint64 rowid);
     Q_INVOKABLE void deleteMetaData(qint64 rowid);
     void addVods(const QList<ScRecord>& records);
@@ -85,7 +81,6 @@ signals:
     void vodAvailable(qint64 rowid, QString filePath, qreal progress, quint64 fileSize, int width, int height, QString formatId);
     void thumbnailAvailable(qint64 rowid, QString filePath);
     void thumbnailDownloadFailed(qint64 rowid, int error, QString url);
-    void vodCacheLimitChanged();
     void downloadFailed(QString url, int error, QString filePath);
 
 public slots:
@@ -112,8 +107,6 @@ private:
     void updateStatus();
     void setStatusFromRowCount();
     void clearVods();
-
-    void pruneVodCacheToLimit();
     void fetchThumbnailFromUrl(qint64 rowid, const QString& url);
     void fetchMetaData(qint64 urlShareId, const QString& url);
     void addThumbnail(qint64 rowid, const QByteArray& bytes);
@@ -182,7 +175,6 @@ private:
     QString m_MetaDataDir;
     QString m_VodDir;
     QString m_IconDir;
-    qint64 m_VodCacheLimit;
     int m_SuspendedVodsChangedEventCount;
 
 };
