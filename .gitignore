@@ -1,0 +1,5 @@
+**/save/*
+src/starfish-app/media/*
+src/starfish-app/icons/*
+src/starfish-app/icons.json.gz
+*.user

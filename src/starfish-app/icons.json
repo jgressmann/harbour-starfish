@@ -1,0 +1,205 @@
+{
+    "version": 1,
+    "event": [
+        {
+            "regex": "asl|afreeca(tv)? starleague",
+            "url": "https://www.dropbox.com/s/l0ctttcufkum7ve/asl.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "basetrade|bstl|btsl",
+            "url": "https://www.dropbox.com/s/k90yhh5cp74b4ub/bttv.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "beasty",
+            "url": "https://www.dropbox.com/s/vqrxsszvtem0fm8/beastyqtsc2.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "code s",
+            "url": "https://www.dropbox.com/s/1v9lmxurko6rtgw/codes.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "corsair cup",
+            "url": "https://www.dropbox.com/s/5h16q2f0ciz6sz3/cc.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "crank",
+            "url": "https://www.dropbox.com/s/75zt2hfrn2p337c/cranksc2.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "day9|day\\[9\\]",
+            "url": "https://www.dropbox.com/s/tfg6hzm4dy9xhj6/day9.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "dreamhack",
+            "url": "https://www.dropbox.com/s/n2lqxsuy0tgqkt7/dreamhack.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "esl",
+            "url": "https://www.dropbox.com/s/kwuzx4bbhfag963/esl.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "falcon paladin",
+            "url": "https://www.dropbox.com/s/4qk2g3s4jesgcei/fp.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "go4sc",
+            "url": "https://www.dropbox.com/s/kwuzx4bbhfag963/esl.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "gsl super tournament",
+            "url": "https://www.dropbox.com/s/uw8pukwin0i6svu/gslst.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "gstl",
+            "url": "https://www.dropbox.com/s/tw45vqy9ii0ok7r/gsl.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "happy",
+            "url": "https://www.dropbox.com/s/bwmd1jeor5rjg20/happysc2.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "hsc|homestory cup|home story cup",
+            "url": "https://www.dropbox.com/s/upb0a78gw5dx02s/hsc.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "iem",
+            "url": "https://www.dropbox.com/s/b1ptynou2krqwt3/iem.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "iron squid",
+            "url": "https://www.dropbox.com/s/iiojidrwaxkasrz/ironsquid.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "kespa cup",
+            "url": "https://www.dropbox.com/s/tpn99j6rvppy0y8/kespacup.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "lowko",
+            "url": "https://www.dropbox.com/s/7c049sx97kurr33/lowko.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "lycan league",
+            "url": "https://www.dropbox.com/s/t356ty0xljg90kp/lycan.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "mlg|major league gaming",
+            "url": "https://www.dropbox.com/s/36j7pjy1v1qmqam/mlg.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "nasl|north american starleague",
+            "url": "https://www.dropbox.com/s/ghe3hfyd7zpeg2q/nasl.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "nation wars|nationwars",
+            "url": "https://www.dropbox.com/s/pkn46lj53b5vp0o/nw.jpeg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "neuro",
+            "url": "https://www.dropbox.com/s/vpuy7faucbxhyab/neuro.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "olimoleague",
+            "url": "https://www.dropbox.com/s/4aha3rht1jpc3ju/olimoleague.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "pig",
+            "url": "https://www.dropbox.com/s/s20i7hfulpk1lo0/pig.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "polt",
+            "url": "https://www.dropbox.com/s/ltiv55mcsfd9pg6/polt.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "proleague",
+            "url": "https://www.dropbox.com/s/wjei8zeezccqerk/proleague.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "red bull battlegrounds|red bull bg",
+            "url": "https://www.dropbox.com/s/d7s2rxwj5rrnzha/rbbg.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "shoutcraft kings",
+            "url": "https://www.dropbox.com/s/peenl9loc6y2rz6/sckings.jpeg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "ssl classic",
+            "url": "https://www.dropbox.com/s/0dcs97e97trhaih/sslclassic.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "takes?|take tv",
+            "url": "https://www.dropbox.com/s/o2b6clbgoipn0lm/taketv.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "ting",
+            "url": "https://www.dropbox.com/s/hqewdtgo3gngbf1/ting.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "wardi",
+            "url": "https://www.dropbox.com/s/9janehema13sf0k/warditv.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "wcs",
+            "url": "https://www.dropbox.com/s/4fzx8kdaab9zndb/wcs.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "wesg",
+            "url": "https://www.dropbox.com/s/d1zmbnk6xnscr3o/wesg.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "winterstarcraft",
+            "url": "https://www.dropbox.com/s/4ocz2nkr54d83p5/winter.jpeg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "winterstarcraft",
+            "url": "https://www.dropbox.com/s/lcc64bpixqqssfi/zotac.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "gsl",
+            "url": "https://www.dropbox.com/s/tw45vqy9ii0ok7r/gsl.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "ssl|starleague",
+            "url": "https://www.dropbox.com/s/6fq6cspu0h3rh6b/ssl.jpg?dl=1",
+            "extension": ".jpg"
+        }
+    ]
+}
