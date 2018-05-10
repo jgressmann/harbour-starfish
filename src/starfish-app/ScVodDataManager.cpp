@@ -665,6 +665,7 @@ ScVodDataManager::clear() {
     QDir().mkpath(m_MetaDataDir);
     QDir().mkpath(m_ThumbnailDir);
     QDir().mkpath(m_VodDir);
+    QDir().mkpath(m_IconDir);
 
     // remove database entries
     QSqlQuery q(m_Database);
@@ -699,6 +700,12 @@ ScVodDataManager::clear() {
     }
 
     if (!q.exec("DELETE FROM vod_file_ref")) {
+        setError(Error_SqlTableManipError);
+        setStatus(Status_Error);
+        return;
+    }
+
+    if (!q.exec("DELETE FROM icons")) {
         setError(Error_SqlTableManipError);
         setStatus(Status_Error);
         return;
