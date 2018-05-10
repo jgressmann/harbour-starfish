@@ -169,6 +169,7 @@ ScVodDatabaseDownloader::downloadNew() {
     QMutexLocker g(&m_Lock);
     switch (m_Status) {
     case Status_Ready:
+    case Status_Finished:
     case Status_Error:
     case Status_Canceled:
         break;
@@ -230,7 +231,7 @@ ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
             } else {
                 // must be the xml database
                 bool ok = false;
-                auto xml = ScApp::gzipDecompress(bytes, &ok);
+                auto xml = Sc::gzipDecompress(bytes, &ok);
                 if (ok) {
                     QList<ScRecord> events;
                     if (loadFromXml(xml, &events)) {
@@ -339,6 +340,7 @@ ScVodDatabaseDownloader::setScraper(ScVodScraper* scraper) {
 
     if (m_Scraper != scraper) {
         if (m_Scraper) {
+            m_Scraper->setClassifier(nullptr);
 //            disconnect(m_Scraper, &ScVodScraper::errorChanged, this, &ScQuickDatabaseDownloader::onScraperErrorChanged);
             disconnect(m_Scraper, &ScVodScraper::statusChanged, this, &ScVodDatabaseDownloader::onScraperStatusChanged);
             disconnect(m_Scraper, &ScVodScraper::progressChanged, this, &ScVodDatabaseDownloader::onScraperProgressChanged);
@@ -354,6 +356,9 @@ ScVodDatabaseDownloader::setScraper(ScVodScraper* scraper) {
         emit scraperChanged();
 
         if (m_Scraper) {
+            if (m_DataManager) {
+                m_Scraper->setClassifier(m_DataManager->classifier());
+            }
 //            connect(m_Scraper, &ScVodScraper::errorChanged, this, &ScQuickDatabaseDownloader::onScraperErrorChanged);
             connect(m_Scraper, &ScVodScraper::statusChanged, this, &ScVodDatabaseDownloader::onScraperStatusChanged);
             connect(m_Scraper, &ScVodScraper::progressChanged, this, &ScVodDatabaseDownloader::onScraperProgressChanged);
@@ -538,7 +543,7 @@ ScVodDatabaseDownloader::tryParseDatabaseUrls(const QByteArray& bytes) {
     }
 
     if (m_YearMin <= 0 || m_YearMax <= 0 ||
-        m_YearMin > m_YearMax || m_YearMax - m_YearMin + 1 != m_YearUrls.size()) {
+        m_YearMin > m_YearMax || m_YearMax - m_YearMin + 1 > m_YearUrls.size()) {
         qCritical() << "Ill-formed data. Year min" << m_YearMin << "year max" << m_YearMax << "# urls" << m_YearUrls.size();
         return false;
     }
@@ -567,8 +572,18 @@ ScVodDatabaseDownloader::setDataManager(ScVodDataManager* value) {
     }
 
     if (m_DataManager != value) {
+        if (m_Scraper) {
+            m_Scraper->setClassifier(nullptr);
+        }
+
         m_DataManager = value;
         emit dataManagerChanged();
+
+        if (m_DataManager) {
+            if (m_Scraper) {
+                m_Scraper->setClassifier(m_DataManager->classifier());
+            }
+        }
     }
 }
 

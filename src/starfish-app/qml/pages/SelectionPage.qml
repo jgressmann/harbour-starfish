@@ -70,7 +70,7 @@ BasePage {
         TopMenu {}
 //        BottomMenu {}
 
-        SilicaListView {
+        HighlightingListView {
             id: listView
             anchors.fill: parent
             model: listModel

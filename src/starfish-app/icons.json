@@ -2,9 +2,19 @@
     "version": 1,
     "event": [
         {
-            "regex": "asl|afreeca(tv)? starleague",
+            "regex": "alienware",
+            "url": "https://www.dropbox.com/s/yn80hqnlxbbwk8h/alienware.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "^asl|afreeca(tv)? starleague",
             "url": "https://www.dropbox.com/s/l0ctttcufkum7ve/asl.png?dl=1",
             "extension": ".png"
+        },
+        {
+            "regex": "asus rog",
+            "url": "https://www.dropbox.com/s/txfgdlyfekva2i5/asusrog.jpg?dl=1",
+            "extension": ".jpg"
         },
         {
             "regex": "basetrade|bstl|btsl",
@@ -15,6 +25,11 @@
             "regex": "beasty",
             "url": "https://www.dropbox.com/s/vqrxsszvtem0fm8/beastyqtsc2.jpg?dl=1",
             "extension": ".jpg"
+        },
+        {
+            "regex": "blizz?con|blizzard",
+            "url": "https://www.dropbox.com/s/63xg197jzdu4a7n/blizzard.png?dl=1",
+            "extension": ".png"
         },
         {
             "regex": "code s",
@@ -42,7 +57,12 @@
             "extension": ".png"
         },
         {
-            "regex": "esl",
+            "regex": "^eg |evil geniuses",
+            "url": "https://www.dropbox.com/s/8eqogownh96nqgk/eg.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^esl",
             "url": "https://www.dropbox.com/s/kwuzx4bbhfag963/esl.jpg?dl=1",
             "extension": ".jpg"
         },
@@ -82,6 +102,16 @@
             "extension": ".png"
         },
         {
+            "regex": "ipl|iptl|ipsl|ign pro league|ip team league",
+            "url": "https://www.dropbox.com/s/39s85luc0p8dbti/ipl.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^ign",
+            "url": "https://www.dropbox.com/s/i2xhaeezrsu26d8/ign.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "iron squid",
             "url": "https://www.dropbox.com/s/iiojidrwaxkasrz/ironsquid.png?dl=1",
             "extension": ".png"
@@ -89,6 +119,16 @@
         {
             "regex": "kespa cup",
             "url": "https://www.dropbox.com/s/tpn99j6rvppy0y8/kespacup.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "kung fu cup",
+            "url": "https://www.dropbox.com/s/f842ohuw5t8usw6/kungfucup.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "leifeng",
+            "url": "https://www.dropbox.com/s/6gdyxatjg34d3xs/leifeng.png?dl=1",
             "extension": ".png"
         },
         {
@@ -147,9 +187,19 @@
             "extension": ".png"
         },
         {
+            "regex": "^root | root ",
+            "url": "https://www.dropbox.com/s/6nj4z6rk1e6govu/root.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "shoutcraft kings",
             "url": "https://www.dropbox.com/s/peenl9loc6y2rz6/sckings.jpeg?dl=1",
             "extension": ".jpg"
+        },
+        {
+            "regex": "shoutcraft",
+            "url": "https://www.dropbox.com/s/dvcvdiec0kpts50/shoutcraft.png?dl=1",
+            "extension": ".png"
         },
         {
             "regex": "ssl classic",
@@ -159,6 +209,11 @@
         {
             "regex": "takes?|take tv",
             "url": "https://www.dropbox.com/s/o2b6clbgoipn0lm/taketv.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "teamliquid|team liquid|^tl |^tsl |tlownage",
+            "url": "https://www.dropbox.com/s/z0n61ss3syrwk15/tl.png?dl=1",
             "extension": ".png"
         },
         {
@@ -177,6 +232,11 @@
             "extension": ".png"
         },
         {
+            "regex": "wcg",
+            "url": "https://www.dropbox.com/s/zgn06bqijs26dz0/wcg.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "wesg",
             "url": "https://www.dropbox.com/s/d1zmbnk6xnscr3o/wesg.png?dl=1",
             "extension": ".png"
@@ -187,7 +247,7 @@
             "extension": ".jpg"
         },
         {
-            "regex": "winterstarcraft",
+            "regex": "zotac",
             "url": "https://www.dropbox.com/s/lcc64bpixqqssfi/zotac.jpg?dl=1",
             "extension": ".jpg"
         },

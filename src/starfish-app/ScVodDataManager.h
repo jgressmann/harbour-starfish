@@ -26,6 +26,7 @@
 #include <vodman/VMVod.h>
 #include "ScRecord.h"
 #include "ScIcons.h"
+#include "ScClassifier.h"
 
 #include <QMutex>
 #include <QVariant>
@@ -87,6 +88,8 @@ public: //
     Q_INVOKABLE void queryVodFiles(qint64 rowid);
     Q_INVOKABLE void deleteVod(qint64 rowid);
     Q_INVOKABLE void deleteMetaData(qint64 rowid);
+    Q_INVOKABLE void fetchIcons();
+    Q_INVOKABLE void fetchClassifier();
     void addVods(const QList<ScRecord>& records);
     QDate downloadMarker() const;
     void setDownloadMarker(QDate value);
@@ -95,6 +98,7 @@ public: //
     Q_INVOKABLE qreal seen(const QVariantMap& filters) const;
     Q_INVOKABLE void setSeen(const QVariantMap& filters, bool value);
     ScVodman* vodman() const { return m_Vodman; }
+    ScClassifier* classifier() const { return const_cast<ScClassifier*>(&m_Classifier); }
 
 signals:
     void statusChanged();
@@ -113,6 +117,37 @@ public slots:
     void hasRecord(const ScRecord& record, bool* exclude);
     void clear();
     void vacuum();
+
+private:
+    enum UrlType {
+        UT_Unknown,
+        UT_Youtube,
+        UT_Twitch,
+    };
+    enum FetchType {
+        FT_MetaData = 0x1,
+        FT_File = 0x2,
+    };
+
+    struct VodmanMetaDataRequest {
+        qint64 token;
+        qint64 vod_url_share_id;
+    };
+
+    struct VodmanFileRequest {
+        int formatIndex;
+        qint64 token;
+        qint64 vod_url_share_id;
+        qint64 vod_file_id;
+    };
+
+    struct ThumbnailRequest {
+        qint64 rowid;
+    };
+
+    struct IconRequest {
+        QString url;
+    };
 
 private slots:
     void onMetaDataDownloadCompleted(qint64 token, const VMVod& vod);
@@ -150,37 +185,9 @@ private:
     bool exists(const ScRecord& record, bool* exists) const;
     void updateVodDownloadStatus(qint64 vodFileId, const VMVodFileDownload& download);
     void fetchMetaData(qint64 rowid, bool download);
+    void iconRequestFinished(QNetworkReply* reply, IconRequest& r);
+    void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
 
-private:
-    enum UrlType {
-        UT_Unknown,
-        UT_Youtube,
-        UT_Twitch,
-    };
-    enum FetchType {
-        FT_MetaData = 0x1,
-        FT_File = 0x2,
-    };
-
-    struct VodmanMetaDataRequest {
-        qint64 token;
-        qint64 vod_url_share_id;
-    };
-
-    struct VodmanFileRequest {
-        int formatIndex;
-        qint64 token;
-        qint64 vod_url_share_id;
-        qint64 vod_file_id;
-    };
-
-    struct ThumbnailRequest {
-        qint64 rowid;
-    };
-
-    struct IconRequest {
-        QString url;
-    };
 
 private:
     mutable QMutex m_Lock;
@@ -193,7 +200,9 @@ private:
     QHash<QNetworkReply*, IconRequest> m_IconRequests;
     QHash<qint64, VodmanMetaDataRequest> m_VodmanMetaDataRequests;
     QHash<qint64, VodmanFileRequest> m_VodmanFileRequests;
+    QNetworkReply* m_ClassfierRequest;
     ScIcons m_Icons;
+    ScClassifier m_Classifier;
     QString m_ThumbnailDir;
     QString m_MetaDataDir;
     QString m_VodDir;

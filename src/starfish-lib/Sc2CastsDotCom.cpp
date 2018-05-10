@@ -614,7 +614,15 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
             record.url = url;
         }
 
-        record.autoComplete();
+        // first bw game in 2012
+        if (record.isValid(ScRecord::ValidYear) &&
+                !record.isValid(ScRecord::ValidGame) &&
+                record.year < 2012) {
+            record.valid |= ScRecord::ValidGame;
+            record.game = ScRecord::GameSc2;
+        }
+
+        record.autoComplete(*classifier());
 
         if (record.isValid(
                     ScRecord::ValidEventName |

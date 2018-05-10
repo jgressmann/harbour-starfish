@@ -27,7 +27,7 @@
 #include <QDate>
 #include <QDomNode>
 
-
+class ScClassifier;
 class ScRecord
 {
 public:
@@ -77,17 +77,9 @@ public:
     ScRecord();
     ScRecord(const ScRecord&) = default;
     ScRecord& operator=(const ScRecord&) = default;
-//    ScRecord(const ScRecord& other);
-//    ScRecord& operator=(const ScRecord&);
-//    void swap(ScRecord& other);
 
-//    void parseEvent(const QString& str);
-
-//    void resolveStage(const QString& str);
-//    void resolveMatch(const QString& str);
-    void autoComplete();
+    void autoComplete(const ScClassifier& classifier);
     inline bool isValid(int flags) const { return (valid & flags) == flags; }
-
 
 
     QDomNode toXml(QDomDocument& doc) const;

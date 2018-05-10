@@ -25,10 +25,12 @@
 
 #include <QString>
 #include <QNetworkRequest>
+#include <QByteArray>
 
 class QUrl;
 struct Sc
 {
     static const QByteArray UserAgent;
     static QNetworkRequest makeRequest(const QUrl& url);
+    static QByteArray gzipDecompress(const QByteArray& gzipped, bool* ok = Q_NULLPTR);
 };

@@ -38,6 +38,7 @@ ScVodScraper::ScVodScraper(QObject* parent)
     m_Status = Status_Ready;
     m_Error = Error_None;
     m_Progress = 0;
+    m_Classifier = nullptr;
 }
 
 

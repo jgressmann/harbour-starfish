@@ -21,44 +21,18 @@
  * THE SOFTWARE.
  */
 
-#pragma once
+import QtQuick 2.0
+import Sailfish.Silica 1.0
+import QtQuick 2.0
+import "."
 
-#include "ScRecord.h"
-#include <QRegExp>
-#include <QJsonArray>
-#include <QJsonObject>
+SilicaListView {
+    highlight: Rectangle {
+        color: Theme.primaryColor
+        opacity: Global.pathTraceOpacity
+    }
 
-class ScClassifier
-{
-public:
-    bool load(const QString& path);
-    bool load(const QByteArray& buffer);
-
-    bool tryGetGameFromEvent(const QString& str, ScRecord::Game* game, QString* rem = nullptr) const;
-    bool tryGetGameFromStage(const QString& str, ScRecord::Game* game, QString* rem = nullptr) const;
-    bool tryGetGameFromMatch(const QString& str, ScRecord::Game* game, QString* rem = nullptr) const;
-
-private:
-    struct Classifier {
-        QList<QRegExp> positive, negative, remove;
-        void clear();
-    };
-
-    struct GameClassifier {
-        Classifier event;
-        Classifier stage;
-        Classifier match;
-
-        void clear();
-    };
-
-private:
-    bool parseGame(GameClassifier& game, const QJsonObject& obj) const;
-    bool parseClassifier(Classifier& classifier, const QJsonObject& obj) const;
-    bool parse(QList<QRegExp>& list, const QJsonArray& arr) const;
-    bool classify(const Classifier& classfier, const QString& str, QString* rem) const;
-
-private:
-    GameClassifier m_Bw;
-    GameClassifier m_Sc2;
-};
+    Component.onCompleted: {
+        currentIndex = -1
+    }
+}

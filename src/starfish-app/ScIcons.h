@@ -30,7 +30,8 @@
 
 class ScIcons {
 public:
-    bool load(QString path);
+    bool load(const QString& path);
+    bool load(const QByteArray& buffer);
     bool getIconForEvent(const QString& event, QString* url) const;
     int size() const;
     QString url(int index) const;

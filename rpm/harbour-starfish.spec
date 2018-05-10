@@ -47,6 +47,7 @@ Requires:   zlib
 %{_datadir}/%{name}/xml/*
 %{_datadir}/%{name}/media/*
 %{_datadir}/%{name}/icons.json.gz
+%{_datadir}/%{name}/classifier.json.gz
 %{_datadir}/%{name}/COPYING
 #%{_datadir}/%{name}/icons/*
 

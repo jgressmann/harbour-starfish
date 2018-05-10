@@ -50,6 +50,7 @@ PullDownMenu {
             dialog.accepted.connect(function() {
                 console.debug("clear")
                 VodDataManager.clear()
+                VodDataManager.fetchIcons()
             })
         }
     }

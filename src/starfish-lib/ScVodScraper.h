@@ -29,6 +29,7 @@
 #include <QMutex>
 #include <QNetworkAccessManager>
 
+class ScClassifier;
 class ScVodScraper : public QObject
 {
     Q_OBJECT
@@ -71,6 +72,8 @@ public:
     bool canCancelFetch() const;
     bool canStartFetch() const;
     virtual bool canSkip() const;
+    inline ScClassifier* classifier() const { return m_Classifier; }
+    inline void setClassifier(ScClassifier* value) { m_Classifier = value; }
 
 signals:
     void statusChanged();
@@ -106,5 +109,6 @@ private:
     qreal m_Progress;
     Status m_Status;
     Error m_Error;
+    ScClassifier* m_Classifier;
 };
 

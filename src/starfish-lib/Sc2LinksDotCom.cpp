@@ -227,7 +227,7 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
 //        record.year = date.year;
         //record.parseEvent(name + QStringLiteral(" ") + date);
 //        scParse(name + QStringLiteral(" ") + date, &record);
-        record.autoComplete();
+        record.autoComplete(*classifier());
 
         if (record.valid & ScRecord::ValidGame) {
             switch (record.game) {

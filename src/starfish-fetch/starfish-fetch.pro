@@ -21,4 +21,6 @@ CONFIG(standalone) {
     LIBS += -L../starfish-lib -lstarfish
 }
 
+LIBS += -lz
+
 

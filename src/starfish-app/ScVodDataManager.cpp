@@ -62,6 +62,7 @@
 namespace  {
 
 const QString s_IconsUrl = QStringLiteral("https://www.dropbox.com/s/p2640l82i3u1zkg/icons.json.gz?dl=1");
+const QString s_ClassifierUrl = QStringLiteral("https://www.dropbox.com/s/3cckgyzlba8kev9/classifier.json.gz?dl=1");
 
 
 } // anon
@@ -94,6 +95,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     m_Status = Status_Ready;
     m_Error = Error_None;
     m_SuspendedVodsChangedEventCount = 0;
+    m_ClassfierRequest = nullptr;
 
 
     const auto databaseDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
@@ -130,12 +132,21 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     Q_ASSERT(result);
     (void)result;
 
-    QMutexLocker g(&m_Lock);
-    // also download update if available
-    IconRequest r;
-    r.url = s_IconsUrl;
-    auto reply = m_Manager->get(Sc::makeRequest(r.url));
-    m_IconRequests.insert(reply, r);
+    // classifier
+    const auto classifierFileDestinationPath = databaseDir + QStringLiteral("/classifier.json.gz");
+    if (!QFile::exists(classifierFileDestinationPath)) {
+        auto src = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/classifier.json.gz");
+        if (!QFile::copy(src, classifierFileDestinationPath)) {
+            qCritical() << "could not copy" << src << "to" << iconsFileDestinationPath;
+        }
+    }
+
+    result = m_Classifier.load(classifierFileDestinationPath);
+    Q_ASSERT(result);
+    (void)result;
+
+    fetchIcons();
+    fetchClassifier();
 }
 
 void
@@ -144,75 +155,29 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
     reply->deleteLater();
     auto it = m_ThumbnailRequests.find(reply);
     if (it != m_ThumbnailRequests.end()) {
-        ThumbnailRequest r = it.value();
+        auto r = it.value();
         m_ThumbnailRequests.erase(it);
-
-        switch (reply->error()) {
-        case QNetworkReply::OperationCanceledError:
-            break;
-        case QNetworkReply::NoError: {
-            // Get the http status code
-            int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            if (v >= 200 && v < 300) {// Success
-
-                // Here we got the final reply
-                auto bytes = reply->readAll();
-                addThumbnail(r.rowid, bytes);
-
-            }
-            else if (v >= 300 && v < 400) {// Redirection
-
-                // Get the redirection url
-                QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
-                // Because the redirection url can be relative,
-                // we have to use the previous one to resolve it
-                newUrl = reply->url().resolved(newUrl);
-
-                m_ThumbnailRequests.insert(m_Manager->get(Sc::makeRequest(newUrl)), r);
-            } else  {
-                qDebug() << "Http status code:" << v;
-            }
-        } break;
-        default: {
-            qDebug() << "Network request failed: " << reply->errorString() << reply->url();
-
-            QSqlQuery q(m_Database);
-            if (!q.prepare(QStringLiteral("SELECT id FROM vods WHERE thumbnail_id=?"))) {
-                qCritical() << "failed to prepare query" << q.lastError();
-                return;
-            }
-
-            q.addBindValue(r.rowid);
-
-            if (!q.exec()) {
-                qCritical() << "failed to exec query" << q.lastError();
-                return;
-            }
-
-            auto url = reply->url().toString();
-            while (q.next()) {
-                auto vodRowId = qvariant_cast<qint64>(q.value(0));
-                emit thumbnailDownloadFailed(vodRowId, reply->error(), url);
-            }
-        } break;
-        }
+        thumbnailRequestFinished(reply, r);
     } else {
         auto it2 = m_IconRequests.find(reply);
         if (it2 != m_IconRequests.end()) {
             auto r = it2.value();
             m_IconRequests.erase(it2);
+            iconRequestFinished(reply, r);
+        } else {
+            if (m_ClassfierRequest == reply) {
+                m_ClassfierRequest = nullptr;
 
-            switch (reply->error()) {
-            case QNetworkReply::OperationCanceledError:
-                break;
-            case QNetworkReply::NoError: {
-                // Get the http status code
-                int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-                if (v >= 200 && v < 300) {// Success
-                    if (r.url == s_IconsUrl) {
+                switch (reply->error()) {
+                case QNetworkReply::OperationCanceledError:
+                    break;
+                case QNetworkReply::NoError: {
+                    // Get the http status code
+                    int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+                    if (v >= 200 && v < 300) {// Success
                         // Here we got the final reply
                         auto bytes = reply->readAll();
-                        QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QStringLiteral("/icons.json.gz"));
+                        QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QStringLiteral("/classifier.json.gz"));
                         if (file.open(QIODevice::Truncate | QIODevice::WriteOnly)) {
                             auto w = file.write(bytes);
                             file.close();
@@ -222,68 +187,9 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
                                 qWarning() << "failed to write to file (no space)" << file.fileName() << "error" << file.errorString() << "file will be removed";
                                 file.remove();
                             } else {
-                                ScIcons icons;
-                                if (icons.load(file.fileName())) {
-                                    m_Icons = icons;
-
-                                    // create entries and fetch files
-                                    QSqlQuery q(m_Database);
-                                    for (auto i = 0; i < m_Icons.size(); ++i) {
-                                        auto url = m_Icons.url(i);
-
-                                        // insert row for thumbnail
-                                        if (!q.prepare(
-                                                    QStringLiteral("SELECT file_name FROM icons WHERE url=?"))) {
-                                            qCritical() << "failed to prepare query" << q.lastError();
-                                            continue;
-                                        }
-
-                                        q.addBindValue(r.url);
-
-                                        if (!q.exec()) {
-                                            qCritical() << "failed to exec query" << q.lastError();
-                                            return;
-                                        }
-
-                                        if (q.next()) {
-                                            auto filePath = m_IconDir + q.value(0).toString();
-                                            QFileInfo fi(filePath);
-                                            if (fi.exists() && fi.size() > 0) {
-                                                continue;
-                                            }
-                                        } else {
-                                            auto extension = m_Icons.extension(i);
-                                            QTemporaryFile tempFile(m_IconDir + QStringLiteral("XXXXXX") + extension);
-                                            tempFile.setAutoRemove(false);
-                                            if (tempFile.open()) {
-                                                auto iconFilePath = tempFile.fileName();
-                                                auto tempFileName = QFileInfo(iconFilePath).fileName();
-
-                                                // insert row for icon
-                                                if (!q.prepare(
-                                                            QStringLiteral("INSERT INTO icons (url, file_name) VALUES (?, ?)"))) {
-                                                    qCritical() << "failed to prepare query" << q.lastError();
-                                                    continue;
-                                                }
-
-                                                q.addBindValue(url);
-                                                q.addBindValue(tempFileName);
-
-                                                if (!q.exec()) {
-                                                    qCritical() << "failed to exec query" << q.lastError();
-                                                    continue;
-                                                }
-                                            } else {
-                                                qWarning() << "failed to allocate temporary file for icon";
-                                                continue;
-                                            }
-                                        }
-
-                                        auto reply = m_Manager->get(Sc::makeRequest(url));
-                                        IconRequest r;
-                                        r.url = url;
-                                        m_IconRequests.insert(reply, r);
-                                    }
+                                ScClassifier classifier;
+                                if (classifier.load(file.fileName())) {
+                                    m_Classifier = classifier;
                                 } else {
                                     qCritical() << "Failed to load icons from downloaded icons file" << reply->url();
                                 }
@@ -291,64 +197,229 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
                         } else {
                             qWarning() << "failed to open" << file.fileName() << "for writing";
                         }
-                    } else {
-                            QSqlQuery q(m_Database);
-                        if (!q.prepare(
-                                    QStringLiteral("SELECT file_name FROM icons WHERE url=?"))) {
-                            qCritical() << "failed to prepare query" << q.lastError();
-                            return;
-                        }
-
-                        q.addBindValue(r.url);
-
-                        if (!q.exec()) {
-                            qCritical() << "failed to exec query" << q.lastError();
-                            return;
-                        }
-
-                        if (!q.next()) {
-                            return; // cleared?
-                        }
-
-                        auto iconFilePath = m_IconDir + q.value(0).toString();
-
-                        QFile file(iconFilePath);
-                        if (file.open(QIODevice::Truncate | QIODevice::WriteOnly)) {
-                            auto bytes = reply->readAll();
-                            auto w = file.write(bytes);
-                            file.close();
-                            if (-1 == w) {
-                                qWarning() << "failed to write" << file.fileName() << "error" << file.errorString();
-                            } else if (w < bytes.size()) {
-                                qWarning() << "failed to write to file (no space)" << file.fileName() << "error" << file.errorString() << "file will be removed";
-                                file.remove();
-                            } else {
-                                // done
-                            }
-                        } else {
-                            qWarning() << "failed to open" << file.fileName() << "for writing";
-                        }
                     }
-                }
-                else if (v >= 300 && v < 400) {// Redirection
+                    else if (v >= 300 && v < 400) {// Redirection
 
-                    // Get the redirection url
-                    QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
-                    // Because the redirection url can be relative,
-                    // we have to use the previous one to resolve it
-                    newUrl = reply->url().resolved(newUrl);
+                        // Get the redirection url
+                        QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+                        // Because the redirection url can be relative,
+                        // we have to use the previous one to resolve it
+                        newUrl = reply->url().resolved(newUrl);
 
-                    auto newReply = m_Manager->get(Sc::makeRequest(newUrl));
-                    m_IconRequests.insert(newReply, r);
-                } else  {
-                    qDebug() << "Http status code:" << v;
+                        m_ClassfierRequest = m_Manager->get(Sc::makeRequest(newUrl));
+                    } else  {
+                        qDebug() << "Http status code:" << v;
+                    }
+                } break;
+                default: {
+                    qDebug() << "Network request failed: " << reply->errorString() << reply->url();
+                } break;
                 }
-            } break;
-            default: {
-                qDebug() << "Network request failed: " << reply->errorString() << reply->url();
-            } break;
             }
         }
+    }
+}
+
+void
+ScVodDataManager::thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r) {
+    switch (reply->error()) {
+    case QNetworkReply::OperationCanceledError:
+        break;
+    case QNetworkReply::NoError: {
+        // Get the http status code
+        int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        if (v >= 200 && v < 300) {// Success
+
+            // Here we got the final reply
+            auto bytes = reply->readAll();
+            addThumbnail(r.rowid, bytes);
+
+        }
+        else if (v >= 300 && v < 400) {// Redirection
+
+            // Get the redirection url
+            QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+            // Because the redirection url can be relative,
+            // we have to use the previous one to resolve it
+            newUrl = reply->url().resolved(newUrl);
+
+            m_ThumbnailRequests.insert(m_Manager->get(Sc::makeRequest(newUrl)), r);
+        } else  {
+            qDebug() << "Http status code:" << v;
+        }
+    } break;
+    default: {
+        qDebug() << "Network request failed: " << reply->errorString() << reply->url();
+
+        QSqlQuery q(m_Database);
+        if (!q.prepare(QStringLiteral("SELECT id FROM vods WHERE thumbnail_id=?"))) {
+            qCritical() << "failed to prepare query" << q.lastError();
+            return;
+        }
+
+        q.addBindValue(r.rowid);
+
+        if (!q.exec()) {
+            qCritical() << "failed to exec query" << q.lastError();
+            return;
+        }
+
+        auto url = reply->url().toString();
+        while (q.next()) {
+            auto vodRowId = qvariant_cast<qint64>(q.value(0));
+            emit thumbnailDownloadFailed(vodRowId, reply->error(), url);
+        }
+    } break;
+    }
+}
+
+void
+ScVodDataManager::iconRequestFinished(QNetworkReply* reply, IconRequest& r) {
+    switch (reply->error()) {
+    case QNetworkReply::OperationCanceledError:
+        break;
+    case QNetworkReply::NoError: {
+        // Get the http status code
+        int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        if (v >= 200 && v < 300) {// Success
+            if (r.url == s_IconsUrl) {
+                // Here we got the final reply
+                auto bytes = reply->readAll();
+                QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QStringLiteral("/icons.json.gz"));
+                if (file.open(QIODevice::Truncate | QIODevice::WriteOnly)) {
+                    auto w = file.write(bytes);
+                    file.close();
+                    if (-1 == w) {
+                        qWarning() << "failed to write" << file.fileName() << "error" << file.errorString();
+                    } else if (w < bytes.size()) {
+                        qWarning() << "failed to write to file (no space)" << file.fileName() << "error" << file.errorString() << "file will be removed";
+                        file.remove();
+                    } else {
+                        ScIcons icons;
+                        if (icons.load(file.fileName())) {
+                            m_Icons = icons;
+
+                            // create entries and fetch files
+                            QSqlQuery q(m_Database);
+                            for (auto i = 0; i < m_Icons.size(); ++i) {
+                                auto url = m_Icons.url(i);
+
+                                // insert row for thumbnail
+                                if (!q.prepare(
+                                            QStringLiteral("SELECT file_name FROM icons WHERE url=?"))) {
+                                    qCritical() << "failed to prepare query" << q.lastError();
+                                    continue;
+                                }
+
+                                q.addBindValue(r.url);
+
+                                if (!q.exec()) {
+                                    qCritical() << "failed to exec query" << q.lastError();
+                                    return;
+                                }
+
+                                if (q.next()) {
+                                    auto filePath = m_IconDir + q.value(0).toString();
+                                    QFileInfo fi(filePath);
+                                    if (fi.exists() && fi.size() > 0) {
+                                        continue;
+                                    }
+                                } else {
+                                    auto extension = m_Icons.extension(i);
+                                    QTemporaryFile tempFile(m_IconDir + QStringLiteral("XXXXXX") + extension);
+                                    tempFile.setAutoRemove(false);
+                                    if (tempFile.open()) {
+                                        auto iconFilePath = tempFile.fileName();
+                                        auto tempFileName = QFileInfo(iconFilePath).fileName();
+
+                                        // insert row for icon
+                                        if (!q.prepare(
+                                                    QStringLiteral("INSERT INTO icons (url, file_name) VALUES (?, ?)"))) {
+                                            qCritical() << "failed to prepare query" << q.lastError();
+                                            continue;
+                                        }
+
+                                        q.addBindValue(url);
+                                        q.addBindValue(tempFileName);
+
+                                        if (!q.exec()) {
+                                            qCritical() << "failed to exec query" << q.lastError();
+                                            continue;
+                                        }
+                                    } else {
+                                        qWarning() << "failed to allocate temporary file for icon";
+                                        continue;
+                                    }
+                                }
+
+                                auto reply = m_Manager->get(Sc::makeRequest(url));
+                                IconRequest r;
+                                r.url = url;
+                                m_IconRequests.insert(reply, r);
+                            }
+                        } else {
+                            qCritical() << "Failed to load icons from downloaded icons file" << reply->url();
+                        }
+                    }
+                } else {
+                    qWarning() << "failed to open" << file.fileName() << "for writing";
+                }
+            } else {
+                    QSqlQuery q(m_Database);
+                if (!q.prepare(
+                            QStringLiteral("SELECT file_name FROM icons WHERE url=?"))) {
+                    qCritical() << "failed to prepare query" << q.lastError();
+                    return;
+                }
+
+                q.addBindValue(r.url);
+
+                if (!q.exec()) {
+                    qCritical() << "failed to exec query" << q.lastError();
+                    return;
+                }
+
+                if (!q.next()) {
+                    return; // cleared?
+                }
+
+                auto iconFilePath = m_IconDir + q.value(0).toString();
+
+                QFile file(iconFilePath);
+                if (file.open(QIODevice::Truncate | QIODevice::WriteOnly)) {
+                    auto bytes = reply->readAll();
+                    auto w = file.write(bytes);
+                    file.close();
+                    if (-1 == w) {
+                        qWarning() << "failed to write" << file.fileName() << "error" << file.errorString();
+                    } else if (w < bytes.size()) {
+                        qWarning() << "failed to write to file (no space)" << file.fileName() << "error" << file.errorString() << "file will be removed";
+                        file.remove();
+                    } else {
+                        // done
+                    }
+                } else {
+                    qWarning() << "failed to open" << file.fileName() << "for writing";
+                }
+            }
+        }
+        else if (v >= 300 && v < 400) {// Redirection
+
+            // Get the redirection url
+            QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+            // Because the redirection url can be relative,
+            // we have to use the previous one to resolve it
+            newUrl = reply->url().resolved(newUrl);
+
+            auto newReply = m_Manager->get(Sc::makeRequest(newUrl));
+            m_IconRequests.insert(newReply, r);
+        } else  {
+            qDebug() << "Http status code:" << v;
+        }
+    } break;
+    default: {
+        qDebug() << "Network request failed: " << reply->errorString() << reply->url();
+    } break;
     }
 }
 
@@ -849,6 +920,11 @@ bool
 ScVodDataManager::_addVods(const QList<ScEvent>& events) {
     QSqlQuery q(m_Database);
 
+    if (!q.exec("BEGIN TRANSACTION")) {
+        qCritical() << "failed to start transaction" << q.lastError();
+        return false;
+    }
+
     QString cannonicalUrl, videoId;
     bool addedVods = false;
     for (const auto& event : events) {
@@ -993,12 +1069,22 @@ ScVodDataManager::_addVods(const QList<ScEvent>& events) {
         }
     }
 
+    if (!q.exec("END TRANSACTION")) {
+        qCritical() << "failed to end transaction" << q.lastError();
+        return false;
+    }
+
     return addedVods;
 }
 
 bool
 ScVodDataManager::_addVods(const QList<ScRecord>& records) {
     QSqlQuery q(m_Database);
+
+    if (!q.exec("BEGIN TRANSACTION")) {
+        qCritical() << "failed to start transaction" << q.lastError();
+        return false;
+    }
 
     QList<qint64> unknownGameRowids;
     QList<int> unknownGameIndices;
@@ -1136,7 +1222,7 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
                            "    AND season=?\n"
                            "    AND game!=-1\n"))) {
             qCritical() << "failed to prepare match select" << q.lastError();
-            return false;
+            break;
         }
 
         q.addBindValue(record.eventName);
@@ -1145,7 +1231,7 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
 
         if (!q.exec()) {
             qCritical() << "failed to exec" << q.lastError();
-            return false;
+            continue;
         }
 
         if (q.next()) {
@@ -1154,7 +1240,7 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
             if (!q.prepare(QStringLiteral(
                                "UPDATE vods SET game=? WHERE id=?"))) {
                 qCritical() << "failed to prepare match select" << q.lastError();
-                return false;
+                continue;
             }
 
             q.addBindValue(game);
@@ -1162,9 +1248,14 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
 
             if (!q.exec()) {
                 qCritical() << "failed to exec" << q.lastError();
-                return false;
+                continue;
             }
         }
+    }
+
+    if (!q.exec("END TRANSACTION")) {
+        qCritical() << "failed to end transaction" << q.lastError();
+        return false;
     }
 
     return addedVods;
@@ -2444,3 +2535,27 @@ ScVodDataManager::setSeen(const QVariantMap& filters, bool value) {
         qCritical() << "failed to exec query" << q.lastError();
     }
 }
+
+void ScVodDataManager::fetchIcons() {
+    RETURN_IF_ERROR;
+
+    QMutexLocker g(&m_Lock);
+
+    // also download update if available
+    IconRequest r;
+    r.url = s_IconsUrl;
+    auto reply = m_Manager->get(Sc::makeRequest(r.url));
+    m_IconRequests.insert(reply, r);
+}
+
+void ScVodDataManager::fetchClassifier() {
+    RETURN_IF_ERROR;
+
+    QMutexLocker g(&m_Lock);
+
+    if (!m_ClassfierRequest) {
+        m_ClassfierRequest = m_Manager->get(Sc::makeRequest(s_ClassifierUrl));
+    }
+}
+
+

@@ -68,7 +68,8 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/ProgressOverlay.qml \
     qml/SeenButton.qml \
     qml/ProgressMaskEffect.qml \
-    qml/ProgressImageBlendEffect.qml
+    qml/ProgressImageBlendEffect.qml \
+    qml/HighlightingListView.qml \
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 
@@ -83,11 +84,14 @@ INSTALLS += xml
 gzicons.target = icons.json.gz
 gzicons.commands = cat $$PWD/icons.json | gzip --best > $$PWD/$$gzicons.target
 
-QMAKE_EXTRA_TARGETS += gzicons
+gzclassifier.target = classifier.json.gz
+gzclassifier.commands = cat $$PWD/classifier.json | gzip --best > $$PWD/$$gzclassifier.target
 
-misc.files = $$gzicons.target ../../COPYING
+QMAKE_EXTRA_TARGETS += gzicons gzclassifier
+
+misc.files = $$gzicons.target $$gzclassifier.target ../../COPYING
 misc.path = /usr/share/$${TARGET}
-misc.depends = gzicons
+misc.depends = gzicons gzclassifier
 INSTALLS += misc
 
 

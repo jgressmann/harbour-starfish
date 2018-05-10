@@ -16,3 +16,7 @@ include(../../common.pri)
 include(../starfish-lib/src.pri)
 
 INCLUDEPATH += ../starfish-lib
+
+LIBS += -lz
+
+DEFINES += STARFISH_DIR=\"\\\"\"$$PWD/../..\"\\\"\"

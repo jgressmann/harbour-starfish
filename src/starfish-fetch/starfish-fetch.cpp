@@ -31,14 +31,17 @@
 
 #include "Sc2LinksDotCom.h"
 #include "Sc2CastsDotCom.h"
+#include "ScClassifier.h"
 
 static ScVodScraper* scraperPtr;
 //static void excludeEvent(const ScEvent& event, bool* exclude);
 static void excludeRecord(const ScRecord& record, bool* exclude);
+static void showProgress();
 static void statusChanged();
 static ScVodScraper* makeScraper(const QString& name);
 static int year;
 static QFile outputFile;
+
 
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
@@ -62,6 +65,11 @@ int main(int argc, char** argv) {
                 "scraper",
                 "sc2casts");
 
+    QCommandLineOption classifierFilePathOption(
+                QStringList() << "c" << "classifier",
+                "Path to classifier definition file",
+                "classifier");
+
     QCommandLineOption scrapersOption(
                 QStringList() << "scapers",
                 "Print list of available scrapers");
@@ -74,6 +82,7 @@ int main(int argc, char** argv) {
     parser.addOption(fileOption);
     parser.addOption(scraperOption);
     parser.addOption(scrapersOption);
+    parser.addOption(classifierFilePathOption);
 
     parser.process(app);
 
@@ -82,6 +91,13 @@ int main(int argc, char** argv) {
         fprintf(stdout, "sc2casts\n");
         fprintf(stdout, "sc2links\n");
         return 0;
+    }
+
+    auto classifierFilePath = parser.value(classifierFilePathOption);
+    ScClassifier classifier;
+    if (!classifier.load(classifierFilePath)) {
+        fprintf(stderr, "Failed to load classifier from %s\n", qPrintable(classifierFilePath));
+        return -1;
     }
 
     auto outputFilePath = parser.value(fileOption);
@@ -114,9 +130,13 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    scraper->setClassifier(&classifier);
+
 //    ScVodScraper::connect(scraper.data(), &ScVodScraper::excludeEvent, excludeEvent);
     ScVodScraper::connect(scraper.data(), &ScVodScraper::excludeRecord, excludeRecord);
     ScVodScraper::connect(scraper.data(), &ScVodScraper::statusChanged, statusChanged);
+    ScVodScraper::connect(scraper.data(), &ScVodScraper::progressChanged, showProgress);
+    ScVodScraper::connect(scraper.data(), &ScVodScraper::progressDescriptionChanged, showProgress);
     void excludeRecord(const ScRecord& record, bool* exclude);
     scraperPtr = scraper.data();
 
@@ -251,3 +271,8 @@ static ScVodScraper* makeScraper(const QString& name) {
 
     return Q_NULLPTR;
 }
+
+static void showProgress() {
+    fprintf(stdout, "%02d%% %s\n", (int)(scraperPtr->progress() * 100), qPrintable(scraperPtr->progressDescription()));
+}
+

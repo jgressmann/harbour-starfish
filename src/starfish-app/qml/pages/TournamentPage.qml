@@ -48,7 +48,7 @@ BasePage {
         TopMenu {}
 //        BottomMenu {}
 
-        SilicaListView {
+        HighlightingListView {
             id: listView
             anchors.fill: parent
             model: sqlModel
@@ -64,6 +64,10 @@ BasePage {
                 //stageName: sqlModel.data(sqlModel.index(index, 1), 0)
                 stageName: stage_name
                 filters: Global.merge(page.filters, { "stage_name": stageName })
+
+                onClicked: {
+                    ListView.view.currentIndex = index
+                }
             }
 
             ViewPlaceholder {

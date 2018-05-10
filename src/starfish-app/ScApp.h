@@ -49,7 +49,7 @@ public:
     Q_INVOKABLE bool isUrl(const QString& str);
     Q_INVOKABLE void unlink(const QString& filePath);
 
-    static QByteArray gzipDecompress(const QByteArray& gzipped, bool* ok = Q_NULLPTR);
+
 
 signals:
     void isOnBroadbandChanged();

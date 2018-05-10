@@ -22,6 +22,7 @@
  */
 
 #include "ScRecord.h"
+#include "ScClassifier.h"
 
 #include <QDebug>
 #include <QRegExp>
@@ -84,33 +85,21 @@ const QString EnglishWordSeasons[] = {
 
 
 
-const QRegExp eventNameCrudRegex(QStringLiteral("[\\[\\]\\-/,:]"));
+const QRegExp eventNameCrudRegex(QStringLiteral("[\\[\\]\\-/,:]|\\(\\)"));
 const QRegExp dateRegex(QStringLiteral("\\d{4}-\\d{2}-\\d{2}"));
 const QRegExp yearRegex(QStringLiteral("\\d{4}"));
+const QRegExp yearRangeRegex(QStringLiteral("\\(?(\\d{4})-\\d{4}\\)?"));
 
 // September 10th 2011
 const QRegExp englishDate(QStringLiteral("(?:january|febuary|march|april|may|june|july|august|september|october|november|december)\\s+([0-9]{1,2}(?:st|nd|rd|th)\\s+\\d{4})"), Qt::CaseInsensitive);
-//const QRegExp seriesRegex(QStringLiteral("(dreamhack|dreamhack open|iem|gsl|gstl|mlg|nasl|red bull bg|red bull battlegrounds|shoutcraft|wcs|wesg)(?:\\s|[:]\\s*)"), Qt::CaseInsensitive);
 
-
-const QRegExp newLines(QStringLiteral("\r|\n"));
-const QRegExp overwatchEventIsGame(QStringLiteral("overwatch"), Qt::CaseInsensitive);
-const QRegExp overwatchEventRemoveGame = overwatchEventIsGame;
-const QRegExp broodWarEventIsGame(QStringLiteral("\\(bw\\)|starcraft 1|asl|afreeca(?:tv)? starleague|ssl classic"), Qt::CaseInsensitive);
-const QRegExp broodWarEventRemoveGame(QStringLiteral("\\(bw\\)|starcraft 1"), Qt::CaseInsensitive);
-const QRegExp sc2EventIsGame(QStringLiteral("100 friday|ariel cup|basetrade|beastqt|bstl|btsl|corsair cup|crank|dreamhack|gsl|gstl|homestory cup|hots|iem|lowko|lotv|kung fu cup|mlg|nasl|nationwars|nation wars|neuro|ocs masters|olimoleague|pig|red bull|sc2|shoutcraft|starcraft ii|taketv|ting|wcs|wesg|winterstarcraft|wardi|wol|zotac"), Qt::CaseInsensitive);
-const QRegExp sc2EventRemoveGame(QStringLiteral("^sc2 | sc2 | sc2$|starcraft 2|starcraft ii|wol|lotv|hots"), Qt::CaseInsensitive);
-const QRegExp broodwarStageIsGame(QStringLiteral("lets learn starcraft"), Qt::CaseInsensitive);
-const QRegExp broodWarMatchIsGame(QStringLiteral("effort|eonzerg|terror|trutacz"), Qt::CaseInsensitive);
-const QRegExp sc2MatchIsGame(QStringLiteral("alive|bly|classic|clem|dark|elazer|innovation|gumiho|leenock|maru|masa|neeb|nerchio|scarlet|serral|showtime|snute|solar|sortof|stats|tlo|tod|uthermal|zest"), Qt::CaseInsensitive);
 
 int InitializeStatics() {
     Q_ASSERT(eventNameCrudRegex.isValid());
     Q_ASSERT(dateRegex.isValid());
     Q_ASSERT(yearRegex.isValid());
+    Q_ASSERT(yearRangeRegex.isValid());
     Q_ASSERT(englishDate.isValid());
-//    Q_ASSERT(seriesRegex.isValid());
-    Q_ASSERT(sc2EventRemoveGame.isValid());
 
 
     return 1;
@@ -131,7 +120,7 @@ tryGetSeason(QString& inoutSrc, int* season) {
         }
     }
 
-    for (int i = 30; i >= 0; --i) {
+    for (int i = 50; i >= 0; --i) {
 
         QString romanNumeral = romanNumeralFor(i + 1);
 
@@ -144,11 +133,11 @@ tryGetSeason(QString& inoutSrc, int* season) {
                     index > 0 &&
                     inoutSrc[index-1].isSpace()) {
                 hasRomanNumeral = true;
-            // at begin? then ws must be following
-            } else if (index == 0 &&
-                       index + romanNumeral.size() < inoutSrc.size() &&
-                       inoutSrc[romanNumeral.size()].isSpace()) {
-                hasRomanNumeral = true;
+//            // at begin? then ws must be following
+//            } else if (index == 0 &&
+//                       index + romanNumeral.size() < inoutSrc.size() &&
+//                       inoutSrc[romanNumeral.size()].isSpace()) {
+//                hasRomanNumeral = true;
             // surrounded by ws?
             } else if (index > 0 &&
                        index + romanNumeral.size() < inoutSrc.size() &&
@@ -261,34 +250,15 @@ tryGetDate(QString& inoutSrc, QDate* date) {
 }
 
 bool
-tryGetGame(QString& inoutSrc, int* game) {
-    int index = broodWarEventIsGame.indexIn(inoutSrc);
-    if (index >= 0) {
-        inoutSrc.remove(broodWarEventRemoveGame);
-        *game = ScRecord::GameBroodWar;
-        return true;
-    }
-
-    index = sc2EventIsGame.indexIn(inoutSrc);
-    if (index >= 0) {
-        inoutSrc.remove(sc2EventRemoveGame);
-        *game = ScRecord::GameSc2;
-        return true;
-    }
-
-    index = overwatchEventIsGame.indexIn(inoutSrc);
-    if (index >= 0) {
-        inoutSrc.remove(overwatchEventRemoveGame);
-        *game = ScRecord::GameOverwatch;
-        return true;
-    }
-
-    return false;
-}
-
-bool
 tryGetYear(QString& inoutSrc, int* year) {
-    int index = yearRegex.indexIn(inoutSrc);
+    int index = yearRangeRegex.indexIn(inoutSrc);
+    if (index >= 0) {
+        *year = yearRangeRegex.cap(1).toInt();
+        inoutSrc.remove(yearRangeRegex.cap(0));
+        return true;
+    }
+
+    index = yearRegex.indexIn(inoutSrc);
     if (index >= 0) {
         *year = yearRegex.cap(0).toInt();
         inoutSrc.remove(yearRegex.cap(0));
@@ -298,23 +268,6 @@ tryGetYear(QString& inoutSrc, int* year) {
     return false;
 }
 
-//bool
-//tryGetSeries(QString& inoutSrc, QString* series) {
-//    int index = seriesRegex.indexIn(inoutSrc);
-//    if (index >= 0) {
-////        qDebug() << seriesRegex.capturedTexts();
-////        auto captures = seriesRegex.captureCount();
-////        auto a = seriesRegex.cap(0);
-//        auto s = seriesRegex.cap(1);
-//        *series = s;
-//        inoutSrc.remove(index, s.size());
-//        s.remove(eventNameCrudRegex);
-//        *series = s.trimmed();
-//        return true;
-//    }
-
-//    return false;
-//}
 
 void removeCrud(QString& inoutSrc) {
     inoutSrc.remove(yearRegex);
@@ -334,56 +287,14 @@ ScRecord::ScRecord()
     side2Race = 0;
 }
 
-//ScRecord::ScRecord(const ScRecord& other)
-//: name(other.name)
-//, event(other.event)
-//, stage(other.stage)
-//, side1Name(other.side1Name)
-//, side2Name(other.side2Name)
-//, url(other.url)
-//, matchName(other.matchName)
-//, matchDate(other.matchDate)
-//{
-//    side1Race = other.side1Race;
-//    side2Race = other.side2Race;
-//    year = other.year;
-//    season = other.season;
-//    game = other.game;
-//    valid = other.valid;
-//}
-
-//ScRecord&
-//ScRecord::operator=(const ScRecord& other) {
-//    ScRecord(other).swap(*this);
-//    return *this;
-//}
-
-//void
-//ScRecord::swap(ScRecord& other) {
-//    qSwap(eventFullName, other.eventFullName);
-//    qSwap(eventName, other.eventName);
-//    qSwap(stage, other.stage);
-//    qSwap(side1Name, other.side1Name);
-//    qSwap(side2Name, other.side2Name);
-//    qSwap(url, other.url);
-//    qSwap(matchName, other.matchName);
-//    qSwap(matchDate, other.matchDate);
-//    qSwap(side1Race, other.side1Race);
-//    qSwap(side2Race, other.side2Race);
-//    qSwap(year, other.year);
-//    qSwap(season, other.season);
-//    qSwap(game, other.game);
-//    qSwap(valid, other.valid);
-//}
 
 void
-ScRecord::autoComplete() {
+ScRecord::autoComplete(const ScClassifier& classifier) {
     for (bool change = true; change; ) {
         change = false;
 
         if (isValid(ValidEventFullName)) {
             auto str = eventFullName;
-
             QDate date;
             if (tryGetDate(str, &date)) {
                 if (!isValid(ScRecord::ValidYear)) {
@@ -398,7 +309,8 @@ ScRecord::autoComplete() {
                 change = true;
             }
 
-            if (!isValid(ScRecord::ValidGame) && tryGetGame(str, &game)) {
+            if (!isValid(ScRecord::ValidGame) &&
+                    classifier.tryGetGameFromEvent(str, (ScRecord::Game*)&game, &str)) {
                 valid |= ScRecord::ValidGame;
                 change = true;
             }
@@ -417,33 +329,28 @@ ScRecord::autoComplete() {
         }
 
         if (isValid(ValidStage)) {
-            if ((valid & ValidGame) == 0) {
-                int index = broodwarStageIsGame.indexIn(stage);
-                if (index >= 0) {
-                    valid |= ValidGame;
-                    game = GameBroodWar;
-                    change = true;
-                }
+            if (!isValid(ScRecord::ValidGame) &&
+                    classifier.tryGetGameFromStage(stage, (ScRecord::Game*)&game, nullptr)) {
+                valid |= ScRecord::ValidGame;
+                change = true;
             }
         }
 
         if (isValid(ValidSides)) {
             auto str = side1Name + QStringLiteral(" vs ") + side2Name;
 
-            if ((valid & ValidGame) == 0) {
-                int index = sc2MatchIsGame.indexIn(str);
-                if (index >= 0) {
-                    valid |= ValidGame;
-                    game = GameSc2;
-                    change = true;
-                }
+            if (!isValid(ScRecord::ValidGame) &&
+                    classifier.tryGetGameFromMatch(str, (ScRecord::Game*)&game, nullptr)) {
+                valid |= ScRecord::ValidGame;
+                change = true;
+            }
+        }
 
-                index = broodWarMatchIsGame.indexIn(str);
-                if (index >= 0) {
-                    valid |= ValidGame;
-                    game = GameBroodWar;
-                    change = true;
-                }
+        if (isValid(ValidMatchName)) {
+            if (!isValid(ScRecord::ValidGame) &&
+                    classifier.tryGetGameFromMatch(matchName, (ScRecord::Game*)&game, nullptr)) {
+                valid |= ScRecord::ValidGame;
+                change = true;
             }
         }
     }

@@ -110,7 +110,7 @@ BasePage {
             }
         }
 
-        SilicaListView {
+        HighlightingListView {
             id: listView
             anchors.left: parent.left
             anchors.right: parent.right
@@ -118,27 +118,25 @@ BasePage {
             anchors.top: fixture.visible ? fixture.bottom : header.bottom
             model: sqlModel
 
-            delegate: Component {
-                MatchItem {
-                    width: listView.width
-                    contentHeight: Global.itemHeight // MatchItem is a ListItem
-                    side1: side1_name
-                    side2: side2_name
-                    race1: side1_race
-                    race2: side2_race
-                    matchName: match_name
-                    matchDate: match_date
-                    rowId: rowid
-                    startOffsetMs: offset * 1000
-                    showDate: !_sameDate
-                    showSides: !_sameSides
-                    showTitle: !_side2
+            delegate: MatchItem {
+                width: listView.width
+                contentHeight: Global.itemHeight // MatchItem is a ListItem
+                side1: side1_name
+                side2: side2_name
+                race1: side1_race
+                race2: side2_race
+                matchName: match_name
+                matchDate: match_date
+                rowId: rowid
+                startOffsetMs: offset * 1000
+                showDate: !_sameDate
+                showSides: !_sameSides
+                showTitle: !_side2
 //                    vodLabel: !_side2 ? "Episode" : "Match"
 
-    //                    Component.onCompleted: {
-    //                        console.debug("match item id=" + rowId)
-    //                    }
-                }
+//                    Component.onCompleted: {
+//                        console.debug("match item id=" + rowId)
+//                    }
             }
 
             ViewPlaceholder {

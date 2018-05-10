@@ -46,7 +46,7 @@ BasePage {
         TopMenu {}
 //        BottomMenu {}
 
-        SilicaListView {
+        HighlightingListView {
             id: listView
             anchors.fill: parent
             model: sqlModel
@@ -68,6 +68,10 @@ BasePage {
                     matchDate: match_date
                     rowId: rowid
                     startOffsetMs: offset * 1000
+
+                    onClicked: {
+                        ListView.view.currentIndex = index
+                    }
                 }
             }
 

@@ -6,7 +6,8 @@ SOURCES += $$PWD/ScVodScraper.cpp \
 
 SOURCES += $$PWD/Sc2LinksDotCom.cpp
 SOURCES += $$PWD/Vods.cpp
-#$$PWD/ScClassifier.cpp
+SOURCES += $$PWD/ScClassifier.cpp
+
 HEADERS += $$PWD/Sc2LinksDotCom.h \
     $$PWD/ScVodScraper.h \
     $$PWD/Sc.h \
@@ -14,8 +15,8 @@ HEADERS += $$PWD/Sc2LinksDotCom.h \
     $$PWD/ScRecord.h \
 
 HEADERS += $$PWD/Vods.h
-#    $$PWD/ScClassifier.h
-STATECHARTS +=
+HEADERS += $$PWD/ScClassifier.h
+
 
 
 

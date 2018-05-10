@@ -24,6 +24,7 @@
 #include <QtTest/QtTest>
 
 #include <QDebug>
+#include <QFile>
 #include <cstdio>
 
 using namespace  std;
@@ -31,18 +32,31 @@ using namespace  std;
 
 
 #include <ScRecord.h>
+#include <ScClassifier.h>
 
 
 
 class TestParser : public QObject {
     Q_OBJECT
+public:
+    TestParser();
 private slots:
     void autocompleteFromEvent();
     void autocompleteFromEvent_data();
-
+    void autocompleteFromStage();
+    void autocompleteFromStage_data();
+    void autocompleteFromMatch();
+    void autocompleteFromMatch_data();
+private:
+    ScClassifier classifier;
 };
 
 #define make(a) a
+
+TestParser::TestParser() {
+
+    QVERIFY(classifier.load(QStringLiteral(STARFISH_DIR "/src/starfish-app/classifier.json")));
+}
 
 void
 TestParser::autocompleteFromEvent_data() {
@@ -55,85 +69,85 @@ TestParser::autocompleteFromEvent_data() {
 
 
 
-//    record.valid =  ScRecord::ValidYear | ScRecord::ValidGame;
-//    record.eventName = "IEM Kiev";
-//    record.eventFullName = "IEM Kiev January 22nd 2012";
-//    record.year = 2012;
-//    record.game = ScRecord::GameSc2;
-//    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+    record.valid =  ScRecord::ValidYear | ScRecord::ValidGame;
+    record.eventName = "IEM Kiev";
+    record.eventFullName = "IEM Kiev January 22nd 2012";
+    record.year = 2012;
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 
 
-//    record.valid =  ScRecord::ValidYear | ScRecord::ValidSeason | ScRecord::ValidGame;
-//    record.eventName = "GSTL";
-//    record.eventFullName = "GSTL Season 1 2011 October 8th 2011";
-//    record.season = 1;
-//    record.year = 2011;
-//    record.game = ScRecord::GameSc2;
-//    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+    record.valid =  ScRecord::ValidYear | ScRecord::ValidSeason | ScRecord::ValidGame;
+    record.eventName = "GSTL";
+    record.eventFullName = "GSTL Season 1 2011 October 8th 2011";
+    record.season = 1;
+    record.year = 2011;
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 
 
-//    record.valid =  ScRecord::ValidYear | ScRecord::ValidGame;
-//    record.eventName = "DreamHack Valencia";
-//    record.eventFullName = "DreamHack Valencia 2011 September 17th 2011";
-//    record.year = 2011;
-//    record.game = ScRecord::GameSc2;
-//    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+    record.valid =  ScRecord::ValidYear | ScRecord::ValidGame;
+    record.eventName = "DreamHack Valencia";
+    record.eventFullName = "DreamHack Valencia 2011 September 17th 2011";
+    record.year = 2011;
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 
-//    record.valid =  ScRecord::ValidYear | ScRecord::ValidGame;
-//    record.eventName = "DreamHack Open Tours";
-//    record.eventFullName = "DreamHack Open: Tours Febuary 1st 2015";
-//    record.year = 2015;
-//    record.game = ScRecord::GameSc2;
-//    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-
-
-//    record.valid = ScRecord::ValidYear | ScRecord::ValidSeason | ScRecord::ValidGame;
-//    record.eventName = "StarLeague";
-//    record.eventFullName = "StarCraft II StarLeague S2 May 21st 2015";
-//    record.year = 2015;
-//    record.season = 2;
-//    record.game = ScRecord::GameSc2;
-//    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-
-//    record.valid = ScRecord::ValidYear | ScRecord::ValidSeason | ScRecord::ValidGame;
-//    record.eventName = "HomeStory Cup";
-//    record.eventFullName = "HomeStory Cup XI Febuary 11th 2015";
-//    record.year = 2015;
-//    record.season = 11;
-//    record.game = ScRecord::GameSc2;
-//    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-
-//    record.valid =  ScRecord::ValidYear | ScRecord::ValidSeason | ScRecord::ValidGame;
-//    record.eventName = "IEM Shenzhen";
-//    record.eventFullName = "IEM Season X - Shenzhen December 3rd 2015";
-//    record.year = 2015;
-//    record.season = 10;
-//    record.game = ScRecord::GameSc2;
-//    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-
-//    record.valid =  ScRecord::ValidYear | ScRecord::ValidSeason | ScRecord::ValidGame;
-//    record.eventName = "Afreeca Starleague";
-//    record.eventFullName = "Afreeca Starleague S5 (BW) April 3rd 2018";
-//    record.year = 2018;
-//    record.season = 5;
-//    record.game = ScRecord::GameBroodWar;
-//    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+    record.valid =  ScRecord::ValidYear | ScRecord::ValidGame;
+    record.eventName = "DreamHack Open Tours";
+    record.eventFullName = "DreamHack Open: Tours Febuary 1st 2015";
+    record.year = 2015;
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 
 
-//    record.valid =  ScRecord::ValidYear | ScRecord::ValidGame;
-//    record.eventName = "Olimoleague";
-//    record.eventFullName = "Olimoleague April 5th 2018";
-//    record.year = 2018;
-//    record.game = ScRecord::GameSc2;
-//    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+    record.valid = ScRecord::ValidYear | ScRecord::ValidSeason | ScRecord::ValidGame;
+    record.eventName = "StarLeague";
+    record.eventFullName = "StarCraft II StarLeague S2 May 21st 2015";
+    record.year = 2015;
+    record.season = 2;
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 
-//    record.valid =  ScRecord::ValidYear | ScRecord::ValidGame | ScRecord::ValidSeason;
-//    record.eventName = "NationWars";
-//    record.eventFullName = "NationWars V April 5th 2018";
-//    record.year = 2018;
-//    record.season = 5;
-//    record.game = ScRecord::GameSc2;
-//    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+    record.valid = ScRecord::ValidYear | ScRecord::ValidSeason | ScRecord::ValidGame;
+    record.eventName = "HomeStory Cup";
+    record.eventFullName = "HomeStory Cup XI Febuary 11th 2015";
+    record.year = 2015;
+    record.season = 11;
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid =  ScRecord::ValidYear | ScRecord::ValidSeason | ScRecord::ValidGame;
+    record.eventName = "IEM Shenzhen";
+    record.eventFullName = "IEM Season X - Shenzhen December 3rd 2015";
+    record.year = 2015;
+    record.season = 10;
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid =  ScRecord::ValidYear | ScRecord::ValidSeason | ScRecord::ValidGame;
+    record.eventName = "Afreeca Starleague";
+    record.eventFullName = "Afreeca Starleague S5 (BW) April 3rd 2018";
+    record.year = 2018;
+    record.season = 5;
+    record.game = ScRecord::GameBroodWar;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+
+    record.valid =  ScRecord::ValidYear | ScRecord::ValidGame;
+    record.eventName = "Olimoleague";
+    record.eventFullName = "Olimoleague April 5th 2018";
+    record.year = 2018;
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid =  ScRecord::ValidYear | ScRecord::ValidGame | ScRecord::ValidSeason;
+    record.eventName = "NationWars";
+    record.eventFullName = "NationWars V April 5th 2018";
+    record.year = 2018;
+    record.season = 5;
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 
     record.valid = ScRecord::ValidGame | ScRecord::ValidSeason;
     record.eventName = "Nation Wars";
@@ -186,115 +200,40 @@ TestParser::autocompleteFromEvent_data() {
     record.eventFullName = "Kung fu Cup";
     record.game = ScRecord::GameSc2;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "I love StarCraft";
+    record.eventFullName = "I love StarCraft";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "NASL Open";
+    record.eventFullName = "NASL Open";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame | ScRecord::ValidSeason;
+    record.eventName = "NASL";
+    record.eventFullName = "NASL 4";
+    record.game = ScRecord::GameSc2;
+    record.season = 4;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame | ScRecord::ValidYear;
+    record.eventName = "Proleague";
+    record.eventFullName = "Proleague (2012-2013)";
+    record.game = ScRecord::GameSc2;
+    record.year = 2012;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "Iron Squid";
+    record.eventFullName = "Iron Squid";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 }
 
-//void
-//TestParser::v2_data() {
-//    QTest::addColumn<QString>("input");
-//    QTest::addColumn<ScRecord>("record"); // the string must match the token in the QFETCH macro
-
-
-
-//    ScRecord record;
-
-//    QTest::newRow("empty input") << "" << record;
-
-
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear;
-//    record.series = "IEM";
-//    record.event = "Kiev";
-//    record.year = 2012;
-//    QTest::newRow("IEM Kiev January 22nd 2012") << make("IEM Kiev\nJanuary 22nd 2012") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidYear;
-////    record.series = "";
-//    record.event = "SHOUTcraft Invitational 4";
-//    record.year = 2012;
-//    QTest::newRow("SHOUTcraft Invitational 4 January 15th 2012") << make("SHOUTcraft Invitational 4\nJanuary 15th 2012") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear;
-//    record.series = "GSL";
-//    record.event = "Blizzard Cup";
-//    record.season = 4;
-//    record.year = 2011;
-//    QTest::newRow("GSL Blizzard Cup 2011 December 17th 2011") << make("GSL Blizzard Cup 2011\nDecember 17th 2011") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear;
-//    record.series = "NASL";
-//    record.event = "";
-//    record.season = 2;
-//    record.year = 2011;
-//    QTest::newRow("NASL Season 2 December 8th 2011") << make("NASL Season 2\nDecember 8th 2011") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear;
-//    record.series = "GSL";
-//    record.event = "November";
-//    record.season = 2;
-//    record.year = 2011;
-//    QTest::newRow("GSL November December 7th 2011") << make("GSL November\nDecember 7th 2011") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear;
-//    record.series = "GSL";
-//    record.event = "Team Ace Invitational";
-//    record.season = 2;
-//    record.year = 2011;
-//    QTest::newRow("GSL Team Ace Invitational November 13th 2011") << make("GSL Team Ace Invitational\nNovember 13th 2011") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear;
-//    record.series = "MLG";
-//    record.event = "Global Invitational";
-//    record.season = 2;
-//    record.year = 2011;
-//    QTest::newRow("MLG Global Invitational November 10th 2011") << make("MLG Global Invitational November 10th 2011") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear | ScRecord::ValidSeason;
-//    record.series = "GSTL";
-//    record.event = "";
-//    record.season = 1;
-//    record.year = 2011;
-//    QTest::newRow("GSTL Season 1 2011 October 8th 2011") << make("GSTL Season 1 2011\nOctober 8th 2011") << record;
-
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear;
-//    record.series = "DreamHack";
-//    record.event = "Valencia";
-//    record.year = 2011;
-//    QTest::newRow("DreamHack Valencia 2011 September 17th 2011") << make("DreamHack Valencia 2011\nSeptember 17th 2011 ") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear;
-//    record.series = "DreamHack Open";
-//    record.event = "Tours";
-//    record.year = 2015;
-//    QTest::newRow("DreamHack Open: Tours Febuary 1st 2015") << make("DreamHack Open: Tours\nFebuary 1st 2015 ") << record;
-
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidYear | ScRecord::ValidSeason;
-//    record.event = "StarLeague";
-//    record.year = 2015;
-//    record.season = 2;
-//    QTest::newRow("StarCraft II StarLeague S2 May 21st 2015") << make("StarCraft II StarLeague S2 May 21st 2015") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidYear | ScRecord::ValidSeason;
-//    record.event = "HomeStory Cup";
-//    record.year = 2015;
-//    record.season = 11;
-//    QTest::newRow("HomeStory Cup XI Febuary 11th 2015") << make("HomeStory Cup XI Febuary 11th 2015") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear | ScRecord::ValidSeason;
-//    record.series = "IEM";
-//    record.event = "Shenzhen";
-//    record.year = 2015;
-//    record.season = 10;
-//    QTest::newRow("IEM Season X - Shenzhen December 3rd 2015") << make("IEM Season X - Shenzhen December 3rd 2015") << record;
-
-//    record.valid = ScRecord::ValidEvent | ScRecord::ValidSeries | ScRecord::ValidYear | ScRecord::ValidSeason;
-//    record.series = "SHOUTcraft";
-//    record.event = "Clan Wars";
-//    record.year = 2015;
-//    record.season = 2;
-//    QTest::newRow("SHOUTcraft Clan Wars S2 December 3rd 2015") << make("SHOUTcraft Clan Wars S2 December 3rd 2015") << record;
-//}
 
 void
 TestParser::autocompleteFromEvent() {
@@ -305,7 +244,7 @@ TestParser::autocompleteFromEvent() {
     ScRecord completed;
     completed.valid = ScRecord::ValidEventFullName;
     completed.eventFullName = record.eventFullName;
-    completed.autoComplete();
+    completed.autoComplete(classifier);
 
     QVERIFY(completed.valid & ScRecord::ValidEventName);
     QCOMPARE(completed.eventName, record.eventName);
@@ -323,6 +262,123 @@ TestParser::autocompleteFromEvent() {
     }
 }
 
+
+void
+TestParser::autocompleteFromStage_data() {
+//    QTest::addColumn<QString>("input");
+    QTest::addColumn<ScRecord>("record"); // the string must match the token in the QFETCH macro
+
+
+
+    ScRecord record;
+
+
+    record.valid = ScRecord::ValidGame;
+    record.stage = "Pro SC2 VOD";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.stage.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.stage = "lets learn starcraft";
+    record.game = ScRecord::GameBroodWar;
+    QTest::newRow(record.stage.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.stage = "vvv gaming";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.stage.toLocal8Bit()) << record;
+}
+
+void
+TestParser::autocompleteFromStage() {
+//    QFETCH(QString, input);
+    QFETCH(ScRecord, record);
+
+
+    ScRecord completed;
+    completed.valid = ScRecord::ValidStage;
+    completed.stage = record.stage;
+    completed.autoComplete(classifier);
+
+    QVERIFY(completed.valid & ScRecord::ValidStage);
+    QCOMPARE(completed.stage, record.stage);
+
+    if (record.valid & ScRecord::ValidYear) {
+        QCOMPARE(completed.year, record.year);
+    }
+
+    if (record.valid & ScRecord::ValidSeason) {
+        QCOMPARE(completed.season, record.season);
+    }
+
+    if (record.valid & ScRecord::ValidGame) {
+        QCOMPARE(completed.game, record.game);
+    }
+}
+
+
+void
+TestParser::autocompleteFromMatch_data() {
+//    QTest::addColumn<QString>("input");
+    QTest::addColumn<ScRecord>("record"); // the string must match the token in the QFETCH macro
+
+
+
+    ScRecord record;
+
+
+    record.valid = ScRecord::ValidGame;
+    record.matchName = "JINAIR - CJ Entus";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.matchName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.matchName = "JonSnow - DnS";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.matchName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.matchName = "Hyun - BabyKnight";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.matchName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.matchName = "SLush - Psy";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.matchName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.matchName = "Jaedong - fantasy";
+    record.game = ScRecord::GameBroodWar;
+    QTest::newRow(record.matchName.toLocal8Bit()) << record;
+}
+
+void
+TestParser::autocompleteFromMatch() {
+//    QFETCH(QString, input);
+    QFETCH(ScRecord, record);
+
+
+    ScRecord completed;
+    completed.valid = ScRecord::ValidMatchName;
+    completed.matchName = record.matchName;
+    completed.autoComplete(classifier);
+
+    QVERIFY(completed.valid & ScRecord::ValidMatchName);
+    QCOMPARE(completed.matchName, record.matchName);
+
+    if (record.valid & ScRecord::ValidYear) {
+        QCOMPARE(completed.year, record.year);
+    }
+
+    if (record.valid & ScRecord::ValidSeason) {
+        QCOMPARE(completed.season, record.season);
+    }
+
+    if (record.valid & ScRecord::ValidGame) {
+        QCOMPARE(completed.game, record.game);
+    }
+}
 
 QTEST_APPLESS_MAIN(TestParser)
 #include "TestParser.moc"

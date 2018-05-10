@@ -67,7 +67,7 @@ BasePage {
 
 
 
-        SilicaListView {
+        HighlightingListView {
             id: listView
             anchors.fill: parent
             model: sqlModel
@@ -86,6 +86,10 @@ BasePage {
                 grid: page.grid
                 foo: index * 0.1
 
+                onClicked: {
+                    ListView.view.currentIndex = index
+                }
+
                 Component.onCompleted: {
                     console.debug("filter page key: "+key+" index: " + index + " value: " + value)
                 }
@@ -95,6 +99,8 @@ BasePage {
                 enabled: listView.count === 0
                 text: "nothing here"
             }
+
+
         }
 
         SilicaGridView {
@@ -110,6 +116,10 @@ BasePage {
 //                    cellHeight: 3*Theme.paddingLarge + 2*Theme.iconSizeExtraLarge
             cellWidth: parent.width / 2
             cellHeight: parent.height / (Global.gridItemsPerPage / 2)
+            highlight: Rectangle {
+                color: Theme.primaryColor
+                opacity: Global.pathTraceOpacity
+            }
 
             delegate: FilterItem {
                 key: page.key
@@ -122,6 +132,10 @@ BasePage {
 //                        width: GridView.view.width
 //                        height: GridView.view.height
 
+                onClicked: {
+                    GridView.view.currentIndex = index
+                }
+
                 Component.onCompleted: {
                     console.debug("filter page key: "+key+" index: " + index + " value: " + value)
                 }
@@ -130,6 +144,10 @@ BasePage {
             ViewPlaceholder {
                 enabled: gridView.count === 0
                 text: "nothing here"
+            }
+
+            Component.onCompleted: {
+                currentIndex = -1
             }
         }
     }
