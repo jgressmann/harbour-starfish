@@ -40,66 +40,10 @@ namespace  {
 
 const QString s_IconsUrl = QStringLiteral("https://www.dropbox.com/s/p2640l82i3u1zkg/icons.json.gz?dl=1");
 
-typedef QHash<QRegExp, QString> EventToIconMapType;
-const EventToIconMapType eventToIconMap1;
-const EventToIconMapType eventToIconMap2;
-
-int InitializeStatics() {
-    EventToIconMapType& m1 = const_cast< EventToIconMapType& >(eventToIconMap1);
-    m1.insert(QRegExp("asl|afreeca(tv)? starleague", Qt::CaseInsensitive), "asl.png");
-    m1.insert(QRegExp("basetrade|bstl|btsl", Qt::CaseInsensitive), "bttv.png");
-    m1.insert(QRegExp("beasty", Qt::CaseInsensitive), "beastyqtsc2.jpg");
-    m1.insert(QRegExp("code s", Qt::CaseInsensitive), "codes.png");
-    m1.insert(QRegExp("corsair cup", Qt::CaseInsensitive), "cc.png");
-    m1.insert(QRegExp("crank", Qt::CaseInsensitive), "cranksc2.jpg");
-    m1.insert(QRegExp("day9|day\\[9\\]", Qt::CaseInsensitive), "day9.png");
-    m1.insert(QRegExp("dreamhack", Qt::CaseInsensitive), "dreamhack.png");
-    m1.insert(QRegExp("esl", Qt::CaseInsensitive), "esl.jpg");
-    m1.insert(QRegExp("falcon paladin", Qt::CaseInsensitive), "fp.jpg");
-    m1.insert(QRegExp("go4sc", Qt::CaseInsensitive), "esl.jpg");
-    m1.insert(QRegExp("gsl super tournament", Qt::CaseInsensitive), "gslst.png");
-    m1.insert(QRegExp("gstl", Qt::CaseInsensitive), "gstl.png");
-    m1.insert(QRegExp("happy", Qt::CaseInsensitive), "happysc2.jpg");
-    m1.insert(QRegExp("hsc|homestory cup|home story cup", Qt::CaseInsensitive), "hsc.png");
-    m1.insert(QRegExp("iem", Qt::CaseInsensitive), "iem.png");
-    m1.insert(QRegExp("iron squid", Qt::CaseInsensitive), "iron_squid.png");
-    m1.insert(QRegExp("kespa cup", Qt::CaseInsensitive), "kespacup.png");
-    m1.insert(QRegExp("lowko", Qt::CaseInsensitive), "lowko.jpg");
-    m1.insert(QRegExp("lycan league", Qt::CaseInsensitive), "lycan.png");
-    m1.insert(QRegExp("mlg|major league gaming", Qt::CaseInsensitive), "mlg.png");
-    m1.insert(QRegExp("nasl|north american starleague", Qt::CaseInsensitive), "nasl.jpg");
-    m1.insert(QRegExp("nation wars|nationwars", Qt::CaseInsensitive), "nw.jpeg");
-    m1.insert(QRegExp("neuro", Qt::CaseInsensitive), "neuro.jpg");
-    m1.insert(QRegExp("olimoleague", Qt::CaseInsensitive), "olimoleague.png");
-    m1.insert(QRegExp("pig", Qt::CaseInsensitive), "pig.jpg");
-    m1.insert(QRegExp("polt", Qt::CaseInsensitive), "polt.jpg");
-    m1.insert(QRegExp("proleague", Qt::CaseInsensitive), "proleague.png");
-    m1.insert(QRegExp("red bull battlegrounds|red bull bg", Qt::CaseInsensitive), "rbbg.png");
-    m1.insert(QRegExp("shoutcraft kings", Qt::CaseInsensitive), "sckings.jpeg");
-    m1.insert(QRegExp("ssl classic", Qt::CaseInsensitive), "sslclassic.jpg");
-    m1.insert(QRegExp("takes?|take tv", Qt::CaseInsensitive), "taketv.png");
-    m1.insert(QRegExp("ting", Qt::CaseInsensitive), "ting.png");
-    m1.insert(QRegExp("wardi", Qt::CaseInsensitive), "warditv.jpg");
-    m1.insert(QRegExp("wcs", Qt::CaseInsensitive), "wcs.png");
-    m1.insert(QRegExp("wesg", Qt::CaseInsensitive), "wesg.png");
-    m1.insert(QRegExp("winterstarcraft", Qt::CaseInsensitive), "winter.jpeg");
-    m1.insert(QRegExp("zotac", Qt::CaseInsensitive), "zotac.jpg");
-
-    // level 2
-    EventToIconMapType& m2 = const_cast< EventToIconMapType& >(eventToIconMap2);
-    m2.insert(QRegExp("gsl", Qt::CaseInsensitive), "gsl.png");
-    m2.insert(QRegExp("ssl|starleague", Qt::CaseInsensitive), "ssl.jpg");
-    return 1;
-}
-
-int s_StaticsInitialized = InitializeStatics();
-
-
 
 } // anon
 
 ScVodDataManager::~ScVodDataManager() {
-    (void)s_StaticsInitialized;
 }
 
 ScVodDataManager::ScVodDataManager(QObject *parent)
@@ -609,18 +553,6 @@ ScVodDataManager::icon(const QString& key, const QVariant& value) const {
         }
     } else if (QStringLiteral("event_name") == key) {
         auto event = value.toString();
-//        foreach(const auto &regex, eventToIconMap1.keys()) {
-//            if (regex.indexIn(event) >= 0) {
-//                return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/") + eventToIconMap1.value(regex);
-//            }
-//        }
-
-//        foreach(const auto &regex, eventToIconMap2.keys()) {
-//            if (regex.indexIn(event) >= 0) {
-//                return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/") + eventToIconMap2.value(regex);
-//            }
-//        }
-
         QString url;
         if (m_Icons.getIconForEvent(event, &url)) {
             QSqlQuery q(m_Database);
