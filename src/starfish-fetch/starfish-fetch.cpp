@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
                 "Print list of available scrapers");
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("Copyright (c) 2018 Jean Gressmann\nstarfish-fetch fetches vod data from the internet and outputs it as xml");
+    parser.setApplicationDescription("Copyright (c) 2018 Jean Gressmann\nstarfish-fetch fetches VOD data from the internet and outputs it as xml");
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption(yearOption);
@@ -154,12 +154,18 @@ int main(int argc, char** argv) {
 
 static void excludeRecord(const ScRecord& record, bool* exclude) {
     Q_ASSERT(exclude);
-    if (record.valid & ScRecord::ValidYear) {
-        *exclude = record.year != year;
-        if (record.year < year) {
+    if (record.valid & ScRecord::ValidMatchDate) {
+        *exclude = record.matchDate.year() != year;
+        if (record.matchDate.year() < year) {
             scraperPtr->cancelFetch();
         }
     }
+//    if (record.valid & ScRecord::ValidYear) {
+//        *exclude = record.year != year;
+//        if (record.year < year) {
+//            scraperPtr->cancelFetch();
+//        }
+//    }
 }
 
 static void writeXml() {

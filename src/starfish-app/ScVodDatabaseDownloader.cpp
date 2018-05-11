@@ -434,7 +434,8 @@ void
 ScVodDatabaseDownloader::hasRecord(const ScRecord& record, bool* exists) {
     QMutexLocker g(&m_Lock);
     Q_ASSERT(exists);
-    m_DataManager->hasRecord(record, exists);
+    *exists = false; // if user cancelled we'll never get older VODs for the current year
+    //m_DataManager->hasRecord(record, exists);
 }
 
 void

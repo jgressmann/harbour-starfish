@@ -87,12 +87,12 @@ const QString EnglishWordSeasons[] = {
 
 const QRegExp eventNameCrudRegex(QStringLiteral("[\\[\\]\\-/,:]|\\(\\)"));
 const QRegExp dateRegex(QStringLiteral("\\d{4}-\\d{2}-\\d{2}"));
-const QRegExp yearRegex(QStringLiteral("\\d{4}"));
+const QRegExp yearRegex(QStringLiteral("^\\d{4}| \\d{4}"));
 const QRegExp yearRangeRegex(QStringLiteral("\\(?(\\d{4})-\\d{4}\\)?"));
 
 // September 10th 2011
 const QRegExp englishDate(QStringLiteral("(?:january|febuary|march|april|may|june|july|august|september|october|november|december)\\s+([0-9]{1,2}(?:st|nd|rd|th)\\s+\\d{4})"), Qt::CaseInsensitive);
-
+const QRegExp sidesRegex(QStringLiteral("(.*)\\s+(?:-|vs)\\s+(.*)"));
 
 int InitializeStatics() {
     Q_ASSERT(eventNameCrudRegex.isValid());
@@ -124,8 +124,28 @@ tryGetSeason(QString& inoutSrc, int* season) {
 
         QString romanNumeral = romanNumeralFor(i + 1);
 
+
+
+        // s1, s2, s3, ...
+        QString shortSeasonString = QStringLiteral("s%1").arg(i+1);
+        auto index = inoutSrc.indexOf(shortSeasonString, 0, Qt::CaseInsensitive);
+        if (index >= 0) {
+            *season = i + 1;;
+            inoutSrc.remove(index, shortSeasonString.size());
+            return true;
+        }
+
+        // season 1, season 2, ...
+        QString longSeasonString = QStringLiteral("season %1").arg(i+1);
+        index = inoutSrc.indexOf(longSeasonString, 0, Qt::CaseInsensitive);
+        if (index >= 0) {
+            *season = i + 1;;
+            inoutSrc.remove(index, longSeasonString.size());
+            return true;
+        }
+
         // I, II, III, IV, ...
-        auto index = inoutSrc.indexOf(romanNumeral, 0, Qt::CaseInsensitive);
+        index = inoutSrc.indexOf(romanNumeral, 0, Qt::CaseInsensitive);
         auto hasRomanNumeral = false;
         if (index >= 0) {
             // at end? then there must be whitespace in front of the numeral
@@ -156,24 +176,6 @@ tryGetSeason(QString& inoutSrc, int* season) {
                 inoutSrc.remove(index, romanNumeral.size());
             }
             *season = i + 1;
-            return true;
-        }
-
-        // s1, s2, s3, ...
-        QString shortSeasonString = QStringLiteral("s%1").arg(i+1);
-        index = inoutSrc.indexOf(shortSeasonString, 0, Qt::CaseInsensitive);
-        if (index >= 0) {
-            *season = i + 1;;
-            inoutSrc.remove(index, shortSeasonString.size());
-            return true;
-        }
-
-        // season 1, season 2, ...
-        QString longSeasonString = QStringLiteral("season %1").arg(i+1);
-        index = inoutSrc.indexOf(longSeasonString, 0, Qt::CaseInsensitive);
-        if (index >= 0) {
-            *season = i + 1;;
-            inoutSrc.remove(index, longSeasonString.size());
             return true;
         }
 
@@ -268,6 +270,15 @@ tryGetYear(QString& inoutSrc, int* year) {
     return false;
 }
 
+bool tryGetSides(const QString& str, QString* side1, QString* side2) {
+    int index = sidesRegex.indexIn(str);
+    if (index >= 0) {
+        *side1 = sidesRegex.cap(1);
+        *side2 = sidesRegex.cap(2);
+        return true;
+    }
+    return false;
+}
 
 void removeCrud(QString& inoutSrc) {
     inoutSrc.remove(yearRegex);
@@ -309,15 +320,19 @@ ScRecord::autoComplete(const ScClassifier& classifier) {
                 change = true;
             }
 
+            if (!isValid(ScRecord::ValidSeason) && tryGetSeason(str, &season)) {
+                valid |= ScRecord::ValidSeason;
+                change = true;
+            }
+
             if (!isValid(ScRecord::ValidGame) &&
                     classifier.tryGetGameFromEvent(str, (ScRecord::Game*)&game, &str)) {
                 valid |= ScRecord::ValidGame;
                 change = true;
             }
 
-            if (!isValid(ScRecord::ValidSeason) && tryGetSeason(str, &season)) {
-                valid |= ScRecord::ValidSeason;
-                change = true;
+            if (isValid(ScRecord::ValidGame)) {
+                classifier.cleanEvent((Game)game, str);
             }
 
             if (!isValid(ValidEventName)) {
@@ -350,6 +365,11 @@ ScRecord::autoComplete(const ScClassifier& classifier) {
             if (!isValid(ScRecord::ValidGame) &&
                     classifier.tryGetGameFromMatch(matchName, (ScRecord::Game*)&game, nullptr)) {
                 valid |= ScRecord::ValidGame;
+                change = true;
+            }
+
+            if (!isValid(ValidSides) && tryGetSides(matchName, &side1Name, &side2Name)) {
+                valid |= ScRecord::ValidSides;
                 change = true;
             }
         }

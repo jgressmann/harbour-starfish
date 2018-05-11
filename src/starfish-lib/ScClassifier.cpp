@@ -285,3 +285,19 @@ ScClassifier::classify(const Classifier& classfier, const QString& str, QString*
 
     return result;
 }
+
+void
+ScClassifier::cleanEvent(ScRecord::Game game, QString& str) const {
+    switch (game) {
+    case ScRecord::GameBroodWar:
+        for (const auto& regex : m_Bw.event.remove) {
+            str.remove(regex);
+        }
+        break;
+    case ScRecord::GameSc2:
+        for (const auto& regex : m_Sc2.event.remove) {
+            str.remove(regex);
+        }
+        break;
+    }
+}

@@ -5,12 +5,12 @@
         "event": {
             "+": [
                 {
-                    "regex": "^asl|afreeca(?:tv)? starleague|\\(bw\\)|broodwar|ssl classic|starcraft 1|starleague classic"
+                    "regex": "afreeca(?:tv)? starleague|^\\s*asl|\\(bw\\)|broodwar|ssl classic|starcraft 1|starleague classic"
                 }
             ],
             "-": [
                 {
-                    "regex": "hots|lotv|wol|^\\s*proleague\\s*$"
+                    "regex": "asl.*prime|hots|lotv|^\\s*proleague\\s*$|starleague$|wol"
                 }
             ],
             "remove": [
@@ -37,7 +37,7 @@
         "match": {
             "+": [
                 {
-                    "regex": "effort|eonzerg|fantasy|terror|trutacz"
+                    "regex": "effort|eonzerg|terror|trutacz"
                 }
             ],
             "-": [
@@ -57,7 +57,7 @@
         "event": {
             "+": [
                 {
-                    "regex": "100 friday|after hours gaming league|ariel cup|basetrade|beastqt|bstl|btsl|corsair cup|crank|day\\[9\\] eu|dreamhack|esl euro cup|gsl|gstl|homestory cup|hots|iem|i love starcraft|ipl|ipsl|iptl|iron squid|lowko|lotv|kung fu cup|mlg|nasl|nationwars|nation wars|neuro|ocs masters|olimoleague|pig|pro level big|proleague|red bull|sc2|shoutcraft|starcraft2|starcraft ii|taketv|ting|vvv|wcs|wesg|winterstarcraft|wardi|wol|zotac"
+                    "regex": "100 friday|after hours gaming league|ariel cup|asl.*prime|basetrade|beastqt|bstl|bronze league|btsl|corsair cup|crank|day\\[9\\] eu|dreamhack|drunken cast|esl euro cup|gsl|gstl|homestory cup|hots|iem|i love starcraft|ipl|ipsl|iptl|iron squid|legacy of the void|lotv|lowko|kung fu cup|mlg|nasl|nationwars|nation wars|neuro|ocs masters|olimoleague|pig|plantronics|pro level big|proleague|red bull|sc2|screddit|shoutcraft|starcraft2|starcraft ii|^\\s*starleague\\s*$|taketv|ting|vortex championship|vsl team league|vvv|wcs|wesg|winterstarcraft|wardi|wol|zotac"
                 }
             ],
             "-": [
@@ -85,7 +85,7 @@
         "match": {
             "+": [
                 {
-                    "regex": "adebisi|alive|armani|axslav|babyknight|beastyqt|bling|bly|byun|catz|classic|clem|crank|dark|dayshi|demuslim|desrow|destiny|dde|dimaga|dkiller|dns|drewbie|elfi|^eg | eg$|eg-tl|elazer|empirekas|fruitdealer|goody|grubby|gumiho|happy|harstem|hasuobs|haypro|heromarine|huk|husky|hyun|idra|impact|immvp|incredible miracle|innovation|inori|^jinair|jimrising|jjakji|kawaiirice|kelazhur|kiwikaki|lambo|leenock|life|lg-im|losira|lucifron|lzgamer|major|makaprime|mana|marineking|maru|masa|^mc|mc$|^mma|mma$|minigun|moman|moonglade|morrow|mrbitter|naama|naniwa|neeb|nerchio|nestea|nightend|optimus|ostojiy|patience|parting|pig|polt|puck|puma|psy|qxc|root|samsung galaxy|sbenu|scarlet|select|sen|serral|sheth|showtime|sjow|slush|snute|socke|solar|sortof|stardust|stats|stephano|stx soul|taeja|tlo|tod|toodming|totalbiscuit|true|uthermal|vibe|violet|vortix|vvv|whitera|white-ra|xenocider|xlord|zest"
+                    "regex": "adebisi|alive|armani|axslav|babyknight|beastyqt|bling|bly|bomber|byun|catz|classic|clem|crank|dark|dayshi|demuslim|desrow|destiny|dde|dimaga|dkiller|dns|drewbie|elfi|^eg | eg$|eg-tl|elazer|empirekas|fruitdealer|goody|grubby|gumiho|gungfubanda|happy|harstem|hasuobs|haypro|heromarine|huk|husky|hyun|idra|impact|immvp|incredible miracle|innovation|inori|^jinair|jimrising|jjakji|kawaiirice|kelazhur|kiwikaki|lambo|leenock|life|lg-im|losira|lucifron|lzgamer|major|makaprime|mana|marineking|maru|masa|^mc|mc$|^mma|mma$|minigun|moman|moonglade|morrow|mrbitter|naama|naniwa|neeb|nerchio|nestea|nightend|optimus|ostojiy|patience|parting|pig|polt|puck|puma|psy|qxc|rogue|root|samsung galaxy|sbenu|scarlet|select|sen|serral|sheth|showtime|sjow|slush|snute|socke|solar|soo|sortof|sos|stardust|stats|stephano|strintern|stx soul|taeja|tlo|tod|toodming|totalbiscuit|true|uthermal|vibe|violet|vortix|vvv|whitera|white-ra|xenocider|xigua|xlord|zest"
                 }
             ],
             "-": [],

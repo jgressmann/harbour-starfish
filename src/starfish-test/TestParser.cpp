@@ -47,6 +47,8 @@ private slots:
     void autocompleteFromStage_data();
     void autocompleteFromMatch();
     void autocompleteFromMatch_data();
+    void autocomplete();
+    void autocomplete_data();
 private:
     ScClassifier classifier;
 };
@@ -67,7 +69,7 @@ TestParser::autocompleteFromEvent_data() {
 
     ScRecord record;
 
-
+#if 1
 
     record.valid =  ScRecord::ValidYear | ScRecord::ValidGame;
     record.eventName = "IEM Kiev";
@@ -227,10 +229,76 @@ TestParser::autocompleteFromEvent_data() {
     record.year = 2012;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 
+    record.valid = ScRecord::ValidGame | ScRecord::ValidYear;
+    record.eventName = "Proleague Preseason";
+    record.eventFullName = "2014 Proleague Preseason";
+    record.game = ScRecord::GameSc2;
+    record.year = 2014;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
     record.valid = ScRecord::ValidGame;
     record.eventName = "Iron Squid";
     record.eventFullName = "Iron Squid";
     record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "Bronze League Heroes";
+    record.eventFullName = "Bronze League Heroes";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = 0;
+    record.eventName = "POSTPWN $1000";
+    record.eventFullName = "POSTPWN $1000";
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "Vortex Championship";
+    record.eventFullName = "Vortex Championship";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame | ScRecord::ValidSeason;
+    record.eventName = "ASL Prime";
+    record.eventFullName = "ASL Season 4 Prime";
+    record.season = 4;
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame | ScRecord::ValidSeason | ScRecord::ValidYear;
+    record.eventName = "StarLeague";
+    record.eventFullName = "2015 StarLeague S2";
+    record.season = 2;
+    record.game = ScRecord::GameSc2;
+    record.year = 2015;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "Legacy of the Void Beta";
+    record.eventFullName = "Legacy of the Void Beta";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "Drunken Cast";
+    record.eventFullName = "Drunken Cast";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "VSL Team League";
+    record.eventFullName = "VSL Team League";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+#endif
+    record.valid = ScRecord::ValidGame | ScRecord::ValidYear | ScRecord::ValidSeason;
+    record.eventName = "ASL Team Battle";
+    record.eventFullName = "2017 ASL Team Battle S1";
+    record.game = ScRecord::GameBroodWar;
+    record.year = 2017;
+    record.season = 1;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 }
 
@@ -351,6 +419,21 @@ TestParser::autocompleteFromMatch_data() {
     record.matchName = "Jaedong - fantasy";
     record.game = ScRecord::GameBroodWar;
     QTest::newRow(record.matchName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.matchName = "cure - soo";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.matchName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.matchName = "Apocalypse - GunGfuBanDa";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.matchName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.matchName = "ret - StrinterN";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.matchName.toLocal8Bit()) << record;
 }
 
 void
@@ -377,6 +460,77 @@ TestParser::autocompleteFromMatch() {
 
     if (record.valid & ScRecord::ValidGame) {
         QCOMPARE(completed.game, record.game);
+    }
+}
+
+
+
+void
+TestParser::autocomplete_data() {
+//    QTest::addColumn<QString>("input");
+    QTest::addColumn<ScRecord>("record"); // the string must match the token in the QFETCH macro
+
+
+
+    ScRecord record;
+
+
+    record.valid = ScRecord::ValidGame | ScRecord::ValidEventFullName |
+            ScRecord::ValidStage | ScRecord::ValidYear |
+            ScRecord::ValidMatchDate | ScRecord::ValidMatchName |
+            ScRecord::ValidEventName | ScRecord::ValidSides;
+    record.matchName = "Stats - CoCa";
+    record.matchDate = QDate(2013, 12, 16);
+    record.game = ScRecord::GameSc2;
+    record.stage = "Pro SC2 VOD";
+    record.eventFullName = "2014 Proleague Preseason";
+    record.eventName = "Proleague Preseason";
+    record.year = 2014;
+    record.side1Name = "Stats";
+    record.side2Name = "CoCa";
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+}
+
+void
+TestParser::autocomplete() {
+//    QFETCH(QString, input);
+    QFETCH(ScRecord, record);
+
+
+    ScRecord completed;
+    completed.valid = ScRecord::ValidMatchName | ScRecord::ValidStage | ScRecord::ValidEventFullName | ScRecord::ValidMatchDate;
+    completed.matchName = record.matchName;
+    completed.matchDate = record.matchDate;
+    completed.stage = record.stage;
+    completed.eventFullName = record.eventFullName;
+    completed.autoComplete(classifier);
+
+    QVERIFY(completed.valid & ScRecord::ValidMatchName);
+    QVERIFY(completed.valid & ScRecord::ValidMatchDate);
+    QVERIFY(completed.valid & ScRecord::ValidStage);
+    QVERIFY(completed.valid & ScRecord::ValidEventFullName);
+    QVERIFY(completed.valid & ScRecord::ValidEventName);
+    QCOMPARE(completed.matchName, record.matchName);
+    QCOMPARE(completed.matchDate, record.matchDate);
+    QCOMPARE(completed.stage, record.stage);
+    QCOMPARE(completed.eventFullName, record.eventFullName);
+    QCOMPARE(completed.eventName, record.eventName);
+
+    if (record.valid & ScRecord::ValidYear) {
+        QCOMPARE(completed.year, record.year);
+    }
+
+    if (record.valid & ScRecord::ValidSeason) {
+        QCOMPARE(completed.season, record.season);
+    }
+
+    if (record.valid & ScRecord::ValidGame) {
+        QCOMPARE(completed.game, record.game);
+    }
+
+    if (record.valid & ScRecord::ValidSides) {
+        QCOMPARE(completed.side1Name, record.side1Name);
+        QCOMPARE(completed.side2Name, record.side2Name);
     }
 }
 

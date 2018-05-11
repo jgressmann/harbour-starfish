@@ -37,6 +37,7 @@ public:
     bool tryGetGameFromEvent(const QString& str, ScRecord::Game* game, QString* rem = nullptr) const;
     bool tryGetGameFromStage(const QString& str, ScRecord::Game* game, QString* rem = nullptr) const;
     bool tryGetGameFromMatch(const QString& str, ScRecord::Game* game, QString* rem = nullptr) const;
+    void cleanEvent(ScRecord::Game game, QString& str) const;
 
 private:
     struct Classifier {

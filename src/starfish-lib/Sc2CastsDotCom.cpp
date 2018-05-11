@@ -42,6 +42,13 @@ const QRegExp tags(QStringLiteral("<[^>]+>"));
 const QRegExp dateConstituentsRegex("(\\w+)\\s+(\\d{1,2})\\s*,?\\s*(\\d{4})");
 const QRegExp eventNameRegex("<span\\s+class\\s*=\\s*['\"]event_name['\"][^>]*>([^>]*)</span>");
 const QRegExp stageNameRegex("<span\\s+class\\s*=\\s*['\"]round_name['\"][^>]*>([^>]*)</span>");
+const QRegExp vslabelContent("<div\\s+(?:\\s*[^>]*)*class\\s*=\\s*['\"]vslabel['\"][^>]*>(.*Posted on.*)</div>");
+const QRegExp raceRegex("<img\\s+(?:\\s*[^>]*)*alt\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>");
+const QRegExp playersRegex("<h1>(.*)</h1>");
+const QRegExp dateGroupRegex("<div\\s+(?:\\s*[^>]*)*class\\s*=\\s*['\"]headline_mobile['\"][^>]*>([^>]+)</div>");
+const QRegExp matchUrlRegex("<h2>.*<a\\s+(?:\\s*[^>]*)*href\\s*=\\s*['\"](/cast\\d+[^'\"]+)['\"](?:\\s*[^>]*)*>(.*)</h2>");
+const QRegExp matchNameRegex("</span><b\\s*>(.*)</b><span");
+
 
 
 int InitializeStatics() {
@@ -51,6 +58,16 @@ int InitializeStatics() {
     Q_ASSERT(dateConstituentsRegex.isValid());
     Q_ASSERT(eventNameRegex.isValid());
     Q_ASSERT(stageNameRegex.isValid());
+    Q_ASSERT(vslabelContent.isValid());
+    Q_ASSERT(raceRegex.isValid());
+    Q_ASSERT(playersRegex.isValid());
+    Q_ASSERT(dateGroupRegex.isValid());
+    Q_ASSERT(matchUrlRegex.isValid());
+    Q_ASSERT(matchNameRegex.isValid());
+    const_cast<QRegExp&>(vslabelContent).setMinimal(true);
+    const_cast<QRegExp&>(playersRegex).setMinimal(true);
+    const_cast<QRegExp&>(matchNameRegex).setMinimal(true);
+    const_cast<QRegExp&>(matchUrlRegex).setMinimal(true);
     return 1;
 }
 
@@ -287,16 +304,7 @@ Sc2CastsDotCom::parseLevel0(QNetworkReply* reply) {
 
     QList<int> dateGroupIndices;
     QList<QDate> dates;
-    const QRegExp dateGroupRegex("<div\\s+(?:\\s*[^>]*)*class\\s*=\\s*['\"]headline_mobile['\"][^>]*>([^>]+)</div>");
-    Q_ASSERT(dateGroupRegex.isValid());
 
-    QRegExp matchUrlRegex("<h2>.*<a\\s+(?:\\s*[^>]*)*href\\s*=\\s*['\"](/cast\\d+[^'\"]+)['\"](?:\\s*[^>]*)*>(.*)</h2>");
-    matchUrlRegex.setMinimal(true);
-    Q_ASSERT(matchUrlRegex.isValid());
-
-    QRegExp matchNameRegex("</span><b\\s*>(.*)</b><span");
-    matchNameRegex.setMinimal(true);
-    Q_ASSERT(matchNameRegex.isValid());
 
 
 
@@ -497,17 +505,8 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
     // <div class="vslabel"><img src="//sc2casts.com/images/races/z_50.png" width="50" height="50" alt="Zerg" title="Zerg" style="padding-left:3px;padding-right:3px;"><h1><a href="/player452-Leenock"><b>Leenock</b></a> vs <a href="/player3246-Elazer"><b>Elazer</b></a></h1><img src="//sc2casts.com/images/races/z_50.png" width="50" height="50" alt="Zerg" title="Zerg" style="padding-left:3px;padding-right:3px;"></div><div class="videomenu"><div class="fn_buttons"><a href="javascript:void(0)" title="Hide YouTube controls to avoid duration spoilers" class="toggle_button_off" onclick="showSignUp()"><img src="/images/controls/duration_off.png" width="16" height="16" style="vertical-align:middle" >Hide duration</a></div></div><span class="games_links2"><div class="video_player_window"><iframe id="yytplayer" type="text/html" width="860" height="453" src="https://www.youtube.com/embed/SbIKVMf-qIM?start=0&showinfo=0" frameborder="0" allowfullscreen class="ytmargin"></iframe></div></span></div><div class="infolabel"><h2>BO3 <span class="nomobile">in 1 video</span></h2> from <h2><a href="/event986-2018-GSL-Season-2-Code-S"><span class="event_name">2018 GSL Season 2 Code S</span></a></h2>&nbsp;<h2><span class="round_name">Group Stage</span></h2><span class="nomobile">&nbsp;- </span><span class="onlymobile"></span>Caster: <h2><a href="/caster60-Artosis-&-tasteless"><span class="caster_name">Artosis & tasteless</span></a></h2><span class="nomobile">&nbsp;- </span><span class="onlymobile"></span>Posted on:&nbsp;<span>Apr 19, 2018</span></div><br/><div id="tt" style="padding-left: 10px;"><table style="font-size: 12px;"><tr><td align="center"><a href="javascript:void(0);" onclick="javascript:setrating('1',23339)"><img src="//sc2casts.com/images/thumbs_up.png" border=0 title="Yea" align="absmiddle"/></a><br/>0</td><td>&nbsp;</td><td align="center"><a href="javascript:void(0);" onclick="javascript:setrating('-1',23339)"><img src="//sc2casts.com/images/thumbs_down.png" border=0 title="Nah" align="absmiddle"/></a><br/>0</td><td valign="middle" style="font-size: 12px;margin-left: 10px;"><span style="display:inline-block; margin-left: 10px;">Enjoyed this series? Please vote and help others discover great <!-- google_ad_section_start -->Starcraft<!-- google_ad_section_end --> casts!</span></td></tr></table></div>
 
     //    const QRegExp matchHeaderRegex();
-    QRegExp vslabelContent("<div\\s+(?:\\s*[^>]*)*class\\s*=\\s*['\"]vslabel['\"][^>]*>(.*Posted on.*)</div>");
-    vslabelContent.setMinimal(true);
-    Q_ASSERT(vslabelContent.isValid());
-    const QRegExp raceRegex("<img\\s+(?:\\s*[^>]*)*alt\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>");
-    Q_ASSERT(raceRegex.isValid());
 
-    QRegExp playersRegex("<h1>(.*)</h1>");
-    playersRegex.setMinimal(true);
-    Q_ASSERT(playersRegex.isValid());
-//    const QRegExp matchDateRegex("Posted on:(.*)");
-//    Q_ASSERT(matchDateRegex.isValid());
+
 
 
     //<span class="event_name">2018 GSL Season 2 Code S</span></a></h2>&nbsp;<h2><span class="round_name">Group Stage</span>
@@ -622,7 +621,18 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
             record.game = ScRecord::GameSc2;
         }
 
+        // attempt to get the year from the e.g. the event:
+        // 2014 Proleague Preseason -> matches in 2013
+        auto wasYearValid = record.isValid(ScRecord::ValidYear);
+        auto year = record.year;
+        record.valid &= ~ScRecord::ValidYear;
+
         record.autoComplete(*classifier());
+
+        if ((wasYearValid && !record.isValid(ScRecord::ValidYear))) {
+            record.year = year;
+            record.valid |= ScRecord::ValidYear;
+        }
 
         if (record.isValid(
                     ScRecord::ValidEventName |

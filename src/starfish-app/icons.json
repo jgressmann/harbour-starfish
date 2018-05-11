@@ -72,6 +72,11 @@
             "extension": ".jpg"
         },
         {
+            "regex": "gfinity",
+            "url": "https://www.dropbox.com/s/sutnuet5trlxx70/gfinity.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "go4sc",
             "url": "https://www.dropbox.com/s/kwuzx4bbhfag963/esl.jpg?dl=1",
             "extension": ".jpg"
@@ -127,7 +132,7 @@
             "extension": ".png"
         },
         {
-            "regex": "leifeng",
+            "regex": "leifeng|lei feng",
             "url": "https://www.dropbox.com/s/6gdyxatjg34d3xs/leifeng.png?dl=1",
             "extension": ".png"
         },
@@ -182,8 +187,13 @@
             "extension": ".png"
         },
         {
-            "regex": "red bull battlegrounds|red bull bg",
+            "regex": "red bull battle|red bull bg",
             "url": "https://www.dropbox.com/s/d7s2rxwj5rrnzha/rbbg.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "red bull",
+            "url": "https://www.dropbox.com/s/sbjdlhyo6sofe4l/redbull.png?dl=1",
             "extension": ".png"
         },
         {
@@ -197,12 +207,17 @@
             "extension": ".jpg"
         },
         {
+            "regex": "shoutcraft clan wars",
+            "url": "https://www.dropbox.com/s/kvlmnfh299rrdp4/sccw.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "shoutcraft",
             "url": "https://www.dropbox.com/s/dvcvdiec0kpts50/shoutcraft.png?dl=1",
             "extension": ".png"
         },
         {
-            "regex": "ssl classic",
+            "regex": "ssl classic|starleague classic",
             "url": "https://www.dropbox.com/s/0dcs97e97trhaih/sslclassic.jpg?dl=1",
             "extension": ".jpg"
         },
