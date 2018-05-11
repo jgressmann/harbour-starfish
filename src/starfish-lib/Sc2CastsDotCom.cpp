@@ -499,21 +499,17 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
 
 //    qDebug() << index;
     ScRecord& record = m_Vods[index];
+//    qDebug() << record;
 
     QString soup = QString::fromUtf8(reply->readAll());
 
     // <div class="vslabel"><img src="//sc2casts.com/images/races/z_50.png" width="50" height="50" alt="Zerg" title="Zerg" style="padding-left:3px;padding-right:3px;"><h1><a href="/player452-Leenock"><b>Leenock</b></a> vs <a href="/player3246-Elazer"><b>Elazer</b></a></h1><img src="//sc2casts.com/images/races/z_50.png" width="50" height="50" alt="Zerg" title="Zerg" style="padding-left:3px;padding-right:3px;"></div><div class="videomenu"><div class="fn_buttons"><a href="javascript:void(0)" title="Hide YouTube controls to avoid duration spoilers" class="toggle_button_off" onclick="showSignUp()"><img src="/images/controls/duration_off.png" width="16" height="16" style="vertical-align:middle" >Hide duration</a></div></div><span class="games_links2"><div class="video_player_window"><iframe id="yytplayer" type="text/html" width="860" height="453" src="https://www.youtube.com/embed/SbIKVMf-qIM?start=0&showinfo=0" frameborder="0" allowfullscreen class="ytmargin"></iframe></div></span></div><div class="infolabel"><h2>BO3 <span class="nomobile">in 1 video</span></h2> from <h2><a href="/event986-2018-GSL-Season-2-Code-S"><span class="event_name">2018 GSL Season 2 Code S</span></a></h2>&nbsp;<h2><span class="round_name">Group Stage</span></h2><span class="nomobile">&nbsp;- </span><span class="onlymobile"></span>Caster: <h2><a href="/caster60-Artosis-&-tasteless"><span class="caster_name">Artosis & tasteless</span></a></h2><span class="nomobile">&nbsp;- </span><span class="onlymobile"></span>Posted on:&nbsp;<span>Apr 19, 2018</span></div><br/><div id="tt" style="padding-left: 10px;"><table style="font-size: 12px;"><tr><td align="center"><a href="javascript:void(0);" onclick="javascript:setrating('1',23339)"><img src="//sc2casts.com/images/thumbs_up.png" border=0 title="Yea" align="absmiddle"/></a><br/>0</td><td>&nbsp;</td><td align="center"><a href="javascript:void(0);" onclick="javascript:setrating('-1',23339)"><img src="//sc2casts.com/images/thumbs_down.png" border=0 title="Nah" align="absmiddle"/></a><br/>0</td><td valign="middle" style="font-size: 12px;margin-left: 10px;"><span style="display:inline-block; margin-left: 10px;">Enjoyed this series? Please vote and help others discover great <!-- google_ad_section_start -->Starcraft<!-- google_ad_section_end --> casts!</span></td></tr></table></div>
 
-    //    const QRegExp matchHeaderRegex();
-
-
-
-
     //<span class="event_name">2018 GSL Season 2 Code S</span></a></h2>&nbsp;<h2><span class="round_name">Group Stage</span>
 
 
 
-    if (vslabelContent.indexIn(soup)) {
+    if (vslabelContent.indexIn(soup) >= 0) {
         auto content = vslabelContent.cap(1);
 //        qDebug("%s\n", qPrintable(content));
 
@@ -573,12 +569,12 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
                 side2 = sides[1].trimmed();
             }
 
-            content.remove(playersRegex.cap(0));
+//            content.remove(playersRegex.cap(0));
         }
 
 
 
-        content.remove(tags);
+//        content.remove(tags);
 
 
         if (!event.isEmpty()) {
@@ -627,6 +623,7 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
         auto year = record.year;
         record.valid &= ~ScRecord::ValidYear;
 
+
         record.autoComplete(*classifier());
 
         if ((wasYearValid && !record.isValid(ScRecord::ValidYear))) {
@@ -652,22 +649,16 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
                 bool exclude = false;
                 emit excludeRecord(record, &exclude);
                 if (exclude) {
+//                    qDebug() << "exclude" << record;
                     record.valid = 0;
                 } else {
-    //                qDebug() << record.event
-    //                         << record.year
-    //                         << record.season
-    //                         << record.stage
-    //                         << record.game
-    //                         << record.matchName
-    //                         << record.matchDate
-    //                         << record.side1Name << record.side1Race
-    //                         << record.side2Name << record.side2Race
-    //                         << record.url;
+
                 }
             }
         } else {
+            qDebug() << "invalid" << record;
             record.valid = 0;
+            qDebug("%s\n", qPrintable(content));
         }
     } else {
         record.valid = 0;

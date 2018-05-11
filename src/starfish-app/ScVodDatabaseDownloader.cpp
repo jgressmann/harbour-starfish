@@ -419,8 +419,16 @@ void
 ScVodDatabaseDownloader::excludeRecord(const ScRecord& record, bool* exclude) {
     QMutexLocker g(&m_Lock);
     Q_ASSERT(exclude);
-    if (record.valid & ScRecord::ValidYear) {
-        if (record.year < m_LimitMarker.year()) {
+//    if (record.valid & ScRecord::ValidYear) {
+//        if (record.year < m_LimitMarker.year()) {
+//            *exclude = true;
+//            m_Scraper->cancelFetch();
+//            return;
+//        }
+//    }
+
+    if (record.valid & ScRecord::ValidMatchDate) {
+        if (record.matchDate < m_LimitMarker) {
             *exclude = true;
             m_Scraper->cancelFetch();
             return;

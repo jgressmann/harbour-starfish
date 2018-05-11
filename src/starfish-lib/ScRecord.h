@@ -26,6 +26,7 @@
 #include <QObject>
 #include <QDate>
 #include <QDomNode>
+#include <QDebug>
 
 class ScClassifier;
 class ScRecord
@@ -88,7 +89,7 @@ public:
 
 Q_DECLARE_METATYPE(ScRecord)
 
-
+QDebug operator<<(QDebug debug, const ScRecord& value);
 
 //QDataStream &operator<<(QDataStream &stream, const ScRecord &value);
 //QDataStream &operator>>(QDataStream &stream, ScRecord &value);

@@ -24,11 +24,11 @@
 #include "ScRecord.h"
 #include "ScClassifier.h"
 
-#include <QDebug>
 #include <QRegExp>
+#include <QDebugStateSaver>
 
 
-#include <QDataStream>
+
 
 #include <vector>
 #include <utility>
@@ -599,3 +599,129 @@ ScRecord::fromXml(const QDomNode& node) {
 //    }
 //    return stream;
 //}
+
+//static QString makeValidString(const ScRecord& record) {
+//    QString result = QStringLiteral("(");
+//    if (record.isValid(ScRecord::ValidEventFullName)) {
+//        if (result.size() > 1) {
+//            result += QStringLiteral(", ");
+//        }
+//        result += QStringLiteral("event full name");
+//    }
+
+//    if (record.isValid(ScRecord::ValidEventName)) {
+//        if (result.size() > 1) {
+//            result += QStringLiteral(", ");
+//        }
+//        result += QStringLiteral("event name");
+//    }
+
+//    if (record.isValid(ScRecord::ValidGame)) {
+//        if (result.size() > 1) {
+//            result += QStringLiteral(", ");
+//        }
+//        result += QStringLiteral("game");
+//    }
+
+//    if (record.isValid(ScRecord::ValidMatchDate)) {
+//        if (result.size() > 1) {
+//            result += QStringLiteral(", ");
+//        }
+//        result += QStringLiteral("match date");
+//    }
+
+//    if (record.isValid(ScRecord::ValidMatchName)) {
+//        if (result.size() > 1) {
+//            result += QStringLiteral(", ");
+//        }
+//        result += QStringLiteral("match name");
+//    }
+
+//    if (record.isValid(ScRecord::ValidRaces)) {
+//        if (result.size() > 1) {
+//            result += QStringLiteral(", ");
+//        }
+//        result += QStringLiteral("races");
+//    }
+
+//    if (record.isValid(ScRecord::ValidSides)) {
+//        if (result.size() > 1) {
+//            result += QStringLiteral(", ");
+//        }
+//        result += QStringLiteral("sides");
+//    }
+
+//    if (record.isValid(ScRecord::ValidStage)) {
+//        if (result.size() > 1) {
+//            result += QStringLiteral(", ");
+//        }
+//        result += QStringLiteral("stage");
+//    }
+
+//    if (record.isValid(ScRecord::ValidUrl)) {
+//        if (result.size() > 1) {
+//            result += QStringLiteral(", ");
+//        }
+//        result += QStringLiteral("url");
+//    }
+
+//    if (record.isValid(ScRecord::ValidYear)) {
+//        if (result.size() > 1) {
+//            result += QStringLiteral(", ");
+//        }
+//        result += QStringLiteral("year");
+//    }
+
+//    return result;
+//}
+
+QDebug operator<<(QDebug debug, const ScRecord& record) {
+    QDebugStateSaver saver(debug);
+    debug.nospace() << "ScRecord(\n";
+    if (record.isValid(ScRecord::ValidEventFullName)) {
+        debug.nospace() << "\teventFullName=" << record.eventFullName << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidEventName)) {
+        debug.nospace() << "\teventName=" << record.eventName << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidGame)) {
+        debug.nospace() << "\tgame=" << record.game << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidMatchDate)) {
+        debug.nospace() << "\tmatchDate=" << record.matchDate << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidMatchName)) {
+        debug.nospace() << "\tmatchName=" << record.matchName << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidRaces)) {
+        debug.nospace() << "\traces=" << record.side1Race << "/" << record.side2Race << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidSeason)) {
+        debug.nospace() << "\tseason=" << record.season << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidSides)) {
+        debug.nospace() << "\tsides=" << record.side1Name << "/" << record.side2Name << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidStage)) {
+        debug.nospace() << "\tstage=" << record.stage << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidUrl)) {
+        debug.nospace() << "\turl=" << record.url << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidYear)) {
+        debug.nospace() << "\tyear=" << record.year << "\n";
+    }
+
+    debug.nospace() << ")\n";
+    return debug;
+}
