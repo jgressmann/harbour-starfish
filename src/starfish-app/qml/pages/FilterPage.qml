@@ -90,9 +90,9 @@ BasePage {
                     ListView.view.currentIndex = index
                 }
 
-                Component.onCompleted: {
-                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
-                }
+//                Component.onCompleted: {
+//                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
+//                }
             }
 
             ViewPlaceholder {
@@ -126,19 +126,17 @@ BasePage {
                 value: sqlModel.data(sqlModel.index(index, 0), 0)
                 filters: page.filters
                 grid: page.grid
-                //height: gridView.cellHeight
                 contentHeight: gridView.cellHeight // FilterItem is a ListItem
                 width: gridView.cellWidth
-//                        width: GridView.view.width
-//                        height: GridView.view.height
+
 
                 onClicked: {
                     GridView.view.currentIndex = index
                 }
 
-                Component.onCompleted: {
-                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
-                }
+//                Component.onCompleted: {
+//                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
+//                }
             }
 
             ViewPlaceholder {
