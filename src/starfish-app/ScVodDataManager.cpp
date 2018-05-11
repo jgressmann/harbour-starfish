@@ -490,12 +490,41 @@ ScVodDataManager::createTablesIfNecessary() {
         "    file_name TEXT NOT NULL\n"
         ")\n",
 
+        "CREATE INDEX IF NOT EXISTS vods_id ON vods (id)\n",
+        "CREATE INDEX IF NOT EXISTS vods_game ON vods (game)\n",
+        "CREATE INDEX IF NOT EXISTS vods_year ON vods (year)\n",
+        "CREATE INDEX IF NOT EXISTS vods_season ON vods (season)\n",
+        "CREATE INDEX IF NOT EXISTS vods_event_name ON vods (event_name)\n",
+        "CREATE INDEX IF NOT EXISTS vods_seen ON vods (seen)\n",
+        "CREATE INDEX IF NOT EXISTS vod_thumbnails_id ON vod_thumbnails (id)\n",
+        "CREATE INDEX IF NOT EXISTS vod_thumbnails_url ON vod_thumbnails (url)\n",
+        "CREATE INDEX IF NOT EXISTS vod_files_id ON vod_files (id)\n",
+        "CREATE INDEX IF NOT EXISTS vod_url_share_id ON vod_url_share (id)\n",
+        "CREATE INDEX IF NOT EXISTS vod_url_share_video_id ON vod_url_share (video_id)\n",
+        "CREATE INDEX IF NOT EXISTS vod_url_share_type ON vod_url_share (type)\n"
+            //"CREATE INDEX IF NOT EXISTS vod_file_ref_vod_id ON vod_file_ref (vod_id)\n",
+            //"CREATE INDEX IF NOT EXISTS vod_file_ref_vod_file_id ON vod_file_ref (vod_file_id)\n"
     };
 
     static char const* const DropSql[] = {
-        "DROP TABLE IF EXISTS vod_file_ref      ",
-        "DROP TABLE IF EXISTS vods      ",
-        "DROP TABLE IF EXISTS vod_files ",
+        "DROP INDEX IF EXISTS vods_id",
+        "DROP INDEX IF EXISTS vods_game",
+        "DROP INDEX IF EXISTS vods_year",
+        "DROP INDEX IF EXISTS vods_season",
+        "DROP INDEX IF EXISTS vods_event_name",
+        "DROP INDEX IF EXISTS vods_seen",
+        "DROP INDEX IF EXISTS vod_thumbnails_id",
+        "DROP INDEX IF EXISTS vod_thumbnails_url",
+        "DROP INDEX IF EXISTS vod_url_share_id",
+        "DROP INDEX IF EXISTS vod_url_share_video_id",
+        "DROP INDEX IF EXISTS vod_url_share_type",
+//        "DROP INDEX IF EXISTS vod_file_ref_vod_id",
+//        "DROP INDEX IF EXISTS vod_file_ref_vod_file_id",
+
+
+        "DROP TABLE IF EXISTS vod_file_ref",
+        "DROP TABLE IF EXISTS vods",
+        "DROP TABLE IF EXISTS vod_files",
         "DROP TABLE IF EXISTS vod_thumbnails ",
         "DROP TABLE IF EXISTS vod_url_share",
         "DROP TABLE IF EXISTS settings",
@@ -507,6 +536,21 @@ ScVodDataManager::createTablesIfNecessary() {
 
     if (!q.exec("PRAGMA foreign_keys = ON")) {
         qCritical() << "failed to enable foreign keys" << q.lastError();
+        setError(Error_CouldntCreateSqlTables);
+        setStatus(Status_Error);
+        return;
+    }
+
+    // https://codificar.com.br/blog/sqlite-optimization-faq/
+    if (!q.exec("PRAGMA count_changes = OFF")) {
+        qCritical() << "failed to disable change counting" << q.lastError();
+        setError(Error_CouldntCreateSqlTables);
+        setStatus(Status_Error);
+        return;
+    }
+
+    if (!q.exec("PRAGMA temp_store = MEMORY")) {
+        qCritical() << "failed to set temp store to memory" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
         setStatus(Status_Error);
         return;
