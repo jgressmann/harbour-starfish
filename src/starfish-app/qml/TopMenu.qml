@@ -39,21 +39,28 @@ PullDownMenu {
     }
 
     MenuItem {
-        text: qsTr("Clear VOD data")
-        onClicked: {
-            var dialog = pageStack.push(
-                        Qt.resolvedUrl("pages/ConfirmClearDialog.qml"),
-                        {
-                            acceptDestination: Qt.resolvedUrl("pages/StartPage.qml"),
-                            acceptDestinationAction: PageStackAction.Replace
-                        })
-            dialog.accepted.connect(function() {
-                console.debug("clear")
-                VodDataManager.clear()
-                VodDataManager.fetchIcons()
-            })
-        }
+        text: "Tools"
+        onClicked: pageStack.push(Qt.resolvedUrl("pages/ToolsPage.qml"))
     }
+
+
+
+//    MenuItem {
+//        text: qsTr("Clear VOD data")
+//        onClicked: {
+//            var dialog = pageStack.push(
+//                        Qt.resolvedUrl("pages/ConfirmClearDialog.qml"),
+//                        {
+//                            acceptDestination: Qt.resolvedUrl("pages/StartPage.qml"),
+//                            acceptDestinationAction: PageStackAction.Replace
+//                        })
+//            dialog.accepted.connect(function() {
+//                console.debug("clear")
+//                VodDataManager.clear()
+//                VodDataManager.fetchIcons()
+//            })
+//        }
+//    }
 
 
     MenuItem {
