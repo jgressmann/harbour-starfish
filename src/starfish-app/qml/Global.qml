@@ -85,13 +85,13 @@ Item { // Components can't declare functions
     }
 
     function values(sql) {
-        console.debug(sql)
+//        console.debug(sql)
 
         _model.select = sql;
 
         var result = []
         var rows = _model.rowCount()
-        console.debug(sql + ": " + rows + " rows")
+//        console.debug(sql + ": " + rows + " rows")
         for (var i = 0; i < rows; ++i) {
             var cell = _model.data(_model.index(i, 0), 0)
             result.push(cell)
@@ -201,17 +201,47 @@ Item { // Components can't declare functions
         for (var change = true; change; ) {
             change = false
             var newRem = []
-            for (var i = 0; i < rem.length; ++i) {
-                var sql = "select distinct "+ rem[i] +" from vods" + whereClause(myFilters)
-                var v = values(sql)
-                if (v.length === 1) {
-                    console.debug("performNext single value " + rem[i] + "=" + v[0])
-                    myFilters[rem[i]] = v[0]
-                    change = true
-                } else {
-                    newRem.push(rem[i])
+//            for (var i = 0; i < rem.length; ++i) {
+//                var sql = "select distinct "+ rem[i] +" from vods" + whereClause(myFilters)
+//                var v = values(sql)
+//                if (v.length === 1) {
+//                    console.debug("performNext single value " + rem[i] + "=" + v[0])
+//                    myFilters[rem[i]] = v[0]
+//                    change = true
+//                } else {
+//                    newRem.push(rem[i])
+//                }
+//            }
+
+            if (rem.length > 0) {
+                var w = whereClause(myFilters);
+                var xsql = "select * from\n";
+                for (var i = 0; i < rem.length; ++i) {
+                    if (i > 0) {
+                        xsql += " cross join "
+                    }
+                    xsql += "(select distinct "+ rem[i] +" from vods" + w + ") CROSS JOIN (select count(distinct "+ rem[i] +") from vods" + w + ")\n"
+                }
+                xsql += "limit 1\n"
+
+//                console.debug(xsql);
+
+                // do select
+                _model.select = xsql
+
+                for (var i = 0; i < rem.length; ++i) {
+                    var value = _model.data(_model.index(0, i*2), 0)
+                    var count = _model.data(_model.index(0, i*2+1), 0)
+                    console.debug("count=" + count + " value=" + value)
+                    if (count === 1) {
+                        myFilters[rem[i]] = value
+                        change = true
+                    } else if (count > 1) {
+                        newRem.push(rem[i])
+                    }
                 }
             }
+
             rem = newRem
         }
 
