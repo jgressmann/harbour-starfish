@@ -27,7 +27,7 @@
 
 #include "Sc2LinksDotCom.h"
 #include "Sc2CastsDotCom.h"
-#include "SqlVodModel.h"
+#include "ScSqlVodModel.h"
 #include "ScVodDatabaseDownloader.h"
 #include "ScVodDataManager.h"
 #include "ScApp.h"
@@ -60,7 +60,7 @@ main(int argc, char *argv[]) {
     QScopedPointer<QQuickView> view(SailfishApp::createView());
 
 
-    qmlRegisterType<SqlVodModel>(STARFISH_NAMESPACE, 1, 0, "SqlVodModel");
+    qmlRegisterType<ScSqlVodModel>(STARFISH_NAMESPACE, 1, 0, "SqlVodModel");
     qmlRegisterType<ScVodDatabaseDownloader>(STARFISH_NAMESPACE, 1, 0, "VodDatabaseDownloader");
     qmlRegisterType<Sc2LinksDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2LinksDotComScraper");
     qmlRegisterType<Sc2CastsDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2CastsDotComScraper");

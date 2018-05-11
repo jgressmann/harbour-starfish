@@ -27,14 +27,14 @@
 #include <QList>
 
 class ScVodDataManager;
-class SqlVodModel : public QSqlQueryModel {
+class ScSqlVodModel : public QSqlQueryModel {
     Q_OBJECT
     Q_PROPERTY(QString select READ select WRITE setSelect NOTIFY selectChanged)
     Q_PROPERTY(ScVodDataManager* dataManager READ dataManager WRITE setDataManager NOTIFY dataManagerChanged)
     Q_PROPERTY(QStringList columns READ columns WRITE setColumns NOTIFY columnsChanged)
 public:
-    ~SqlVodModel();
-    explicit SqlVodModel(QObject* parent = Q_NULLPTR);
+    ~ScSqlVodModel();
+    explicit ScSqlVodModel(QObject* parent = Q_NULLPTR);
 
 public:
     QString select() const;

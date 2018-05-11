@@ -21,7 +21,7 @@
  * THE SOFTWARE.
  */
 
-#include "SqlVodModel.h"
+#include "ScSqlVodModel.h"
 #include "ScVodDataManager.h"
 #include <QSqlQuery>
 #include <QSqlError>
@@ -30,11 +30,11 @@
 
 // https://wiki.qt.io/How_to_Use_a_QSqlQueryModel_in_QML
 
-SqlVodModel::~SqlVodModel() {
+ScSqlVodModel::~ScSqlVodModel() {
 
 }
 
-SqlVodModel::SqlVodModel(QObject* parent)
+ScSqlVodModel::ScSqlVodModel(QObject* parent)
     : QSqlQueryModel(parent)
 {
     m_DataManager = Q_NULLPTR;
@@ -42,7 +42,7 @@ SqlVodModel::SqlVodModel(QObject* parent)
 }
 
 QVariant
-SqlVodModel::data(const QModelIndex &modelIndex, int role) const {
+ScSqlVodModel::data(const QModelIndex &modelIndex, int role) const {
     if (role < Qt::UserRole) {
         return QSqlQueryModel::data(modelIndex, role);
     }
@@ -53,17 +53,17 @@ SqlVodModel::data(const QModelIndex &modelIndex, int role) const {
 }
 
 QHash<int,QByteArray>
-SqlVodModel::roleNames() const {
+ScSqlVodModel::roleNames() const {
     return m_RoleNames;
 }
 
 QString
-SqlVodModel::select() const {
+ScSqlVodModel::select() const {
     return m_Select;
 }
 
 void
-SqlVodModel::setSelect(QString newValue) {
+ScSqlVodModel::setSelect(QString newValue) {
     if (m_Select != newValue) {
         m_Select = newValue;
         emit selectChanged();
@@ -73,18 +73,18 @@ SqlVodModel::setSelect(QString newValue) {
 }
 
 ScVodDataManager*
-SqlVodModel::dataManager() const {
+ScSqlVodModel::dataManager() const {
     return m_DataManager;
 }
 
 void
-SqlVodModel::setDataManager(ScVodDataManager* newValue) {
+ScSqlVodModel::setDataManager(ScVodDataManager* newValue) {
     if (newValue != m_DataManager) {
         m_Dirty = true;
 
         if (m_DataManager) {
             disconnect(m_DataManager, &ScVodDataManager::vodsChanged,
-                       this,  &SqlVodModel::update);
+                       this,  &ScSqlVodModel::update);
         }
 
         m_DataManager = newValue;
@@ -92,7 +92,7 @@ SqlVodModel::setDataManager(ScVodDataManager* newValue) {
 
         if (m_DataManager) {
             connect(m_DataManager, &ScVodDataManager::vodsChanged,
-                       this,  &SqlVodModel::update);
+                       this,  &ScSqlVodModel::update);
             update();
         }
     }
@@ -101,7 +101,7 @@ SqlVodModel::setDataManager(ScVodDataManager* newValue) {
 
 
 void
-SqlVodModel::update() {
+ScSqlVodModel::update() {
     if (m_Dirty) {
         m_Dirty = !tryConfigureModel();
     } else {
@@ -110,7 +110,7 @@ SqlVodModel::update() {
 }
 
 bool
-SqlVodModel::tryConfigureModel() {
+ScSqlVodModel::tryConfigureModel() {
     if (m_DataManager &&
        !m_Select.isEmpty() &&
        !m_Columns.empty()) {
@@ -130,7 +130,7 @@ SqlVodModel::tryConfigureModel() {
 }
 
 void
-SqlVodModel::refresh() {
+ScSqlVodModel::refresh() {
     beginResetModel();
     setQuery(m_Select, m_DataManager->database());
     for (int i = 0; i < m_Columns.count(); ++i) {
@@ -140,12 +140,12 @@ SqlVodModel::refresh() {
 }
 
 QStringList
-SqlVodModel::columns() const {
+ScSqlVodModel::columns() const {
     return m_Columns;
 }
 
 void
-SqlVodModel::setColumns(const QStringList& newValue) {
+ScSqlVodModel::setColumns(const QStringList& newValue) {
     m_Dirty = true;
     m_Columns = newValue;
     m_RoleNames.clear();

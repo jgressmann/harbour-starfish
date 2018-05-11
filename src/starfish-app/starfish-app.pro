@@ -16,22 +16,22 @@ CONFIG += sailfishapp
 
 
 SOURCES += harbour-starfish.cpp \
-    SqlVodModel.cpp \
     ScVodman.cpp \
     ScApp.cpp \
     ScVodDataManager.cpp \
     ScVodDatabaseDownloader.cpp \
-    ScIcons.cpp
+    ScIcons.cpp \
+    ScSqlVodModel.cpp
 
 
 
 HEADERS += \
-    SqlVodModel.h \
     ScVodman.h \
     ScApp.h \
     ScVodDataManager.h \
     ScVodDatabaseDownloader.h \
-    ScIcons.h
+    ScIcons.h \
+    ScSqlVodModel.h
 
 #../../rpm/harbour-starfish.changes.run.in \
 #../../rpm/harbour-starfish.yaml \
