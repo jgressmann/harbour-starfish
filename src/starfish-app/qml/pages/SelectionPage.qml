@@ -76,6 +76,8 @@ BasePage {
             model: listModel
             header: PageHeader {
                 title: page.title
+
+                VodDataManagerBusyIndicator {}
             }
 
             delegate: Component {

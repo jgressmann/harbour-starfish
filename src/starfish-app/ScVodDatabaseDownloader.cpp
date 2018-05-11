@@ -33,26 +33,9 @@
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QJsonArray>
-#include <QThreadPool>
 
-class ScVodDatabaseDownloader::Adder : public QRunnable
-{
-public:
-    Adder(ScVodDatabaseDownloader* owner, const QList<ScRecord>& records)
-    {
-        m_Owner = owner;
-        m_Records = records;
-    }
 
-    virtual void run() Q_DECL_OVERRIDE
-    {
-        m_Owner->m_DataManager->addVods(m_Records);
-        m_Owner->actionFinished();
-    }
 
-    ScVodDatabaseDownloader* m_Owner;
-    QList<ScRecord> m_Records;
-};
 
 ScVodDatabaseDownloader::~ScVodDatabaseDownloader() {
     while (true) {
@@ -199,6 +182,7 @@ ScVodDatabaseDownloader::downloadNew() {
     setStatus(Status_Downloading);
     setProgress(0);
     m_Skip = false;
+    m_Generation = m_DataManager->generation() + 1;
 
     _downloadNew();
 }
@@ -237,7 +221,8 @@ ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
                     if (loadFromXml(xml, &events)) {
                         m_DataManager->setDownloadMarker(m_TargetMarker);
                         ++m_PendingActions;
-                        QThreadPool::globalInstance()->start(new Adder(this, events));
+                        m_DataManager->addVods(events, m_Generation);
+                        actionFinished();
                     } else {
                         setError(Error_DataInvalid);
                         setStatus(Status_Error);
@@ -439,11 +424,10 @@ ScVodDatabaseDownloader::excludeRecord(const ScRecord& record, bool* exclude) {
 }
 
 void
-ScVodDatabaseDownloader::hasRecord(const ScRecord& record, bool* exists) {
+ScVodDatabaseDownloader::hasRecord(const ScRecord& /*record*/, bool* exists) {
     QMutexLocker g(&m_Lock);
     Q_ASSERT(exists);
     *exists = false; // if user cancelled we'll never get older VODs for the current year
-    //m_DataManager->hasRecord(record, exists);
 }
 
 void
@@ -455,7 +439,8 @@ ScVodDatabaseDownloader::onScraperStatusChanged() {
     case ScVodScraper::Status_VodFetchingCanceled:
     case ScVodScraper::Status_Error:
         m_DownloadState = DS_AddingVods;
-        QThreadPool::globalInstance()->start(new Adder(this, m_Scraper->vods()));
+        m_DataManager->addVods(m_Scraper->vods(), m_Generation);
+        actionFinished();
         break;
     default:
         break;

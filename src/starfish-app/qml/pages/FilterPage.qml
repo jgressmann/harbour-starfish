@@ -74,6 +74,7 @@ BasePage {
             visible: !_grid
             header: PageHeader {
                 title: page.title
+                VodDataManagerBusyIndicator {}
             }
 
             delegate: FilterItem {
@@ -110,6 +111,8 @@ BasePage {
             visible: _grid
             header: PageHeader {
                 title: page.title
+
+                VodDataManagerBusyIndicator {}
             }
 
 //                    cellWidth: 2*Theme.horizontalPageMargin + 2*Theme.iconSizeExtraLarge

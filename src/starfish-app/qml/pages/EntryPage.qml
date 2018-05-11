@@ -180,6 +180,8 @@ BasePage {
             model: visualModel
             header: PageHeader {
                 title: "Go go go"
+
+                VodDataManagerBusyIndicator {}
             }
         }
     }

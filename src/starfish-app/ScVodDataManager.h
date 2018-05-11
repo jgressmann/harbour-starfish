@@ -29,8 +29,9 @@
 #include "ScClassifier.h"
 
 #include <QMutex>
-#include <QVariant>
 #include <QSqlDatabase>
+#include <QThread>
+#include <QVariant>
 
 class QNetworkAccessManager;
 class QNetworkRequest;
@@ -41,12 +42,34 @@ class ScEvent;
 class ScStage;
 class ScMatch;
 class VMVodFileDownload;
+
+
+
+typedef void (*ScThreadFunction)(void* arg);
+class ScWorker : public QObject {
+    Q_OBJECT
+public:
+    ScWorker(ScThreadFunction f, void* arg = nullptr);
+
+signals:
+    void finished();
+
+public slots:
+    void process();
+
+private:
+    ScThreadFunction m_Function;
+    void* m_Arg;
+};
+
 class ScVodDataManager : public QObject {
 
     Q_OBJECT
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
     Q_PROPERTY(ScVodman* vodman READ vodman CONSTANT)
+    Q_PROPERTY(QString downloadMarker READ downloadMarkerString NOTIFY downloadMarkerChanged)
+    Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
 public:
 
 
@@ -90,8 +113,10 @@ public: //
     Q_INVOKABLE void deleteMetaData(qint64 rowid);
     Q_INVOKABLE void fetchIcons();
     Q_INVOKABLE void fetchClassifier();
-    void addVods(const QList<ScRecord>& records);
+    Q_INVOKABLE void resetDownloadMarker();
+    void addVods(const QList<ScRecord>& records, qint64 generation);
     QDate downloadMarker() const;
+    QString downloadMarkerString() const;
     void setDownloadMarker(QDate value);
     void suspendVodsChangedEvents();
     void resumeVodsChangedEvents();
@@ -99,6 +124,8 @@ public: //
     Q_INVOKABLE void setSeen(const QVariantMap& filters, bool value);
     ScVodman* vodman() const { return m_Vodman; }
     ScClassifier* classifier() const { return const_cast<ScClassifier*>(&m_Classifier); }
+    qint64 generation() const;
+    bool busy() const;
 
 signals:
     void statusChanged();
@@ -109,6 +136,9 @@ signals:
     void thumbnailAvailable(qint64 rowid, QString filePath);
     void thumbnailDownloadFailed(qint64 rowid, int error, QString url);
     void downloadFailed(QString url, int error, QString filePath);
+    void downloadMarkerChanged();
+    void busyChanged();
+    void vodsToAdd();
 
 public slots:
     void excludeEvent(const ScEvent& event, bool* exclude);
@@ -155,6 +185,7 @@ private slots:
     void onFileDownloadCompleted(qint64 token, const VMVodFileDownload& download);
     void onDownloadFailed(qint64 token, int serviceErrorCode);
     void requestFinished(QNetworkReply* reply);
+    void vodsAdded();
 
 private:
     static bool tryGetEvent(QString& inoutSrc, QString* location);
@@ -172,8 +203,7 @@ private:
                          QString* cannonicalUrl,
                          QString* outId, int* outUrlType, int* outStartOffset);
     static int parseTwitchOffset(const QString& str);
-    bool _addVods(const QList<ScEvent>& events);
-    bool _addVods(const QList<ScRecord>& records);
+    bool _addVods(const QList<ScRecord>& records, qint64 generation);
     void tryRaiseVodsChanged();
     void getSeries(const QString& str, QString& series, QString& event);
     bool exists(
@@ -182,15 +212,19 @@ private:
             const ScMatch& match,
             bool* exists) const;
 
-    bool exists(const ScRecord& record, bool* exists) const;
+    bool exists(const ScRecord& record, qint64* id) const;
     void updateVodDownloadStatus(qint64 vodFileId, const VMVodFileDownload& download);
     void fetchMetaData(qint64 rowid, bool download);
     void iconRequestFinished(QNetworkReply* reply, IconRequest& r);
     void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
-
+    static void batchAddVods(void* ctx);
+    void batchAddVods();
 
 private:
     mutable QMutex m_Lock;
+    mutable QMutex m_AddQueueLock;
+    QList<ScRecord> m_AddQueue;
+    QThread m_AddThread;
     ScVodman* m_Vodman;
     QNetworkAccessManager* m_Manager;
     QSqlDatabase m_Database;
@@ -208,6 +242,6 @@ private:
     QString m_VodDir;
     QString m_IconDir;
     int m_SuspendedVodsChangedEventCount;
-
+    bool m_VodsAdded;
 };
 

@@ -77,6 +77,8 @@ BasePage {
 
         PageHeader {
             id: header
+
+            VodDataManagerBusyIndicator {}
         }
 
         Column {

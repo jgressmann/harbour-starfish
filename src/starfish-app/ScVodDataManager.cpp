@@ -64,15 +64,30 @@ namespace  {
 const QString s_IconsUrl = QStringLiteral("https://www.dropbox.com/s/p2640l82i3u1zkg/icons.json.gz?dl=1");
 const QString s_ClassifierUrl = QStringLiteral("https://www.dropbox.com/s/3cckgyzlba8kev9/classifier.json.gz?dl=1");
 
+const int BatchSize = 64;
 
 } // anon
 
+
+ScWorker::ScWorker(ScThreadFunction f, void* arg)
+    : m_Function(f)
+    , m_Arg(arg) {
+}
+
+
+void ScWorker::process() {
+    m_Function(m_Arg);
+    emit finished();
+}
+
 ScVodDataManager::~ScVodDataManager() {
+    m_AddThread.quit();
 }
 
 ScVodDataManager::ScVodDataManager(QObject *parent)
     : QObject(parent)
-    , m_Lock(QMutex::Recursive) {
+    , m_Lock(QMutex::Recursive)
+    , m_AddQueueLock(QMutex::NonRecursive) {
 
     m_Manager = new QNetworkAccessManager(this);
     connect(m_Manager, &QNetworkAccessManager::finished, this,
@@ -147,6 +162,15 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
 
     fetchIcons();
     fetchClassifier();
+
+//    m_AddThread = Thread::create(AddThreadMain, this);
+    auto adder = new ScWorker(&ScVodDataManager::batchAddVods, this);
+    adder->moveToThread(&m_AddThread);
+//    connect(m_Adder, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
+    connect(this, &ScVodDataManager::vodsToAdd, adder, &ScWorker::process);
+    connect(adder, &ScWorker::finished, this, &ScVodDataManager::vodsAdded);
+    connect(&m_AddThread, &QThread::finished, adder, &QObject::deleteLater);
+    m_AddThread.start(QThread::IdlePriority);
 }
 
 void
@@ -469,6 +493,7 @@ ScVodDataManager::createTablesIfNecessary() {
         "    year INTEGER NOT NULL,\n"
         "    offset INTEGER NOT NULL,\n"
         "    seen INTEGER DEFAULT 0,\n"
+        "    generation INTEGER NOT NULL,\n"
         "    thumbnail_id INTEGER REFERENCES vod_thumbnails(id) ON DELETE SET NULL,\n"
         "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE\n"
         ")\n",
@@ -645,16 +670,6 @@ ScVodDataManager::label(const QString& key, const QVariant& value) const {
     if (value.isValid()) {
         if (key == QStringLiteral("game")) {
             int game = value.toInt();
-//            switch (game) {
-//            case ScEnums::Game_Broodwar:
-//                return QStringLiteral("Brood War");
-//            case ScEnums::Game_Sc2:
-//                return QStringLiteral("StarCraft II");
-//            case ScEnums::Game_Unknown:
-//                return tr("Misc");
-//            default:
-//                return tr("unknown game");
-//            }
             switch (game) {
             case ScRecord::GameBroodWar:
                 return QStringLiteral("Brood War");
@@ -857,10 +872,11 @@ ScVodDataManager::exists(
 }
 
 
-bool
-ScVodDataManager::exists(const ScRecord& record, bool* exists) const {
 
-    Q_ASSERT(exists);
+bool
+ScVodDataManager::exists(const ScRecord& record, qint64* id) const {
+
+    Q_ASSERT(id);
     Q_ASSERT(record.isValid(
                  ScRecord::ValidEventName |
                  ScRecord::ValidStage |
@@ -869,6 +885,8 @@ ScVodDataManager::exists(const ScRecord& record, bool* exists) const {
 //                 ScRecord::ValidSeason |
                  ScRecord::ValidMatchName |
                  ScRecord::ValidMatchDate));
+
+    *id = -1;
 
     QSqlQuery q(m_Database);
 
@@ -892,7 +910,7 @@ ScVodDataManager::exists(const ScRecord& record, bool* exists) const {
     q.addBindValue(record.eventName);
     q.addBindValue(record.year);
     q.addBindValue(record.isValid(ScRecord::ValidGame) ? record.game : -1);
-    q.addBindValue(record.isValid(ScRecord::ValidSeason) ? record.season : 0);
+    q.addBindValue(record.isValid(ScRecord::ValidSeason) ? record.season : 1);
     q.addBindValue(record.matchName);
     q.addBindValue(record.matchDate);
     q.addBindValue(record.stage);
@@ -902,7 +920,9 @@ ScVodDataManager::exists(const ScRecord& record, bool* exists) const {
         return false;
     }
 
-    *exists = q.next();
+    if (q.next()) {
+        *id = qvariant_cast<qint64>(q.value(0));
+    }
 
     return true;
 }
@@ -946,183 +966,35 @@ ScVodDataManager::hasRecord(const ScRecord& record, bool* _exists) {
                        ScRecord::ValidStage |
                        ScRecord::ValidMatchDate |
                        ScRecord::ValidMatchName)) {
-        exists(record, _exists);
+        qint64 id = -1;
+        if (!exists(record, &id)) {
+            *_exists = false;
+        } else {
+            *_exists = id != -1;
+        }
     } else {
         *_exists = false;
     }
 }
 
 void
-ScVodDataManager::addVods(const QList<ScRecord>& records) {
-    QMutexLocker g(&m_Lock);
-    if (_addVods(records)) {
-        tryRaiseVodsChanged();
-    }
-}
+ScVodDataManager::addVods(const QList<ScRecord>& records, qint64 generation) {
+//    QMutexLocker g(&m_Lock);
+//    if (_addVods(records, generation)) {
+//        tryRaiseVodsChanged();
+//    }
 
-bool
-ScVodDataManager::_addVods(const QList<ScEvent>& events) {
-    QSqlQuery q(m_Database);
-
-    if (!q.exec("BEGIN TRANSACTION")) {
-        qCritical() << "failed to start transaction" << q.lastError();
-        return false;
-    }
-
-    QString cannonicalUrl, videoId;
-    bool addedVods = false;
-    for (const auto& event : events) {
-        for (const auto& stage : event.data().stages) {
-            for (const auto& match : stage.data().matches) {
-
-
-                bool entryExists;
-                if (!exists(event, stage, match, &entryExists) || entryExists) {
-                    continue;
-                }
-
-                int urlType, startOffset;
-
-                parseUrl(match.url(), &cannonicalUrl, &videoId, &urlType, &startOffset);
-                qint64 urlShareId = 0;
-
-                if (UT_Unknown != urlType) {
-                    if (!q.prepare(QStringLiteral("SELECT id FROM vod_url_share WHERE video_id=? AND type=?"))) {
-                        qCritical() << "failed to prepare query" << q.lastError();
-                        continue;
-                    }
-
-                    q.addBindValue(videoId);
-                    q.addBindValue(urlType);
-
-                    if (!q.exec()) {
-                        qCritical() << "failed to exec" << q.lastError();
-                        continue;
-                    }
-
-                    if (q.next()) {
-                        urlShareId = qvariant_cast<qint64>(q.value(0));
-                    } else {
-                        if (!q.prepare(QStringLiteral("INSERT INTO vod_url_share (video_id, url, type) VALUES (?, ?, ?)"))) {
-                            qCritical() << "failed to prepare query" << q.lastError();
-                            continue;
-                        }
-
-                        q.addBindValue(videoId);
-                        q.addBindValue(cannonicalUrl);
-                        q.addBindValue(urlType);
-
-                        if (!q.exec()) {
-                            qCritical() << "failed to exec" << q.lastError();
-                            continue;
-                        }
-
-                        urlShareId = qvariant_cast<qint64>(q.lastInsertId());
-                    }
-                } else {
-                    if (!q.prepare(QStringLiteral("INSERT INTO vod_url_share (url, type) VALUES (?, ?)"))) {
-                        qCritical() << "failed to prepare query" << q.lastError();
-                        break;
-                    }
-
-                    q.addBindValue(match.url());
-                    q.addBindValue(urlType);
-
-                    if (!q.exec()) {
-                        qCritical() << "failed to exec" << q.lastError();
-                        continue;
-                    }
-
-                    urlShareId = qvariant_cast<qint64>(q.lastInsertId());
-                }
-
-                if (!q.prepare(
-            QStringLiteral(
-                                "INSERT INTO vods (\n"
-                                "   event_name,\n"
-                                "   event_full_title,\n"
-                                "   season,\n"
-                                "   game,\n"
-                                "   year,\n"
-                                "   stage_name,\n"
-                                "   match_name,\n"
-                                "   match_date,\n"
-                                "   side1,\n"
-                                "   side2,\n"
-                                "   match_number,\n"
-                                "   vod_url_share_id,\n"
-                                "   offset\n"
-                                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n"))) {
-                    qCritical() << "failed to prepare vod insert" << q.lastError();
-                    continue;
-                }
-
-                q.addBindValue(event.name());
-                //q.addBindValue(event.fullName());
-                q.addBindValue(event.name());
-                q.addBindValue(event.season());
-                q.addBindValue(event.game());
-                q.addBindValue(event.year());
-                q.addBindValue(stage.name());
-                q.addBindValue(stage.number());
-                q.addBindValue(match.date());
-                q.addBindValue(match.side1());
-                q.addBindValue(match.side2());
-                q.addBindValue(match.number());
-                q.addBindValue(urlShareId);
-                q.addBindValue(startOffset);
-
-                if (!q.exec()) {
-                    qCritical() << "failed to exec vod insert" << q.lastError();
-                    qDebug() << "failed"
-                             << match.date()
-                             << match.side1()
-                             << match.side2()
-                             << urlShareId
-                             << event.name()
-                             << event.season()
-                             << stage.name()
-                             << stage.number()
-                             << match.number()
-                             << event.game()
-                             << event.year()
-                             << startOffset
-                                ;
-
-                    continue;
-                }
-
-
-                addedVods = true;
-                qDebug() << "add"
-                         << match.date()
-                         << match.side1()
-                         << match.side2()
-                         << urlShareId
-                         << event.name()
-                         << event.season()
-                         << stage.name()
-                         << stage.number()
-                         << match.number()
-                         << event.game()
-                         << event.year()
-                         << startOffset
-                            ;
-
-            }
+    if (!records.isEmpty()) {
+        QMutexLocker g(&m_AddQueueLock);
+        m_AddQueue << records;
+        for (int i = 0; i < records.size(); i += BatchSize) {
+            emit vodsToAdd();
         }
     }
-
-    if (!q.exec("END TRANSACTION")) {
-        qCritical() << "failed to end transaction" << q.lastError();
-        return false;
-    }
-
-    return addedVods;
 }
 
 bool
-ScVodDataManager::_addVods(const QList<ScRecord>& records) {
+ScVodDataManager::_addVods(const QList<ScRecord>& records, qint64 generation) {
     QSqlQuery q(m_Database);
 
     if (!q.exec("BEGIN TRANSACTION")) {
@@ -1138,40 +1010,71 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
     for (int i = 0; i < records.size(); ++i) {
         const ScRecord& record = records[i];
 
-        bool entryExists;
-        if (!exists(record, &entryExists) || entryExists) {
+        qint64 id;
+        if (!exists(record, &id)) {
             continue;
         }
 
-        int urlType, startOffset;
-
-        parseUrl(record.url, &cannonicalUrl, &videoId, &urlType, &startOffset);
-        qint64 urlShareId = 0;
-
-        if (UT_Unknown != urlType) {
-            if (!q.prepare(QStringLiteral("SELECT id FROM vod_url_share WHERE video_id=? AND type=?"))) {
+        if (id != -1) {
+            if (!q.prepare(QStringLiteral("UPDATE vods SET generation=? WHERE id=?"))) {
                 qCritical() << "failed to prepare query" << q.lastError();
                 continue;
             }
 
-            q.addBindValue(videoId);
-            q.addBindValue(urlType);
+            q.addBindValue(generation);
+            q.addBindValue(id);
 
             if (!q.exec()) {
                 qCritical() << "failed to exec" << q.lastError();
                 continue;
             }
+        } else {
 
-            if (q.next()) {
-                urlShareId = qvariant_cast<qint64>(q.value(0));
-            } else {
-                if (!q.prepare(QStringLiteral("INSERT INTO vod_url_share (video_id, url, type) VALUES (?, ?, ?)"))) {
+            int urlType, startOffset;
+
+            parseUrl(record.url, &cannonicalUrl, &videoId, &urlType, &startOffset);
+            qint64 urlShareId = 0;
+
+            if (UT_Unknown != urlType) {
+                if (!q.prepare(QStringLiteral("SELECT id FROM vod_url_share WHERE video_id=? AND type=?"))) {
                     qCritical() << "failed to prepare query" << q.lastError();
                     continue;
                 }
 
                 q.addBindValue(videoId);
-                q.addBindValue(cannonicalUrl);
+                q.addBindValue(urlType);
+
+                if (!q.exec()) {
+                    qCritical() << "failed to exec" << q.lastError();
+                    continue;
+                }
+
+                if (q.next()) {
+                    urlShareId = qvariant_cast<qint64>(q.value(0));
+                } else {
+                    if (!q.prepare(QStringLiteral("INSERT INTO vod_url_share (video_id, url, type) VALUES (?, ?, ?)"))) {
+                        qCritical() << "failed to prepare query" << q.lastError();
+                        continue;
+                    }
+
+                    q.addBindValue(videoId);
+                    q.addBindValue(cannonicalUrl);
+                    q.addBindValue(urlType);
+
+                    if (!q.exec()) {
+                        qCritical() << "failed to exec" << q.lastError();
+                        continue;
+                    }
+
+                    urlShareId = qvariant_cast<qint64>(q.lastInsertId());
+                }
+            } else {
+                if (!q.prepare(QStringLiteral("INSERT INTO vod_url_share (url, type) VALUES (?, ?)"))) {
+                    qCritical() << "failed to prepare query" << q.lastError();
+                    break;
+                }
+
+                q.addBindValue(record.url);
                 q.addBindValue(urlType);
 
                 if (!q.exec()) {
@@ -1181,71 +1084,58 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
 
                 urlShareId = qvariant_cast<qint64>(q.lastInsertId());
             }
-        } else {
-            if (!q.prepare(QStringLiteral("INSERT INTO vod_url_share (url, type) VALUES (?, ?)"))) {
-                qCritical() << "failed to prepare query" << q.lastError();
-                break;
-            }
 
-            q.addBindValue(record.url);
-            q.addBindValue(urlType);
-
-            if (!q.exec()) {
-                qCritical() << "failed to exec" << q.lastError();
+            if (!q.prepare(
+                        QStringLiteral(
+                            "INSERT INTO vods (\n"
+                            "   event_name,\n"
+                            "   event_full_name,\n"
+                            "   season,\n"
+                            "   game,\n"
+                            "   year,\n"
+                            "   stage_name,\n"
+                            "   match_name,\n"
+                            "   match_date,\n"
+                            "   side1_name,\n"
+                            "   side2_name,\n"
+                            "   side1_race,\n"
+                            "   side2_race,\n"
+                            "   vod_url_share_id,\n"
+                            "   offset,\n"
+                            "   generation\n"
+                            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n"))) {
+                qCritical() << "failed to prepare vod insert" << q.lastError();
                 continue;
             }
 
-            urlShareId = qvariant_cast<qint64>(q.lastInsertId());
+            q.addBindValue(record.eventName);
+            q.addBindValue(record.eventFullName);
+            q.addBindValue(record.isValid(ScRecord::ValidSeason) ? record.season : 1);
+            q.addBindValue(record.isValid(ScRecord::ValidGame) ? record.game : -1);
+            q.addBindValue(record.year);
+            q.addBindValue(record.stage);
+            q.addBindValue(record.matchName);
+            q.addBindValue(record.matchDate);
+            q.addBindValue(record.side1Name);
+            q.addBindValue(record.side2Name);
+            q.addBindValue(record.side1Race);
+            q.addBindValue(record.side2Race);
+            q.addBindValue(urlShareId);
+            q.addBindValue(startOffset);
+            q.addBindValue(generation);
+
+            if (!q.exec()) {
+                qCritical() << "failed to exec vod insert" << q.lastError();
+                continue;
+            }
+
+            if (!record.isValid(ScRecord::ValidGame)) {
+                unknownGameRowids << qvariant_cast<qint64>(q.lastInsertId());
+                unknownGameIndices << i;
+            }
+
+            addedVods = true;
         }
-
-        if (!q.prepare(
-                    QStringLiteral(
-                        "INSERT INTO vods (\n"
-                        "   event_name,\n"
-                        "   event_full_name,\n"
-                        "   season,\n"
-                        "   game,\n"
-                        "   year,\n"
-                        "   stage_name,\n"
-                        "   match_name,\n"
-                        "   match_date,\n"
-                        "   side1_name,\n"
-                        "   side2_name,\n"
-                        "   side1_race,\n"
-                        "   side2_race,\n"
-                        "   vod_url_share_id,\n"
-                        "   offset\n"
-                        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n"))) {
-            qCritical() << "failed to prepare vod insert" << q.lastError();
-            continue;
-        }
-
-        q.addBindValue(record.eventName);
-        q.addBindValue(record.eventFullName);
-        q.addBindValue(record.isValid(ScRecord::ValidSeason) ? record.season : 0);
-        q.addBindValue(record.isValid(ScRecord::ValidGame) ? record.game : -1);
-        q.addBindValue(record.year);
-        q.addBindValue(record.stage);
-        q.addBindValue(record.matchName);
-        q.addBindValue(record.matchDate);
-        q.addBindValue(record.side1Name);
-        q.addBindValue(record.side2Name);
-        q.addBindValue(record.side1Race);
-        q.addBindValue(record.side2Race);
-        q.addBindValue(urlShareId);
-        q.addBindValue(startOffset);
-
-        if (!q.exec()) {
-            qCritical() << "failed to exec vod insert" << q.lastError();
-            continue;
-        }
-
-        if (!record.isValid(ScRecord::ValidGame)) {
-            unknownGameRowids << qvariant_cast<qint64>(q.lastInsertId());
-            unknownGameIndices << i;
-        }
-
-        addedVods = true;
     }
 
     // try to fix game column
@@ -2357,6 +2247,16 @@ ScVodDataManager::downloadMarker() const {
     return QDate();
 }
 
+QString
+ScVodDataManager::downloadMarkerString() const {
+    return downloadMarker().toString(Qt::ISODate);
+}
+
+void
+ScVodDataManager::resetDownloadMarker() {
+    setDownloadMarker(QDate());
+}
+
 void
 ScVodDataManager::setDownloadMarker(QDate value) {
     QSqlQuery q(m_Database);
@@ -2372,6 +2272,8 @@ ScVodDataManager::setDownloadMarker(QDate value) {
         qCritical() << "failed to exec download marker update" << q.lastError();
         return;
     }
+
+    emit downloadMarkerChanged();
 }
 
 void
@@ -2602,4 +2504,75 @@ void ScVodDataManager::fetchClassifier() {
     }
 }
 
+qint64
+ScVodDataManager::generation() const {
+    RETURN_IF_ERROR;
 
+    QMutexLocker g(&m_Lock);
+
+    QSqlQuery q(m_Database);
+
+    if (!q.exec("select max(generation) from vods")) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return -1;
+    }
+
+    if (q.next()) {
+        return qvariant_cast<qint64>(q.value(0));
+    }
+
+    return 0;
+}
+
+void
+ScVodDataManager::batchAddVods(void* ctx) {
+    static_cast<ScVodDataManager*>(ctx)->batchAddVods();
+}
+
+void
+ScVodDataManager::batchAddVods() {
+
+    QList<ScRecord> records;
+    for (int i = 0; i < BatchSize && !m_AddQueue.isEmpty(); ++i) {
+        records << m_AddQueue.front();
+        m_AddQueue.pop_front();
+    }
+
+    auto added = false;
+    if (!records.isEmpty()) {
+        QMutexLocker g(&m_Lock);
+        added = _addVods(records, 0);
+    }
+
+    if (added) {
+        QMutexLocker g(&m_AddQueueLock);
+        m_VodsAdded |= added;
+    }
+}
+
+
+void
+ScVodDataManager::vodsAdded() {
+    bool hasAdded = false;
+    {
+        QMutexLocker g(&m_AddQueueLock);
+        if (m_VodsAdded) {
+            m_VodsAdded = false;
+            hasAdded = true;
+
+        }
+    }
+
+    QMutexLocker g(&m_Lock);
+    if (hasAdded) {
+        tryRaiseVodsChanged();
+    }
+
+    emit busyChanged();
+}
+
+bool
+ScVodDataManager::busy() const {
+    QMutexLocker g(&m_AddQueueLock);
+    return !m_AddQueue.isEmpty();
+}

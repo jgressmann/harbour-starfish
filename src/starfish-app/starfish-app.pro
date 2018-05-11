@@ -62,6 +62,7 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/pages/NewPage.qml \
     qml/pages/EntryPage.qml \
     qml/pages/AboutPage.qml \
+    qml/pages/ToolsPage.qml \
     qml/TopMenu.qml \
     qml/Global.qml \
     qml/FormatComboBox.qml \
@@ -70,6 +71,7 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/ProgressMaskEffect.qml \
     qml/ProgressImageBlendEffect.qml \
     qml/HighlightingListView.qml \
+    qml/VodDataManagerBusyIndicator.qml \
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 

@@ -121,7 +121,6 @@ private:
     void updateProgressDescription();
     void setProgressIndeterminate(bool value);
 
-    class Adder;
     enum DownloadState {
         DS_None,
         DS_FetchingMetaData,
@@ -141,6 +140,7 @@ private:
     QDate m_TargetMarker;
     QDate m_LimitMarker;
     qreal m_Progress;
+    qint64 m_Generation;
     QString m_ProgressDescription;
     int m_YearMin, m_YearMax;
     QList<QString> m_YearUrls;

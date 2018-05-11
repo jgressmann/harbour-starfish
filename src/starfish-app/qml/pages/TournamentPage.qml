@@ -54,6 +54,8 @@ BasePage {
             model: sqlModel
             header: PageHeader {
                 title: sqlModel.data(sqlModel.index(0, 0), 0)
+
+                VodDataManagerBusyIndicator {}
             }
 
             delegate: StageItem {

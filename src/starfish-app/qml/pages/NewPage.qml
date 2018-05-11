@@ -52,6 +52,8 @@ BasePage {
             model: sqlModel
             header: PageHeader {
                 title: qsTr("New")
+
+                VodDataManagerBusyIndicator {}
             }
 
             delegate: Component {
