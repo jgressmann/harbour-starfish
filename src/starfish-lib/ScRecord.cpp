@@ -87,7 +87,7 @@ const QString EnglishWordSeasons[] = {
 
 const QRegExp eventNameCrudRegex(QStringLiteral("[\\[\\]\\-/,:]|\\(\\)"));
 const QRegExp dateRegex(QStringLiteral("\\d{4}-\\d{2}-\\d{2}"));
-const QRegExp yearRegex(QStringLiteral("^\\d{4}| \\d{4}"));
+const QRegExp yearRegex(QStringLiteral("^\\d{4} | \\d{4}"));
 const QRegExp yearRangeRegex(QStringLiteral("\\(?(\\d{4})-\\d{4}\\)?"));
 
 // September 10th 2011

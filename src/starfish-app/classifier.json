@@ -57,7 +57,7 @@
         "event": {
             "+": [
                 {
-                    "regex": "100 friday|after hours gaming league|ariel cup|asl.*prime|basetrade|beastqt|bstl|bronze league|btsl|corsair cup|crank|day\\[9\\] eu|dreamhack|drunken cast|esl euro cup|gsl|gstl|homestory cup|hots|iem|i love starcraft|ipl|ipsl|iptl|iron squid|legacy of the void|lotv|lowko|kung fu cup|mlg|nasl|nationwars|nation wars|neuro|ocs masters|olimoleague|pig|plantronics|pro level big|proleague|red bull|sc2|screddit|shoutcraft|starcraft2|starcraft ii|^\\s*starleague\\s*$|taketv|ting|vortex championship|vsl team league|vvv|wcs|wesg|winterstarcraft|wardi|wol|zotac"
+                    "regex": "100 friday|after hours gaming league|ariel cup|asl.*prime|basetrade|beastqt|bstl|bronze league|btsl|corsair cup|crank|day\\[9\\] eu|dreamhack|drunken cast|esl euro cup|gsl|gstl|homestory cup|hots|iem|i love starcraft|ipl|ipsl|iptl|iron squid|legacy of the void|lotv|lowko|kung fu cup|mlg|nasl|nationwars|nation wars|neuro|ocs masters|olimoleague|pig|plantronics|pro level big|proleague|red bull|sc2|screddit|shoutcraft|starcraft\\s*2|starcraft ii|^\\s*starleague\\s*$|taketv|ting|vortex championship|vsl team league|vvv|wcs|wesg|winterstarcraft|wardi|wol|zotac"
                 }
             ],
             "-": [
@@ -67,7 +67,7 @@
             ],
             "remove": [
                 {
-                    "regex": "^sc2 | sc2 | sc2$|starcraft 2|starcraft ii|wol|lotv|hots"
+                    "regex": "^sc2 | sc2 | sc2$|starcraft\\s*2|starcraft ii|wol|lotv|hots"
                 }
             ]
         },

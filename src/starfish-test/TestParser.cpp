@@ -300,6 +300,12 @@ TestParser::autocompleteFromEvent_data() {
     record.year = 2017;
     record.season = 1;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "17173.com World Cup";
+    record.eventFullName = "17173.com Starcraft 2 World Cup";
+    record.game = ScRecord::GameSc2;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 }
 
 

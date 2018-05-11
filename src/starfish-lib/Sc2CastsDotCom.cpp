@@ -631,6 +631,12 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
             record.valid |= ScRecord::ValidYear;
         }
 
+        // focus on detecting brood war correctly
+        if (!record.isValid(ScRecord::ValidGame)) {
+            record.game = ScRecord::GameSc2;
+            record.valid |= ScRecord::ValidGame;
+        }
+
         if (record.isValid(
                     ScRecord::ValidEventName |
                     ScRecord::ValidEventFullName |
@@ -656,9 +662,9 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
                 }
             }
         } else {
-            qDebug() << "invalid" << record;
+            //qDebug() << "invalid" << record;
             record.valid = 0;
-            qDebug("%s\n", qPrintable(content));
+            //qDebug("%s\n", qPrintable(content));
         }
     } else {
         record.valid = 0;
