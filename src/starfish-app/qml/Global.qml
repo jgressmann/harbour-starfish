@@ -110,7 +110,7 @@ Item { // Components can't declare functions
         }
 
         sql = "select count(*) as count from (" + sql  + ")"
-        console.debug(sql)
+//        console.debug(sql)
 
 
         _model.select = sql;
@@ -121,7 +121,7 @@ Item { // Components can't declare functions
         }
 
         var result = _model.data(_model.index(0, 0), 0)
-        console.debug("sql result: " + result)
+//        console.debug("sql result: " + result)
         return result
     }
 
