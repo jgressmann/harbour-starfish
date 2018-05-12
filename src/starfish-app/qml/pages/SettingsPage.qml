@@ -100,7 +100,13 @@ Page {
                 MenuItem { text: "sc2links.com" }
             }
 
-            Component.onCompleted: currentIndex = settingNetworkScraper.value
+            Component.onCompleted: {
+                if (sc2CastsDotComScraper.id === settingNetworkScraper.value) {
+                    currentIndex = 0
+                } else {
+                    currentIndex = 1
+                }
+            }
 
             onCurrentIndexChanged: {
                 switch (currentIndex) {
