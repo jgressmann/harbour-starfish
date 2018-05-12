@@ -42,6 +42,9 @@ HEADERS += \
 
 DISTFILES += qml/harbour-starfish.qml \
     qml/cover/CoverPage.qml \
+    classifier.json \
+    database.json \
+    icons.json \
     harbour-starfish.desktop \
     media/*.png \
     icons.json \
@@ -74,6 +77,7 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/VodDataManagerBusyIndicator.qml \
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
+!CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
 
 media.path = /usr/share/$${TARGET}/media
 media.files = media/sc2.png media/bw.png media/random.png
