@@ -209,8 +209,8 @@ Sc2LinksDotCom::finish() {
     Q_ASSERT(m_RequestMatch.empty());
     Q_ASSERT(m_RequestVod.empty());
 
-    pruneInvalidSeries();
-    saveRecords();
+//    pruneInvalidSeries();
+//    saveRecords();
     m_Events.clear();
 }
 
@@ -230,7 +230,7 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
         QString name = aHrefRegex.cap(2).trimmed();
         QString date = aHrefRegex.cap(3);
 
-        ScEnums::Game game = ScEnums::Game_Unknown;
+//        ScEnums::Game game = ScEnums::Game_Unknown;
         int year = 0;
         int season = 0;
         QString fullTitle = name;
@@ -242,24 +242,22 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
         ScRecord record;
         record.eventFullName = name;
         record.valid = ScRecord::ValidEventFullName;
-//        record.year = date.year;
-        //record.parseEvent(name + QStringLiteral(" ") + date);
-//        scParse(name + QStringLiteral(" ") + date, &record);
+
         record.autoComplete(*classifier());
 
-        if (record.valid & ScRecord::ValidGame) {
-            switch (record.game) {
-            case ScRecord::GameBroodWar:
-                game = ScEnums::Game_Broodwar;
-                break;
-            case ScRecord::GameSc2:
-                game = ScEnums::Game_Sc2;
-                break;
-            default:
-                game = ScEnums::Game_Unknown;
-                break;
-            }
-        }
+//        if (record.valid & ScRecord::ValidGame) {
+//            switch (record.game) {
+//            case ScRecord::GameBroodWar:
+//                game = ScEnums::Game_Broodwar;
+//                break;
+//            case ScRecord::GameSc2:
+//                game = ScEnums::Game_Sc2;
+//                break;
+//            default:
+//                game = ScEnums::Game_Unknown;
+//                break;
+//            }
+//        }
 
         if (record.valid & ScRecord::ValidSeason) {
             season = record.season;
@@ -273,7 +271,7 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
         ScEventData& data = ev.data();
 
         data.fullName = fullTitle;
-        data.game = game;
+//        data.game = game;
         data.name = record.eventName;
         data.season = season;
         data.year = year;
@@ -282,13 +280,13 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
         emit excludeEvent(ev, &exclude);
 
         if (exclude) {
-            qDebug() << "exclude event" << name << year << game << season;
+            qDebug() << "exclude event" << name << year << season;
         } else {
             m_Events << ev;
 
             m_EventRequestQueue.append(ev);
 
-            qDebug() << "fetch event" << name << year << game << season;
+            qDebug() << "fetch event" << name << year << season;
         }
     }
 
@@ -334,7 +332,7 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
     }
 
     stageOffsets << soup.length();
-
+    ScRecord record;
 
     for (int i = 0; i < stageOffsets.size() - 1; ++i) {
 
@@ -392,27 +390,6 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
                 eventData.year = qmatchDate.year();
             }
 
-            if (eventData.game == ScEnums::Game_Unknown) {
-                ScRecord record;
-//                record.resolveStage(stage.name());
-//                record.resolveMatch(junk);
-
-                if (record.valid & ScRecord::ValidGame) {
-                    switch (record.game) {
-                    case ScRecord::GameBroodWar:
-                        eventData.game = ScEnums::Game_Broodwar;
-                        break;
-                    case ScRecord::GameSc2:
-                        eventData.game = ScEnums::Game_Sc2;
-                        break;
-                    }
-                }
-            }
-
-//            if (eventData.game == ScEnums::Game_Unknown) {
-//                qDebug() << "setting event year from first match to" << qmatchDate.year();
-//                eventData.year = qmatchDate.year();
-//            }
 
             int imatchNumber = matchNumber.toInt();
 
@@ -424,11 +401,13 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
             matchData.side2 = side2;
             matchData.name = matchOrEpisode + QStringLiteral(" ") + matchNumber;
             matchData.owner = stage.toWeak();
-            bool exclude = false;
-            emit excludeMatch(match, &exclude);
 
+            completeRecord(eventData, stageData, matchData, &record);
+
+            bool exclude = false;
+            emit excludeRecord(record, &exclude);
             if (exclude) {
-                qDebug() << "exclude match" << event.name() << event.year() << event.game() << event.season() << imatchNumber << qmatchDate << side1 << side2;
+                qDebug() << "exclude" << record;
             } else {
 //                t->isShow = matchOrEpisode.compare(QStringLiteral("match"), Qt::CaseInsensitive) == 0;
                 stageData.matches << match;
@@ -457,14 +436,24 @@ Sc2LinksDotCom::parseLevel2(QNetworkReply* reply) {
     if (index >= 0) {
         QString url = iFrameRegex.cap(1);
         match.data().url = url;
+        const ScStageData& stage = *match.data().owner.data();
+        const ScEventData& event = *stage.owner.data();
+
+        ScRecord record;
+        completeRecord(event, stage, match.data(), &record);
+
+        bool exclude = false;
+        emit excludeRecord(record, &exclude);
+        if (exclude) {
+            qDebug() << "exclude" << record;
+        } else {
+            m_Vods << record;
+        }
 
     } else {
         qWarning() << "no vod url found in" << reply->request().url();
     }
 }
-
-
-
 void
 Sc2LinksDotCom::updateVodFetchingProgress() {
     if (m_TotalUrlsToFetched) {
@@ -484,6 +473,7 @@ Sc2LinksDotCom::_cancel() {
     foreach (const auto& key, m_PendingRequests.keys()) {
         key->abort();
     }
+    // This crashes
 //    const auto beg = m_PendingRequests.cbegin();
 //    const auto end = m_PendingRequests.cend();
 //    for (auto it = beg; it != end; ++it) {
@@ -529,13 +519,37 @@ Sc2LinksDotCom::_id() const {
 }
 
 void
+Sc2LinksDotCom::completeRecord(const ScEventData& event, const ScStageData& stage, const ScMatchData& match, ScRecord* _record) const {
+    Q_ASSERT(_record);
+    toRecord(event, stage, match, _record);
+
+    ScRecord& record = *_record;
+    record.autoComplete(*classifier());
+
+    if (!record.isValid(ScRecord::ValidGame)) {
+        // focus on detecting bw
+        record.game = ScRecord::GameSc2;
+        record.valid |= ScRecord::ValidGame;
+    }
+
+    if (!record.isValid(ScRecord::ValidYear)) {
+        record.year = record.matchDate.year();
+        record.valid |= ScRecord::ValidYear;
+    }
+}
+
+
+void
 Sc2LinksDotCom::toRecord(const ScEventData& event, const ScStageData& stage, const ScMatchData& match, ScRecord* _record) {
     Q_ASSERT(_record);
-    Q_ASSERT(!match.url.isEmpty());
-    ScRecord& record = *_record;
 
-    record.valid = ScRecord::ValidUrl;
-    record.url = match.url;
+    ScRecord& record = *_record;
+    record.valid = 0;
+
+    if (!match.url.isEmpty()) {
+        record.url = match.url;
+        record.valid |= ScRecord::ValidUrl;
+    }
 
     if (!event.fullName.isEmpty()) {
         record.eventFullName = event.fullName;

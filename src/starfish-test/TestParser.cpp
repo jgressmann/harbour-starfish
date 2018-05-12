@@ -314,6 +314,11 @@ TestParser::autocompleteFromEvent_data() {
     record.year = 2017;
     record.season = 1;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = 0;
+    record.eventName = "StarCraft 20th Anniversary";
+    record.eventFullName = "StarCraft 20th Anniversary";
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 }
 
 
@@ -578,7 +583,7 @@ static const char* const s_Data[] = {
 "Afreeca Starleague S5 (BW)April 3rd 2018
 "NeuroApril 2nd 2018
 "GSL Season One Code SMarch 31st 2018
-"StarCraft 20th AnniversaryMarch 31st 2018
+"StarCraft 20th Anniversary March 31st 2018
 "Falcon PaladinMarch 26th 2018
 "WESGMarch 18th 2018
 "WardiTVMarch 18th 2018

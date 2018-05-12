@@ -58,6 +58,7 @@ private:
     void pruneInvalidSeries();
     void saveRecords();
     static void toRecord(const ScEventData& event, const ScStageData& stage, const ScMatchData& match, ScRecord* record);
+    void completeRecord(const ScEventData& event, const ScStageData& stage, const ScMatchData& match, ScRecord* record) const;
     void finish();
 
 
