@@ -66,7 +66,7 @@ namespace  {
 const QString s_IconsUrl = QStringLiteral("https://www.dropbox.com/s/p2640l82i3u1zkg/icons.json.gz?dl=1");
 const QString s_ClassifierUrl = QStringLiteral("https://www.dropbox.com/s/3cckgyzlba8kev9/classifier.json.gz?dl=1");
 
-const int BatchSize = 16;
+const int BatchSize = 8;
 
 class Stopwatch {
 public:
@@ -614,6 +614,13 @@ ScVodDataManager::createTablesIfNecessary() {
 
     if (!q.exec("PRAGMA temp_store = MEMORY")) {
         qCritical() << "failed to set temp store to memory" << q.lastError();
+        setError(Error_CouldntCreateSqlTables);
+        setStatus(Status_Error);
+        return;
+    }
+
+    if (!q.exec("PRAGMA journal_mode = WAL")) {
+        qCritical() << "failed to set journal mode to WAL" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
         setStatus(Status_Error);
         return;
