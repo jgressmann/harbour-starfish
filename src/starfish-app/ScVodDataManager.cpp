@@ -907,6 +907,8 @@ ScVodDataManager::exists(
         record.game = ScRecord::GameSc2;
         record.valid |= ScRecord::ValidGame;
         break;
+    default:
+        break;
     }
 
     if (!stage.name().isEmpty()) {
@@ -2082,6 +2084,7 @@ ScVodDataManager::addThumbnail(qint64 rowid, const QByteArray& bytes) {
     auto mimeData = QMimeDatabase().mimeTypeForData(bytes);
     if (mimeData.isValid() && !mimeData.suffixes().contains(extension)) {
         auto newFileName = thumbnailFileName.left(lastDot) + QStringLiteral(".") + mimeData.preferredSuffix();
+        qDebug() << "changing" << thumbnailFileName << "to" << newFileName;
         if (!q.prepare(QStringLiteral("UPDATE vod_thumbnails SET file_name=? WHERE id=?"))) {
             qCritical() << "failed to prepare query" << q.lastError();
             return;

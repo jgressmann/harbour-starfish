@@ -166,12 +166,12 @@ ListItem {
                 height: parent.height - heading.height
                 anchors.top: heading.bottom
 
-
                 Item {
                     id: thumbnailGroup
                     width: Global.itemHeight
                     height: Global.itemHeight
                     anchors.verticalCenter: parent.verticalCenter
+                    property bool downloadFailed: false
 
                     Image {
                         id: thumbnail
@@ -182,20 +182,36 @@ ListItem {
                         cache: false
                         // prevents the image from loading on device
                         //asynchronous: true
-                        visible: status === Image.Ready
+                        visible: status === Image.Ready && !thumbnailGroup.downloadFailed
 
-//                        MouseArea {
-//                            anchors.fill: parent
-//                            enabled: parent.visible
-//                            onClicked: VodDataManager.fetchThumbnail(rowId)
-//                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: parent.visible
+                            onClicked: VodDataManager.fetchThumbnail(rowId)
+                        }
+                    }
+
+                    Image {
+                        id: reloadThumbnail
+                        source: source = "image://theme/icon-m-reload"
+                        anchors.centerIn: parent
+                        visible: thumbnailGroup.downloadFailed
+                        cache: false
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                thumbnailGroup.downloadFailed = false
+                                VodDataManager.fetchThumbnail(rowId)
+                            }
+                        }
                     }
 
                     BusyIndicator {
                         size: BusyIndicatorSize.Medium
                         anchors.centerIn: parent
                         running: visible
-                        visible: !thumbnail.visible
+                        visible: !thumbnail.visible && !reloadThumbnail.visible
                     }
                 }
 
@@ -295,6 +311,7 @@ ListItem {
                                 source: "image://theme/icon-s-date"
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: !!_vod
+                                cache: false
                             }
 
                             Item {
@@ -309,6 +326,7 @@ ListItem {
     //                                anchors.verticalCenter: parent.verticalCenter
     //                                anchors.right: parent.right
                                     visible: progressOverlay.progress < 1
+                                    cache: false
 
                                     layer.enabled: true
 
@@ -407,14 +425,6 @@ ListItem {
         _clicking = false
     }
 
-//    on_OnScreenChanged: {
-////        console.debug("onScreen changed " + rowId + " " + _onScreen + " " + root.y)
-//        if (_onScreen) {
-//            _fetchThumbnail()
-//        } else {
-//            VodDataManager.cancelFetchMetaData(rowId)
-//        }
-//    }
 
     Connections {
         target: pageStack
@@ -510,7 +520,7 @@ ListItem {
     function thumbnailDownloadFailed(rowid, error, url) {
         if (rowid === rowId) {
             console.debug("thumbnail download failed rowid=" + rowid + " error=" + error + " url=" + url)
-            thumbnail.source = "image://theme/icon-m-reload"
+            thumbnailGroup.downloadFailed = true
         }
     }
 
@@ -548,15 +558,13 @@ ListItem {
             _width = width
             _height = height
             _formatId = formatId
-//            if (_clicked) {
-//                _tryPlay()
-//            }
         }
     }
 
     function thumbnailAvailable(rowid, filePath) {
         if (rowid === rowId) {
             console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
+            thumbnail.source = "" // force reload
             thumbnail.source = filePath
         }
     }
