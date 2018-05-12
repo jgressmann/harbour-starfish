@@ -133,7 +133,6 @@ BasePage {
                 startOffsetMs: offset * 1000
                 showDate: !_sameDate
                 showSides: !_sameSides
-                showTitle: !_side2
 //                    vodLabel: !_side2 ? "Episode" : "Match"
 
 //                    Component.onCompleted: {

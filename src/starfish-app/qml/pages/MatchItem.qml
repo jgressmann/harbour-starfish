@@ -38,8 +38,8 @@ ListItem {
     property date matchDate
     property bool seen: false
     property bool showDate: true
-    property bool showSides: true
-    property bool showTitle: true
+    property bool showSides: (side1 && side2) || (side1 && !_vodTitle)
+    property bool showTitle: !side2
     property bool menuEnabled: true
     property int rowId: -1
     property string _vodFilePath
@@ -218,7 +218,11 @@ ListItem {
                         truncationMode: TruncationMode.Fade
                         text: {
                             if (showSides) {
-                                return side1 + " - " + side2
+                                if (side2) {
+                                    return side1 + " - " + side2
+                                }
+
+                                return side1
                             }
 
                             if (showTitle && _vodTitle) {
