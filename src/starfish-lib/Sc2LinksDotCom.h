@@ -42,8 +42,9 @@ public: //
     virtual bool canSkip() const Q_DECL_OVERRIDE;
 
 protected:
-    virtual void _fetch();
-    virtual void _cancel();
+    virtual void _fetch() Q_DECL_OVERRIDE;
+    virtual void _cancel() Q_DECL_OVERRIDE;
+    virtual QString _id() const Q_DECL_OVERRIDE;
 
 private slots:
     void requestFinished(QNetworkReply* reply);
@@ -55,10 +56,14 @@ private:
     QNetworkReply* makeRequest(const QUrl& url) const;
     void updateVodFetchingProgress();
     void pruneInvalidSeries();
+    void saveRecords();
+    static void toRecord(const ScEventData& event, const ScStageData& stage, const ScMatchData& match, ScRecord* record);
+    void finish();
+
 
 private:
     QList<ScRecord> m_Vods;
-    QList<ScEvent> m_Vods2;
+    QList<ScEvent> m_Events;
     QList<ScEvent> m_EventRequestQueue;
     QHash<QNetworkReply*, int> m_PendingRequests;
     QHash<QNetworkReply*, ScEvent> m_RequestStage;

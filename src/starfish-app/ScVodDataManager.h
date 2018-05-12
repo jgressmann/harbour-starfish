@@ -242,6 +242,5 @@ private:
     QString m_VodDir;
     QString m_IconDir;
     int m_SuspendedVodsChangedEventCount;
-    bool m_VodsAdded;
 };
 

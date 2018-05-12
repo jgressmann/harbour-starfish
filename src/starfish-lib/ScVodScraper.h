@@ -40,6 +40,7 @@ class ScVodScraper : public QObject
     Q_PROPERTY(QString progressDescription READ progressDescription NOTIFY progressDescriptionChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
+    Q_PROPERTY(QString id READ id CONSTANT)
 public:
     enum Status {
         Status_Ready,
@@ -74,7 +75,7 @@ public:
     virtual bool canSkip() const;
     inline ScClassifier* classifier() const { return m_Classifier; }
     inline void setClassifier(ScClassifier* value) { m_Classifier = value; }
-
+    inline QString id() const { return _id(); }
 signals:
     void statusChanged();
     void errorChanged();
@@ -96,6 +97,7 @@ public slots:
 protected:
     virtual void _fetch() = 0;
     virtual void _cancel();
+    virtual QString _id() const = 0;
     void setStatus(Status value);
     void setError(Error error);
     void setProgress(qreal value);

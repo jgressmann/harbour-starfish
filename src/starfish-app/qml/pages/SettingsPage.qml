@@ -32,11 +32,11 @@ import ".."
 Page {
     id: root
 
-    Component.onCompleted: {
-        console.debug("broadband format=" + settingBroadbandDefaultFormat.value)
-        console.debug("mobile format=" + settingMobileDefaultFormat.value)
-        console.debug("max meta data downloads=" + settingNetworkMaxConcurrentMetaDataDownloads.value)
-    }
+//    Component.onCompleted: {
+//        console.debug("broadband format=" + settingBroadbandDefaultFormat.value)
+//        console.debug("mobile format=" + settingMobileDefaultFormat.value)
+//        console.debug("max meta data downloads=" + settingNetworkMaxConcurrentMetaDataDownloads.value)
+//    }
 
     Component.onDestruction: {
         settings.sync()
@@ -91,6 +91,29 @@ Page {
             }
         }
 
+        ComboBox {
+            label: "VOD site"
+            description: "This site is used to check for new VODs."
+            menu: ContextMenu {
+                id: menu
+                MenuItem { text: "sc2casts.com" }
+                MenuItem { text: "sc2links.com" }
+            }
+
+            Component.onCompleted: currentIndex = settingNetworkScraper.value
+
+            onCurrentIndexChanged: {
+                switch (currentIndex) {
+                case 0:
+                    settingNetworkScraper.value = sc2CastsDotComScraper.id
+                    break
+                case 1:
+                    settingNetworkScraper.value = sc2LinksDotComScraper.id
+                    break
+                }
+            }
+        }
+
         SectionHeader {
             text: "Format"
         }
@@ -127,6 +150,7 @@ Page {
                 settingExternalMediaPlayer.value = checked
             }
         }
+
     }
 
     SilicaFlickable {

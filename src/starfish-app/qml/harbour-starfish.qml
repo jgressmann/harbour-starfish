@@ -47,7 +47,7 @@ ApplicationWindow {
     VodDatabaseDownloader {
         id: vodDatabaseDownloader
         dataManager: VodDataManager
-        scraper: sc2CastsDotComScraper
+
 
         onStatusChanged: {
             switch (status) {
@@ -91,6 +91,14 @@ ApplicationWindow {
         }
 
         ConfigurationValue {
+            id: settingNetworkScraper
+            key: "/network/scraper"
+            defaultValue: sc2CastsDotComScraper.id
+
+            onValueChanged: _setScraper()
+        }
+
+        ConfigurationValue {
             id: settingExternalMediaPlayer
             key: "/playback/use_external_player"
             defaultValue: false
@@ -129,7 +137,17 @@ ApplicationWindow {
 
     Component.onCompleted: {
         VodDataManager.vodman.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
+        _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
+    }
+
+    function _setScraper() {
+        console.debug("scraper=" + settingNetworkScraper.value)
+        if (sc2CastsDotComScraper.id === settingNetworkScraper.value) {
+            vodDatabaseDownloader.scraper = sc2CastsDotComScraper
+        } else if (sc2LinksDotComScraper.id === settingNetworkScraper.value) {
+            vodDatabaseDownloader.scraper = sc2LinksDotComScraper
+        }
     }
 }
 

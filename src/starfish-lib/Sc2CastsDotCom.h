@@ -42,8 +42,9 @@ public: //
     virtual QList<ScRecord> vods() const { return m_Vods; }
 
 protected:
-    virtual void _fetch();
-    virtual void _cancel();
+    virtual void _fetch() Q_DECL_OVERRIDE;
+    virtual void _cancel()  Q_DECL_OVERRIDE;
+    virtual QString _id() const  Q_DECL_OVERRIDE;
 
 private slots:
     void requestFinished(QNetworkReply* reply);

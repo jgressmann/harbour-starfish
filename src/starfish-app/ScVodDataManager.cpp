@@ -58,13 +58,48 @@
     } while (0)
 
 
+#define CLASSIFIER_FILE "/classifier.json.gz"
+#define ICONS_FILE "/icons.json.gz"
 
 namespace  {
 
 const QString s_IconsUrl = QStringLiteral("https://www.dropbox.com/s/p2640l82i3u1zkg/icons.json.gz?dl=1");
 const QString s_ClassifierUrl = QStringLiteral("https://www.dropbox.com/s/3cckgyzlba8kev9/classifier.json.gz?dl=1");
 
-const int BatchSize = 64;
+const int BatchSize = 16;
+
+class Stopwatch {
+public:
+    ~Stopwatch() {
+        auto stop = QDateTime::currentMSecsSinceEpoch();
+        auto duration = stop - m_Start;
+        if (duration > m_Threshold) {
+            qWarning("%s took %d [ms]\n", qPrintable(m_Name), (int)duration);
+        } else {
+            qDebug("%s took %d [ms]\n", qPrintable(m_Name), (int)duration);
+        }
+    }
+    Stopwatch(const char* name, int millisBeforeWarn = 100)
+        : m_Name(QLatin1String(name))
+        , m_Start(QDateTime::currentMSecsSinceEpoch())
+        , m_Threshold(millisBeforeWarn)
+    {
+
+    }
+
+    Stopwatch(const QString& str, int millisBeforeWarn = 100)
+        : m_Name(str)
+        , m_Start(QDateTime::currentMSecsSinceEpoch())
+        , m_Threshold(millisBeforeWarn)
+    {
+
+    }
+
+private:
+    QString m_Name;
+    qint64 m_Start;
+    int m_Threshold;
+};
 
 } // anon
 
@@ -135,9 +170,9 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
 
 
     // icons
-    const auto iconsFileDestinationPath = databaseDir + QStringLiteral("/icons.json.gz");
+    const auto iconsFileDestinationPath = databaseDir + QStringLiteral(ICONS_FILE);
     if (!QFile::exists(iconsFileDestinationPath)) {
-        auto src = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/icons.json.gz");
+        auto src = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) ICONS_FILE);
         if (!QFile::copy(src, iconsFileDestinationPath)) {
             qCritical() << "could not copy" << src << "to" << iconsFileDestinationPath;
         }
@@ -148,9 +183,9 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     (void)result;
 
     // classifier
-    const auto classifierFileDestinationPath = databaseDir + QStringLiteral("/classifier.json.gz");
+    const auto classifierFileDestinationPath = databaseDir + QStringLiteral(CLASSIFIER_FILE);
     if (!QFile::exists(classifierFileDestinationPath)) {
-        auto src = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/classifier.json.gz");
+        auto src = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) CLASSIFIER_FILE);
         if (!QFile::copy(src, classifierFileDestinationPath)) {
             qCritical() << "could not copy" << src << "to" << iconsFileDestinationPath;
         }
@@ -175,6 +210,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
 
 void
 ScVodDataManager::requestFinished(QNetworkReply* reply) {
+    Stopwatch sw("requestFinished");
     QMutexLocker guard(&m_Lock);
     reply->deleteLater();
     auto it = m_ThumbnailRequests.find(reply);
@@ -201,7 +237,7 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
                     if (v >= 200 && v < 300) {// Success
                         // Here we got the final reply
                         auto bytes = reply->readAll();
-                        QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QStringLiteral("/classifier.json.gz"));
+                        QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QStringLiteral(CLASSIFIER_FILE));
                         if (file.open(QIODevice::Truncate | QIODevice::WriteOnly)) {
                             auto w = file.write(bytes);
                             file.close();
@@ -309,7 +345,7 @@ ScVodDataManager::iconRequestFinished(QNetworkReply* reply, IconRequest& r) {
             if (r.url == s_IconsUrl) {
                 // Here we got the final reply
                 auto bytes = reply->readAll();
-                QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QStringLiteral("/icons.json.gz"));
+                QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QStringLiteral(ICONS_FILE));
                 if (file.open(QIODevice::Truncate | QIODevice::WriteOnly)) {
                     auto w = file.write(bytes);
                     file.close();
@@ -547,6 +583,7 @@ ScVodDataManager::createTablesIfNecessary() {
 //        "DROP INDEX IF EXISTS vod_file_ref_vod_file_id",
 
 
+        "DROP TABLE IF EXISTS icons",
         "DROP TABLE IF EXISTS vod_file_ref",
         "DROP TABLE IF EXISTS vods",
         "DROP TABLE IF EXISTS vod_files",
@@ -694,6 +731,7 @@ ScVodDataManager::label(const QString& key, const QVariant& value) const {
 
 QString
 ScVodDataManager::icon(const QString& key, const QVariant& value) const {
+//    Stopwatch sw("icon", 5);
     if (QStringLiteral("game") == key) {
         auto game = value.toInt();
         switch (game) {
@@ -733,7 +771,6 @@ ScVodDataManager::icon(const QString& key, const QVariant& value) const {
     }
 
     return QStringLiteral("image://theme/icon-m-sailfish");
-
 }
 
 
@@ -826,48 +863,71 @@ ScVodDataManager::exists(
         const ScEvent& event,
         const ScStage& stage,
         const ScMatch& match,
-        bool* exists) const {
+        bool* _exists) const {
 
-    Q_ASSERT(exists);
+    Q_ASSERT(_exists);
 
     QSqlQuery q(m_Database);
 
-    if (!q.prepare(QStringLiteral(
-                       "SELECT\n"
-                       "    id\n"
-                       "FROM\n"
-                       "    vods\n"
-                       "WHERE\n"
-                       "    event_name=?\n"
-                       "    AND year=?\n"
-                       "    AND game=?\n"
-                       "    AND season=?\n"
-                       "    AND match_name=?\n"
-                       "    AND match_date=?\n"
-                       "    AND side1=?\n"
-                       "    AND (side2 IS NULL OR side2=?)\n"
-                       "    AND stage_name=?\n"))) {
-        qCritical() << "failed to prepare match select" << q.lastError();
+    ScRecord record;
+    if (!event.fullName().isEmpty()) {
+        record.eventFullName = event.fullName();
+        record.valid |= ScRecord::ValidEventFullName;
+    }
+
+    if (!event.name().isEmpty()) {
+        record.eventName = event.fullName();
+        record.valid |= ScRecord::ValidEventName;
+    }
+
+    if (event.year() > 0) {
+        record.year = event.year();
+        record.valid |= ScRecord::ValidYear;
+    }
+
+    if (event.season() > 0) {
+        record.season = event.season();
+        record.valid |= ScRecord::ValidSeason;
+    }
+
+    switch (event.game()) {
+    case ScEnums::Game_Broodwar:
+        record.game = ScRecord::GameBroodWar;
+        record.valid |= ScRecord::ValidGame;
+        break;
+    case ScEnums::Game_Sc2:
+        record.game = ScRecord::GameSc2;
+        record.valid |= ScRecord::ValidGame;
+        break;
+    }
+
+    if (!stage.name().isEmpty()) {
+        record.stage = stage.name();
+        record.valid |= ScRecord::ValidStage;
+    }
+
+    if (!match.name().isEmpty()) {
+        record.matchName = match.name();
+        record.valid |= ScRecord::ValidMatchName;
+    }
+
+    if (match.date().isValid()) {
+        record.matchDate = match.date();
+        record.valid |= ScRecord::ValidMatchDate;
+    }
+
+    if (!match.side1().isEmpty()) {
+        record.side1Name = match.side1();
+        record.side2Name = match.side2();
+        record.valid |= ScRecord::ValidSides;
+    }
+
+    qint64 id;
+    if (!exists(record, &id)) {
         return false;
     }
 
-    q.addBindValue(event.name());
-    q.addBindValue(event.year());
-    q.addBindValue(event.game());
-    q.addBindValue(event.season());
-    q.addBindValue(QString::number(match.number()));
-    q.addBindValue(match.date());
-    q.addBindValue(match.side1());
-    q.addBindValue(match.side2());
-    q.addBindValue(stage.name());
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec match select" << q.lastError();
-        return false;
-    }
-
-    *exists = q.next();
-
+    *_exists = id != -1;
     return true;
 }
 
@@ -979,15 +1039,12 @@ ScVodDataManager::hasRecord(const ScRecord& record, bool* _exists) {
 
 void
 ScVodDataManager::addVods(const QList<ScRecord>& records, qint64 generation) {
-//    QMutexLocker g(&m_Lock);
-//    if (_addVods(records, generation)) {
-//        tryRaiseVodsChanged();
-//    }
-
     if (!records.isEmpty()) {
-        QMutexLocker g(&m_AddQueueLock);
+        QMutexLocker g(&m_Lock);
+        QMutexLocker g2(&m_AddQueueLock);
         m_AddQueue << records;
         for (int i = 0; i < records.size(); i += BatchSize) {
+            suspendVodsChangedEvents();
             emit vodsToAdd();
         }
     }
@@ -995,6 +1052,7 @@ ScVodDataManager::addVods(const QList<ScRecord>& records, qint64 generation) {
 
 bool
 ScVodDataManager::_addVods(const QList<ScRecord>& records, qint64 generation) {
+    Stopwatch sw("_addVods", 100);
     QSqlQuery q(m_Database);
 
     if (!q.exec("BEGIN TRANSACTION")) {
@@ -1031,6 +1089,11 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records, qint64 generation) {
         } else {
 
             int urlType, startOffset;
+
+            if (!record.isValid(ScRecord::ValidUrl)) {
+                qWarning() << "invalid url" << record;
+                continue;
+            }
 
             parseUrl(record.url, &cannonicalUrl, &videoId, &urlType, &startOffset);
             qint64 urlShareId = 0;
@@ -1364,6 +1427,7 @@ void
 ScVodDataManager::fetchMetaData(qint64 rowid, bool download) {
     RETURN_IF_ERROR;
 
+    Stopwatch sw("fetchMetaData", 10);
     QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);
@@ -1435,6 +1499,7 @@ ScVodDataManager::fetchMetaData(qint64 rowid, bool download) {
 void ScVodDataManager::fetchThumbnail(qint64 rowid) {
     RETURN_IF_ERROR;
 
+    Stopwatch sw("fetchThumbnail", 10);
     QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);
@@ -2286,8 +2351,10 @@ void
 ScVodDataManager::resumeVodsChangedEvents()
 {
     QMutexLocker g(&m_Lock);
-    if (--m_SuspendedVodsChangedEventCount == 0){
+    if (--m_SuspendedVodsChangedEventCount == 0 ){
         emit vodsChanged();
+    } else if (m_SuspendedVodsChangedEventCount < 0) {
+        qCritical() << "m_SuspendedVodsChangedEventCount < 0";
     }
 }
 
@@ -2538,35 +2605,17 @@ ScVodDataManager::batchAddVods() {
         m_AddQueue.pop_front();
     }
 
-    auto added = false;
     if (!records.isEmpty()) {
         QMutexLocker g(&m_Lock);
-        added = _addVods(records, 0);
-    }
-
-    if (added) {
-        QMutexLocker g(&m_AddQueueLock);
-        m_VodsAdded |= added;
+        _addVods(records, 0);
     }
 }
 
 
 void
 ScVodDataManager::vodsAdded() {
-    bool hasAdded = false;
-    {
-        QMutexLocker g(&m_AddQueueLock);
-        if (m_VodsAdded) {
-            m_VodsAdded = false;
-            hasAdded = true;
-
-        }
-    }
-
     QMutexLocker g(&m_Lock);
-    if (hasAdded) {
-        tryRaiseVodsChanged();
-    }
+    resumeVodsChangedEvents();
 
     emit busyChanged();
 }

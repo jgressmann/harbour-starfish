@@ -711,3 +711,8 @@ Sc2CastsDotCom::pruneInvalidVods() {
         }
     }
 }
+
+QString
+Sc2CastsDotCom::_id() const {
+    return QStringLiteral("sc2casts.com");
+}
