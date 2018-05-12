@@ -602,6 +602,11 @@ Sc2LinksDotCom::toRecord(const ScEventData& event, const ScStageData& stage, con
         record.side2Name = match.side2;
         record.valid |= ScRecord::ValidSides;
     }
+
+    if (match.matchNumber > 0) {
+        record.matchNumber = match.matchNumber;
+        record.valid |= ScRecord::ValidMatchNumber;
+    }
 }
 
 void

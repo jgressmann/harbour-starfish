@@ -40,7 +40,7 @@ BasePage {
         id: sqlModel
         dataManager: VodDataManager
         columns: ["side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "rowid", "offset"]
-        select: "select " + columns.join(",") + " from vods " + Global.whereClause(filters) + " order by match_date, match_name desc"
+        select: "select " + columns.join(",") + " from vods " + Global.whereClause(filters) + " order by match_date desc, match_number asc, match_name desc"
     }
 
     SqlVodModel {

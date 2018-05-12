@@ -190,7 +190,7 @@ private slots:
 private:
     static bool tryGetEvent(QString& inoutSrc, QString* location);
     static bool tryGetIcon(const QString& title, QString* iconPath);
-    void createTablesIfNecessary();
+    void setupDatabase();
     void setStatus(Status value);
     void setError(Error value);
     void updateStatus();
@@ -203,7 +203,7 @@ private:
                          QString* cannonicalUrl,
                          QString* outId, int* outUrlType, int* outStartOffset);
     static int parseTwitchOffset(const QString& str);
-    bool _addVods(const QList<ScRecord>& records, qint64 generation);
+    bool _addVods(const QList<ScRecord>& records);
     void tryRaiseVodsChanged();
     void getSeries(const QString& str, QString& series, QString& event);
     bool exists(

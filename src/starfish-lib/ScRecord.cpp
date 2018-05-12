@@ -92,7 +92,8 @@ const QRegExp yearRangeRegex(QStringLiteral("\\(?(\\d{4})-\\d{4}\\)?"));
 
 // September 10th 2011
 const QRegExp englishDate(QStringLiteral("(?:january|febuary|march|april|may|june|july|august|september|october|november|december)\\s+([0-9]{1,2}(?:st|nd|rd|th)\\s+\\d{4})"), Qt::CaseInsensitive);
-const QRegExp sidesRegex(QStringLiteral("(.*)\\s+(?:-|vs)\\s+(.*)"));
+const QRegExp sidesRegex(QStringLiteral("(.*)\\s+(?:-|vs)\\s+(.*)"), Qt::CaseInsensitive);
+const QRegExp matchNumberRegex(QStringLiteral("^\\s*(?:match|episode)\\s+(\\d+)\\s*$"), Qt::CaseInsensitive);
 
 int InitializeStatics() {
     Q_ASSERT(eventNameCrudRegex.isValid());
@@ -100,6 +101,8 @@ int InitializeStatics() {
     Q_ASSERT(yearRegex.isValid());
     Q_ASSERT(yearRangeRegex.isValid());
     Q_ASSERT(englishDate.isValid());
+    Q_ASSERT(sidesRegex.isValid());
+    Q_ASSERT(matchNumberRegex.isValid());
 
 
     return 1;
@@ -280,6 +283,15 @@ bool tryGetSides(const QString& str, QString* side1, QString* side2) {
     return false;
 }
 
+bool tryGetMatchNumber(const QString& str, int* matchNumber) {
+    int index = matchNumberRegex.indexIn(str);
+    if (index >= 0) {
+        *matchNumber = matchNumberRegex.cap(1).toInt();
+        return true;
+    }
+    return false;
+}
+
 void removeCrud(QString& inoutSrc) {
     inoutSrc.remove(yearRegex);
     inoutSrc.remove(eventNameCrudRegex);
@@ -296,6 +308,7 @@ ScRecord::ScRecord()
     season = 0;
     side1Race = 0;
     side2Race = 0;
+    matchNumber = 0;
 }
 
 
@@ -378,6 +391,11 @@ ScRecord::autoComplete(const ScClassifier& classifier) {
 
             if (!isValid(ValidSides) && tryGetSides(matchName, &side1Name, &side2Name)) {
                 valid |= ScRecord::ValidSides;
+                change = true;
+            }
+
+            if (!isValid(ValidMatchNumber) && tryGetMatchNumber(matchName, &matchNumber)) {
+                valid |= ScRecord::ValidMatchNumber;
                 change = true;
             }
         }

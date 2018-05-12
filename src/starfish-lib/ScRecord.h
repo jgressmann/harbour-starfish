@@ -44,6 +44,7 @@ public:
         ValidUrl = 0x100,
         ValidMatchName = 0x200,
         ValidEventFullName = 0x400,
+        ValidMatchNumber = 0x800,
     };
 
     enum Game {
@@ -73,6 +74,7 @@ public:
     int season;
     int game;
     int valid;
+    int matchNumber;
 
     ~ScRecord() = default;
     ScRecord();
