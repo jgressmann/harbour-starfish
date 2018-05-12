@@ -306,34 +306,42 @@ ScRecord::autoComplete(const ScClassifier& classifier) {
 
         if (isValid(ValidEventFullName)) {
             auto str = eventFullName;
+            // to remove parts of str
             QDate date;
-            if (tryGetDate(str, &date)) {
-                if (!isValid(ScRecord::ValidYear)) {
-                    year = date.year();
-                    valid |= ScRecord::ValidYear;
-                    change = true;
-                }
-            }
-
-            if (!isValid(ScRecord::ValidYear) && tryGetYear(str, &year)) {
+            auto result = tryGetDate(str, &date);
+            if (!isValid(ScRecord::ValidYear) && result) {
+                year = date.year();
                 valid |= ScRecord::ValidYear;
                 change = true;
             }
 
-            if (!isValid(ScRecord::ValidSeason) && tryGetSeason(str, &season)) {
+            int y;
+            result = tryGetYear(str, &y);
+            if (!isValid(ScRecord::ValidYear) && result) {
+                year = y;
+                valid |= ScRecord::ValidYear;
+                change = true;
+            }
+
+            int s;
+            result = tryGetSeason(str, &s);
+            if (!isValid(ScRecord::ValidSeason) && result) {
+                season = s;
                 valid |= ScRecord::ValidSeason;
                 change = true;
             }
 
-            if (!isValid(ScRecord::ValidGame) &&
-                    classifier.tryGetGameFromEvent(str, (ScRecord::Game*)&game, &str)) {
+            ScRecord::Game g;
+            result = classifier.tryGetGameFromEvent(str, &g, &str);
+            if (!isValid(ScRecord::ValidGame) && result) {
+                game = g;
                 valid |= ScRecord::ValidGame;
                 change = true;
             }
 
-            if (isValid(ScRecord::ValidGame)) {
-                classifier.cleanEvent((Game)game, str);
-            }
+//            if (isValid(ScRecord::ValidGame)) {
+//                classifier.cleanEvent((Game)game, str);
+//            }
 
             if (!isValid(ValidEventName)) {
                 removeCrud(str);

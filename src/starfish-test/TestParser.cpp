@@ -306,6 +306,14 @@ TestParser::autocompleteFromEvent_data() {
     record.eventFullName = "17173.com Starcraft 2 World Cup";
     record.game = ScRecord::GameSc2;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame | ScRecord::ValidSeason | ScRecord::ValidYear;
+    record.eventName = "StarLeague Classic";
+    record.eventFullName = "2017 StarLeague S1 Classic";
+    record.game = ScRecord::GameBroodWar;
+    record.year = 2017;
+    record.season = 1;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 }
 
 
@@ -494,6 +502,22 @@ TestParser::autocomplete_data() {
     record.year = 2014;
     record.side1Name = "Stats";
     record.side2Name = "CoCa";
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame | ScRecord::ValidEventFullName |
+            ScRecord::ValidStage | ScRecord::ValidYear |
+            ScRecord::ValidMatchDate | ScRecord::ValidMatchName |
+            ScRecord::ValidEventName | ScRecord::ValidSides | ScRecord::ValidSeason;
+    record.matchName = "Soulkey vs free";
+    record.matchDate = QDate(2017,05,26);
+    record.game = ScRecord::GameBroodWar;
+    record.stage = "Day 7";
+    record.eventFullName = "2017 StarLeague S1 Classic";
+    record.eventName = "StarLeague Classic";
+    record.year = 2017;
+    record.side1Name = "Soulkey";
+    record.side2Name = "free";
+    record.season = 1;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 }
 

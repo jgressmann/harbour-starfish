@@ -5,7 +5,7 @@
         "event": {
             "+": [
                 {
-                    "regex": "afreeca(?:tv)? starleague|^\\s*asl|\\(bw\\)|broodwar|ssl classic|starcraft 1|starleague classic"
+                    "regex": "afreeca(?:tv)? starleague|^\\s*asl|\\(bw\\)|broodwar|ssl\\s+classic|starcraft 1|starleague\\s+classic"
                 }
             ],
             "-": [
