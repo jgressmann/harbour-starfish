@@ -265,7 +265,7 @@ Page {
 
                 onOpenChanged: {
                     console.debug("control panel open=" + open)
-                    positionSlider.value = Math.max(0, mediaplayer.position)
+                    //positionSlider.value = Math.max(0, mediaplayer.position)
                 }
 
                 Column {
@@ -275,10 +275,40 @@ Page {
                         id: positionSlider
                         width: parent.width
                         maximumValue: Math.max(1, mediaplayer.duration)
-                        onValueChanged: {
-                            console.debug("onValueChanged " + value)
-                            if (down) {
-                                _seek(sliderValue)
+//                        onValueChanged: {
+//                            console.debug("onValueChanged " + value + " down=" + down)
+//                            if (down) {
+//                                _seek(sliderValue)
+//                            }
+//                        }
+
+                        Connections {
+                            target: mediaplayer
+                            onPositionChanged: {
+                                if (!positionSlider.down && !seekTimer.running) {
+                                    positionSliderConnections.target = null
+                                    positionSlider.value = Math.max(0, mediaplayer.position)
+                                    positionSliderConnections.target = positionSlider
+                                }
+                            }
+                        }
+
+                        Connections {
+                            id: positionSliderConnections
+                            target: positionSlider
+                            onValueChanged: {
+                                console.debug("onValueChanged " + positionSlider.value + " down=" + positionSlider.down)
+                                seekTimer.restart()
+                            }
+                        }
+
+                        Timer {
+                            id: seekTimer
+                            running: false
+                            interval: 500
+                            repeat: false
+                            onTriggered: {
+                                _seek(positionSlider.sliderValue)
                             }
                         }
                     }
