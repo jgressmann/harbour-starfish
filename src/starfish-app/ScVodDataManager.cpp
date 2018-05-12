@@ -371,7 +371,7 @@ ScVodDataManager::iconRequestFinished(QNetworkReply* reply, IconRequest& r) {
                                     continue;
                                 }
 
-                                q.addBindValue(r.url);
+                                q.addBindValue(url);
 
                                 if (!q.exec()) {
                                     qCritical() << "failed to exec query" << q.lastError();
@@ -406,6 +406,7 @@ ScVodDataManager::iconRequestFinished(QNetworkReply* reply, IconRequest& r) {
                                             qCritical() << "failed to exec query" << q.lastError();
                                             continue;
                                         }
+                                        qDebug() << "add icon" << url << tempFileName;
                                     } else {
                                         qWarning() << "failed to allocate temporary file for icon";
                                         continue;
