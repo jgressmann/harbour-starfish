@@ -527,7 +527,7 @@ ListItem {
         settingPlaybackRowId.value = rowId
         settingPlaybackUrl.value = _vodUrl
 
-        if (settingExternalMediaPlayer.value) {
+        if (settingExternalMediaPlayer.value && _vodUrl.indexOf("http") !== 0) {
             Qt.openUrlExternally(_vodUrl)
         } else {
             pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"), {
