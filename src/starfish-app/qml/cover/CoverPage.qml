@@ -176,6 +176,7 @@ CoverBackground {
 //        console.debug("status=" + status)
         switch (status) {
         case PageStatus.Activating:
+            sqlModel.select = ""
             sqlModel.select = "select count(*) from vods where seen=0"
             _newVodCount = sqlModel.data(sqlModel.index(0, 0), 0)
             videoFrameImage.source = "" // force reload

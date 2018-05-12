@@ -41,15 +41,19 @@ BasePage {
 
 
     SqlVodModel {
+        id: model
         columns: ["count"]
-        select: "select count(*) as count from vods"
         dataManager: VodDataManager
         onModelReset: {
             console.debug("sql model reset")
             _vodCount = data(index(0, 0), 0)
         }
 
-        Component.onCompleted: {
+        Component.onCompleted: update()
+
+        function update() {
+            select = ""
+            select = "select count(*) as count from vods"
             _vodCount = data(index(0, 0), 0)
         }
     }
@@ -68,6 +72,13 @@ BasePage {
             text: "There seems to be nothing here."
             hintText: " Pull down to fetch new VODs."
         }
+    }
+
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: model.update()
     }
 
     function _tryNavigateAway() {

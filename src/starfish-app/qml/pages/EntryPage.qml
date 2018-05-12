@@ -194,6 +194,7 @@ BasePage {
 
     onStatusChanged: {
         if (PageStatus.Activating === status) {
+            sqlModel.select = ""
             sqlModel.select = "select " + sqlModel.columns.join(",") + " from vods where id=" + settingPlaybackRowId.value
             continueVodFromRowId.updateVisible()
 //            console.debug("entry page rows=" + sqlModel.rowCount())
