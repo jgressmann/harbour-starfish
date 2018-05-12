@@ -67,7 +67,7 @@
             ],
             "remove": [
                 {
-                    "regex": "^sc2\\s+|\\s+sc2\\s+|\\s+sc2$|^starcraft\\s*2\\s+|\\s+starcraft\\s*2\\s+|\\s+starcraft\\s*2$|starcraft ii|wol|lotv|hots"
+                    "regex": "^sc2\\s+|\\s+sc2\\s+|\\s+sc2$|^starcraft\\s*2\\s+|starcraft\\s*2|\\s+starcraft\\s*2$|starcraft ii|wol|lotv|hots"
                 }
             ]
         },
