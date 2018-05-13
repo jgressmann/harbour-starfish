@@ -47,8 +47,6 @@ ScApp::displayName() const {
     return QStringLiteral("Starfish");
 }
 
-
-
 bool
 ScApp::isOnBroadband() const {
     auto configs = m_NetworkConfigurationManager->allConfigurations(QNetworkConfiguration::Active);
@@ -91,10 +89,6 @@ ScApp::isUrl(const QString& str) {
     QUrl url(str);
     return url.isValid();
 }
-
-
-
-
 
 QString ScApp::dataDir() const {
     return QStandardPaths::writableLocation(QStandardPaths::DataLocation);
