@@ -33,7 +33,7 @@ Page {
     id: root
 
 //    property var openHander
-    signal videoSelected(int videoId, string videoUrl, int offset, string playbackUrl)
+    signal videoSelected(var obj, string playbackUrl, int offset)
 
     PageHeader {
         id: header
@@ -54,7 +54,12 @@ Page {
                 text: "From clipboard"
                 enabled: Clipboard.hasText && App.isUrl(Clipboard.text)
                 onClicked: {
-                    videoSelected(-1, Clipboard.text, 0, Clipboard.text)
+                    videoSelected(
+                                {
+                                    url: Clipboard.text
+                                },
+                                Clipboard.text,
+                                0)
                 }
             }
             Button {
@@ -68,7 +73,11 @@ Page {
                     id: filePickerPage
                     FilePickerPage {
                         onSelectedContentPropertiesChanged: {
-                            videoSelected(-1, selectedContentProperties.url, 0, selectedContentProperties.url)
+                            videoSelected({
+                                              url: selectedContentProperties.url
+                                          },
+                                          selectedContentProperties.url,
+                                          0)
                         }
                     }
                 }
@@ -81,411 +90,24 @@ Page {
     }
 
 
-
     SilicaFlickable {
         width: parent.width
         anchors.top: container.bottom
         anchors.bottom: parent.bottom
-
-
-
-
         contentWidth: parent.width
-
 
         VerticalScrollDecorator {}
 Rectangle {
     color: "transparent"
     anchors.fill: parent
-        SilicaListView {
-            id: listView
-            anchors.fill: parent
-            model: recentlyUsedVideos
-            clip: true
-            delegate: Component {
-
-
-                    Loader {
-                        sourceComponent: video_id === -1 ? fileComponent : vodComponent
-
-                        Component {
-                            id: fileComponent
-                            ListItem {
-                                id: listItem
-//                                visible: video_id === -1
-//                                anchors.fill: parent
-                                //height: Global.itemHeight
-                    //                    contentHeight: parent.height
-                                width: listView.width
-                                contentHeight: Global.itemHeight + Theme.fontSizeMedium
-
-                                menu: Component {
-                                    ContextMenu {
-                                        MenuItem {
-                                            text: "Remove from list"
-                                            onClicked: {
-                                                recentlyUsedVideos.remove({
-                                                                              video_id: -1,
-                                                                              url: url})
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Column {
-                                    id: heading
-                                    x: Theme.horizontalPageMargin
-                                    width: parent.width - 2*x
-
-                                    Label {
-                                        id: directoryLabel
-                                        width: parent.width
-                                        visible: !!text
-                                        truncationMode: TruncationMode.Fade
-                                        font.pixelSize: Theme.fontSizeSmall
-                                        text: {
-                                            // only show file name for files
-                                            if (url && (url.indexOf("file:///") === 0 || url.indexOf("/") === 0)) {
-                                                var str = url
-                                                if (str.indexOf("file:///") === 0) {
-                                                    str = url.substr(7)
-                                                }
-
-                                                var lastSlashIndex = str.lastIndexOf("/")
-                                                return str.substr(0, lastSlashIndex)
-                                            }
-
-                                            return ""
-                                        }
-                                    }
-
-                                    Item {
-                    //                            color: "transparent"
-                                        width: parent.width
-                                        height: listItem.contentHeight - directoryLabel.height
-
-                                        Item {
-                                            id: thumbnailGroup
-                                            width: Global.itemHeight
-                                            height: Global.itemHeight
-                                            anchors.verticalCenter: parent.verticalCenter
-
-                                            Image {
-                                                id: thumbnail
-                                                anchors.fill: parent
-                                                sourceSize.width: width
-                                                sourceSize.height: height
-                                                fillMode: Image.PreserveAspectFit
-                                                cache: false
-                                                visible: status === Image.Ready
-                                                source: thumbnail_path
-
-                                                onStatusChanged: {
-                                                    console.debug("status=" + status)
-                                                }
-                                            }
-
-                                            Image {
-                                                anchors.fill: parent
-                                                fillMode: Image.PreserveAspectFit
-                                                cache: false
-                                                visible: !thumbnail.visible
-                                                source: "image://theme/icon-m-sailfish"
-                                            }
-                                        }
-
-                                        Item {
-                                            id: imageSpacer
-                                            width: Theme.paddingMedium
-                                            height: parent.height
-
-                                            anchors.left: thumbnailGroup.right
-                                        }
-
-                                        Label {
-                                            anchors.left: imageSpacer.right
-                                            anchors.right: parent.right
-                                            anchors.top: parent.top
-                    //                                anchors.bottom: dirLabel.top
-                                            anchors.bottom: parent.bottom
-                                            verticalAlignment: Text.AlignVCenter
-                                            text: {
-                                                // only show file name for files
-                                                if (url && (url.indexOf("file:///") === 0 || url.indexOf("/") === 0)) {
-                                                    var lastSlashIndex = url.lastIndexOf("/")
-                                                    return url.substr(lastSlashIndex + 1)
-                                                }
-
-                                                return url
-                                            }
-
-                    //                            font.pixelSize: Global.labelFontSize
-                                            truncationMode: TruncationMode.Fade
-                                            wrapMode: Text.Wrap
-                                        }
-                                    }
-                                }
-
-
-                                onClicked: {
-                                    videoSelected(video_id, url, offset, url)
-                                }
-
-                                Component.onCompleted: {
-                                    console.debug("index=" + index + " modified=" + modified + " rowid=" + rowid + " video id=" + video_id + " url=" + url + " offset=" + offset + " thumbnail=" + thumbnail_path)
-                                }
-                            }
-
-                        }
-
-
-                        Component {
-                            id: vodComponent
-                            SilicaListView {
-                                id: wrapperView
-                                width: listView.width
-
-
-                                quickScrollEnabled: false
-//                                clip: true
-                                model: video_id !== -1 ? sqlModel : null
-
-
-
-                                delegate: Component {
-                                    MatchItem {
-                                        width: ListView.view.width
-                                        contentHeight: Global.itemHeight + Theme.fontSizeMedium
-                                        onHeightChanged: wrapperView.height = height
-
-                                        eventFullName: event_full_name
-                                        stageName: stage_name
-                                        side1: side1_name
-                                        side2: side2_name
-                                        race1: side1_race
-                                        race2: side2_race
-                                        matchName: match_name
-                                        matchDate: match_date
-                                        rowId: video_id
-                                        startOffsetMs: offset * 1000
-                    //                            menuEnabled: false
-
-                                        onPlayRequest: function (self) {
-                                            videoSelected(video_id, "dummy", offset, self.vodUrl)
-                                        }
-
-                                        menu: Component {
-                                            ContextMenu {
-                                                MenuItem {
-                                                    text: "Remove from list"
-                                                    onClicked: {
-                                                        recentlyUsedVideos.remove({
-                                                                                      video_id: video_id,
-                                                                                  url: "dummy"})
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                SqlVodModel {
-                                    id: sqlModel
-                                    dataManager: VodDataManager
-                                    columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "offset"]
-                                    select: "select " + columns.join(",") + " from vods where id=" + video_id
-                                }
-                            }
-                        }
-
-                    }
-
-//                ListItem {
-//                    id: listItem
-//                    visible: video_id === -1
-//                    anchors.fill: parent
-//                    //height: Global.itemHeight
-////                    contentHeight: parent.height
-//                    width: listView.width
-//                    contentHeight: Global.itemHeight + Theme.fontSizeMedium
-
-//                    menu: Component {
-//                        ContextMenu {
-//                            MenuItem {
-//                                text: "Remove from list"
-//                                onClicked: {
-//                                    recentlyUsedVideos.remove({
-//                                                                  video_id: -1,
-//                                                                  url: url})
-//                                }
-//                            }
-//                        }
-//                    }
-
-//                    Column {
-//                        id: heading
-//                        x: Theme.horizontalPageMargin
-//                        width: parent.width - 2*x
-
-//                        Label {
-//                            id: directoryLabel
-//                            width: parent.width
-//                            visible: !!text
-//                            truncationMode: TruncationMode.Fade
-//                            font.pixelSize: Theme.fontSizeSmall
-//                            text: {
-//                                // only show file name for files
-//                                if (url && (url.indexOf("file:///") === 0 || url.indexOf("/") === 0)) {
-//                                    var str = url
-//                                    if (str.indexOf("file:///") === 0) {
-//                                        str = url.substr(7)
-//                                    }
-
-//                                    var lastSlashIndex = str.lastIndexOf("/")
-//                                    return str.substr(0, lastSlashIndex)
-//                                }
-
-//                                return ""
-//                            }
-//                        }
-
-//                        Item {
-////                            color: "transparent"
-//                            width: parent.width
-//                            height: listItem.contentHeight - directoryLabel.height
-
-//                            Item {
-//                                id: thumbnailGroup
-//                                width: Global.itemHeight
-//                                height: Global.itemHeight
-//                                anchors.verticalCenter: parent.verticalCenter
-
-//                                Image {
-//                                    id: thumbnail
-//                                    anchors.fill: parent
-//                                    sourceSize.width: width
-//                                    sourceSize.height: height
-//                                    fillMode: Image.PreserveAspectFit
-//                                    cache: false
-//                                    visible: status === Image.Ready
-//                                    source: thumbnail_path
-
-//                                    onStatusChanged: {
-//                                        console.debug("status=" + status)
-//                                    }
-//                                }
-
-//                                Image {
-//                                    anchors.fill: parent
-//                                    fillMode: Image.PreserveAspectFit
-//                                    cache: false
-//                                    visible: !thumbnail.visible
-//                                    source: "image://theme/icon-m-sailfish"
-//                                }
-//                            }
-
-//                            Item {
-//                                id: imageSpacer
-//                                width: Theme.paddingMedium
-//                                height: parent.height
-
-//                                anchors.left: thumbnailGroup.right
-//                            }
-
-//                            Label {
-//                                anchors.left: imageSpacer.right
-//                                anchors.right: parent.right
-//                                anchors.top: parent.top
-////                                anchors.bottom: dirLabel.top
-//                                anchors.bottom: parent.bottom
-//                                verticalAlignment: Text.AlignVCenter
-//                                text: {
-//                                    // only show file name for files
-//                                    if (url && (url.indexOf("file:///") === 0 || url.indexOf("/") === 0)) {
-//                                        var lastSlashIndex = url.lastIndexOf("/")
-//                                        return url.substr(lastSlashIndex + 1)
-//                                    }
-
-//                                    return url
-//                                }
-
-//    //                            font.pixelSize: Global.labelFontSize
-//                                truncationMode: TruncationMode.Fade
-//                                wrapMode: Text.Wrap
-//                            }
-
-
-//                        }
-
-//                    }
-
-
-//                    onClicked: {
-//                        videoSelected(video_id, url, offset, url)
-//                    }
-
-//                    Component.onCompleted: {
-//                        console.debug("index=" + index + " modified=" + modified + " rowid=" + rowid + " video id=" + video_id + " url=" + url + " offset=" + offset + " thumbnail=" + thumbnail_path)
-//                    }
-//                }
-
-//                SilicaListView {
-//                    visible: video_id !== -1
-//                    height: parent.height
-//                    width: parent.width
-//                    quickScrollEnabled: false
-//                    clip: true
-//                    model: video_id !== -1 ? sqlModel : null
-
-//                    delegate: Component {
-//                        MatchItem {
-//                            contentHeight: ListView.view.height
-
-//                            eventFullName: event_full_name
-//                            stageName: stage_name
-//                            side1: side1_name
-//                            side2: side2_name
-//                            race1: side1_race
-//                            race2: side2_race
-//                            matchName: match_name
-//                            matchDate: match_date
-//                            rowId: video_id
-//                            startOffsetMs: offset * 1000
-////                            menuEnabled: false
-
-//                            onPlayRequest: function (self) {
-//                                videoSelected(video_id, "dummy", offset, self.vodUrl)
-//                            }
-
-//                            menu: Component {
-//                                ContextMenu {
-//                                    MenuItem {
-//                                        text: "Remove from list"
-//                                        onClicked: {
-//                                            recentlyUsedVideos.remove({
-//                                                                          video_id: video_id,
-//                                                                      url: "dummy"})
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-
-//                    SqlVodModel {
-//                        id: sqlModel
-//                        dataManager: VodDataManager
-//                        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "offset"]
-//                        select: "select " + columns.join(",") + " from vods where id=" + video_id
-//                    }
-//                }
-            }
-
-            ViewPlaceholder {
-                text: "No recent videos."
-                hintText: "This list will fill with the videos you have watched."
-            }
+    RecentlyWatchedVideoView {
+        anchors.fill: parent
+        clip: true
+        onClicked: function (a, b, c) {
+            videoSelected(a, b, c)
         }
+    }
+
     }
     }
 

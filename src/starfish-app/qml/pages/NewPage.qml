@@ -77,11 +77,10 @@ BasePage {
 
                     onPlayRequest: function (self) {
 
-                        settingPlaybackOffset.value = offset
-                        settingPlaybackRowId.value = rowId
-                        settingPlaybackUrl.value = self.vodUrl
-
-                        recentlyUsedVideos.add([rowid, "dummy", offset, null])
+                        recentlyUsedVideos.add({
+                                                   video_id: rowid,
+                                                   offset: offset
+                                               })
 
 
                         if (settingExternalMediaPlayer.value && self.vodUrl.indexOf("http") !== 0) {

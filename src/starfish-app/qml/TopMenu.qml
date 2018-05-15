@@ -128,45 +128,21 @@ PullDownMenu {
 
         function _storeRecentVideo(thumbnailPath) {
             console.debug("video_id="+ openVideo.videoId + " offset=" + openVideo.playbackOffset + " title=" + openVideo.title + " source=" + openVideo.videoUrl + " thumbnail=" + thumbnailPath)
-            recentlyUsedVideos.add([openVideo.videoId, openVideo.videoUrl, openVideo.playbackOffset, thumbnailPath])
+//            recentlyUsedVideos.add([openVideo.videoId, openVideo.videoUrl, openVideo.playbackOffset, thumbnailPath])
         }
 
         function _openVideoPage(callback, openHandler) {
             var threshold = pageStack.depth
             var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
-            openPage.videoSelected.connect(function (videoRowId, videoUrl, offset, playbackUrl) {
+            openPage.videoSelected.connect(function (obj, playbackUrl, offset) {
                 openVideo.storeThreshold = threshold
-                openVideo.videoId = videoRowId
-                openVideo.videoUrl = Global.completeFileUrl(videoUrl)
-                openVideo.playbackOffset = offset
-                recentlyUsedVideos.add([openVideo.videoId, openVideo.videoUrl, openVideo.playbackOffset, null])
-                callback(playbackUrl, offset)
-//                playerPage.play(videoUrl, offset)
-//                pageStack.pop(playerPage)
-            })
-        }
-
-//        function _openVideoPage2() {
-//            var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
-//            openPage.videoSelected.connect(function (videoRowId, videoUrl, offset, playbackUrl) {
-//                openVideo.storeThreshold = pageStack.depth
 //                openVideo.videoId = videoRowId
 //                openVideo.videoUrl = Global.completeFileUrl(videoUrl)
-//                recentlyUsedVideos.add([videoRowId, videoUrl, offset, null])
-//                var playerPage = pageStack.replace(
-//                    Qt.resolvedUrl("pages/VideoPlayerPage.qml"),
-//                    {
-//                        source: videoUrl,
-//                        startOffset: offset
-//                    },
-//                    PageStackAction.Replace)
-
-//                // hook back to here
-//                playerPage.openHandler = _openVideoPage
-
-//                videoPlayerPageConnections.target = playerPage
-//            })
-//        }
+//                openVideo.playbackOffset = offset
+                recentlyUsedVideos.add(obj)
+                callback(playbackUrl, offset)
+            })
+        }
     }
 
     MenuItem {

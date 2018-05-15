@@ -456,8 +456,6 @@ Page {
         }
 
         if (mediaplayer.playbackState === MediaPlayer.PausedState) {
-            settingPlaybackOffset.value = streamPositonS
-
             videoOutput.grabToImage(function (a) {
 //                    console.debug("video frame grabbed")
 //                    App.unlink(Global.videoFramePath)
@@ -492,13 +490,6 @@ Page {
         console.debug("_forceBusyIndicator=true")
         busyTimer.restart()
         mediaplayer.seek(position)
-    }
-
-    function _play(url) {
-        settingPlaybackOffset.value = 0
-        settingPlaybackRowId.value = -1
-        settingPlaybackUrl.value = url
-        source = url
     }
 }
 

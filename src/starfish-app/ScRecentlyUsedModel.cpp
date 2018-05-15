@@ -9,30 +9,15 @@
 ScRecentlyUsedModel::ScRecentlyUsedModel(QObject* parent)
     : QAbstractTableModel(parent)
 {
-//    m_Db = nullptr;
     m_Count = 10;
-//    m_NeedToCreateTable = true;
-    m_Dirty = false;
     m_Ready = false;
     m_IndexCache = -1;
     m_RowCount = 0;
 }
 void
 ScRecentlyUsedModel::setDatabase(const QVariant& value) {
-    auto db = qvariant_cast<QSqlDatabase>(value);
+    m_Db = qvariant_cast<QSqlDatabase>(value);;
 
-    if (m_Ready && m_Dirty) {
-        if (writeBackCache()) {
-            m_Dirty = false;
-            m_IndexCache = -1;
-        } else {
-            qCritical().noquote().nospace() << "failed to write back cached row " << m_RowCache.last();
-            return;
-        }
-    }
-
-    m_Db = db;
-//    m_NeedToCreateTable = true;
     tryGetReady();
     emit databaseChanged();
 }
@@ -45,16 +30,6 @@ ScRecentlyUsedModel::setCount(int value) {
     }
 
     if (value != m_Count) {
-        if (m_Ready && m_Dirty && value < m_Count && m_IndexCache >= value) {
-            if (writeBackCache()) {
-                m_Dirty = false;
-                m_IndexCache = -1;
-            } else {
-                qCritical().noquote().nospace() << "failed to write back cached row " << m_RowCache.last();
-                return;
-            }
-        }
-
         m_Count = value;
         tryGetReady();
         emit countChanged();
@@ -64,21 +39,11 @@ ScRecentlyUsedModel::setCount(int value) {
 void
 ScRecentlyUsedModel::setTable(const QString& value) {
     if (value != m_Table) {
-        if (m_Ready && m_Dirty) {
-            if (writeBackCache()) {
-                m_Dirty = false;
-                m_IndexCache = -1;
-            } else {
-                qCritical().noquote().nospace() << "failed to write back cached row " << m_RowCache.last();
-                return;
-            }
-        }
 
         m_Table = value;
 //        m_NeedToCreateTable = true;
         m_RowCountSql = QStringLiteral("SELECT COUNT(*) FROM %1").arg(m_Table);
         m_SelectDataSql = QStringLiteral("SELECT * FROM %1 ORDER BY modified DESC").arg(m_Table);
-        m_SelectOldestRowSql = QStringLiteral("SELECT id FROM %1 ORDER BY modified DESC LIMIT 1").arg(m_Table);
 //        m_UpdateModifiedSql = QStringLiteral("UPDATE %1 SET modified=? WHERE id=?").arg(m_Table);
         m_DeleteRowSql = QStringLiteral("DELETE FROM %1 WHERE id=?").arg(m_Table);
         setColumnBasedSql();
@@ -111,18 +76,8 @@ ScRecentlyUsedModel::setColumnBasedSql() {
 
 void
 ScRecentlyUsedModel::setColumnNames(const QStringList& value) {
-    if (m_Ready && m_Dirty) {
-        if (writeBackCache()) {
-            m_Dirty = false;
-            m_IndexCache = -1;
-        } else {
-            qCritical().noquote().nospace() << "failed to write back cached row " << m_RowCache.last();
-            return;
-        }
-    }
 
     m_ColumnNames = value;
-//    m_NeedToCreateTable = true;
     m_RowCache.resize(m_ColumnNames.size()+ExtraColumns);
     m_RoleNames.clear();
     for (int i = 0; i < m_ColumnNames.size(); ++i) {
@@ -137,36 +92,15 @@ ScRecentlyUsedModel::setColumnNames(const QStringList& value) {
 
 void
 ScRecentlyUsedModel::setColumnTypes(const QStringList& value) {
-    if (m_Ready && m_Dirty) {
-        if (writeBackCache()) {
-            m_Dirty = false;
-            m_IndexCache = -1;
-        } else {
-            qCritical().noquote().nospace() << "failed to write back cached row " << m_RowCache.last();
-            return;
-        }
-    }
 
     m_ColumnTypes = value;
-//    m_NeedToCreateTable = true;
     tryGetReady();
     emit columnNamesChanged();
 }
 
 void
 ScRecentlyUsedModel::setRowIdentifierColumns(const QStringList& value) {
-    if (m_Ready && m_Dirty) {
-        if (writeBackCache()) {
-            m_Dirty = false;
-            m_IndexCache = -1;
-        } else {
-            qCritical().noquote().nospace() << "failed to write back cached row " << m_RowCache.last();
-            return;
-        }
-    }
-
-    m_RowIdentifierColumns = value;
-//    m_NeedToCreateTable = true;
+    m_KeyColumns = value;
     tryGetReady();
     emit columnNamesChanged();
 }
@@ -176,7 +110,7 @@ ScRecentlyUsedModel::ready() const {
     return  !m_Table.isEmpty() &&
             !m_ColumnNames.isEmpty() &&
             m_ColumnNames.size() == m_ColumnTypes.size() &&
-            !m_RowIdentifierColumns.isEmpty() &&
+            !m_KeyColumns.isEmpty() &&
             m_Db.isOpen();
 }
 
@@ -198,17 +132,6 @@ ScRecentlyUsedModel::data(const QModelIndex &index, int role) const {
     if (row >= 0 && row < m_RowCount && column >= 0 && column < m_ColumnNames.size() + ExtraColumns) {
         if (m_Ready) {
             if (m_IndexCache != row) {
-                if (m_IndexCache != -1) {
-                    if (m_Dirty) {
-                        if (writeBackCache()) {
-                            m_Dirty = false;
-                            m_IndexCache = -1;
-                        } else {
-                            return QVariant();
-                        }
-                    }
-                }
-
                 QSqlQuery q(m_Db);
                 if (q.exec(m_SelectDataSql)) {
                     for (int i = 0; i <= row; ++i) {
@@ -229,9 +152,6 @@ ScRecentlyUsedModel::data(const QModelIndex &index, int role) const {
                 }
             }
 
-//            m_Dirty = true;
-//            m_RowCache[m_ColumnNames.size()] = QDateTime::currentDateTime();
-
             return m_RowCache[column];
         } else {
             qWarning().nospace().noquote() << "data: not ready";
@@ -240,85 +160,6 @@ ScRecentlyUsedModel::data(const QModelIndex &index, int role) const {
 
     return QVariant();
 }
-
-bool
-ScRecentlyUsedModel::writeBackCache() const {
-    QSqlQuery q(m_Db);
-    // write back date time update
-    if (q.prepare(m_UpdateRowSql)) {
-        for (int i = 0; i < m_RowCache.size(); ++i) {
-            q.addBindValue(m_RowCache[i]);
-        }
-        if (q.exec()) {
-            return true;
-        } else {
-            qWarning().nospace().noquote() << "failed to write back time stamp for row " << m_RowCache[m_RowCache.size()-1].toInt() << ", sql: " << m_UpdateRowSql << ", error: " << q.lastError();
-            return false;
-        }
-    } else {
-        qWarning().nospace().noquote() << "failed to write back time stamp for row " << m_RowCache[m_RowCache.size()-1].toInt() << ", sql: " << m_UpdateRowSql << ", error: " << q.lastError();
-        return false;
-    }
-}
-
-//bool
-//ScRecentlyUsedModel::setData(const QModelIndex &index, const QVariant &value, int role) {
-//    if (index.row() >= 0 && index.column() >= 0 && index.column() < m_ColumnNames.size()) {
-//        auto r = index.row();
-//        auto c = index.column();
-//        if (m_Ready) {
-//            if (m_IndexCache != r) {
-//                if (m_IndexCache != -1) {
-//                    if (m_Dirty) {
-//                        if (writeBackCache()) {
-//                            m_Dirty = false;
-//                            m_IndexCache = -1;
-//                        } else {
-//                            return false;
-//                        }
-//                    }
-//                }
-
-//                QSqlQuery q(m_Db);
-//                if (q.exec(m_SelectDataSql)) {
-//                    auto r = index.row();
-//                    for (int i = 0; i <= r; ++i) {
-//                        if (!q.next()) {
-//                            qWarning().nospace().noquote() << "failed to position on row " << r << ", error: " << q.lastError();
-//                            return false;
-//                        }
-//                    }
-
-//                    m_IndexCache = r;
-
-//                    for (int i = 0; i < m_RowCache.size(); ++i) {
-//                        m_RowCache[i] = q.value(i);
-//                    }
-//                } else {
-//                    qWarning().nospace().noquote() << "failed select rows, sql: " << m_SelectDataSql << ", error: " << q.lastError();
-//                    return false;
-//                }
-//            }
-
-//            m_Dirty = true;
-//            m_RowCache[m_ColumnNames.size()] = QDateTime::currentDateTime();
-//            m_RowCache[c] = value;
-//            return true;
-//        }
-//    }
-
-//    return false;
-//}
-
-//Qt::ItemFlags
-//ScRecentlyUsedModel::flags(const QModelIndex &index) const {
-//    auto f = QAbstractTableModel::flags(index);
-//    if (index.column() >= 0 && index.column() < m_ColumnNames.size()) {
-//        f |= Qt::ItemIsEditable;
-//    }
-
-//    return f;
-//}
 
 void
 ScRecentlyUsedModel::remove(const QVariantMap& pairs) {
@@ -349,39 +190,97 @@ ScRecentlyUsedModel::remove(const QVariantMap& pairs) {
             if (q.exec()) {
                 qInfo().nospace().noquote() << "deleted";
                 m_RowCount = qMax(0, m_RowCount-q.numRowsAffected());
+                m_IndexCache = -1;
             } else {
                 qWarning().nospace().noquote() << "failed to exec delete, error: " << q.lastError();
             }
             endResetModel();
         }   else {
-            qWarning().nospace().noquote() << "failed to prepare select sql: " << m_SelectRowsByKeySql << ", error: " << q.lastError();
+            qWarning().nospace().noquote() << "failed to prepare select sql: " << sql << ", error: " << q.lastError();
         }
     } else {
         qWarning().noquote().nospace() << "remove: not ready";
     }
 }
 
+
 void
-ScRecentlyUsedModel::add(const QList<QVariant>& values) {
+ScRecentlyUsedModel::update(const QVariantMap& keys, const QVariantMap& values) {
+    if (keys.empty()) {
+        qWarning().noquote().nospace() << "update: no keys";
+        return;
+    }
+
+    if (values.empty()) {
+        qWarning().noquote().nospace() << "update: no values";
+        return;
+    }
     if (m_Ready) {
-        if (values.size() != m_ColumnNames.size()) {
-            qWarning().noquote().nospace() << "add: insufficient values";
-        } else {
+
+    } else {
+        qWarning().noquote().nospace() << "update: not ready";
+    }
+}
+
+void
+ScRecentlyUsedModel::add(const QVariantMap& pairs) {
+    if (m_Ready) {
+        QList<int> identifierIndices;
+        auto insertRowSql = QStringLiteral("INSERT INTO %1 (").arg(m_Table);
+        {
+            auto insertRowSqlTail = QStringLiteral(", modified) VALUES (?, ");
+            auto beg = pairs.cbegin();
+            auto end = pairs.cend();
+            for (auto it = beg; it != end; ++it) {
+                auto index = m_KeyColumns.indexOf(it.key());
+                if (index >= 0) {
+                    identifierIndices << index;
+                }
+
+                if (it != beg) {
+                    insertRowSql += QStringLiteral(", ");
+                    insertRowSqlTail += QStringLiteral(", ");
+                }
+
+                insertRowSql += it.key();
+                insertRowSqlTail += QStringLiteral("?");
+            }
+
+            insertRowSql += insertRowSqlTail;
+            insertRowSql += QStringLiteral(")");
+        }
+
+        if (identifierIndices.empty()) {
+            qWarning().noquote().nospace() << "add: no identifiers found";
+            return;
+        }
+
+        auto selectRowSql = QStringLiteral("SELECT id FROM %1 WHERE ").arg(m_Table);
+        for (int i = 0; i < identifierIndices.size(); ++i) {
+            if (i > 0) {
+                selectRowSql += QStringLiteral(" AND ");
+            }
+
+            auto index = identifierIndices[i];
+//            selectRowSql += QStringLiteral("(");
+//            selectRowSql += m_KeyColumns[index];
+//            selectRowSql += QStringLiteral(" IS NULL OR ");
+//            selectRowSql += m_KeyColumns[index];
+//            selectRowSql += QStringLiteral("=?)");
+            selectRowSql += m_KeyColumns[index];
+            selectRowSql += QStringLiteral("=?");
+        }
+
+
             QSqlQuery q(m_Db);
             // try to find the row
             qint64 rowid = -1;
 
-            if (q.prepare(m_SelectRowsByKeySql)) {
-                for (int i = 0; i < m_RowIdentifierColumns.size(); ++i) {
-
-                    auto rowIdColumn = m_RowIdentifierColumns[i];
-                    auto index = m_ColumnNames.indexOf(rowIdColumn);
-                    if (index == -1) {
-                        qWarning().noquote().nospace() << "add: invalid row identifier column " << rowIdColumn;
-                        return;
-                    }
-
-                    q.addBindValue(values[index]);
+            if (q.prepare(selectRowSql)) {
+                for (int i = 0; i < identifierIndices.size(); ++i) {
+                    auto index = identifierIndices[i];
+                    const auto& columnName = m_KeyColumns[index];
+                    q.addBindValue(pairs[columnName]);
                 }
 
                 if (q.exec()) {
@@ -401,45 +300,10 @@ ScRecentlyUsedModel::add(const QList<QVariant>& values) {
                     return;
                 }
             }   else {
-                qWarning().nospace().noquote() << "failed to prepare select sql: " << m_SelectRowsByKeySql << ", error: " << q.lastError();
+                qWarning().nospace().noquote() << "failed to prepare select sql: " << selectRowSql << ", error: " << q.lastError();
                 return;
             }
 
-
-//            for (int i = 0; i < m_RowIdentifierColumns.size(); ++i) {
-//                auto rowIdColumn = m_RowIdentifierColumns[i];
-//                auto index = m_ColumnNames.indexOf(rowIdColumn);
-//                if (index == -1) {
-//                    qWarning().noquote().nospace() << "add: invalid row identifier column " << rowIdColumn;
-//                    return;
-//                }
-
-//                rowid = -1;
-//                auto sql = QStringLiteral("SELECT id FROM %1 WHERE %2=?").arg(m_Table, rowIdColumn);
-//                if (q.prepare(sql)) {
-//                    q.addBindValue(values[index]);
-//                    if (q.exec()) {
-//                        if (q.next()) {
-//                            rowid = qvariant_cast<qint64>(q.value(0));
-//                            if (q.next()) {
-//                                //rowid = -1; // must be a single row
-//                                qDebug().noquote().nospace() << "single row with " << m_RowIdentifierColumns[i] << "=" << values[index];
-//                            } else {
-//                                qDebug().noquote().nospace() << "single row with " << m_RowIdentifierColumns[i] << "=" << values[index];
-//                            }
-//                        } else {
-//                            qDebug().noquote().nospace() << "no row with " << m_RowIdentifierColumns[i] << "=" << values[index];
-//                            break;
-//                        }
-//                    } else {
-//                        qWarning().nospace().noquote() << "failed to exec select, error: " << q.lastError();
-//                        return;
-//                    }
-//                } else {
-//                    qWarning().nospace().noquote() << "failed to prepare select sql: " << sql << ", error: " << q.lastError();
-//                    return;
-//                }
-//            }
 
             int rowIndex = -1;
             auto sorted = false;
@@ -473,8 +337,8 @@ ScRecentlyUsedModel::add(const QList<QVariant>& values) {
                 beginRemoveRows(QModelIndex(), rowIndex, rowIndex);
                 if (q.prepare(m_DeleteRowSql)) {
                     q.addBindValue(rowid);
-
                     if (q.exec()) {
+                        m_IndexCache = -1;
                         --m_RowCount;
                         qDebug().nospace().noquote() << "delete rowid " << rowid;
                     } else {
@@ -499,15 +363,18 @@ ScRecentlyUsedModel::add(const QList<QVariant>& values) {
             // newest row
             qDebug().nospace().noquote() << "insert";
             emit beginInsertRows(QModelIndex(), 0, 0);
-            if (q.prepare(m_InsertRowSql)) {
-                for (int i = 0; i < values.size(); ++i) {
-                    qDebug().nospace().noquote() << "\t" << values[i] << "\n";
-                    q.addBindValue(values[i]);
+            if (q.prepare(insertRowSql)) {
+                auto beg = pairs.cbegin();
+                auto end = pairs.cend();
+                for (auto it = beg; it != end; ++it) {
+                    qDebug().nospace().noquote() << "\t" << it.value() << "\n";
+                    q.addBindValue(it.value());
                 }
 
                 q.addBindValue(QDateTime::currentDateTime());
 
                 if (q.exec()) {
+                    m_IndexCache = -1;
                     ++m_RowCount;
                     qDebug().nospace().noquote() << "new row, count " << m_RowCount;
                 } else {
@@ -518,7 +385,7 @@ ScRecentlyUsedModel::add(const QList<QVariant>& values) {
             }
             emit endInsertRows();
 
-        }
+
     } else {
         qWarning().noquote().nospace() << "add: not ready";
     }
@@ -558,15 +425,15 @@ ScRecentlyUsedModel::tryGetReady() {
         if (createTable()) {
             m_Ready = true;
             m_SelectRowsByKeySql = QStringLiteral("SELECT id FROM %1 WHERE ").arg(m_Table);
-            for (int i = 0; i < m_RowIdentifierColumns.size(); ++i) {
+            for (int i = 0; i < m_KeyColumns.size(); ++i) {
                 if (i > 0) {
                     m_SelectRowsByKeySql += QStringLiteral(" AND ");
                 }
 
                 m_SelectRowsByKeySql += QStringLiteral("(");
-                m_SelectRowsByKeySql += m_RowIdentifierColumns[i];
+                m_SelectRowsByKeySql += m_KeyColumns[i];
                 m_SelectRowsByKeySql += QStringLiteral(" IS NULL OR ");
-                m_SelectRowsByKeySql += m_RowIdentifierColumns[i];
+                m_SelectRowsByKeySql += m_KeyColumns[i];
                 m_SelectRowsByKeySql += QStringLiteral("=?)");
             }
         }

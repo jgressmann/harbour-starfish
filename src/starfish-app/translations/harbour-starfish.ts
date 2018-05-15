@@ -4,10 +4,6 @@
 <context>
     <name>EntryPage</name>
     <message>
-        <source>Game</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>New VODs</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16,15 +12,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Video player</source>
+        <source>Game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continue watching</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Continue watching...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

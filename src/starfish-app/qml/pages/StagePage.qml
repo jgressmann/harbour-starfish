@@ -141,10 +141,6 @@ BasePage {
 
                 onPlayRequest: function (self) {
 
-                    settingPlaybackOffset.value = offset
-                    settingPlaybackRowId.value = rowId
-                    settingPlaybackUrl.value = self.vodUrl
-
                     recentlyUsedVideos.add([rowid, "dummy", offset, null])
 
 
