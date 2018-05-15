@@ -151,7 +151,7 @@ ScRecentlyUsedModel::remove(const QVariantMap& pairs) {
                 sql += QStringLiteral(" AND ");
             }
 
-            sql += QStringLiteral("(%1 IS NULL OR %1=?)").arg(it.key());
+            sql += QStringLiteral("%1=?").arg(it.key());
         }
 
         QSqlQuery q(m_Db);
