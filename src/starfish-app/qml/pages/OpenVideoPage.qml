@@ -91,7 +91,7 @@ Page {
 
 
         contentWidth: parent.width
-//        contentHeight: height
+
 
         VerticalScrollDecorator {}
 Rectangle {
@@ -103,8 +103,7 @@ Rectangle {
             model: recentlyUsedVideos
             clip: true
             delegate: Component {
-//                width: parent.width
-//                height: Global.itemHeight + Theme.fontSizeMedium
+
 
                     Loader {
                         sourceComponent: video_id === -1 ? fileComponent : vodComponent
@@ -113,7 +112,7 @@ Rectangle {
                             id: fileComponent
                             ListItem {
                                 id: listItem
-                                visible: video_id === -1
+//                                visible: video_id === -1
 //                                anchors.fill: parent
                                 //height: Global.itemHeight
                     //                    contentHeight: parent.height
@@ -224,10 +223,7 @@ Rectangle {
                                             truncationMode: TruncationMode.Fade
                                             wrapMode: Text.Wrap
                                         }
-
-
                                     }
-
                                 }
 
 
@@ -246,18 +242,21 @@ Rectangle {
                         Component {
                             id: vodComponent
                             SilicaListView {
-                                visible: video_id !== -1
+                                id: wrapperView
                                 width: listView.width
-                                height: Global.itemHeight + Theme.fontSizeMedium
+
 
                                 quickScrollEnabled: false
-                                clip: true
+//                                clip: true
                                 model: video_id !== -1 ? sqlModel : null
+
+
 
                                 delegate: Component {
                                     MatchItem {
                                         width: ListView.view.width
-                                        contentHeight: ListView.view.height
+                                        contentHeight: Global.itemHeight + Theme.fontSizeMedium
+                                        onHeightChanged: wrapperView.height = height
 
                                         eventFullName: event_full_name
                                         stageName: stage_name
@@ -297,7 +296,6 @@ Rectangle {
                                     select: "select " + columns.join(",") + " from vods where id=" + video_id
                                 }
                             }
-
                         }
 
                     }
