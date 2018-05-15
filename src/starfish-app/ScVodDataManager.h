@@ -117,7 +117,7 @@ public: //
     Q_INVOKABLE void fetchIcons();
     Q_INVOKABLE void fetchClassifier();
     Q_INVOKABLE void resetDownloadMarker();
-    void addVods(const QList<ScRecord>& records, qint64 generation);
+    void addVods(const QList<ScRecord>& records);
     QDate downloadMarker() const;
     QString downloadMarkerString() const;
     void setDownloadMarker(QDate value);

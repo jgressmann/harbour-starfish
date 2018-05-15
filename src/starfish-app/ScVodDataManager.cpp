@@ -1050,7 +1050,7 @@ ScVodDataManager::hasRecord(const ScRecord& record, bool* _exists) {
 }
 
 void
-ScVodDataManager::addVods(const QList<ScRecord>& records, qint64 generation) {
+ScVodDataManager::addVods(const QList<ScRecord>& records) {
     if (!records.isEmpty()) {
         QMutexLocker g(&m_Lock);
         QMutexLocker g2(&m_AddQueueLock);
@@ -2564,26 +2564,6 @@ void ScVodDataManager::fetchClassifier() {
     if (!m_ClassfierRequest) {
         m_ClassfierRequest = m_Manager->get(Sc::makeRequest(s_ClassifierUrl));
     }
-}
-
-qint64
-ScVodDataManager::generation() const {
-    RETURN_IF_ERROR;
-
-    QMutexLocker g(&m_Lock);
-
-    QSqlQuery q(m_Database);
-
-    if (!q.exec("select max(generation) from vods")) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return -1;
-    }
-
-    if (q.next()) {
-        return qvariant_cast<qint64>(q.value(0));
-    }
-
-    return 0;
 }
 
 void

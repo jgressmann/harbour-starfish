@@ -182,7 +182,6 @@ ScVodDatabaseDownloader::downloadNew() {
     setStatus(Status_Downloading);
     setProgress(0);
     m_Skip = false;
-    m_Generation = m_DataManager->generation() + 1;
 
     _downloadNew();
 }
@@ -221,7 +220,7 @@ ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
                     if (loadFromXml(xml, &events)) {
                         m_DataManager->setDownloadMarker(m_TargetMarker);
                         ++m_PendingActions;
-                        m_DataManager->addVods(events, m_Generation);
+                        m_DataManager->addVods(events);
                         actionFinished();
                     } else {
                         setError(Error_DataInvalid);
@@ -439,7 +438,7 @@ ScVodDatabaseDownloader::onScraperStatusChanged() {
     case ScVodScraper::Status_VodFetchingCanceled:
     case ScVodScraper::Status_Error:
         m_DownloadState = DS_AddingVods;
-        m_DataManager->addVods(m_Scraper->vods(), m_Generation);
+        m_DataManager->addVods(m_Scraper->vods());
         actionFinished();
         break;
     default:
