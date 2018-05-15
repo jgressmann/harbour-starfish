@@ -64,8 +64,109 @@ PullDownMenu {
 
 
     MenuItem {
-        text: qsTr("Video player")
-        onClicked: pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
+        id: openVideo
+        text: qsTr("Open video")
+
+        property string videoUrl
+        property string title
+        property int playbackOffset: 0
+        property int videoId: -1
+        property int storeThreshold: -1
+//        property var playerPage
+
+        onClicked: {
+            _openVideoPage(function (url, offset) {
+                var playerPage = pageStack.replace(
+                            Qt.resolvedUrl("pages/VideoPlayerPage.qml"),
+                            {
+                                source: url,
+                                startOffset: offset
+                            },
+                            PageStackAction.Immediate)
+
+                var callback = function () {
+                    _openVideoPage(function(a, b) {
+                        playerPage.play(a, b)
+                        pageStack.pop(playerPage)
+                    })
+                }
+                playerPage.openHandler = callback
+
+            })
+        }
+
+
+        Connections {
+            id: videoPlayerPageConnections
+//            target: pageStack.currentPage
+            ignoreUnknownSignals: true
+//            enabled: false
+            onTitleChanged: openVideo.title = target.title
+            onPlaybackOffsetChanged: openVideo.playbackOffset = target.playbackOffset
+
+            onSourceChanged: {
+                if (target) {
+                    console.debug("player source changed")
+                    target = null
+                    var thumbnailPath = VodDataManager.makeThumbnailFile(Global.videoFramePath)
+                    openVideo._storeRecentVideo(thumbnailPath)
+                }
+            }
+        }
+
+        Connections {
+            target: pageStack
+            onDepthChanged: {
+                if (openVideo.storeThreshold >= 0 && pageStack.depth < openVideo.storeThreshold) {
+                    console.debug("player page popped")
+                    openVideo.storeThreshold = -1
+                    var thumbnailPath = VodDataManager.makeThumbnailFile(Global.videoFramePath)
+                    openVideo._storeRecentVideo(thumbnailPath)
+                }
+            }
+        }
+
+        function _storeRecentVideo(thumbnailPath) {
+            console.debug("video_id="+ openVideo.videoId + " offset=" + openVideo.playbackOffset + " title=" + openVideo.title + " source=" + openVideo.videoUrl + " thumbnail=" + thumbnailPath)
+            recentlyUsedVideos.add([openVideo.videoId, openVideo.videoUrl, openVideo.playbackOffset, thumbnailPath])
+        }
+
+        function _openVideoPage(callback, openHandler) {
+            var threshold = pageStack.depth
+            var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
+            openPage.videoSelected.connect(function (videoRowId, videoUrl, offset, playbackUrl) {
+                openVideo.storeThreshold = threshold
+                openVideo.videoId = videoRowId
+                openVideo.videoUrl = Global.completeFileUrl(videoUrl)
+                openVideo.playbackOffset = offset
+                recentlyUsedVideos.add([openVideo.videoId, openVideo.videoUrl, openVideo.playbackOffset, null])
+                callback(playbackUrl, offset)
+//                playerPage.play(videoUrl, offset)
+//                pageStack.pop(playerPage)
+            })
+        }
+
+//        function _openVideoPage2() {
+//            var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
+//            openPage.videoSelected.connect(function (videoRowId, videoUrl, offset, playbackUrl) {
+//                openVideo.storeThreshold = pageStack.depth
+//                openVideo.videoId = videoRowId
+//                openVideo.videoUrl = Global.completeFileUrl(videoUrl)
+//                recentlyUsedVideos.add([videoRowId, videoUrl, offset, null])
+//                var playerPage = pageStack.replace(
+//                    Qt.resolvedUrl("pages/VideoPlayerPage.qml"),
+//                    {
+//                        source: videoUrl,
+//                        startOffset: offset
+//                    },
+//                    PageStackAction.Replace)
+
+//                // hook back to here
+//                playerPage.openHandler = _openVideoPage
+
+//                videoPlayerPageConnections.target = playerPage
+//            })
+//        }
     }
 
     MenuItem {

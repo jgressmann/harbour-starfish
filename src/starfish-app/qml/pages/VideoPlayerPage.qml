@@ -24,31 +24,37 @@
 import QtQuick 2.0
 import QtMultimedia 5.0
 import Sailfish.Silica 1.0
-import Sailfish.Pickers 1.0
 import org.duckdns.jgressmann 1.0
 import ".."
 
 Page {
     id: page
-    property alias source: mediaplayer.source
-    property int startOffsetMs: 0
+    property string source
+    property int startOffset: 0
+    readonly property int _startOffsetMs: startOffset * 1000
+    property string title
 
     property int playbackAllowedOrientations: Orientation.Landscape | Orientation.LandscapeInverted
-    backNavigation: controlPanel.open || _showMenu
+    backNavigation: controlPanel.open || !_hasSource
 
+    readonly property int playbackOffset: streamPositonS
     readonly property int streamPositonS: Math.floor(mediaplayer.position / 1000)
     readonly property int streamDurationS: Math.ceil(mediaplayer.duration / 1000)
     property bool _forceBusyIndicator: false
     property bool _hasSource: !!("" + source)
-    property bool _showMenu: !_hasSource || _forceShowMenu
-    property bool _showVideo: _hasSource && !_forceShowMenu
-    property bool _forceShowMenu: false
+    property bool _showVideo: true
     property bool _pausedOnPageDeactivation: false
+    property var openHandler
+
 
     onSourceChanged: {
         console.debug("onSourceChanged " + source)
-    }
+        if (mediaplayer.source) {
+            _stopPlayback()
+        }
 
+        mediaplayer.source = source
+    }
 
     MediaPlayer {
         id: mediaplayer
@@ -65,19 +71,17 @@ Page {
             } else if (status === MediaPlayer.EndOfMedia) {
                 console.debug("end of media")
                 controlPanel.open = true
+            } else if (status === MediaPlayer.Loaded) {
+                console.debug("loaded")
+                page.title = metaData.title
             }
 
 //            _forceBusyIndicator = false
 //            console.debug("_forceBusyIndicator=false")
         }
 
-//        onBufferProgressChanged: {
-//            console.debug("media player buffer progress=" + bufferProgress)
-//        }
-
         onPlaybackStateChanged: {
             console.debug("media player playback state=" + playbackState)
-
         }
 
 //        onVolumeChanged: {
@@ -382,14 +386,15 @@ Page {
 
                         IconButton {
                             icon.source: "image://theme/icon-m-folder"
+                            visible: !!openHandler
 
                             anchors.verticalCenter: parent.verticalCenter
 
                             onClicked: {
-                                console.debug("menu")
+                                console.debug("open")
                                 mediaplayer.pause()
                                 controlPanel.open = false
-                                _forceShowMenu = true
+                                openHandler()
                             }
                         }
                     }
@@ -399,9 +404,9 @@ Page {
     }
 
     Component.onCompleted: {
-        if (_showVideo && startOffsetMs > 0) {
-            console.debug("seek to " + startOffsetMs)
-            _seek(startOffsetMs)
+        if (_showVideo && _startOffsetMs > 0) {
+            console.debug("seek to " + _startOffsetMs)
+            _seek(_startOffsetMs)
         }
     }
 
@@ -416,75 +421,51 @@ Page {
         }
     }
 
-    ButtonLayout {
-        id: contentSelection
-        anchors.centerIn: parent
-        visible: _showMenu
-
-        onVisibleChanged: {
-            if (visible) {
-                page.allowedOrientations = window.allowedOrientations
-            }
-        }
-
-        Button {
-            text: "Open from clipboard"
-            enabled: Clipboard.hasText && App.isUrl(Clipboard.text)
-            onClicked: _play(Clipboard.text)
-        }
-
-        Button {
-            text: "Open file"
-
-            onClicked: {
-                allowedOrientations = window.allowedOrientations
-                pageStack.push(filePickerPage)
-            }
-
-            Component {
-                id: filePickerPage
-                FilePickerPage {
-                    onSelectedContentPropertiesChanged: {
-                        var path = selectedContentProperties.filePath
-                        if (path) {
-                            pageStack.pop(page, PageStackAction.Immediate)
-                            _play(path)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     onStatusChanged: {
         console.debug("page status=" + page.status)
         switch (page.status) {
         case PageStatus.Deactivating: {
-            if (mediaplayer.playbackState === MediaPlayer.PlayingState) {
-                mediaplayer.pause()
-                _pausedOnPageDeactivation = true
-            } else {
-                _pausedOnPageDeactivation = false
-            }
-
-            if (mediaplayer.playbackState === MediaPlayer.PausedState) {
-                settingPlaybackOffset.value = mediaplayer.position / 1000
-
-                videoOutput.grabToImage(function (a) {
-//                    console.debug("video frame grabbed")
-//                    App.unlink(Global.videoFramePath)
-//                    console.debug("unlink")
-                    //var success = a.saveToFile(Global.videoFramePath)
-                    //console.debug("save frame to path=" + path + " success=" + success)
-                    a.saveToFile(Global.videoFramePath)
-                })
-            }
+            console.debug("page status=deactivating")
+            _stopPlayback()
         } break
         case PageStatus.Activating:
+            console.debug("page status=activating")
             if (_pausedOnPageDeactivation) {
                 mediaplayer.play();
             }
             break
+        }
+    }
+
+    function play(url, _offset) {
+        source = url
+        mediaplayer.play()
+        startOffset = _offset
+        if (_showVideo && startOffset > 0) {
+            console.debug("seek to " + _startOffsetMs)
+            _seek(_startOffsetMs)
+        }
+    }
+
+    function _stopPlayback() {
+        if (mediaplayer.playbackState === MediaPlayer.PlayingState) {
+            mediaplayer.pause()
+            _pausedOnPageDeactivation = true
+        } else {
+            _pausedOnPageDeactivation = false
+        }
+
+        if (mediaplayer.playbackState === MediaPlayer.PausedState) {
+            settingPlaybackOffset.value = streamPositonS
+
+            videoOutput.grabToImage(function (a) {
+//                    console.debug("video frame grabbed")
+//                    App.unlink(Global.videoFramePath)
+//                    console.debug("unlink")
+                //var success = a.saveToFile(Global.videoFramePath)
+                //console.debug("save frame to path=" + path + " success=" + success)
+                a.saveToFile(Global.videoFramePath)
+            })
         }
     }
 
@@ -509,8 +490,7 @@ Page {
     function _seek(position) {
         _forceBusyIndicator = true
         console.debug("_forceBusyIndicator=true")
-        busyTimer.running = false
-        busyTimer.running = true
+        busyTimer.restart()
         mediaplayer.seek(position)
     }
 
@@ -518,7 +498,6 @@ Page {
         settingPlaybackOffset.value = 0
         settingPlaybackRowId.value = -1
         settingPlaybackUrl.value = url
-        _forceShowMenu = false
         source = url
     }
 }

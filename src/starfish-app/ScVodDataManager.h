@@ -27,6 +27,7 @@
 #include "ScRecord.h"
 #include "ScIcons.h"
 #include "ScClassifier.h"
+#include "ScApp.h"
 
 #include <QMutex>
 #include <QSqlDatabase>
@@ -42,6 +43,7 @@ class ScEvent;
 class ScStage;
 class ScMatch;
 class VMVodFileDownload;
+
 
 
 
@@ -70,6 +72,7 @@ class ScVodDataManager : public QObject {
     Q_PROPERTY(ScVodman* vodman READ vodman CONSTANT)
     Q_PROPERTY(QString downloadMarker READ downloadMarkerString NOTIFY downloadMarkerChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
+    Q_PROPERTY(QVariant database READ databaseVariant CONSTANT)
 public:
 
 
@@ -122,10 +125,13 @@ public: //
     void resumeVodsChangedEvents();
     Q_INVOKABLE qreal seen(const QVariantMap& filters) const;
     Q_INVOKABLE void setSeen(const QVariantMap& filters, bool value);
-    ScVodman* vodman() const { return m_Vodman; }
-    ScClassifier* classifier() const { return const_cast<ScClassifier*>(&m_Classifier); }
+    inline ScVodman* vodman() const { return m_Vodman; }
+    inline ScClassifier* classifier() const { return const_cast<ScClassifier*>(&m_Classifier); }
+    inline QVariant databaseVariant() const { return QVariant::fromValue(m_Database); }
     qint64 generation() const;
     bool busy() const;
+    Q_INVOKABLE QString makeThumbnailFile(const QString& srcPath);
+
 
 signals:
     void statusChanged();
@@ -139,6 +145,7 @@ signals:
     void downloadMarkerChanged();
     void busyChanged();
     void vodsToAdd();
+    void vodsCleared();
 
 public slots:
     void excludeEvent(const ScEvent& event, bool* exclude);

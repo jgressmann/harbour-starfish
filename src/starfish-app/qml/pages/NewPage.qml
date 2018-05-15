@@ -74,6 +74,27 @@ BasePage {
                     onClicked: {
                         ListView.view.currentIndex = index
                     }
+
+                    onPlayRequest: function (self) {
+
+                        settingPlaybackOffset.value = offset
+                        settingPlaybackRowId.value = rowId
+                        settingPlaybackUrl.value = self.vodUrl
+
+                        recentlyUsedVideos.add([rowid, "dummy", offset, null])
+
+
+                        if (settingExternalMediaPlayer.value && self.vodUrl.indexOf("http") !== 0) {
+                            Qt.openUrlExternally(self.vodUrl)
+                        } else {
+                            var playerPage = pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"), {
+                                               source: self.vodUrl,
+                                               startOffsetMs: self.startOffsetMs,
+                            })
+
+    //                        playerPageConnections.target = playerPage
+                        }
+                    }
                 }
             }
 

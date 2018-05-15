@@ -21,7 +21,8 @@ SOURCES += harbour-starfish.cpp \
     ScVodDataManager.cpp \
     ScVodDatabaseDownloader.cpp \
     ScIcons.cpp \
-    ScSqlVodModel.cpp
+    ScSqlVodModel.cpp \
+    ScRecentlyUsedModel.cpp
 
 
 
@@ -31,7 +32,8 @@ HEADERS += \
     ScVodDataManager.h \
     ScVodDatabaseDownloader.h \
     ScIcons.h \
-    ScSqlVodModel.h
+    ScSqlVodModel.h \
+    ScRecentlyUsedModel.h
 
 #../../rpm/harbour-starfish.changes.run.in \
 #../../rpm/harbour-starfish.yaml \
@@ -66,6 +68,7 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/pages/EntryPage.qml \
     qml/pages/AboutPage.qml \
     qml/pages/ToolsPage.qml \
+    qml/pages/OpenVideoPage.qml \
     qml/TopMenu.qml \
     qml/Global.qml \
     qml/FormatComboBox.qml \

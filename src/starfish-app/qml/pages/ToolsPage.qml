@@ -66,12 +66,12 @@ Page {
             text: "Data"
         }
 
-        Column {
-            width: root.width
+        ButtonLayout {
+            width: parent.width
 
             Button {
                 text: "Clear VOD data"
-                anchors.horizontalCenter: parent.horizontalCenter
+//                anchors.horizontalCenter: parent.horizontalCenter
                 onClicked: {
                     var dialog = pageStack.push(
                                 Qt.resolvedUrl("ConfirmClearDialog.qml"),
@@ -84,6 +84,13 @@ Page {
                         VodDataManager.clear()
                         VodDataManager.fetchIcons()
                     })
+                }
+            }
+
+            Button {
+                text: "Reset recent videos"
+                onClicked: {
+                    recentlyUsedVideos.recreateTable()
                 }
             }
         }

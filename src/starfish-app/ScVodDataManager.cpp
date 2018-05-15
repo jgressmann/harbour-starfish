@@ -850,6 +850,8 @@ ScVodDataManager::clear() {
     setDownloadMarker(QDate());
 
     tryRaiseVodsChanged();
+
+    emit vodsCleared();
 }
 
 
@@ -2617,4 +2619,36 @@ bool
 ScVodDataManager::busy() const {
     QMutexLocker g(&m_AddQueueLock);
     return !m_AddQueue.isEmpty();
+}
+
+QString
+ScVodDataManager::makeThumbnailFile(const QString& srcPath) {
+    RETURN_IF_ERROR;
+
+    QFile file(srcPath);
+    if (file.open(QIODevice::ReadOnly)) {
+        auto bytes = file.readAll();
+        auto lastDot = srcPath.lastIndexOf(QChar('.'));
+        auto extension = srcPath.mid(lastDot);
+
+
+        QTemporaryFile tempFile(m_ThumbnailDir + QStringLiteral("XXXXXX") + extension);
+        tempFile.setAutoRemove(false);
+        if (tempFile.open()) {
+            auto thumbNailFilePath = tempFile.fileName();
+            if (bytes.size() == tempFile.write(bytes)) {
+                return thumbNailFilePath;
+            } else {
+                tempFile.setAutoRemove(true);
+                qWarning() << "failed to write image data to file" << tempFile.errorString();
+            }
+        } else {
+            qWarning() << "failed to allocate temporary file for thumbnail";
+        }
+
+    } else {
+        qWarning().noquote().nospace() << "failed to open " << srcPath << ", error: " << file.errorString();
+    }
+
+    return QString();
 }

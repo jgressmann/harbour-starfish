@@ -24,6 +24,9 @@
 #pragma once
 
 #include <QObject>
+#include <QSqlDatabase>
+
+Q_DECLARE_METATYPE(QSqlDatabase)
 
 class QNetworkConfigurationManager;
 class ScApp : public QObject

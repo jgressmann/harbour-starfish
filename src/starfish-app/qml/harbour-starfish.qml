@@ -135,7 +135,28 @@ ApplicationWindow {
         }
     }
 
+    RecentlyUsedModel {
+        id: recentlyUsedVideos
+        columnNames: ["video_id", "url", "offset", "thumbnail_path"]
+        rowIdentifierColumns: ["video_id", "url"]
+        columnTypes: ["INTEGER DEFAULT -1", "TEXT", "INTEGER DEFAULT 0", "TEXT"]
+        table: "recently_used_videos"
+        count: 10
+        database: VodDataManager.database
+
+        onRowsAboutToBeRemoved: function (parent, topRight, bottomRight) {
+            for (var i = topRight.row; i <= bottomRight.row; ++i) {
+                var thumbNailFilePath = data(index(row, 4), 0)
+                console.debug("row=" + i + " thumbnail path=" + thumbNailFilePath)
+                if (thumbNailFilePath) {
+                    App.unlink(thumbNailFilePath)
+                }
+            }
+        }
+    }
+
     Component.onCompleted: {
+        VodDataManager.vodsCleared.connect(_removedObsoleteEntriesFromRecentlyUsedVideos)
         VodDataManager.vodman.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
         _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
@@ -148,6 +169,10 @@ ApplicationWindow {
         } else if (sc2LinksDotComScraper.id === settingNetworkScraper.value) {
             vodDatabaseDownloader.scraper = sc2LinksDotComScraper
         }
+    }
+
+    function _removedObsoleteEntriesFromRecentlyUsedVideos() {
+        console.debug("_removedObsoleteEntriesFromRecentlyUsedVideos")
     }
 }
 

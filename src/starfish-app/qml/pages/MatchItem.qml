@@ -48,16 +48,21 @@ ListItem {
     property bool _clicking: false
     property bool _playWhenTransitionDone: false
     property variant _vod
+    readonly property string vodUrl: _vodUrl
     property string _vodUrl
     property string _vodTitle
     property string _formatId
     property int startOffsetMs: 0
+    readonly property int startOffset: Math.floor(startOffsetMs / 1000)
     property bool _downloading: false
     property int _width: 0
     property int _height: 0
     property bool _seen: false
 //    property bool _onScreen: y < Screen.height
     menu: menuEnabled ? contextMenu : null
+    signal playRequest(var self)
+    readonly property string title: titleLabel.text
+    readonly property string thumbnailSource: thumbnail.source
 
     ProgressOverlay {
         id: progressOverlay
@@ -517,6 +522,16 @@ ListItem {
         }
     }
 
+    Connections {
+        id: playerPageConnections
+        ignoreUnknownSignals: true
+        onPlaybackOffsetChanged: {
+            console.debug("start offset=" + playerPage.playbackOffset)
+            startOffsetMs = playerPage.playbackOffset * 1000
+        }
+
+    }
+
     function thumbnailDownloadFailed(rowid, error, url) {
         if (rowid === rowId) {
             console.debug("thumbnail download failed rowid=" + rowid + " error=" + error + " url=" + url)
@@ -531,20 +546,29 @@ ListItem {
     }
 
     function _play() {
-        console.debug("open vod url " + _vodUrl)
+        console.debug("play " + _vodUrl)
+        playRequest(root)
 
-        settingPlaybackOffset.value = startOffsetMs / 1000
-        settingPlaybackRowId.value = rowId
-        settingPlaybackUrl.value = _vodUrl
 
-        if (settingExternalMediaPlayer.value && _vodUrl.indexOf("http") !== 0) {
-            Qt.openUrlExternally(_vodUrl)
-        } else {
-            pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"), {
-                               source: _vodUrl,
-                               startOffsetMs: startOffsetMs,
-            })
-        }
+
+//        settingPlaybackOffset.value = startOffset
+//        settingPlaybackRowId.value = rowId
+//        settingPlaybackUrl.value = _vodUrl
+
+//        recentlyUsedVideos.add([rowId, null, startOffset, titleLabel.text, thumbnail.source])
+
+
+//        if (settingExternalMediaPlayer.value && _vodUrl.indexOf("http") !== 0) {
+//            Qt.openUrlExternally(_vodUrl)
+//        } else {
+//            var playerPage = pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"), {
+//                               source: _vodUrl,
+//                               startOffsetMs: startOffsetMs,
+//                                openHander: root.openHandler
+//            })
+
+//            playerPageConnections.target = playerPage
+//        }
     }
 
     function vodAvailable(rowid, filePath, progress, fileSize, width, height, formatId) {
@@ -748,7 +772,6 @@ ListItem {
         _downloading = false
         progressOverlay.show = false
     }
-
 
 }
 

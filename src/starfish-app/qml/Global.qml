@@ -279,6 +279,16 @@ Item { // Components can't declare functions
          return Math.floor(millisSinceTheEpoch() / 1000)
     }
 
+    function completeFileUrl(str) {
+        if (str) {
+            if (str.indexOf("/") === 0) {
+                return "file://" + str
+            }
+        }
+
+        return str
+    }
+
     SqlVodModel {
         id: _model
         columns: ["count"]

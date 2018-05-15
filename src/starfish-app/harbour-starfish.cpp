@@ -32,10 +32,10 @@
 #include "ScVodDataManager.h"
 #include "ScApp.h"
 #include "ScVodman.h"
+#include "ScRecentlyUsedModel.h"
 
 
 #include <sailfishapp.h>
-
 
 static QObject *dataManagerProvider(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
@@ -64,6 +64,8 @@ main(int argc, char *argv[]) {
     qmlRegisterType<ScVodDatabaseDownloader>(STARFISH_NAMESPACE, 1, 0, "VodDatabaseDownloader");
     qmlRegisterType<Sc2LinksDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2LinksDotComScraper");
     qmlRegisterType<Sc2CastsDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2CastsDotComScraper");
+    qmlRegisterType<ScRecentlyUsedModel>(STARFISH_NAMESPACE, 1, 0, "RecentlyUsedModel");
+//    qmlRegisterUncreatableType<QSqlDatabase>("Qt", 1, 0, "QSqlDatabase", "QSqlDatabase");
     qmlRegisterSingletonType<ScApp>(STARFISH_NAMESPACE, 1, 0, "App", appProvider);
     qmlRegisterUncreatableType<ScVodScraper>(STARFISH_NAMESPACE, 1, 0, "VodScraper", "VodScraper");
     qmlRegisterUncreatableType<ScVodman>(STARFISH_NAMESPACE, 1, 0, "Vodman", "Vodman");
