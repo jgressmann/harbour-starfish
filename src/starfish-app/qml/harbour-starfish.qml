@@ -138,7 +138,7 @@ ApplicationWindow {
     RecentlyUsedModel {
         id: recentlyUsedVideos
         columnNames: ["video_id", "url", "offset", "thumbnail_path"]
-        rowIdentifierColumns: ["video_id", "url"]
+        keyColumns: ["video_id", "url"]
         columnTypes: ["INTEGER DEFAULT -1", "TEXT", "INTEGER DEFAULT 0", "TEXT"]
         table: "recently_used_videos"
         count: 10

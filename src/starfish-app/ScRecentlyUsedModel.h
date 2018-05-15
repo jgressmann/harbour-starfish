@@ -12,7 +12,7 @@ class ScRecentlyUsedModel : public QAbstractTableModel
     Q_PROPERTY(QString table READ table WRITE setTable NOTIFY tableChanged)
     Q_PROPERTY(QStringList columnNames READ columnNames WRITE setColumnNames NOTIFY columnNamesChanged)
     Q_PROPERTY(QStringList columnTypes READ columnTypes WRITE setColumnTypes NOTIFY columnTypesChanged)
-    Q_PROPERTY(QStringList rowIdentifierColumns READ rowIdentifierColumns WRITE setRowIdentifierColumns NOTIFY rowIdentifierColumnsChanged)
+    Q_PROPERTY(QStringList keyColumns READ keyColumns WRITE setKeyColumns NOTIFY keyColumnsChanged)
     Q_PROPERTY(QVariant database READ database WRITE setDatabase NOTIFY databaseChanged)
     Q_PROPERTY(int count READ count WRITE setCount NOTIFY countChanged)
 public:
@@ -28,7 +28,7 @@ public:
     QString table() const { return m_Table; }
     QStringList columnNames() const { return m_ColumnNames; }
     QStringList columnTypes() const { return m_ColumnTypes; }
-    QStringList rowIdentifierColumns() const { return m_KeyColumns; }
+    QStringList keyColumns() const { return m_KeyColumns; }
     QVariant database() const { return QVariant::fromValue(m_Db); }
     int count() const { return m_Count; }
     void setDatabase(const QVariant& value);
@@ -36,7 +36,7 @@ public:
     void setTable(const QString& value);
     void setColumnNames(const QStringList& value);
     void setColumnTypes(const QStringList& value);
-    void setRowIdentifierColumns(const QStringList& value);
+    void setKeyColumns(const QStringList& value);
     Q_INVOKABLE void add(const QVariantMap& pairs);
     Q_INVOKABLE void update(const QVariantMap& keys, const QVariantMap& values);
     Q_INVOKABLE void remove(const QVariantMap& pairs);
@@ -48,7 +48,7 @@ signals:
     void tableChanged();
     void columnNamesChanged();
     void columnTypesChanged();
-    void rowIdentifierColumnsChanged();
+    void keyColumnsChanged();
 private:
     enum {
         ExtraColumns = 2,

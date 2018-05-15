@@ -73,7 +73,7 @@ ScRecentlyUsedModel::setColumnTypes(const QStringList& value) {
 }
 
 void
-ScRecentlyUsedModel::setRowIdentifierColumns(const QStringList& value) {
+ScRecentlyUsedModel::setKeyColumns(const QStringList& value) {
     m_KeyColumns = value;
     tryGetReady();
     emit columnNamesChanged();
