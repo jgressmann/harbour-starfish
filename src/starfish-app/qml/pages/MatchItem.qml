@@ -548,27 +548,6 @@ ListItem {
     function _play() {
         console.debug("play " + _vodUrl)
         playRequest(root)
-
-
-
-//        settingPlaybackOffset.value = startOffset
-//        settingPlaybackRowId.value = rowId
-//        settingPlaybackUrl.value = _vodUrl
-
-//        recentlyUsedVideos.add([rowId, null, startOffset, titleLabel.text, thumbnail.source])
-
-
-//        if (settingExternalMediaPlayer.value && _vodUrl.indexOf("http") !== 0) {
-//            Qt.openUrlExternally(_vodUrl)
-//        } else {
-//            var playerPage = pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"), {
-//                               source: _vodUrl,
-//                               startOffsetMs: startOffsetMs,
-//                                openHander: root.openHandler
-//            })
-
-//            playerPageConnections.target = playerPage
-//        }
     }
 
     function vodAvailable(rowid, filePath, progress, fileSize, width, height, formatId) {
