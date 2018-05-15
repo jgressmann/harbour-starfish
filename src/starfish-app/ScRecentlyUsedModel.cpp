@@ -41,37 +41,12 @@ ScRecentlyUsedModel::setTable(const QString& value) {
     if (value != m_Table) {
 
         m_Table = value;
-//        m_NeedToCreateTable = true;
         m_RowCountSql = QStringLiteral("SELECT COUNT(*) FROM %1").arg(m_Table);
         m_SelectDataSql = QStringLiteral("SELECT * FROM %1 ORDER BY modified DESC").arg(m_Table);
-//        m_UpdateModifiedSql = QStringLiteral("UPDATE %1 SET modified=? WHERE id=?").arg(m_Table);
         m_DeleteRowSql = QStringLiteral("DELETE FROM %1 WHERE id=?").arg(m_Table);
-        setColumnBasedSql();
         tryGetReady();
         emit tableChanged();
     }
-}
-
-void
-ScRecentlyUsedModel::setColumnBasedSql() {
-    m_UpdateRowSql = QStringLiteral("UPDATE %1 SET ").arg(m_Table);
-    m_InsertRowSql = QStringLiteral("INSERT INTO %1 (").arg(m_Table);
-    auto insertTail = QStringLiteral(", modified) VALUES (");
-    for (int i = 0; i < m_ColumnNames.size(); ++i) {
-        if (i > 0) {
-            m_UpdateRowSql += QStringLiteral(", ");
-            m_InsertRowSql += QStringLiteral(", ");
-            insertTail += QStringLiteral(", ");
-        }
-
-        m_UpdateRowSql += QStringLiteral("%1=?").arg(m_ColumnNames[i]);
-        m_InsertRowSql += m_ColumnNames[i];
-        insertTail += QStringLiteral("?");
-    }
-
-    m_UpdateRowSql += QStringLiteral(", modified=? WHERE id=?");
-    m_InsertRowSql += insertTail;
-    m_InsertRowSql += QStringLiteral(", ?)");
 }
 
 void
@@ -85,7 +60,6 @@ ScRecentlyUsedModel::setColumnNames(const QStringList& value) {
     }
     m_RoleNames[Qt::UserRole + m_ColumnNames.size() + 0] = "modified";
     m_RoleNames[Qt::UserRole + m_ColumnNames.size() + 1] = "rowid";
-    setColumnBasedSql();
     tryGetReady();
     emit columnNamesChanged();
 }
@@ -345,7 +319,7 @@ ScRecentlyUsedModel::add(const QVariantMap& pairs) {
                         qWarning().nospace().noquote() << "failed to exec insert, error: " << q.lastError();
                     }
                 } else {
-                    qWarning().nospace().noquote() << "failed to prepare insert, sql: " << m_InsertRowSql << ", error: " << q.lastError();
+                    qWarning().nospace().noquote() << "failed to prepare insert, sql: " << m_DeleteRowSql << ", error: " << q.lastError();
                 }
                 endRemoveRows();
 
@@ -381,7 +355,7 @@ ScRecentlyUsedModel::add(const QVariantMap& pairs) {
                     qWarning().nospace().noquote() << "failed to exec insert, error: " << q.lastError();
                 }
             } else {
-                qWarning().nospace().noquote() << "failed to prepare insert, sql: " << m_InsertRowSql << ", error: " << q.lastError();
+                qWarning().nospace().noquote() << "failed to prepare insert, sql: " << insertRowSql << ", error: " << q.lastError();
             }
             emit endInsertRows();
 

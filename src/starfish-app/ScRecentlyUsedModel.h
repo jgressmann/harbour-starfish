@@ -22,8 +22,6 @@ public: //
     Q_INVOKABLE virtual int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
     Q_INVOKABLE virtual int columnCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
     Q_INVOKABLE virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
-//    Q_INVOKABLE virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) Q_DECL_OVERRIDE;
-//    virtual Qt::ItemFlags flags(const QModelIndex &index) const Q_DECL_OVERRIDE;
     virtual QHash<int,QByteArray> roleNames() const Q_DECL_OVERRIDE;
 
 public:
@@ -51,7 +49,6 @@ signals:
     void columnNamesChanged();
     void columnTypesChanged();
     void rowIdentifierColumnsChanged();
-//    void databaseChanged();
 private:
     enum {
         ExtraColumns = 2,
@@ -60,7 +57,6 @@ private:
     bool ready() const;
     bool createTable();
     void tryGetReady();
-    void setColumnBasedSql();
 
 private:
     QStringList m_ColumnNames, m_ColumnTypes, m_KeyColumns;
@@ -70,8 +66,6 @@ private:
     QString m_RowCountSql;
     QString m_SelectDataSql;
     QString m_DeleteRowSql;
-    QString m_UpdateRowSql;
-    QString m_InsertRowSql;
     QString m_SelectRowsByKeySql;
     QSqlDatabase m_Db;
     int m_Count;
