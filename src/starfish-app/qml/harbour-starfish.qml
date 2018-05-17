@@ -145,9 +145,10 @@ ApplicationWindow {
         database: VodDataManager.database
         changeForcesReset: true
 
-        onRowsAboutToBeRemoved: function (parent, topRight, bottomRight) {
-            for (var i = topRight.row; i <= bottomRight.row; ++i) {
-                var thumbNailFilePath = data(index(row, 4), 0)
+        onRowsAboutToBeRemoved: function (parent, from, to) {
+            console.debug("removing rows from=" + from + " to=" + to)
+            for (var i = from; i <= to; ++i) {
+                var thumbNailFilePath = data(index(i, 3), 0)
                 console.debug("row=" + i + " thumbnail path=" + thumbNailFilePath)
                 if (thumbNailFilePath) {
                     App.unlink(thumbNailFilePath)

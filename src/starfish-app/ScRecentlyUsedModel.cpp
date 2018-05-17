@@ -331,7 +331,6 @@ ScRecentlyUsedModel::update(const QVariantMap& values, const QVariantMap& where)
             selectSql += whereClause;
         }
 
-//        beginResetModel();
         QSqlQuery q(m_Db);
         if (q.prepare(updateSql)) {
             auto beg = values.cbegin();
@@ -365,8 +364,6 @@ ScRecentlyUsedModel::update(const QVariantMap& values, const QVariantMap& where)
         }   else {
             qWarning().nospace().noquote() << "failed to prepare select sql: " << updateSql << ", error: " << q.lastError();
         }
-//        endResetModel();
-
     } else {
         qWarning().noquote().nospace() << "update: not ready";
     }
@@ -446,22 +443,25 @@ ScRecentlyUsedModel::add(const QVariantMap& pairs) {
                 return;
             }
 
-            m_IndexCache = -1;
+
 
             if (-1 == rowid) {
-                beginResetModel();
                 if (m_RowCount == m_Count) {
+                    beginRemoveRows(QModelIndex(), m_RowCount-1, m_RowCount-1);
+
                     if (q.exec(QStringLiteral("DELETE FROM %1 WHERE id IN (SELECT id FROM %1 ORDER BY modified ASC LIMIT 1)").arg(m_Table))) {
-    //                    if (q.next()) {
-    //                        rowid = qvariant_cast<qint64>(q.value(0));
-    //                    } else {
-    //                        qDebug().noquote().nospace() << "no row";
-    //                    }
+
                     } else {
                         qWarning().nospace().noquote() << "failed to exec sql\n" << q.lastQuery() << ", error: " << q.lastError();
                         return;
                     }
+
+                    endRemoveRows();
                 }
+
+                m_IndexCache = -1;
+
+                beginInsertRows(QModelIndex(), 0, 0);
 
                 if (q.prepare(insertRowSql)) {
                     auto beg = pairs.cbegin();
@@ -482,8 +482,9 @@ ScRecentlyUsedModel::add(const QVariantMap& pairs) {
                 } else {
                     qWarning().nospace().noquote() << "failed to prepare insert, sql: " << insertRowSql << ", error: " << q.lastError();
                 }
-                endResetModel();
+                endInsertRows();
             } else {
+                m_IndexCache = -1;
                 if (q.prepare(QStringLiteral("UPDATE %1 SET modified=? %2").arg(m_Table, rowWhereClause))) {
 
                     q.addBindValue(QDateTime::currentDateTime());
