@@ -105,21 +105,9 @@ ApplicationWindow {
         }
 
         ConfigurationValue {
-            id: settingPlaybackOffset
-            key: "/playback/offset"
-            defaultValue: -1
-        }
-
-        ConfigurationValue {
-            id: settingPlaybackRowId
-            key: "/playback/rowid"
-            defaultValue: -1
-        }
-
-        ConfigurationValue {
-            id: settingPlaybackUrl
-            key: "/playback/url"
-            defaultValue: ""
+            id: settingPlaybackRecentVideosToKeep
+            key: "/playback/recent_videos_to_keep"
+            defaultValue: 10
         }
 
         ConfigurationValue {
@@ -141,7 +129,7 @@ ApplicationWindow {
         keyColumns: ["video_id", "url"]
         columnTypes: ["INTEGER DEFAULT -1", "TEXT", "INTEGER DEFAULT 0", "TEXT"]
         table: "recently_used_videos"
-        count: 10
+        count: settingPlaybackRecentVideosToKeep.value
         database: VodDataManager.database
         changeForcesReset: true
 
@@ -162,6 +150,19 @@ ApplicationWindow {
         VodDataManager.vodman.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
         _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
+
+        Global.playVideoHandler = function (updater, obj, url, offset) {
+            recentlyUsedVideos.add(obj)
+            if (settingExternalMediaPlayer.value && self.url.indexOf("http") !== 0) {
+                Qt.openUrlExternally(url)
+            } else {
+                console.debug("offset=" + offset)
+                var playerPage = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
+                playerPage.play(url, offset)
+                updater.playerPage = playerPage
+                updater.setKey(obj)
+            }
+        }
     }
 
     function _setScraper() {

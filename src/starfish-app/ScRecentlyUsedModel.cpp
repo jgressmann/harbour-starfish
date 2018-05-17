@@ -536,7 +536,6 @@ ScRecentlyUsedModel::tryGetReady() {
     m_RowCount = 0;
     m_Ready = false;
     if (ready()) {
-//        qDebug() << "columns in list model " << QAbstractItemModel::columnCount(QModelIndex());
         if (createTable()) {
             m_Ready = true;
         }
@@ -554,7 +553,7 @@ ScRecentlyUsedModel::tryGetReady() {
                     beginResetModel(); // this is here so that views fetch and sort items
                     endResetModel();
                     beginRemoveRows(QModelIndex(), m_Count, m_RowCount-1);
-                    auto sql = QStringLiteral("DELETE from %1 WHERE id IN (SELECT id from %1 ORDER BY modified DESC LIMIT %2").arg(m_Table, n);
+                    auto sql = QStringLiteral("DELETE FROM %1 WHERE id IN (SELECT id FROM %1 ORDER BY modified DESC LIMIT %2)").arg(m_Table, n);
                     if (q.exec(sql)) {
                         qInfo().noquote().nospace() << "deleted " << n << " extra rows";
                         m_RowCount = m_Count;

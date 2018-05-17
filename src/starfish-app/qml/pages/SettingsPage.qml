@@ -23,20 +23,12 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import Sailfish.Pickers 1.0
 import org.duckdns.jgressmann 1.0
-
 import ".."
 
 
 Page {
     id: root
-
-//    Component.onCompleted: {
-//        console.debug("broadband format=" + settingBroadbandDefaultFormat.value)
-//        console.debug("mobile format=" + settingMobileDefaultFormat.value)
-//        console.debug("max meta data downloads=" + settingNetworkMaxConcurrentMetaDataDownloads.value)
-//    }
 
     Component.onDestruction: {
         settings.sync()
@@ -154,6 +146,29 @@ Page {
             onCheckedChanged: {
                 console.debug("external media player=" + checked)
                 settingExternalMediaPlayer.value = checked
+            }
+        }
+
+        TextField {
+            width: parent.width
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
+            label: "Number of recently watched videos to keep"
+            text: settingPlaybackRecentVideosToKeep.value.toFixed(0)
+            EnterKey.iconSource: "image://theme/icon-m-enter-next"
+            EnterKey.onClicked: focus = false
+            validator: IntValidator {
+                bottom: 1
+            }
+
+            onTextChanged: {
+                console.debug("text: " + text)
+                if (acceptableInput) {
+                    var number = parseFloat(text)
+                    console.debug("number: " + number)
+                    if (typeof(number) === "number") {
+                        settingPlaybackRecentVideosToKeep.value = number
+                    }
+                }
             }
         }
 

@@ -42,30 +42,18 @@ CoverBackground {
         id: videoFrameImage
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
-//        cache: false
         visible: status === Image.Ready
+        cache: false // can't cache always loading same file, it's the content that changes
 //        onStatusChanged: {
 //            console.debug("video frame image status: " + status)
 //        }
     }
 
     Image {
-        id: videoThumbnailImage
-        visible: !videoFrameImage.visible && status === Image.Ready
-        anchors.fill: parent
-        fillMode: Image.PreserveAspectCrop
-        cache: false
-//        onStatusChanged: {
-//            console.debug("thumbnail image status: " + status)
-//        }
-    }
-
-    Image {
         id: logoImage
-        visible: !videoFrameImage.visible && !videoThumbnailImage.visible
+        visible: !videoFrameImage.visible
         anchors.centerIn: parent
         source: "/usr/share/icons/hicolor/128x128/apps/harbour-starfish.png"
-        cache: false
 
         Desaturate {
             anchors.fill: parent
@@ -181,11 +169,6 @@ CoverBackground {
             _newVodCount = sqlModel.data(sqlModel.index(0, 0), 0)
             videoFrameImage.source = "" // force reload
             videoFrameImage.source = Global.videoCoverPath
-            if (settingPlaybackRowId.value >= 0) {
-                VodDataManager.fetchThumbnail(settingPlaybackRowId.value)
-            } else {
-                videoThumbnailImage.source == null
-            }
             refreshTimer.restart()
             _updateUpdatingLabel()
             break
@@ -202,11 +185,6 @@ CoverBackground {
         interval: 60000
         repeat: true
         onTriggered: _updateUpdatingLabel()
-    }
-
-
-    Component.onCompleted: {
-        VodDataManager.thumbnailAvailable.connect(thumbnailAvailable)
     }
 
     Connections {
@@ -255,13 +233,6 @@ CoverBackground {
         }
 
         return "Updated " + timeStr
-    }
-
-    function thumbnailAvailable(rowid, filePath) {
-        if (rowid === settingPlaybackRowId.value) {
-//            console.debug("cover thumbnailAvailable rowid=" + rowid + " path=" + filePath)
-            videoThumbnailImage.source = filePath
-        }
     }
 }
 
