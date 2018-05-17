@@ -23,7 +23,6 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import Sailfish.Pickers 1.0
 import org.duckdns.jgressmann 1.0
 import "."
 
@@ -91,94 +90,6 @@ PullDownMenu {
         }
     }
 
-//    MenuItem {
-//        id: openVideo
-//        text: qsTr("Open video")
-
-//        property var key
-//        property string title
-//        property int playbackOffset
-//        property string thumbnailFilePath
-
-//        onClicked: {
-//            var topPage = pageStack.currentPage
-//            _openVideoPage(function (url, offset) {
-//                pageStack.pop(topPage, PageStackAction.Immediate)
-//                var playerPage = pageStack.push(
-//                            Qt.resolvedUrl("pages/VideoPlayerPage.qml"),
-//                            null,
-//                            PageStackAction.Immediate)
-
-//                var callback = function () {
-//                    _openVideoPage(function(a, b) {
-//                        playerPage.play(a, b)
-//                        pageStack.pop(playerPage)
-//                    })
-//                }
-//                playerPage.openHandler = callback
-
-//                playerPage.play(url, offset)
-
-//                videoPlayerPageConnections.target = playerPage
-//            })
-//        }
-
-
-//        Connections {
-//            id: videoPlayerPageConnections
-
-//            ignoreUnknownSignals: true
-//            onTitleChanged: openVideo.title = target.title
-//            onPlaybackOffsetChanged: openVideo.playbackOffset = target.playbackOffset
-
-//            onClosedChanged: {
-//                console.debug("closed")
-//                openVideo._saveVideoData()
-//            }
-
-//            onVideoFrameCaptured: function (path) {
-//                console.debug("got frame")
-//            }
-//        }
-
-//        onKeyChanged: {
-//            if (!!key) {
-//                thumbnailFilePath = recentlyUsedVideos.select(["thumbnail_path"], key)[0].thumbnail_path
-//                if (!thumbnailFilePath) {
-//                    thumbnailFilePath = VodDataManager.makeThumbnailFile(Global.videoFramePath)
-//                    recentlyUsedVideos.update({ thumbnail_path: thumbnailFilePath}, key)
-//                }
-
-//                console.debug("thumbnail path=" + thumbnailFilePath)
-//            }
-//        }
-
-//        function _saveVideoData() {
-//            if (!!key) {
-//                if (thumbnailFilePath) {
-//                    App.copy(Global.videoFramePath, thumbnailFilePath)
-//                }
-
-//                recentlyUsedVideos.update({ offset: playbackOffset}, key)
-//                key = null
-//                thumbnailFilePath = ""
-//                playbackOffset = 0
-//            }
-//        }
-
-
-//        function _openVideoPage(callback, openHandler) {
-//            var threshold = pageStack.depth
-//            var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
-//            openPage.videoSelected.connect(function (_key, playbackUrl, offset) {
-//                recentlyUsedVideos.add(_key)
-//                _saveVideoData()
-//                key = _key;
-
-//                callback(playbackUrl, offset)
-//            })
-//        }
-//    }
 
 
     MenuItem {

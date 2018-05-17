@@ -177,11 +177,9 @@ SilicaListView {
                     }
 
                     Component.onCompleted: {
-//                        console.debug("index=" + index + " modified=" + modified + " rowid=" + rowid + " video id=" + video_id + " url=" + url + " offset=" + offset + " thumbnail=" + thumbnail_path)
-//                        console.debug("index=" + index + " thumbnail=" + thumbnail_path)
+                        console.debug("index=" + index + " url=" + url)
                     }
                 }
-
             }
 
 
@@ -193,7 +191,7 @@ SilicaListView {
                     id: wrapperView
                     width: listView.width
 
-
+                    readonly property int inputIndex: index
                     quickScrollEnabled: false
 //                                clip: true
                     model: sqlModel
@@ -253,9 +251,11 @@ SilicaListView {
                     }
 
                     Component.onCompleted: {
-//                        sqlModel.select = "select " + sqlModel.columns.join(",") + " from vods where id=" + video_id
+                        console.debug("index=" + inputIndex + " video_id=" + video_id)
                     }
                 }
+
+
             }
         }
     }

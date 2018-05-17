@@ -297,7 +297,7 @@ ScRecentlyUsedModel::update(const QVariantMap& values, const QVariantMap& where)
             }
 
 
-            updateSql += QStringLiteral(", modified=?");
+//            updateSql += QStringLiteral(", modified=?");
             auto whereClause = QStringLiteral(" WHERE ");
 
             beg = where.cbegin();
@@ -335,7 +335,7 @@ ScRecentlyUsedModel::update(const QVariantMap& values, const QVariantMap& where)
                 q.addBindValue(it.value());
             }
 
-            q.addBindValue(QDateTime::currentDateTime());
+//            q.addBindValue(QDateTime::currentDateTime());
 
             beg = where.cbegin();
             end = where.cend();
@@ -398,7 +398,7 @@ ScRecentlyUsedModel::add(const QVariantMap& pairs) {
             return;
         }
 
-        auto selectRowSql = QStringLiteral("SELECT id FROM %1").arg(m_Table);
+//        auto selectRowSql = QStringLiteral("SELECT id FROM %1").arg(m_Table);
         auto rowWhereClause = QStringLiteral(" WHERE ");
         for (int i = 0; i < identifierIndices.size(); ++i) {
             if (i > 0) {
@@ -410,103 +410,84 @@ ScRecentlyUsedModel::add(const QVariantMap& pairs) {
             rowWhereClause += QStringLiteral("=?");
         }
 
-        selectRowSql += rowWhereClause;
+//        selectRowSql += rowWhereClause;
 
 
             QSqlQuery q(m_Db);
-            // try to find the row
-            qint64 rowid = -1;
 
-            if (q.prepare(selectRowSql)) {
+            m_IndexCache = -1;
+            if (q.prepare(QStringLiteral("UPDATE %1 SET modified=? %2").arg(m_Table, rowWhereClause))) {
+
+                q.addBindValue(QDateTime::currentDateTime());
+
+                QString debugWhere;
                 for (int i = 0; i < identifierIndices.size(); ++i) {
+                    if (i > 0)  {
+                        debugWhere += QStringLiteral(" AND ");
+                    }
                     auto index = identifierIndices[i];
                     const auto& columnName = m_KeyColumns[index];
                     q.addBindValue(pairs[columnName]);
+                    debugWhere += columnName;
+                    debugWhere += QStringLiteral("=");
+                    debugWhere += pairs[columnName].toString();
                 }
 
                 if (q.exec()) {
-                    if (q.next()) {
-                        rowid = qvariant_cast<qint64>(q.value(0));
-                    } else {
-                        qDebug().noquote().nospace() << "no row";
-                    }
-                } else {
-                    qWarning().nospace().noquote() << "failed to exec select, error: " << q.lastError();
-                    return;
-                }
-            }   else {
-                qWarning().nospace().noquote() << "failed to prepare select sql: " << selectRowSql << ", error: " << q.lastError();
-                return;
-            }
-
-
-
-            if (-1 == rowid) {
-                if (m_RowCount == m_Count) {
-                    beginRemoveRows(QModelIndex(), m_RowCount-1, m_RowCount-1);
-
-                    if (q.exec(QStringLiteral("DELETE FROM %1 WHERE id IN (SELECT id FROM %1 ORDER BY modified ASC LIMIT 1)").arg(m_Table))) {
-
-                    } else {
-                        qWarning().nospace().noquote() << "failed to exec sql\n" << q.lastQuery() << ", error: " << q.lastError();
-                        return;
-                    }
-
-                    endRemoveRows();
-                }
-
-                m_IndexCache = -1;
-
-                beginInsertRows(QModelIndex(), 0, 0);
-
-                if (q.prepare(insertRowSql)) {
-                    auto beg = pairs.cbegin();
-                    auto end = pairs.cend();
-                    for (auto it = beg; it != end; ++it) {
-                        qDebug().nospace().noquote() << "\t" << it.value() << "\n";
-                        q.addBindValue(it.value());
-                    }
-
-                    q.addBindValue(QDateTime::currentDateTime());
-
-                    if (q.exec()) {
-                        ++m_RowCount;
-                        qDebug().nospace().noquote() << "new row, count " << m_RowCount;
-                    } else {
-                        qWarning().nospace().noquote() << "failed to exec insert, error: " << q.lastError();
-                    }
-                } else {
-                    qWarning().nospace().noquote() << "failed to prepare insert, sql: " << insertRowSql << ", error: " << q.lastError();
-                }
-                endInsertRows();
-            } else {
-                m_IndexCache = -1;
-                if (q.prepare(QStringLiteral("UPDATE %1 SET modified=? %2").arg(m_Table, rowWhereClause))) {
-
-                    q.addBindValue(QDateTime::currentDateTime());
-
-                    for (int i = 0; i < identifierIndices.size(); ++i) {
-                        auto index = identifierIndices[i];
-                        const auto& columnName = m_KeyColumns[index];
-                        q.addBindValue(pairs[columnName]);
-                    }
-
-                    if (q.exec()) {
-                        qDebug().nospace().noquote() << "updated modified";
+                    if (q.numRowsAffected() > 0) {
+                        qDebug().nospace().noquote() << "updated modified " << q.numRowsAffected() << " rows " << debugWhere;
                         if (m_ChangeForcesReset) {
                             beginResetModel();
                             endResetModel();
                         } else {
                             emit dataChanged(createIndex(0, 0), createIndex(m_RowCount-1, 0));
                         }
-
                     } else {
-                        qWarning().nospace().noquote() << "failed to exec insert, error: " << q.lastError();
+                        if (m_RowCount == m_Count) {
+                            beginRemoveRows(QModelIndex(), m_RowCount-1, m_RowCount-1);
+
+                            if (q.exec(QStringLiteral("DELETE FROM %1 WHERE id IN (SELECT id FROM %1 ORDER BY modified ASC LIMIT 1)").arg(m_Table))) {
+
+                            } else {
+                                qWarning().nospace().noquote() << "failed to exec sql\n" << q.lastQuery() << ", error: " << q.lastError();
+                                return;
+                            }
+
+                            endRemoveRows();
+                        }
+
+                        m_IndexCache = -1;
+
+                        beginInsertRows(QModelIndex(), 0, 0);
+
+                        if (q.prepare(insertRowSql)) {
+                            auto beg = pairs.cbegin();
+                            auto end = pairs.cend();
+                            for (auto it = beg; it != end; ++it) {
+                                qDebug().nospace().noquote() << "\t" << it.value() << "\n";
+                                q.addBindValue(it.value());
+                            }
+
+                            q.addBindValue(QDateTime::currentDateTime());
+
+                            if (q.exec()) {
+                                ++m_RowCount;
+                                qDebug().nospace().noquote() << "new row, count " << m_RowCount;
+                            } else {
+                                qWarning().nospace().noquote() << "failed to exec insert, error: " << q.lastError();
+                            }
+                        } else {
+                            qWarning().nospace().noquote() << "failed to prepare insert, sql: " << insertRowSql << ", error: " << q.lastError();
+                        }
+                        endInsertRows();
                     }
                 } else {
-                    qWarning().nospace().noquote() << "failed to prepare insert, sql: " << insertRowSql << ", error: " << q.lastError();
+                    qWarning().nospace().noquote() << "failed to exec insert, error: " << q.lastError();
                 }
+            } else {
+                qWarning().nospace().noquote() << "failed to prepare insert, sql: " << insertRowSql << ", error: " << q.lastError();
             }
+
     } else {
         qWarning().noquote().nospace() << "add: not ready";
     }

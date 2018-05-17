@@ -32,7 +32,6 @@ import ".."
 Page {
     id: root
 
-//    property var openHander
     signal videoSelected(var obj, string playbackUrl, int offset)
 
     PageHeader {
@@ -98,19 +97,14 @@ Page {
         contentWidth: parent.width
 
         VerticalScrollDecorator {}
-Rectangle {
-    color: "transparent"
-    anchors.fill: parent
-    RecentlyWatchedVideoView {
-        anchors.fill: parent
-        clip: true
-        onClicked: function (a, b, c) {
-            videoSelected(a, b, c)
+
+        RecentlyWatchedVideoView {
+            anchors.fill: parent
+            clip: true
+            onClicked: function (a, b, c) {
+                videoSelected(a, b, c)
+            }
         }
     }
-
-    }
-    }
-
 }
 

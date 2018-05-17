@@ -57,7 +57,8 @@ ListItem {
     property int _width: 0
     property int _height: 0
     property bool _seen: false
-//    property bool _onScreen: y < Screen.height
+    property bool _tryingToPlay: false
+
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
     readonly property string title: titleLabel.text
@@ -684,20 +685,24 @@ ListItem {
     }
 
     function _tryPlay() {
-        if (_vodFilePath && progressOverlay.progress > 0) {
-            // try download rest if incomplete and format matches
-            if (_vod && progressOverlay.progress < 1 && !_downloading) {
-                var index = _getVodFormatIndexFromId()
-                if (index >= 0) {
-                    _downloadFormat(index)
+        if (!_tryingToPlay) {
+            _tryingToPlay = true
+            if (_vodFilePath && progressOverlay.progress > 0) {
+                // try download rest if incomplete and format matches
+                if (_vod && progressOverlay.progress < 1 && !_downloading) {
+                    var index = _getVodFormatIndexFromId()
+                    if (index >= 0) {
+                        _downloadFormat(index)
+                    }
                 }
-            }
 
-            // at any rate, play the file
-            _vodUrl = _vodFilePath
-            _play()
-        } else if (_vod) {
-            _playStream()
+                // at any rate, play the file
+                _vodUrl = _vodFilePath
+                _play()
+            } else if (_vod) {
+                _playStream()
+            }
+            _tryingToPlay = false
         }
     }
 
