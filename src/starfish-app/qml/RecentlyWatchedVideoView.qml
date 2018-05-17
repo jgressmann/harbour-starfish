@@ -30,23 +30,31 @@ import "pages"
 
 SilicaListView {
     id: listView
-//    anchors.fill: parent
+
     model: recentlyUsedVideos
-//    clip: true
 
     signal clicked(var obj, string playbackUrl, int offset)
 
+
+
     delegate: Component {
         Loader {
+            onLoaded: {
+                console.debug("loaded video_id="+video_id+" url="+url)
+            }
+
             sourceComponent: video_id === -1 ? fileComponent : vodComponent
 
             Component {
                 id: fileComponent
+
+
                 ListItem {
                     id: listItem
 
                     width: listView.width
                     contentHeight: Global.itemHeight + Theme.fontSizeMedium
+
 
                     menu: Component {
                         ContextMenu {
@@ -106,16 +114,12 @@ SilicaListView {
                                     cache: false
                                     visible: status === Image.Ready
                                     source: thumbnail_path
-
-                                    onStatusChanged: {
-                                        console.debug("status=" + status)
-                                    }
                                 }
 
                                 Image {
                                     anchors.fill: parent
                                     fillMode: Image.PreserveAspectFit
-                                    cache: false
+//                                    cache: false
                                     visible: !thumbnail.visible
                                     source: "image://theme/icon-m-sailfish"
                                 }
@@ -147,23 +151,34 @@ SilicaListView {
                                 }
 
         //                            font.pixelSize: Global.labelFontSize
-                                truncationMode: TruncationMode.Fade
-                                wrapMode: Text.Wrap
+//                                truncationMode: TruncationMode.Fade
+                                wrapMode: Text.WrapAnywhere
+                                elide: Text.ElideRight
                             }
                         }
                     }
 
 
                     onClicked: {
+                        console.debug("url=" + url)
                         listView.clicked({
-                                             url: url,
-                                             offset: offset,
+                                             url: url
                                          },
-                                         url, offset)
+                                         url,
+                                         offset)
+                    }
+
+
+                    property date modififedChangedListener: modified
+                    onModififedChangedListenerChanged: {
+                        console.debug("index="+ index+" modified=" + modified)
+                        thumbnail.source = ""
+                        thumbnail.source = thumbnail_path
                     }
 
                     Component.onCompleted: {
-                        console.debug("index=" + index + " modified=" + modified + " rowid=" + rowid + " video id=" + video_id + " url=" + url + " offset=" + offset + " thumbnail=" + thumbnail_path)
+//                        console.debug("index=" + index + " modified=" + modified + " rowid=" + rowid + " video id=" + video_id + " url=" + url + " offset=" + offset + " thumbnail=" + thumbnail_path)
+//                        console.debug("index=" + index + " thumbnail=" + thumbnail_path)
                     }
                 }
 
@@ -172,6 +187,8 @@ SilicaListView {
 
             Component {
                 id: vodComponent
+
+
                 SilicaListView {
                     id: wrapperView
                     width: listView.width
@@ -179,12 +196,12 @@ SilicaListView {
 
                     quickScrollEnabled: false
 //                                clip: true
-                    model: video_id !== -1 ? sqlModel : null
-
+                    model: sqlModel
 
 
                     delegate: Component {
                         MatchItem {
+                            id: matchItem
                             width: ListView.view.width
                             contentHeight: Global.itemHeight + Theme.fontSizeMedium
                             onHeightChanged: wrapperView.height = height
@@ -198,15 +215,21 @@ SilicaListView {
                             matchName: match_name
                             matchDate: match_date
                             rowId: video_id
-                            startOffsetMs: offset * 1000
-        //                            menuEnabled: false
+                            startOffset: offset
 
                             onPlayRequest: function (self) {
+                                console.debug("video_id=" + video_id)
+                                console.debug("rowid=" + rowId)
+                                if (video_id === -1) {
+                                    console.debug("rowid=" + rowId)
+                                    console.debug("ARRRRRRRRRRRRRRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGG")
+                                }
 
                                 listView.clicked({
-                                                video_id: video_id,
-                                                     offset: offset
-                                                 }, self.vodUrl, self.startOffset)
+                                                    video_id: rowId
+                                                 },
+                                                 self.vodUrl,
+                                                 self.startOffset)
                             }
 
                             menu: Component {
@@ -214,7 +237,7 @@ SilicaListView {
                                     MenuItem {
                                         text: "Remove from list"
                                         onClicked: {
-                                            recentlyUsedVideos.remove({ video_id: video_id })
+                                            recentlyUsedVideos.remove({ video_id: matchItem.rowId })
                                         }
                                     }
                                 }
@@ -227,6 +250,10 @@ SilicaListView {
                         dataManager: VodDataManager
                         columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "offset"]
                         select: "select " + columns.join(",") + " from vods where id=" + video_id
+                    }
+
+                    Component.onCompleted: {
+//                        sqlModel.select = "select " + sqlModel.columns.join(",") + " from vods where id=" + video_id
                     }
                 }
             }

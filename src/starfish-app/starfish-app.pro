@@ -78,7 +78,8 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/ProgressImageBlendEffect.qml \
     qml/HighlightingListView.qml \
     qml/VodDataManagerBusyIndicator.qml \
-    qml/RecentlyWatchedVideoView.qml
+    qml/RecentlyWatchedVideoView.qml \
+    qml/RecentlyWatchedVideoUpdater.qml \
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 !CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT

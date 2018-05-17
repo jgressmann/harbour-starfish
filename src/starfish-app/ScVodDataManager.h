@@ -128,7 +128,6 @@ public: //
     inline ScVodman* vodman() const { return m_Vodman; }
     inline ScClassifier* classifier() const { return const_cast<ScClassifier*>(&m_Classifier); }
     inline QVariant databaseVariant() const { return QVariant::fromValue(m_Database); }
-    qint64 generation() const;
     bool busy() const;
     Q_INVOKABLE QString makeThumbnailFile(const QString& srcPath);
 
@@ -226,6 +225,7 @@ private:
     void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
     static void batchAddVods(void* ctx);
     void batchAddVods();
+    void dropTables();
 
 private:
     mutable QMutex m_Lock;

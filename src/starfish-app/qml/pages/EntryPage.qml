@@ -74,25 +74,6 @@ BasePage {
             }
         }
 
-//        ListItem {
-//            contentHeight: Global.itemHeight
-
-//            Label {
-//                id: videoPlayerLabel
-//                x: Theme.horizontalPageMargin
-//                width: page.width - 2*x
-//                text: qsTr("Video player")
-
-//                font.pixelSize: Global.labelFontSize
-//                anchors.verticalCenter: parent.verticalCenter
-//            }
-
-//            onClicked: {
-//                pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"))
-//            }
-//        }
-
-
         Column {
             id: continueWatching
             width: parent.width
@@ -117,24 +98,26 @@ BasePage {
                 height: 0
                 width: parent.width
 
-                onClicked: function (obj, offset, playbackUrl) {
+                RecentlyWatchedVideoUpdater {
+                    id: updater
+                }
+
+                onClicked: function (obj, url, offset) {
                     recentlyUsedVideos.add(obj)
-                    if (settingExternalMediaPlayer.value && playbackUrl.indexOf("http") !== 0) {
-                        Qt.openUrlExternally(playbackUrl)
+                    if (settingExternalMediaPlayer.value && url.indexOf("http") !== 0) {
+                        Qt.openUrlExternally(url)
                     } else {
-                        var playerPage = pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"), {
-                                           source: playbackUrl,
-                                           startOffsetMs: offset*1000,
-                        })
+                        var playerPage = pageStack.push(
+                                    Qt.resolvedUrl("VideoPlayerPage.qml"),
+                                    {
+                                           source: url,
+                                           startOffset: offset,
+                                    })
+
+                        updater.playerPage = playerPage
+                        updater.setKey(obj)
                     }
                 }
-            }
-
-            Connections {
-                target: recentlyUsedVideos
-                onRowsRemoved: continueWatching.updateVisible()
-                onRowsInserted: continueWatching.updateVisible()
-                onModelReset: continueWatching.updateVisible()
             }
 
             Component.onCompleted: updateVisible()

@@ -35,6 +35,8 @@ Item { // Components can't declare functions
     readonly property int itemHeight: Theme.itemSizeLarge
     readonly property int labelFontSize: Theme.fontSizeLarge
     readonly property string videoFramePath: App.dataDir + "/video.png"
+    readonly property string videoThumbnailPath: App.dataDir + "/thumbnail.png"
+    readonly property string videoCoverPath: App.dataDir + "/cover.png"
     readonly property real pathTraceOpacity: 0.25
 
 //    property var scraper

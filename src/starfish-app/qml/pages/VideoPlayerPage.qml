@@ -22,6 +22,7 @@
  */
 
 import QtQuick 2.0
+import QtGraphicalEffects 1.0
 import QtMultimedia 5.0
 import Sailfish.Silica 1.0
 import org.duckdns.jgressmann 1.0
@@ -45,7 +46,12 @@ Page {
     property bool _showVideo: true
     property bool _pausedOnPageDeactivation: false
     property var openHandler
+    readonly property bool closed: _closed
+    property bool _closed: false
 
+    signal videoFrameCaptured(string filepath)
+    signal videoCoverCaptured(string filepath)
+    signal videoThumbnailCaptured(string filepath)
 
     onSourceChanged: {
         console.debug("onSourceChanged " + source)
@@ -88,6 +94,35 @@ Page {
 //            console.debug("media player volume=" + volume)
 //        }
     }
+
+
+
+    Item {
+        id: thumbnailOutput
+        property real factor: 1.0 / Math.max(videoOutput.width, videoOutput.height)
+        width: Theme.iconSizeLarge * factor * videoOutput.width
+        height: Theme.iconSizeLarge * factor * videoOutput.height
+
+
+        ColorOverlay {
+            anchors.fill: parent
+            source: videoOutput
+        }
+    }
+
+    Item {
+        id: coverOutput
+        property real factor: 1.0 / Math.max(videoOutput.width, videoOutput.height)
+        width: 512 * factor * videoOutput.width
+        height: 512 * factor * videoOutput.height
+
+
+        ColorOverlay {
+            anchors.fill: parent
+            source: videoOutput
+        }
+    }
+
 
     Rectangle {
         anchors.fill: parent
@@ -279,12 +314,6 @@ Page {
                         id: positionSlider
                         width: parent.width
                         maximumValue: Math.max(1, mediaplayer.duration)
-//                        onValueChanged: {
-//                            console.debug("onValueChanged " + value + " down=" + down)
-//                            if (down) {
-//                                _seek(sliderValue)
-//                            }
-//                        }
 
                         Connections {
                             target: mediaplayer
@@ -404,12 +433,30 @@ Page {
     }
 
     Component.onCompleted: {
-        if (_showVideo && _startOffsetMs > 0) {
-            console.debug("seek to " + _startOffsetMs)
-            _seek(_startOffsetMs)
+        if (source) {
+            play(source, startOffset)
         }
     }
 
+    Component.onDestruction: {
+        console.debug("destruction")
+        _closed = true
+    }
+
+//    Timer {
+//        id: frameCapturedSignalTimer
+//        interval: 1
+//        repeat: false
+//        onRunningChanged: {
+//            console.debug("frame capture timer running=" + running)
+//        }
+
+//        onTriggered: {
+//            console.debug("frame capture timer triggered begin")
+//            videoFrameCaptured(Global.videoFramePath)
+//            console.debug("frame capture timer triggered end")
+//        }
+//    }
 
 
     Timer {
@@ -437,10 +484,11 @@ Page {
         }
     }
 
-    function play(url, _offset) {
+    function play(url, offset) {
+        console.debug("play offset=" + offset + " url=" + url)
         source = url
         mediaplayer.play()
-        startOffset = _offset
+        startOffset = offset
         if (_showVideo && startOffset > 0) {
             console.debug("seek to " + _startOffsetMs)
             _seek(_startOffsetMs)
@@ -456,13 +504,24 @@ Page {
         }
 
         if (mediaplayer.playbackState === MediaPlayer.PausedState) {
-            videoOutput.grabToImage(function (a) {
-//                    console.debug("video frame grabbed")
-//                    App.unlink(Global.videoFramePath)
-//                    console.debug("unlink")
-                //var success = a.saveToFile(Global.videoFramePath)
-                //console.debug("save frame to path=" + path + " success=" + success)
-                a.saveToFile(Global.videoFramePath)
+//            videoOutput.grabToImage(function (a) {
+////                    console.debug("video frame grabbed")
+////                    App.unlink(Global.videoFramePath)
+////                    console.debug("unlink")
+//                //var success = a.saveToFile(Global.videoFramePath)
+//                //console.debug("save frame to path=" + path + " success=" + success)
+//                a.saveToFile(Global.videoFramePath)
+////                frameCapturedSignalTimer.start()
+//                videoFrameCaptured(Global.videoFramePath)
+//            })
+            thumbnailOutput.grabToImage(function (a) {
+                a.saveToFile(Global.videoThumbnailPath)
+                videoThumbnailCaptured(Global.videoThumbnailPath)
+            })
+
+            coverOutput.grabToImage(function (a) {
+                a.saveToFile(Global.videoCoverPath)
+                videoCoverCaptured(Global.videoCoverPath)
             })
         }
     }

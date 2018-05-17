@@ -72,6 +72,7 @@ Page {
                 Component {
                     id: filePickerPage
                     FilePickerPage {
+                        popOnSelection: false
                         onSelectedContentPropertiesChanged: {
                             videoSelected({
                                               url: selectedContentProperties.url

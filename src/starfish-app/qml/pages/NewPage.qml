@@ -69,7 +69,7 @@ BasePage {
                     matchName: match_name
                     matchDate: match_date
                     rowId: rowid
-                    startOffsetMs: offset * 1000
+                    startOffset: offset
 
                     onClicked: {
                         ListView.view.currentIndex = index
@@ -88,7 +88,7 @@ BasePage {
                         } else {
                             var playerPage = pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"), {
                                                source: self.vodUrl,
-                                               startOffsetMs: self.startOffsetMs,
+                                               startOffset: self.startOffset,
                             })
 
     //                        playerPageConnections.target = playerPage

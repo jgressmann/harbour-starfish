@@ -42,7 +42,7 @@ CoverBackground {
         id: videoFrameImage
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
-        cache: false
+//        cache: false
         visible: status === Image.Ready
 //        onStatusChanged: {
 //            console.debug("video frame image status: " + status)
@@ -180,7 +180,7 @@ CoverBackground {
             sqlModel.select = "select count(*) from vods where seen=0"
             _newVodCount = sqlModel.data(sqlModel.index(0, 0), 0)
             videoFrameImage.source = "" // force reload
-            videoFrameImage.source = Global.videoFramePath
+            videoFrameImage.source = Global.videoCoverPath
             if (settingPlaybackRowId.value >= 0) {
                 VodDataManager.fetchThumbnail(settingPlaybackRowId.value)
             } else {

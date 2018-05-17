@@ -49,8 +49,10 @@ public:
     QString appDir() const;
     bool isOnBroadband() const;
     bool isOnMobile() const;
-    Q_INVOKABLE bool isUrl(const QString& str);
-    Q_INVOKABLE void unlink(const QString& filePath);
+    Q_INVOKABLE bool isUrl(const QString& str) const;
+    Q_INVOKABLE bool unlink(const QString& filePath) const;
+    Q_INVOKABLE bool copy(const QString& srcFilePath, const QString& dstFilePath) const;
+    Q_INVOKABLE bool move(const QString& srcFilePath, const QString& dstFilePath) const;
 
 
 

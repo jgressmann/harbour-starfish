@@ -130,7 +130,7 @@ BasePage {
                 matchName: match_name
                 matchDate: match_date
                 rowId: rowid
-                startOffsetMs: offset * 1000
+                startOffset: offset
                 showDate: !_sameDate
                 showSides: !_sameSides
 //                    vodLabel: !_side2 ? "Episode" : "Match"
@@ -139,20 +139,21 @@ BasePage {
 //                        console.debug("match item id=" + rowId)
 //                    }
 
+                RecentlyWatchedVideoUpdater {
+                    id: updater
+                }
+
                 onPlayRequest: function (self) {
-
-                    recentlyUsedVideos.add([rowid, "dummy", offset, null])
-
-
                     if (settingExternalMediaPlayer.value && self.vodUrl.indexOf("http") !== 0) {
+                        recentlyUsedVideos.add([rowid, "dummy", offset, null])
                         Qt.openUrlExternally(self.vodUrl)
                     } else {
                         var playerPage = pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"), {
                                            source: self.vodUrl,
-                                           startOffsetMs: self.startOffsetMs,
+                                           startOffset: self.startOffset,
                         })
 
-//                        playerPageConnections.target = playerPage
+                        updater.playerPage = playerPage
                     }
                 }
             }

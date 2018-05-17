@@ -568,31 +568,7 @@ ScVodDataManager::setupDatabase() {
             //"CREATE INDEX IF NOT EXISTS vod_file_ref_vod_file_id ON vod_file_ref (vod_file_id)\n"
     };
 
-    static char const* const DropSql[] = {
-        "DROP INDEX IF EXISTS vods_id",
-        "DROP INDEX IF EXISTS vods_game",
-        "DROP INDEX IF EXISTS vods_year",
-        "DROP INDEX IF EXISTS vods_season",
-        "DROP INDEX IF EXISTS vods_event_name",
-        "DROP INDEX IF EXISTS vods_seen",
-        "DROP INDEX IF EXISTS vod_thumbnails_id",
-        "DROP INDEX IF EXISTS vod_thumbnails_url",
-        "DROP INDEX IF EXISTS vod_url_share_id",
-        "DROP INDEX IF EXISTS vod_url_share_video_id",
-        "DROP INDEX IF EXISTS vod_url_share_type",
-//        "DROP INDEX IF EXISTS vod_file_ref_vod_id",
-//        "DROP INDEX IF EXISTS vod_file_ref_vod_file_id",
 
-
-        "DROP TABLE IF EXISTS icons",
-        "DROP TABLE IF EXISTS vod_file_ref",
-        "DROP TABLE IF EXISTS vods",
-        "DROP TABLE IF EXISTS vod_files",
-        "DROP TABLE IF EXISTS vod_thumbnails ",
-        "DROP TABLE IF EXISTS vod_url_share",
-        "DROP TABLE IF EXISTS settings",
-        "DROP TABLE IF EXISTS icons",
-    };
 
     const int Version = 1;
 
@@ -636,13 +612,7 @@ ScVodDataManager::setupDatabase() {
     bool hasVersion = false;
     auto version = q.value(0).toInt(&hasVersion);
     if (hasVersion && version != Version) {
-        for (size_t i = 0; i < _countof(DropSql); ++i) {
-            if (!q.prepare(DropSql[i]) || !q.exec()) {
-                qCritical() << "failed to drop table" << q.lastError();
-                setError(Error_CouldntCreateSqlTables);
-                setStatus(Status_Error);
-            }
-        }
+        dropTables();
 
         if (!q.exec(QStringLiteral("PRAGMA user_version = %1").arg(QString::number(Version)))) {
             qCritical() << "failed to set user version" << q.lastError();
@@ -781,6 +751,42 @@ ScVodDataManager::icon(const QString& key, const QVariant& value) const {
     return QStringLiteral("image://theme/icon-m-sailfish");
 }
 
+void
+ScVodDataManager::dropTables() {
+    static char const* const DropSql[] = {
+        "DROP INDEX IF EXISTS vods_id",
+        "DROP INDEX IF EXISTS vods_game",
+        "DROP INDEX IF EXISTS vods_year",
+        "DROP INDEX IF EXISTS vods_season",
+        "DROP INDEX IF EXISTS vods_event_name",
+        "DROP INDEX IF EXISTS vods_seen",
+        "DROP INDEX IF EXISTS vod_thumbnails_id",
+        "DROP INDEX IF EXISTS vod_thumbnails_url",
+        "DROP INDEX IF EXISTS vod_url_share_id",
+        "DROP INDEX IF EXISTS vod_url_share_video_id",
+        "DROP INDEX IF EXISTS vod_url_share_type",
+//        "DROP INDEX IF EXISTS vod_file_ref_vod_id",
+//        "DROP INDEX IF EXISTS vod_file_ref_vod_file_id",
+
+
+        "DROP TABLE IF EXISTS vod_file_ref",
+        "DROP TABLE IF EXISTS vods",
+        "DROP TABLE IF EXISTS vod_files",
+        "DROP TABLE IF EXISTS vod_thumbnails ",
+        "DROP TABLE IF EXISTS vod_url_share",
+        "DROP TABLE IF EXISTS settings",
+        "DROP TABLE IF EXISTS icons",
+    };
+
+    QSqlQuery q(m_Database);
+    for (size_t i = 0; i < _countof(DropSql); ++i) {
+        if (!q.prepare(DropSql[i]) || !q.exec()) {
+            qCritical() << "failed to drop table" << q.lastError();
+            setError(Error_CouldntCreateSqlTables);
+            setStatus(Status_Error);
+        }
+    }
+}
 
 void
 ScVodDataManager::clear() {
@@ -797,57 +803,61 @@ ScVodDataManager::clear() {
     QDir().mkpath(m_VodDir);
     QDir().mkpath(m_IconDir);
 
-    // remove database entries
-    QSqlQuery q(m_Database);
-    if (!q.exec("BEGIN TRANSACTION")) {
-        setError(Error_CouldntStartTransaction);
-        setStatus(Status_Error);
-        return;
-    }
+//    // remove database entries
+//    QSqlQuery q(m_Database);
+//    if (!q.exec("BEGIN TRANSACTION")) {
+//        setError(Error_CouldntStartTransaction);
+//        setStatus(Status_Error);
+//        return;
+//    }
 
-    if (!q.exec("DELETE FROM vods")) {
-        setError(Error_SqlTableManipError);
-        setStatus(Status_Error);
-        return;
-    }
+//    if (!q.exec("DELETE FROM vods")) {
+//        setError(Error_SqlTableManipError);
+//        setStatus(Status_Error);
+//        return;
+//    }
 
-    if (!q.exec("DELETE FROM vod_thumbnails")) {
-        setError(Error_SqlTableManipError);
-        setStatus(Status_Error);
-        return;
-    }
+//    if (!q.exec("DELETE FROM vod_thumbnails")) {
+//        setError(Error_SqlTableManipError);
+//        setStatus(Status_Error);
+//        return;
+//    }
 
-    if (!q.exec("DELETE FROM vod_files")) {
-        setError(Error_SqlTableManipError);
-        setStatus(Status_Error);
-        return;
-    }
+//    if (!q.exec("DELETE FROM vod_files")) {
+//        setError(Error_SqlTableManipError);
+//        setStatus(Status_Error);
+//        return;
+//    }
 
-    if (!q.exec("DELETE FROM vod_url_share")) {
-        setError(Error_SqlTableManipError);
-        setStatus(Status_Error);
-        return;
-    }
+//    if (!q.exec("DELETE FROM vod_url_share")) {
+//        setError(Error_SqlTableManipError);
+//        setStatus(Status_Error);
+//        return;
+//    }
 
-    if (!q.exec("DELETE FROM vod_file_ref")) {
-        setError(Error_SqlTableManipError);
-        setStatus(Status_Error);
-        return;
-    }
+//    if (!q.exec("DELETE FROM vod_file_ref")) {
+//        setError(Error_SqlTableManipError);
+//        setStatus(Status_Error);
+//        return;
+//    }
 
-    if (!q.exec("DELETE FROM icons")) {
-        setError(Error_SqlTableManipError);
-        setStatus(Status_Error);
-        return;
-    }
+//    if (!q.exec("DELETE FROM icons")) {
+//        setError(Error_SqlTableManipError);
+//        setStatus(Status_Error);
+//        return;
+//    }
 
-    if (!q.exec("COMMIT TRANSACTION")) {
-        setError(Error_CouldntEndTransaction);
-        setStatus(Status_Error);
-        return;
-    }
+//    if (!q.exec("COMMIT TRANSACTION")) {
+//        setError(Error_CouldntEndTransaction);
+//        setStatus(Status_Error);
+//        return;
+//    }
 
-    setDownloadMarker(QDate());
+//    setDownloadMarker(QDate());
+
+    dropTables();
+    setupDatabase();
+
 
     tryRaiseVodsChanged();
 

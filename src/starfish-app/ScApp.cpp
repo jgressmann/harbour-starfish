@@ -28,6 +28,7 @@
 #include <QUrl>
 #include <QStandardPaths>
 #include <QFile>
+#include <QDebug>
 
 
 
@@ -85,7 +86,7 @@ ScApp::isOnMobile() const {
 }
 
 bool
-ScApp::isUrl(const QString& str) {
+ScApp::isUrl(const QString& str) const {
     QUrl url(str);
     return url.isValid();
 }
@@ -98,6 +99,14 @@ QString ScApp::appDir() const {
     return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR));
 }
 
-void ScApp::unlink(const QString& filePath){
-    QFile::remove(filePath);
+bool ScApp::unlink(const QString& filePath) const {
+    return QFile::remove(filePath);
+}
+
+bool ScApp::copy(const QString& srcFilePath, const QString& dstFilePath) const {
+    return QFile::copy(srcFilePath, dstFilePath);
+}
+
+bool ScApp::move(const QString& srcFilePath, const QString& dstFilePath) const {
+    return QFile::rename(srcFilePath, dstFilePath);
 }

@@ -143,6 +143,7 @@ ApplicationWindow {
         table: "recently_used_videos"
         count: 10
         database: VodDataManager.database
+        changeForcesReset: true
 
         onRowsAboutToBeRemoved: function (parent, topRight, bottomRight) {
             for (var i = topRight.row; i <= bottomRight.row; ++i) {

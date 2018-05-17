@@ -43,114 +43,147 @@ PullDownMenu {
         onClicked: pageStack.push(Qt.resolvedUrl("pages/ToolsPage.qml"))
     }
 
+    MenuItem {
+        id: openVideo
+        text: qsTr("Open video")
 
+        RecentlyWatchedVideoUpdater {
+            id: updater
+        }
+
+        onClicked: {
+            var topPage = pageStack.currentPage
+            _openVideoPage(function (url, offset) {
+                pageStack.pop(topPage, PageStackAction.Immediate)
+
+                if (settingExternalMediaPlayer.value && url.indexOf("http") !== 0) {
+                    Qt.openUrlExternally(url)
+                } else {
+                    var playerPage = pageStack.push(
+                                Qt.resolvedUrl("pages/VideoPlayerPage.qml"),
+                                null,
+                                PageStackAction.Immediate)
+
+                    var callback = function () {
+                        _openVideoPage(function(a, b) {
+                            playerPage.play(a, b)
+                            pageStack.pop(playerPage)
+                        })
+                    }
+                    playerPage.openHandler = callback
+
+                    playerPage.play(url, offset)
+
+                    updater.playerPage = playerPage
+
+                }
+            })
+        }
+
+
+        function _openVideoPage(callback) {
+            var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
+            openPage.videoSelected.connect(function (obj, url, offset) {
+                recentlyUsedVideos.add(obj)
+                updater.setKey(obj)
+                callback(url, offset)
+            })
+        }
+    }
 
 //    MenuItem {
-//        text: qsTr("Clear VOD data")
+//        id: openVideo
+//        text: qsTr("Open video")
+
+//        property var key
+//        property string title
+//        property int playbackOffset
+//        property string thumbnailFilePath
+
 //        onClicked: {
-//            var dialog = pageStack.push(
-//                        Qt.resolvedUrl("pages/ConfirmClearDialog.qml"),
-//                        {
-//                            acceptDestination: Qt.resolvedUrl("pages/StartPage.qml"),
-//                            acceptDestinationAction: PageStackAction.Replace
-//                        })
-//            dialog.accepted.connect(function() {
-//                console.debug("clear")
-//                VodDataManager.clear()
-//                VodDataManager.fetchIcons()
+//            var topPage = pageStack.currentPage
+//            _openVideoPage(function (url, offset) {
+//                pageStack.pop(topPage, PageStackAction.Immediate)
+//                var playerPage = pageStack.push(
+//                            Qt.resolvedUrl("pages/VideoPlayerPage.qml"),
+//                            null,
+//                            PageStackAction.Immediate)
+
+//                var callback = function () {
+//                    _openVideoPage(function(a, b) {
+//                        playerPage.play(a, b)
+//                        pageStack.pop(playerPage)
+//                    })
+//                }
+//                playerPage.openHandler = callback
+
+//                playerPage.play(url, offset)
+
+//                videoPlayerPageConnections.target = playerPage
+//            })
+//        }
+
+
+//        Connections {
+//            id: videoPlayerPageConnections
+
+//            ignoreUnknownSignals: true
+//            onTitleChanged: openVideo.title = target.title
+//            onPlaybackOffsetChanged: openVideo.playbackOffset = target.playbackOffset
+
+//            onClosedChanged: {
+//                console.debug("closed")
+//                openVideo._saveVideoData()
+//            }
+
+//            onVideoFrameCaptured: function (path) {
+//                console.debug("got frame")
+//            }
+//        }
+
+//        onKeyChanged: {
+//            if (!!key) {
+//                thumbnailFilePath = recentlyUsedVideos.select(["thumbnail_path"], key)[0].thumbnail_path
+//                if (!thumbnailFilePath) {
+//                    thumbnailFilePath = VodDataManager.makeThumbnailFile(Global.videoFramePath)
+//                    recentlyUsedVideos.update({ thumbnail_path: thumbnailFilePath}, key)
+//                }
+
+//                console.debug("thumbnail path=" + thumbnailFilePath)
+//            }
+//        }
+
+//        function _saveVideoData() {
+//            if (!!key) {
+//                if (thumbnailFilePath) {
+//                    App.copy(Global.videoFramePath, thumbnailFilePath)
+//                }
+
+//                recentlyUsedVideos.update({ offset: playbackOffset}, key)
+//                key = null
+//                thumbnailFilePath = ""
+//                playbackOffset = 0
+//            }
+//        }
+
+
+//        function _openVideoPage(callback, openHandler) {
+//            var threshold = pageStack.depth
+//            var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
+//            openPage.videoSelected.connect(function (_key, playbackUrl, offset) {
+//                recentlyUsedVideos.add(_key)
+//                _saveVideoData()
+//                key = _key;
+
+//                callback(playbackUrl, offset)
 //            })
 //        }
 //    }
 
 
     MenuItem {
-        id: openVideo
-        text: qsTr("Open video")
-
-        property string videoUrl
-        property string title
-        property int playbackOffset: 0
-        property int videoId: -1
-        property int storeThreshold: -1
-//        property var playerPage
-
-        onClicked: {
-            _openVideoPage(function (url, offset) {
-                var playerPage = pageStack.replace(
-                            Qt.resolvedUrl("pages/VideoPlayerPage.qml"),
-                            {
-                                source: url,
-                                startOffset: offset
-                            },
-                            PageStackAction.Immediate)
-
-                var callback = function () {
-                    _openVideoPage(function(a, b) {
-                        playerPage.play(a, b)
-                        pageStack.pop(playerPage)
-                    })
-                }
-                playerPage.openHandler = callback
-
-            })
-        }
-
-
-        Connections {
-            id: videoPlayerPageConnections
-//            target: pageStack.currentPage
-            ignoreUnknownSignals: true
-//            enabled: false
-            onTitleChanged: openVideo.title = target.title
-            onPlaybackOffsetChanged: openVideo.playbackOffset = target.playbackOffset
-
-            onSourceChanged: {
-                if (target) {
-                    console.debug("player source changed")
-                    target = null
-                    var thumbnailPath = VodDataManager.makeThumbnailFile(Global.videoFramePath)
-                    openVideo._storeRecentVideo(thumbnailPath)
-                }
-            }
-        }
-
-        Connections {
-            target: pageStack
-            onDepthChanged: {
-                if (openVideo.storeThreshold >= 0 && pageStack.depth < openVideo.storeThreshold) {
-                    console.debug("player page popped")
-                    openVideo.storeThreshold = -1
-                    var thumbnailPath = VodDataManager.makeThumbnailFile(Global.videoFramePath)
-                    openVideo._storeRecentVideo(thumbnailPath)
-                }
-            }
-        }
-
-        function _storeRecentVideo(thumbnailPath) {
-            console.debug("video_id="+ openVideo.videoId + " offset=" + openVideo.playbackOffset + " title=" + openVideo.title + " source=" + openVideo.videoUrl + " thumbnail=" + thumbnailPath)
-//            recentlyUsedVideos.add([openVideo.videoId, openVideo.videoUrl, openVideo.playbackOffset, thumbnailPath])
-        }
-
-        function _openVideoPage(callback, openHandler) {
-            var threshold = pageStack.depth
-            var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
-            openPage.videoSelected.connect(function (obj, playbackUrl, offset) {
-                openVideo.storeThreshold = threshold
-//                openVideo.videoId = videoRowId
-//                openVideo.videoUrl = Global.completeFileUrl(videoUrl)
-//                openVideo.playbackOffset = offset
-                recentlyUsedVideos.add(obj)
-                callback(playbackUrl, offset)
-            })
-        }
-    }
-
-    MenuItem {
         text: qsTr("Fetch new VODs")
         enabled: vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
         onClicked: vodDatabaseDownloader.downloadNew()
     }
-
-
-
 }

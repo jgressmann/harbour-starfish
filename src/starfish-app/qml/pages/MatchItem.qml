@@ -52,8 +52,7 @@ ListItem {
     property string _vodUrl
     property string _vodTitle
     property string _formatId
-    property int startOffsetMs: 0
-    readonly property int startOffset: Math.floor(startOffsetMs / 1000)
+    property int startOffset: 0
     property bool _downloading: false
     property int _width: 0
     property int _height: 0
@@ -75,7 +74,6 @@ ListItem {
             x: Theme.horizontalPageMargin
             width: parent.width - 2*x
             height: parent.height
-//            color: _onScreen ? "red" : "blue"
 
 //            Rectangle {
 //                color: "blue"
@@ -184,7 +182,7 @@ ListItem {
                         sourceSize.width: width
                         sourceSize.height: height
                         fillMode: Image.PreserveAspectFit
-                        cache: false
+//                        cache: false
                         // prevents the image from loading on device
                         //asynchronous: true
                         visible: status === Image.Ready && !thumbnailGroup.downloadFailed
@@ -201,7 +199,7 @@ ListItem {
                         source: source = "image://theme/icon-m-reload"
                         anchors.centerIn: parent
                         visible: thumbnailGroup.downloadFailed
-                        cache: false
+//                        cache: false
 
                         MouseArea {
                             anchors.fill: parent
@@ -520,16 +518,6 @@ ListItem {
                 }
             }
         }
-    }
-
-    Connections {
-        id: playerPageConnections
-        ignoreUnknownSignals: true
-        onPlaybackOffsetChanged: {
-            console.debug("start offset=" + playerPage.playbackOffset)
-            startOffsetMs = playerPage.playbackOffset * 1000
-        }
-
     }
 
     function thumbnailDownloadFailed(rowid, error, url) {
