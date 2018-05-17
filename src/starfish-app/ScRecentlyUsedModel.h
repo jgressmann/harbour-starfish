@@ -69,10 +69,6 @@ private:
     mutable QVector<QVariant> m_RowCache;
     QHash<int,QByteArray> m_RoleNames;
     QString m_Table;
-    QString m_RowCountSql;
-    QString m_SelectDataSql;
-    QString m_DeleteRowSql;
-    QString m_SelectRowsByKeySql;
     QSqlDatabase m_Db;
     int m_Count;
     int m_RowCount;

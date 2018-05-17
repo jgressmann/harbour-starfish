@@ -40,11 +40,7 @@ ScRecentlyUsedModel::setCount(int value) {
 void
 ScRecentlyUsedModel::setTable(const QString& value) {
     if (value != m_Table) {
-
         m_Table = value;
-        m_RowCountSql = QStringLiteral("SELECT COUNT(*) FROM %1").arg(m_Table);
-        m_SelectDataSql = QStringLiteral("SELECT * FROM %1 ORDER BY modified DESC").arg(m_Table);
-        m_DeleteRowSql = QStringLiteral("DELETE FROM %1 WHERE id=?").arg(m_Table);
         tryGetReady();
         emit tableChanged();
     }
@@ -555,30 +551,19 @@ ScRecentlyUsedModel::tryGetReady() {
 //        qDebug() << "columns in list model " << QAbstractItemModel::columnCount(QModelIndex());
         if (createTable()) {
             m_Ready = true;
-            m_SelectRowsByKeySql = QStringLiteral("SELECT id FROM %1 WHERE ").arg(m_Table);
-            for (int i = 0; i < m_KeyColumns.size(); ++i) {
-                if (i > 0) {
-                    m_SelectRowsByKeySql += QStringLiteral(" AND ");
-                }
-
-                m_SelectRowsByKeySql += QStringLiteral("(");
-                m_SelectRowsByKeySql += m_KeyColumns[i];
-                m_SelectRowsByKeySql += QStringLiteral(" IS NULL OR ");
-                m_SelectRowsByKeySql += m_KeyColumns[i];
-                m_SelectRowsByKeySql += QStringLiteral("=?)");
-            }
         }
     }
 
     if (m_Ready) {
         QSqlQuery q(m_Db);
-        if (q.exec(m_RowCountSql)) {
+        auto sql = QStringLiteral("SELECT COUNT(*) FROM %1").arg(m_Table);
+        if (q.exec(sql)) {
             if (q.next()) {
                 m_RowCount = q.value(0).toInt();
 
                 if (m_RowCount > m_Count) {
                     auto n = QString::number(m_RowCount-m_Count);
-                    beginResetModel();
+                    beginResetModel(); // this is here so that views fetch and sort items
                     endResetModel();
                     beginRemoveRows(QModelIndex(), m_Count, m_RowCount-1);
                     auto sql = QStringLiteral("DELETE from %1 WHERE id IN (SELECT id from %1 ORDER BY modified DESC LIMIT %2").arg(m_Table, n);
@@ -597,7 +582,7 @@ ScRecentlyUsedModel::tryGetReady() {
             }
         } else {
             m_Ready = false;
-            qWarning().noquote().nospace() << "failed to fetch row count using sql\n" << m_RowCountSql << ", error: " << q.lastError();
+            qWarning().noquote().nospace() << "failed to fetch row count using sql: " << sql << ", error: " << q.lastError();
         }
     }
 
