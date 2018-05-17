@@ -120,6 +120,10 @@ BasePage {
             anchors.top: fixture.visible ? fixture.bottom : header.bottom
             model: sqlModel
 
+            RecentlyWatchedVideoUpdater {
+                id: updater
+            }
+
             delegate: MatchItem {
                 width: listView.width
                 contentHeight: Global.itemHeight // MatchItem is a ListItem
@@ -139,22 +143,10 @@ BasePage {
 //                        console.debug("match item id=" + rowId)
 //                    }
 
-                RecentlyWatchedVideoUpdater {
-                    id: updater
-                }
+
 
                 onPlayRequest: function (self) {
-                    if (settingExternalMediaPlayer.value && self.vodUrl.indexOf("http") !== 0) {
-                        recentlyUsedVideos.add([rowid, "dummy", offset, null])
-                        Qt.openUrlExternally(self.vodUrl)
-                    } else {
-                        var playerPage = pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"), {
-                                           source: self.vodUrl,
-                                           startOffset: self.startOffset,
-                        })
-
-                        updater.playerPage = playerPage
-                    }
+                    Global.playVideoHandler(updater, {video_id: rowid}, self.vodUrl, self.startOffset)
                 }
             }
 

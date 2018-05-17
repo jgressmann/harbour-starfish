@@ -56,6 +56,10 @@ BasePage {
                 VodDataManagerBusyIndicator {}
             }
 
+            RecentlyWatchedVideoUpdater {
+                id: updater
+            }
+
             delegate: Component {
                 MatchItem {
                     width: listView.width
@@ -75,24 +79,10 @@ BasePage {
                         ListView.view.currentIndex = index
                     }
 
+
+
                     onPlayRequest: function (self) {
-
-                        recentlyUsedVideos.add({
-                                                   video_id: rowid,
-                                                   offset: offset
-                                               })
-
-
-                        if (settingExternalMediaPlayer.value && self.vodUrl.indexOf("http") !== 0) {
-                            Qt.openUrlExternally(self.vodUrl)
-                        } else {
-                            var playerPage = pageStack.push(Qt.resolvedUrl("VideoPlayerPage.qml"), {
-                                               source: self.vodUrl,
-                                               startOffset: self.startOffset,
-                            })
-
-    //                        playerPageConnections.target = playerPage
-                        }
+                        Global.playVideoHandler(updater, {video_id: rowid}, self.vodUrl, self.startOffset)
                     }
                 }
             }

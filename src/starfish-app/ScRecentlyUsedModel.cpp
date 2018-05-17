@@ -277,6 +277,7 @@ ScRecentlyUsedModel::update(const QVariantMap& values, const QVariantMap& where)
 //recentlyUsedVideos.update({ thumbnail_path: openVideo.thumbnailFilePath}, { id: openVideo.rowId})
         auto selectSql = QStringLiteral("SELECT id FROM %1").arg(m_Table);
         auto updateSql = QStringLiteral("UPDATE %1 SET ").arg(m_Table);
+        QString updateSqlDebug;
         auto whereClauseDebug = QStringLiteral(" WHERE ");
         {
             auto beg = values.cbegin();
@@ -284,6 +285,7 @@ ScRecentlyUsedModel::update(const QVariantMap& values, const QVariantMap& where)
             for (auto it = beg; it != end; ++it) {
                 if (it != beg) {
                     updateSql += QStringLiteral(", ");
+                    updateSqlDebug += QStringLiteral(" ");
                 }
 
                 auto index = m_ColumnNames.indexOf(it.key());
@@ -294,6 +296,10 @@ ScRecentlyUsedModel::update(const QVariantMap& values, const QVariantMap& where)
 
                 updateSql += m_ColumnNames[index];
                 updateSql += QStringLiteral("=?");
+
+                updateSqlDebug += it.key();
+                updateSqlDebug += QStringLiteral("=");
+                updateSqlDebug += it.value().toString();
             }
 
 
@@ -344,15 +350,16 @@ ScRecentlyUsedModel::update(const QVariantMap& values, const QVariantMap& where)
             }
 
             if (q.exec()) {
-                qDebug().nospace().noquote() << "updated " << q.numRowsAffected() << " rows: " << whereClauseDebug;
+                qDebug().nospace().noquote() << "updated " << q.numRowsAffected() << " rows: " << updateSqlDebug << whereClauseDebug;
                 m_IndexCache = -1;
-                if (m_RowCount) {
+                if (q.numRowsAffected()) {
                     if (m_ChangeForcesReset) {
                         beginResetModel();
                         endResetModel();
                     } else {
                         emit dataChanged(createIndex(0, 0), createIndex(m_RowCount-1, 0));
                     }
+//                    emit dataChanged(createIndex(0, 0), createIndex(m_RowCount-1, 0));
                 }
             } else {
                 qWarning().nospace().noquote() << "failed to exec update, error: " << q.lastError();

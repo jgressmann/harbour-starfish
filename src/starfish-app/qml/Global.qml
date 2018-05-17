@@ -38,8 +38,7 @@ Item { // Components can't declare functions
     readonly property string videoThumbnailPath: App.dataDir + "/thumbnail.png"
     readonly property string videoCoverPath: App.dataDir + "/cover.png"
     readonly property real pathTraceOpacity: 0.25
-
-//    property var scraper
+    property var playVideoHandler
 
     function whereClause(filters) {
         var where = ""

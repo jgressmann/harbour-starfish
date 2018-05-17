@@ -177,7 +177,7 @@ SilicaListView {
                     }
 
                     Component.onCompleted: {
-                        console.debug("index=" + index + " url=" + url)
+                        console.debug("index=" + index + " offset=" + offset + " url=" + url)
                     }
                 }
             }
@@ -191,11 +191,24 @@ SilicaListView {
                     id: wrapperView
                     width: listView.width
 
-                    readonly property int inputIndex: index
+
                     quickScrollEnabled: false
 //                                clip: true
                     model: sqlModel
 
+                    readonly property int xindex: index
+                    readonly property int xoffset: offset
+                    readonly property int xvideo_id: video_id
+//                    readonly property string xevent_full_name: event_full_name
+//                    readonly property string xstage_name: stage_name
+//                    readonly property string xside1_name: side1_name
+//                    readonly property string xside2_name: side2_name
+//                    readonly property string xmatch_name: match_name
+//                    readonly property date xmatch_date: match_date
+//                    readonly property int xside1_race: side1_race
+//                    readonly property int xside2_race: side2_race
+//                    readonly property int xvideo_id: video_id
+//                    readonly property int xoffset: offset
 
                     delegate: Component {
                         MatchItem {
@@ -216,6 +229,7 @@ SilicaListView {
                             startOffset: offset
 
                             onPlayRequest: function (self) {
+                                console.debug("xvideo_id=" + xvideo_id)
                                 console.debug("video_id=" + video_id)
                                 console.debug("rowid=" + rowId)
                                 if (video_id === -1) {
@@ -223,11 +237,7 @@ SilicaListView {
                                     console.debug("ARRRRRRRRRRRRRRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGG")
                                 }
 
-                                listView.clicked({
-                                                    video_id: rowId
-                                                 },
-                                                 self.vodUrl,
-                                                 self.startOffset)
+                                listView.clicked({video_id: rowId}, self.vodUrl, xoffset)
                             }
 
                             menu: Component {
@@ -251,7 +261,7 @@ SilicaListView {
                     }
 
                     Component.onCompleted: {
-                        console.debug("index=" + inputIndex + " video_id=" + video_id)
+                        console.debug("index=" + index + " offset=" + offset + " video_id=" + video_id)
                     }
                 }
 

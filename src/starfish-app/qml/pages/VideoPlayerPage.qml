@@ -31,8 +31,8 @@ import ".."
 Page {
     id: page
     property string source
-    property int startOffset: 0
-    readonly property int _startOffsetMs: startOffset * 1000
+    readonly property int startOffset: Math.floor(_startOffsetMs * 1000)
+    property int _startOffsetMs: 0
     property string title
 
     property int playbackAllowedOrientations: Orientation.Landscape | Orientation.LandscapeInverted
@@ -432,11 +432,11 @@ Page {
         }
     }
 
-    Component.onCompleted: {
-        if (source) {
-            play(source, startOffset)
-        }
-    }
+//    Component.onCompleted: {
+//        if (source) {
+//            play(source, startOffset)
+//        }
+//    }
 
     Component.onDestruction: {
         console.debug("destruction")
@@ -488,8 +488,8 @@ Page {
         console.debug("play offset=" + offset + " url=" + url)
         source = url
         mediaplayer.play()
-        startOffset = offset
-        if (_showVideo && startOffset > 0) {
+        _startOffsetMs = offset * 1000
+        if (_showVideo && _startOffsetMs > 0) {
             console.debug("seek to " + _startOffsetMs)
             _seek(_startOffsetMs)
         }

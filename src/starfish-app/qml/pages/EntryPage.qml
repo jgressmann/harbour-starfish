@@ -103,20 +103,7 @@ BasePage {
                 }
 
                 onClicked: function (obj, url, offset) {
-                    recentlyUsedVideos.add(obj)
-                    if (settingExternalMediaPlayer.value && url.indexOf("http") !== 0) {
-                        Qt.openUrlExternally(url)
-                    } else {
-                        var playerPage = pageStack.push(
-                                    Qt.resolvedUrl("VideoPlayerPage.qml"),
-                                    {
-                                           source: url,
-                                           startOffset: offset,
-                                    })
-
-                        updater.playerPage = playerPage
-                        updater.setKey(obj)
-                    }
+                    Global.playVideoHandler(updater, obj, url, offset)
                 }
             }
 
