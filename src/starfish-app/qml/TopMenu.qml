@@ -84,6 +84,7 @@ PullDownMenu {
             var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
             openPage.videoSelected.connect(function (obj, url, offset) {
                 recentlyUsedVideos.add(obj)
+                offset = Math.max(offset, recentlyUsedVideos.select(["offset"], obj)[0].offset)
                 updater.setKey(obj)
                 callback(url, offset)
             })
