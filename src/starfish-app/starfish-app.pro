@@ -88,10 +88,6 @@ media.path = /usr/share/$${TARGET}/media
 media.files = media/sc2.png media/bw.png media/random.png
 INSTALLS += media
 
-xml.path = /usr/share/$${TARGET}/xml
-xml.files = xml/*
-INSTALLS += xml
-
 gzicons.target = icons.json.gz
 gzicons.commands = cat $$PWD/icons.json | gzip --best > $$PWD/$$gzicons.target
 

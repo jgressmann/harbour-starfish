@@ -44,7 +44,7 @@ Requires:   zlib
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 %{_datadir}/%{name}/qml/*
-%{_datadir}/%{name}/xml/*
+#%{_datadir}/%{name}/xml/*
 %{_datadir}/%{name}/media/*
 %{_datadir}/%{name}/icons.json.gz
 %{_datadir}/%{name}/classifier.json.gz
