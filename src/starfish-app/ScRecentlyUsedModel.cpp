@@ -454,7 +454,7 @@ ScRecentlyUsedModel::add(const QVariantMap& pairs) {
                             beginRemoveRows(QModelIndex(), m_RowCount-1, m_RowCount-1);
 
                             if (q.exec(QStringLiteral("DELETE FROM %1 WHERE id IN (SELECT id FROM %1 ORDER BY modified ASC LIMIT 1)").arg(m_Table))) {
-
+                                --m_RowCount;
                             } else {
                                 qWarning().nospace().noquote() << "failed to exec sql\n" << q.lastQuery() << ", error: " << q.lastError();
                                 return;
