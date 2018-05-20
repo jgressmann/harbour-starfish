@@ -39,12 +39,12 @@ Page {
         id: model
 
         SectionHeader {
-            text: "Database"
+            text: "Fetch"
         }
 
         TextField {
             width: parent.width
-            label: "VOD download marker"
+            label: "VOD fetch marker"
             text: VodDataManager.downloadMarker
             readOnly: true
         }
@@ -54,7 +54,7 @@ Page {
             width: root.width
 
             Button {
-                text: "Reset VOD download marker"
+                text: "Reset VOD fetch marker"
                 anchors.horizontalCenter: parent.horizontalCenter
                 onClicked: {
                     VodDataManager.resetDownloadMarker()

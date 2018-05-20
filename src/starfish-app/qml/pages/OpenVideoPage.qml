@@ -85,7 +85,7 @@ Page {
         }
 
         SectionHeader {
-            text: "Recently played"
+            text: "Recently watched"
         }
     }
 
