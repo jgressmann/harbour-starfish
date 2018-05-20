@@ -107,6 +107,11 @@
             "extension": ".png"
         },
         {
+            "regex": "incoming transmission",
+            "url": "https://www.dropbox.com/s/48dbnxe1gh3vrka/niceusername.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "ipl|iptl|ipsl|ign pro league|ip team league",
             "url": "https://www.dropbox.com/s/39s85luc0p8dbti/ipl.png?dl=1",
             "extension": ".png"
@@ -230,6 +235,11 @@
             "regex": "teamliquid|team liquid|^tl |^tsl |tlownage",
             "url": "https://www.dropbox.com/s/z0n61ss3syrwk15/tl.png?dl=1",
             "extension": ".png"
+        },
+        {
+            "regex": "the pylon show",
+            "url": "https://www.dropbox.com/s/qqmpkdmpm3fmba5/tps.jpg?dl=1",
+            "extension": ".jpg"
         },
         {
             "regex": "ting",
