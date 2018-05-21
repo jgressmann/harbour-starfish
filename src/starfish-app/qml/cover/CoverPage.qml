@@ -193,6 +193,7 @@ CoverBackground {
     }
 
     CoverActionList {
+        enabled: VodDataManager.ready
         CoverAction {
             iconSource: vodDatabaseDownloader.status === VodDatabaseDownloader.Status_Downloading
                         ? "image://theme/icon-cover-cancel"

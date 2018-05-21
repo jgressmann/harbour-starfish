@@ -67,25 +67,16 @@ private:
 class ScVodDataManager : public QObject {
 
     Q_OBJECT
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
     Q_PROPERTY(ScVodman* vodman READ vodman CONSTANT)
     Q_PROPERTY(QString downloadMarker READ downloadMarkerString NOTIFY downloadMarkerChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
+    Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
     Q_PROPERTY(QVariant database READ databaseVariant CONSTANT)
+
 public:
-
-
-    enum Status {
-        Status_Ready,
-        Status_VodFetchingInProgress,
-        Status_VodFetchingComplete,
-        Status_VodFetchingBeingCanceled,
-        Status_Error,
-    };
-    Q_ENUMS(Status)
-
     enum Error {
+        Error_Unknown = -1,
         Error_None,
         Error_CouldntCreateSqlTables,
         Error_CouldntStartTransaction,
@@ -101,7 +92,7 @@ public:
 public: //
     Q_INVOKABLE QString label(const QString& key, const QVariant& value = QVariant()) const;
     Q_INVOKABLE QString icon(const QString& key, const QVariant& value = QVariant()) const;
-    Status status() const { return m_Status; }
+    bool ready() const { return m_Ready; }
     Error error() const { return m_Error; }
     QSqlDatabase database() const { return m_Database; }
     Q_INVOKABLE void fetchMetaData(qint64 rowid);
@@ -133,7 +124,7 @@ public: //
 
 
 signals:
-    void statusChanged();
+    void readyChanged();
     void errorChanged();
     void vodsChanged();
     void metaDataAvailable(qint64 rowid, VMVod vod);
@@ -145,6 +136,9 @@ signals:
     void busyChanged();
     void vodsToAdd();
     void vodsCleared();
+    void vodmanError(int error);
+    void vodDownloadFailed(qint64 rowid, int error);
+    void metaDataDownloadFailed(qint64 rowid, int error);
 
 public slots:
     void excludeEvent(const ScEvent& event, bool* exclude);
@@ -197,7 +191,7 @@ private:
     static bool tryGetEvent(QString& inoutSrc, QString* location);
     static bool tryGetIcon(const QString& title, QString* iconPath);
     void setupDatabase();
-    void setStatus(Status value);
+    void setReady(bool ready);
     void setError(Error value);
     void updateStatus();
     void setStatusFromRowCount();
@@ -227,6 +221,7 @@ private:
     void batchAddVods();
     void dropTables();
 
+
 private:
     mutable QMutex m_Lock;
     mutable QMutex m_AddQueueLock;
@@ -236,7 +231,6 @@ private:
     QNetworkAccessManager* m_Manager;
     QSqlDatabase m_Database;
     Error m_Error;
-    Status m_Status;
     QHash<QNetworkReply*, ThumbnailRequest> m_ThumbnailRequests;
     QHash<QNetworkReply*, IconRequest> m_IconRequests;
     QHash<qint64, VodmanMetaDataRequest> m_VodmanMetaDataRequests;
@@ -249,5 +243,6 @@ private:
     QString m_VodDir;
     QString m_IconDir;
     int m_SuspendedVodsChangedEventCount;
+    bool m_Ready;
 };
 

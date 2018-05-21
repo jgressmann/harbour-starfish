@@ -38,7 +38,7 @@ class ScApp : public QObject
     Q_PROPERTY(bool isOnMobile READ isOnMobile NOTIFY isOnMobileChanged)
     Q_PROPERTY(QString dataDir READ dataDir CONSTANT)
     Q_PROPERTY(QString appDir READ appDir CONSTANT)
-
+    Q_PROPERTY(QString logDir READ logDir CONSTANT)
 public:
     ScApp(QObject* parent = nullptr);
 
@@ -47,13 +47,14 @@ public:
     QString displayName() const;
     QString dataDir() const;
     QString appDir() const;
+    QString logDir() const;
     bool isOnBroadband() const;
     bool isOnMobile() const;
     Q_INVOKABLE bool isUrl(const QString& str) const;
     Q_INVOKABLE bool unlink(const QString& filePath) const;
     Q_INVOKABLE bool copy(const QString& srcFilePath, const QString& dstFilePath) const;
     Q_INVOKABLE bool move(const QString& srcFilePath, const QString& dstFilePath) const;
-
+    static QString staticLogDir();
 
 
 signals:

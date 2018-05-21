@@ -48,7 +48,8 @@ DISTFILES += qml/harbour-starfish.qml \
     database.json \
     icons.json \
     harbour-starfish.desktop \
-    media/*.png \
+    media/* \
+    icons/* \
     icons.json \
     qml/pages/StartPage.qml \
     qml/pages/FilterItem.qml \
@@ -87,6 +88,10 @@ DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 media.path = /usr/share/$${TARGET}/media
 media.files = media/sc2.png media/bw.png media/random.png
 INSTALLS += media
+
+icons.path = /usr/share/$${TARGET}/icons
+icons.files = icons/warning.png icons/flash.png
+INSTALLS += icons
 
 gzicons.target = icons.json.gz
 gzicons.commands = cat $$PWD/icons.json | gzip --best > $$PWD/$$gzicons.target

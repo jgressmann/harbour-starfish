@@ -58,6 +58,8 @@ ListItem {
     property int _height: 0
     property bool _seen: false
     property bool _tryingToPlay: false
+    property bool _metaDataDownloadFailed: false
+    property bool _vodDownloadFailed: false
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -75,15 +77,6 @@ ListItem {
             x: Theme.horizontalPageMargin
             width: parent.width - 2*x
             height: parent.height
-
-//            Rectangle {
-//                color: "blue"
-//                x: heading.x
-//                y: heading.y
-//                width: heading.width
-//                height: heading.height
-//                z: heading.z - 1
-//            }
 
             Column {
                 id: heading
@@ -183,7 +176,6 @@ ListItem {
                         sourceSize.width: width
                         sourceSize.height: height
                         fillMode: Image.PreserveAspectFit
-//                        cache: false
                         // prevents the image from loading on device
                         //asynchronous: true
                         visible: status === Image.Ready && !thumbnailGroup.downloadFailed
@@ -200,7 +192,6 @@ ListItem {
                         source: source = "image://theme/icon-m-reload"
                         anchors.centerIn: parent
                         visible: thumbnailGroup.downloadFailed
-//                        cache: false
 
                         MouseArea {
                             anchors.fill: parent
@@ -298,7 +289,7 @@ ListItem {
 
 
                             Item {
-                                visible: _clicked && !_vod
+                                visible: _clicked && !_vod && !_metaDataDownloadFailed
                                 width: visible ? parent.height : 0
                                 height: parent.height
                                 anchors.verticalCenter: parent.verticalCenter
@@ -312,11 +303,19 @@ ListItem {
                             }
 
                             Image {
-                                source: "image://theme/icon-s-date"
+                                width: Theme.iconSizeSmall
+                                height: Theme.iconSizeSmall
+                                sourceSize.width: width
+                                sourceSize.height: height
+                                source: _metaDataDownloadFailed
+                                        ? "/usr/share/harbour-starfish/icons/warning.png"
+                                        : "image://theme/icon-s-date"
+
                                 anchors.verticalCenter: parent.verticalCenter
-                                visible: !!_vod
-                                cache: false
+                                visible: !!_vod || _metaDataDownloadFailed
                             }
+
+
 
                             Item {
                                 width: loadCompleteImage2a.width
@@ -329,8 +328,7 @@ ListItem {
                                     source: "image://theme/icon-s-cloud-download"
     //                                anchors.verticalCenter: parent.verticalCenter
     //                                anchors.right: parent.right
-                                    visible: progressOverlay.progress < 1
-                                    cache: false
+                                    visible: !_vodDownloadFailed && progressOverlay.progress < 1
 
                                     layer.enabled: true
 
@@ -347,12 +345,20 @@ ListItem {
                                     source: "image://theme/icon-s-like"
     //                                anchors.verticalCenter: parent.verticalCenter
     //                                anchors.right: parent.right
-                                    visible: progressOverlay.progress >= 1
+                                    visible: !_vodDownloadFailed && progressOverlay.progress >= 1
+                                }
+
+                                Image {
+                                    width: Theme.iconSizeSmall
+                                    height: Theme.iconSizeSmall
+                                    sourceSize.width: width
+                                    sourceSize.height: height
+                                    source: "/usr/share/harbour-starfish/icons/flash.png"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    visible: _vodDownloadFailed
                                 }
                             }
                         }
-
-
                     }
 
 
@@ -424,11 +430,23 @@ ListItem {
         if (_vod) {
             _tryPlay()
         } else {
+            _metaDataDownloadFailed = false
             VodDataManager.fetchMetaData(rowId)
         }
         _clicking = false
     }
 
+    on_MetaDataDownloadFailedChanged: {
+        console.debug("_metaDataDownloadFailed=" + _metaDataDownloadFailed)
+    }
+
+    on_ClickedChanged: {
+        console.debug("_clicked=" + _clicked)
+    }
+
+    on_VodChanged: {
+        console.debug("_vod=" + _vod)
+    }
 
     Connections {
         target: pageStack
@@ -447,15 +465,10 @@ ListItem {
         VodDataManager.thumbnailAvailable.connect(thumbnailAvailable)
         VodDataManager.thumbnailDownloadFailed.connect(thumbnailDownloadFailed)
         VodDataManager.metaDataAvailable.connect(metaDataAvailable)
+        VodDataManager.metaDataDownloadFailed.connect(metaDataDownloadFailed)
+        VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
         _vodTitle = VodDataManager.title(rowId)
         seenButton.seen = VodDataManager.seen({"id": rowId}) >= 1
-//        console.debug(rowId + " " + eventFullName + " " + stageName + " " + matchName)
-//        if (_onScreen) {
-//            // try to get thumbnail first, might be available already
-//            // an can also use old meta data unlike the vod stream url which
-//            // expires
-//            _fetchThumbnail()
-//        }
         _fetchThumbnail()
         console.debug("create match item rowid=" + rowId)
     }
@@ -498,8 +511,9 @@ ListItem {
                     _vodFilePath = ""
                     _vod = null
                     VodDataManager.deleteMetaData(rowId)
-                    VodDataManager.fetchThumbnail(rowId)
+                    _metaDataDownloadFailed = false
                     VodDataManager.fetchMetaData(rowId)
+                    VodDataManager.fetchThumbnail(rowId)
                 }
             }
 
@@ -525,6 +539,21 @@ ListItem {
         if (rowid === rowId) {
             console.debug("thumbnail download failed rowid=" + rowid + " error=" + error + " url=" + url)
             thumbnailGroup.downloadFailed = true
+        }
+    }
+
+    function metaDataDownloadFailed(rowid, error) {
+        if (rowid === rowId) {
+            console.debug("meta data download failed rowid=" + rowid + " error=" + error)
+            _metaDataDownloadFailed = true
+        }
+    }
+
+    function vodDownloadFailed(rowid, error) {
+        if (rowid === rowId) {
+            console.debug("vod download failed rowid=" + rowid + " error=" + error)
+            _vodDownloadFailed = true
+            _downloading = false
         }
     }
 
@@ -722,6 +751,7 @@ ListItem {
     }
 
     function _downloadFormat(formatIndex) {
+        _vodDownloadFailed = false
         VodDataManager.fetchVod(rowId, formatIndex)
         _downloading = true
     }

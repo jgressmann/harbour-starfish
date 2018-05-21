@@ -107,13 +107,12 @@ Page {
                 x: Theme.horizontalPageMargin
                  width: parent.width-2*x
                  text:
-App.displayName + " lets you watch and download the latest and past StarCraft Brood War " +
-"and StarCraft II VODs from the on the internet."
+App.displayName + " lets you download and stream StarCraft Brood War " +
+"and StarCraft II VODs from the internet."
                  wrapMode: Text.WordWrap
                  font.pixelSize: Theme.fontSizeExtraSmall
                  color: Theme.highlightColor
                  textFormat: TextEdit.RichText
-//                 TextField.text:
             }
 
             SectionHeader {
@@ -138,6 +137,17 @@ App.displayName + " lets you watch and download the latest and past StarCraft Br
                  text: "The application icon is copyright (c) by Blizzard Entertainment.
 This application uses StarCraft (tm) related media from various sites on the internet.
 Should you feel you rights have been infringed please contact me and I'll remove the offending data."
+                 wrapMode: Text.WordWrap
+                 font.pixelSize: Theme.fontSizeExtraSmall
+                 color: Theme.highlightColor
+                 textFormat: TextEdit.RichText
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                 width: parent.width-2*x
+                 text: App.displayName + " uses icons downloaded from <a href=\"https://www.flaticon.com\">flaticon</a> created by <a href=\"https://www.flaticon.com/authors/gregor-cresnar\">Gregor Cresnar</a>,
+and <a href=\"https://www.flaticon.com/authors/smashicons\">Smashicons</a>."
                  wrapMode: Text.WordWrap
                  font.pixelSize: Theme.fontSizeExtraSmall
                  color: Theme.highlightColor

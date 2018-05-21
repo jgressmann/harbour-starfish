@@ -49,7 +49,7 @@ Requires:   zlib
 %{_datadir}/%{name}/icons.json.gz
 %{_datadir}/%{name}/classifier.json.gz
 %{_datadir}/%{name}/COPYING
-#%{_datadir}/%{name}/icons/*
+%{_datadir}/%{name}/icons/*
 
 
 #%package -n libstarfish

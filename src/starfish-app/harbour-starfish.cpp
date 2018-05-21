@@ -23,6 +23,7 @@
 
 #include <QGuiApplication>
 #include <QQuickView>
+#include <QStandardPaths>
 #include <qqml.h>
 
 #include "Sc2LinksDotCom.h"
@@ -34,8 +35,9 @@
 #include "ScVodman.h"
 #include "ScRecentlyUsedModel.h"
 
-
 #include <sailfishapp.h>
+
+#include <stdio.h>
 
 static QObject *dataManagerProvider(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
@@ -53,19 +55,20 @@ static QObject *appProvider(QQmlEngine *engine, QJSEngine *scriptEngine)
     return new ScApp();
 }
 
+static void setupLogging();
+static void teardownLogging();
+
 int
 main(int argc, char *argv[]) {
 
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
-    QScopedPointer<QQuickView> view(SailfishApp::createView());
-
+    setupLogging();
 
     qmlRegisterType<ScSqlVodModel>(STARFISH_NAMESPACE, 1, 0, "SqlVodModel");
     qmlRegisterType<ScVodDatabaseDownloader>(STARFISH_NAMESPACE, 1, 0, "VodDatabaseDownloader");
     qmlRegisterType<Sc2LinksDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2LinksDotComScraper");
     qmlRegisterType<Sc2CastsDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2CastsDotComScraper");
     qmlRegisterType<ScRecentlyUsedModel>(STARFISH_NAMESPACE, 1, 0, "RecentlyUsedModel");
-//    qmlRegisterUncreatableType<QSqlDatabase>("Qt", 1, 0, "QSqlDatabase", "QSqlDatabase");
     qmlRegisterSingletonType<ScApp>(STARFISH_NAMESPACE, 1, 0, "App", appProvider);
     qmlRegisterUncreatableType<ScVodScraper>(STARFISH_NAMESPACE, 1, 0, "VodScraper", "VodScraper");
     qmlRegisterUncreatableType<ScVodman>(STARFISH_NAMESPACE, 1, 0, "Vodman", "Vodman");
@@ -74,10 +77,96 @@ main(int argc, char *argv[]) {
     qmlRegisterSingletonType<ScVodDataManager>(STARFISH_NAMESPACE, 1, 0, "VodDataManager", dataManagerProvider);
 
 
+    QScopedPointer<QQuickView> view(SailfishApp::createView());
     view->setSource(SailfishApp::pathToMainQml());
     view->requestActivate();
     view->show();
-    return app->exec();
+    auto result = app->exec();
+
+    teardownLogging();
+    return result;
 }
 
 
+static FILE* s_LogFile;
+static
+void addMessage(
+        const char* timeStamp,
+        const char* type,
+        const char* message,
+        const char* file,
+        int line,
+        const char* function) {
+
+    fprintf(stderr, "%s|%s|%s(%d)|%s|%s\n", timeStamp, type, file, line, function, message);
+    fprintf(s_LogFile, "%s|%s|%s(%d)|%s|%s\n", timeStamp, type, file, line, function, message);
+}
+
+static const QString s_TimeStampFormatter = QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz");
+static
+void
+messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    auto localMsg = msg.toLocal8Bit();
+    auto timeStamp = QDateTime::currentDateTime().toString(s_TimeStampFormatter).toLocal8Bit();
+    switch (type) {
+    case QtDebugMsg:
+        addMessage(timeStamp.constData(), "Debug", localMsg.constData(), context.file, context.line, context.function);
+        break;
+    case QtInfoMsg:
+        addMessage(timeStamp.constData(), "Info", localMsg.constData(), context.file, context.line, context.function);
+        break;
+    case QtWarningMsg:
+        addMessage(timeStamp.constData(), "Warning", localMsg.constData(), context.file, context.line, context.function);
+        break;
+    case QtCriticalMsg:
+        addMessage(timeStamp.constData(), "Critical", localMsg.constData(), context.file, context.line, context.function);
+        fflush(s_LogFile);
+        break;
+    case QtFatalMsg:
+        addMessage(timeStamp.constData(), "Fatal", localMsg.constData(), context.file, context.line, context.function);
+        fclose(s_LogFile);
+        abort();
+    }
+}
+
+static
+void
+deleteOldLogs(const QString& logDir) {
+    QDir dir;
+    dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
+    dir.setNameFilters(QStringList() << QStringLiteral(STARFISH_APP_NAME "-*.txt"));
+    dir.setSorting(QDir::Time | QDir::Reversed);
+    dir.setPath(logDir);
+
+    auto ageThreshold = QDate::currentDate().addDays(-7);
+
+    auto list = dir.entryInfoList();
+    for (int i = 0; i < list.size(); ++i) {
+        if (list[i].lastModified() >= QDateTime(ageThreshold)) {
+            break;
+        }
+
+        QFile::remove(list[i].absoluteFilePath());
+    }
+}
+
+static
+void
+teardownLogging() {
+    if (s_LogFile) {
+        fclose(s_LogFile);
+    }
+}
+
+static
+void
+setupLogging() {
+    auto logDir = ScApp::staticLogDir();
+    QDir().mkpath(logDir);
+    deleteOldLogs(logDir);
+    auto logFilePath = QStringLiteral("%1/" STARFISH_APP_NAME "-%2.txt").arg(logDir, QDate::currentDate().toString(QStringLiteral("yyyyMMdd")));
+    s_LogFile = fopen(logFilePath.toLocal8Bit(), "a");
+    if (s_LogFile) {
+        qInstallMessageHandler(messageHandler);
+    }
+}

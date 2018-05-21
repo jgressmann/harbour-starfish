@@ -24,6 +24,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Nemo.Configuration 1.0
+import Nemo.Notifications 1.0
 import org.duckdns.jgressmann 1.0
 import "."
 
@@ -54,6 +55,29 @@ ApplicationWindow {
             case VodDatabaseDownloader.Status_Canceled:
             case VodDatabaseDownloader.Status_Finished:
                 settingLastUpdateTimestamp.value = Global.secondsSinceTheEpoch()
+                break
+            }
+        }
+
+        onErrorChanged: {
+            switch (error) {
+            case VodDatabaseDownloader.Error_None:
+                break
+            case VodDatabaseDownloader.Error_NetworkFailure:
+                errorNotification.body = errorNotification.previewBody = "Network down"
+                errorNotification.publish()
+                break
+            case VodDatabaseDownloader.Error_DataInvalid:
+                errorNotification.body = errorNotification.previewBody = "Data downloaded is invalid"
+                errorNotification.publish()
+                break
+            case VodDatabaseDownloader.Error_DataDecompressionFailed:
+                errorNotification.body = errorNotification.previewBody = "Data decompression failed"
+                errorNotification.publish()
+                break
+            default:
+                errorNotification.body = errorNotification.previewBody = "Yikes! An unknown error has occurred"
+                errorNotification.publish()
                 break
             }
         }
@@ -145,8 +169,16 @@ ApplicationWindow {
         }
     }
 
+    Notification {
+         id: errorNotification
+         category: "x-nemo.transfer.error"
+         summary: "Download failed"
+         previewSummary: "Download failed"
+         appName: App.displayName
+         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+    }
+
     Component.onCompleted: {
-        VodDataManager.vodsCleared.connect(_removedObsoleteEntriesFromRecentlyUsedVideos)
         VodDataManager.vodman.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
         _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
@@ -172,10 +204,6 @@ ApplicationWindow {
         } else if (sc2LinksDotComScraper.id === settingNetworkScraper.value) {
             vodDatabaseDownloader.scraper = sc2LinksDotComScraper
         }
-    }
-
-    function _removedObsoleteEntriesFromRecentlyUsedVideos() {
-        console.debug("_removedObsoleteEntriesFromRecentlyUsedVideos")
     }
 }
 

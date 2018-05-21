@@ -111,7 +111,6 @@ SilicaListView {
                                     sourceSize.width: width
                                     sourceSize.height: height
                                     fillMode: Image.PreserveAspectFit
-                                    cache: false
                                     visible: status === Image.Ready
                                     source: thumbnail_path
                                 }
@@ -119,7 +118,6 @@ SilicaListView {
                                 Image {
                                     anchors.fill: parent
                                     fillMode: Image.PreserveAspectFit
-//                                    cache: false
                                     visible: !thumbnail.visible
                                     source: "image://theme/icon-m-sailfish"
                                 }

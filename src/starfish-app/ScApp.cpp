@@ -99,6 +99,14 @@ QString ScApp::appDir() const {
     return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR));
 }
 
+QString ScApp::logDir() const {
+    return staticLogDir();
+}
+
+QString ScApp::staticLogDir() {
+    return QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QStringLiteral("/logs");
+}
+
 bool ScApp::unlink(const QString& filePath) const {
     return QFile::remove(filePath);
 }

@@ -52,8 +52,8 @@
 
 #define RETURN_IF_ERROR \
     do { \
-        if (m_Status == Status_Error) { \
-            qWarning() << "Error status, return"; \
+        if (!m_Ready) { \
+            qCritical("Not ready, return"); \
         } \
     } while (0)
 
@@ -142,7 +142,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     m_ThumbnailDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/thumbnails/";
     m_VodDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/vods/";
     m_IconDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/icons/";
-    m_Status = Status_Ready;
+    m_Ready = true;
     m_Error = Error_None;
     m_SuspendedVodsChangedEventCount = 0;
     m_ClassfierRequest = nullptr;
@@ -165,7 +165,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         setupDatabase();
     } else {
         qCritical("Could not open database '%s'. Error: %s\n", qPrintable(databaseFilePath), qPrintable(m_Database.lastError().text()));
-        m_Status = Status_Error;
+        setReady(false);
     }
 
 
@@ -175,6 +175,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         auto src = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) ICONS_FILE);
         if (!QFile::copy(src, iconsFileDestinationPath)) {
             qCritical() << "could not copy" << src << "to" << iconsFileDestinationPath;
+            setReady(false);
         }
     }
 
@@ -188,6 +189,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         auto src = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) CLASSIFIER_FILE);
         if (!QFile::copy(src, classifierFileDestinationPath)) {
             qCritical() << "could not copy" << src << "to" << iconsFileDestinationPath;
+            setReady(false);
         }
     }
 
@@ -576,7 +578,7 @@ ScVodDataManager::setupDatabase() {
     if (!q.exec("PRAGMA foreign_keys = ON")) {
         qCritical() << "failed to enable foreign keys" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
-        setStatus(Status_Error);
+        setReady(false);
         return;
     }
 
@@ -584,28 +586,28 @@ ScVodDataManager::setupDatabase() {
     if (!q.exec("PRAGMA count_changes = OFF")) {
         qCritical() << "failed to disable change counting" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
-        setStatus(Status_Error);
+        setReady(false);
         return;
     }
 
     if (!q.exec("PRAGMA temp_store = MEMORY")) {
         qCritical() << "failed to set temp store to memory" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
-        setStatus(Status_Error);
+        setReady(false);
         return;
     }
 
     if (!q.exec("PRAGMA journal_mode = WAL")) {
         qCritical() << "failed to set journal mode to WAL" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
-        setStatus(Status_Error);
+        setReady(false);
         return;
     }
 
     if (!q.exec("PRAGMA user_version") || !q.next()) {
         qCritical() << "failed to query user version" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
-        setStatus(Status_Error);
+        setReady(false);
         return;
     }
 
@@ -617,7 +619,7 @@ ScVodDataManager::setupDatabase() {
         if (!q.exec(QStringLiteral("PRAGMA user_version = %1").arg(QString::number(Version)))) {
             qCritical() << "failed to set user version" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
-            setStatus(Status_Error);
+            setReady(false);
             return;
         }
     }
@@ -627,7 +629,7 @@ ScVodDataManager::setupDatabase() {
         if (!q.prepare(CreateSql[i]) || !q.exec()) {
             qCritical() << "failed to create table" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
-            setStatus(Status_Error);
+            setReady(false);
             return;
         }
     }
@@ -646,7 +648,7 @@ ScVodDataManager::setupDatabase() {
         if (!q.prepare("INSERT INTO settings (key, value) VALUES (?, ?)")) {
             qCritical() << "failed to prepare settings insert" << q.lastError();
             setError(Error_SqlTableManipError);
-            setStatus(Status_Error);
+            setReady(false);
             return;
         }
 
@@ -656,7 +658,7 @@ ScVodDataManager::setupDatabase() {
         if (!q.exec()) {
             qCritical() << "failed to insert into settings table" << q.lastError();
             setError(Error_SqlTableManipError);
-            setStatus(Status_Error);
+            setReady(false);
             return;
         }
     }
@@ -664,10 +666,10 @@ ScVodDataManager::setupDatabase() {
 }
 
 void
-ScVodDataManager::setStatus(Status status) {
-    if (m_Status != status) {
-        m_Status = status;
-        emit statusChanged();
+ScVodDataManager::setReady(bool value) {
+    if (m_Ready != value) {
+        m_Ready = value;
+        emit readyChanged();
     }
 }
 
@@ -783,7 +785,7 @@ ScVodDataManager::dropTables() {
         if (!q.prepare(DropSql[i]) || !q.exec()) {
             qCritical() << "failed to drop table" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
-            setStatus(Status_Error);
+            setReady(false);
         }
     }
 }
@@ -807,49 +809,49 @@ ScVodDataManager::clear() {
 //    QSqlQuery q(m_Database);
 //    if (!q.exec("BEGIN TRANSACTION")) {
 //        setError(Error_CouldntStartTransaction);
-//        setStatus(Status_Error);
+//        setReady(false);
 //        return;
 //    }
 
 //    if (!q.exec("DELETE FROM vods")) {
 //        setError(Error_SqlTableManipError);
-//        setStatus(Status_Error);
+//        setReady(false);
 //        return;
 //    }
 
 //    if (!q.exec("DELETE FROM vod_thumbnails")) {
 //        setError(Error_SqlTableManipError);
-//        setStatus(Status_Error);
+//        setReady(false);
 //        return;
 //    }
 
 //    if (!q.exec("DELETE FROM vod_files")) {
 //        setError(Error_SqlTableManipError);
-//        setStatus(Status_Error);
+//        setReady(false);
 //        return;
 //    }
 
 //    if (!q.exec("DELETE FROM vod_url_share")) {
 //        setError(Error_SqlTableManipError);
-//        setStatus(Status_Error);
+//        setReady(false);
 //        return;
 //    }
 
 //    if (!q.exec("DELETE FROM vod_file_ref")) {
 //        setError(Error_SqlTableManipError);
-//        setStatus(Status_Error);
+//        setReady(false);
 //        return;
 //    }
 
 //    if (!q.exec("DELETE FROM icons")) {
 //        setError(Error_SqlTableManipError);
-//        setStatus(Status_Error);
+//        setReady(false);
 //        return;
 //    }
 
 //    if (!q.exec("COMMIT TRANSACTION")) {
 //        setError(Error_CouldntEndTransaction);
-//        setStatus(Status_Error);
+//        setReady(false);
 //        return;
 //    }
 
@@ -1413,7 +1415,62 @@ void ScVodDataManager::updateVodDownloadStatus(
 
 void
 ScVodDataManager::onDownloadFailed(qint64 token, int serviceErrorCode) {
-    qDebug() << token << serviceErrorCode;
+    QMutexLocker g(&m_Lock);
+    auto it = m_VodmanFileRequests.find(token);
+    if (it != m_VodmanFileRequests.end()) {
+        VodmanFileRequest r = it.value();
+        m_VodmanFileRequests.erase(it);
+
+        QSqlQuery q(m_Database);
+        if (!q.prepare(
+                    QStringLiteral(
+                        "SELECT\n"
+                        "   v.id\n"
+                        "FROM vod_file_ref r\n"
+                        "INNER JOIN vods v ON v.id=r.vod_id\n"
+                        "INNER JOIN vod_files f ON f.id=r.vod_file_id\n"
+                        "WHERE f.id=?\n"))) {
+            qCritical() << "failed to prepare query" << q.lastError();
+            return;
+        }
+
+        q.addBindValue(r.vod_file_id);
+
+        if (!q.exec()) {
+            qCritical() << "failed to exec query" << q.lastError();
+            return;
+        }
+
+        while (q.next()) {
+            auto rowid = qvariant_cast<qint64>(q.value(0));
+            emit vodDownloadFailed(rowid, serviceErrorCode);
+        }
+    }
+
+    auto it2 = m_VodmanMetaDataRequests.find(token);
+    if (it2 != m_VodmanMetaDataRequests.end()) {
+        VodmanMetaDataRequest r = it2.value();
+        m_VodmanMetaDataRequests.erase(it2);
+
+        QSqlQuery q(m_Database);
+        if (!q.prepare(QStringLiteral(
+    "SELECT id FROM vods WHERE vod_url_share_id=?"))) {
+            qCritical() << "failed to prepare query" << q.lastError();
+            return;
+        }
+
+        q.addBindValue(r.vod_url_share_id);
+
+        if (!q.exec()) {
+            qCritical() << "failed to exec query" << q.lastError();
+            return;
+        }
+
+        while (q.next()) {
+            auto rowid = qvariant_cast<qint64>(q.value(0));
+            emit metaDataDownloadFailed(rowid, serviceErrorCode);
+        }
+    }
 }
 
 

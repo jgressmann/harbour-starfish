@@ -26,7 +26,7 @@ import Sailfish.Silica 1.0
 import org.duckdns.jgressmann 1.0
 import ".."
 
-BasePage {
+Page {
     id: page
 
     readonly property int vodCount: _vodCount
@@ -64,25 +64,30 @@ BasePage {
         // Why is this necessary?
         contentWidth: parent.width
 
-        TopMenu {}
-//        BottomMenu {}
+        ViewPlaceholder {
+            enabled: VodDataManager.ready && vodCount === 0
+            text: "There seems to be nothing here."
+            hintText: "Pull down to fetch new VODs."
+        }
 
         ViewPlaceholder {
-            enabled: vodCount === 0
-            text: "There seems to be nothing here."
-            hintText: " Pull down to fetch new VODs."
+            enabled: !VodDataManager.ready
+            text: App.displayName + " failed to start."
+            hintText: "For details check the log file located in " + App.logDir
         }
     }
 
     Timer {
         interval: 1000
-        running: true
+        running: VodDataManager.ready
         repeat: true
         onTriggered: model.update()
     }
 
     function _tryNavigateAway() {
-        if (PageStatus.Active === status && vodCount > 0) {
+        if (PageStatus.Active === status &&
+                VodDataManager.ready &&
+                vodCount > 0) {
 //            pageStack.replace(
 //                Qt.resolvedUrl("FilterPage.qml"),
 //                {
