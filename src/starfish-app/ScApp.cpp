@@ -85,6 +85,12 @@ ScApp::isOnMobile() const {
     return false;
 }
 
+
+bool
+ScApp::isOnline() const {
+    return m_NetworkConfigurationManager->isOnline();
+}
+
 bool
 ScApp::isUrl(const QString& str) const {
     QUrl url(str);

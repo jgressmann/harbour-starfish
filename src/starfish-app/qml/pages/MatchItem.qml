@@ -43,6 +43,7 @@ ListItem {
     property bool menuEnabled: true
     property int rowId: -1
     property string _vodFilePath
+    property int _vodFileSize
     property bool _fetchingVod: false
     property bool _clicked: false
     property bool _clicking: false
@@ -309,7 +310,8 @@ ListItem {
                                 sourceSize.width: width
                                 sourceSize.height: height
                                 source: _metaDataDownloadFailed
-                                        ? "/usr/share/harbour-starfish/icons/warning.png"
+                                        ? //"/usr/share/harbour-starfish/icons/warning.png"
+                                          "/usr/share/harbour-starfish/icons/flash.png"
                                         : "image://theme/icon-s-date"
 
                                 anchors.verticalCenter: parent.verticalCenter
@@ -428,11 +430,10 @@ ListItem {
     onClicked: {
         _clicking = true
         _clicked = true
-        if (_vod) {
-            _tryPlay()
-        } else {
-            _metaDataDownloadFailed = false
+        if (!_vod && App.isOnline) {
             VodDataManager.fetchMetaData(rowId)
+        } else if (_vodFilePath) {
+            _tryPlay()
         }
         _clicking = false
     }
@@ -470,7 +471,15 @@ ListItem {
         VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
         _vodTitle = VodDataManager.title(rowId)
         seenButton.seen = VodDataManager.seen({"id": rowId}) >= 1
-        _fetchThumbnail()
+        if (App.isOnline) {
+            VodDataManager.fetchThumbnail(rowId)
+        } else {
+            thumbnailGroup.downloadFailed = true
+        }
+
+        // also fetch a valid meta data from cache
+        VodDataManager.fetchMetaDataFromCache(rowId)
+        VodDataManager.queryVodFiles(rowId)
         console.debug("create match item rowid=" + rowId)
     }
 
@@ -489,7 +498,7 @@ ListItem {
         ContextMenu {
             MenuItem {
                 text: "Download VOD"
-                visible: rowId >= 0 && !!_vod && !_downloading && progressOverlay.progress < 1
+                visible: rowId >= 0 && !!_vod && !_downloading && progressOverlay.progress < 1 && App.isOnline
                 onClicked: _download()
             }
 
@@ -513,12 +522,13 @@ ListItem {
                     progressOverlay.progress = 0
                     _clicked = false
                     _vodUrl = ""
-                    _vodFilePath = ""
+//                    _vodFilePath = ""
                     _vod = null
                     VodDataManager.deleteMetaData(rowId)
-                    _metaDataDownloadFailed = false
-                    VodDataManager.fetchMetaData(rowId)
-                    VodDataManager.fetchThumbnail(rowId)
+                    if (App.isOnline) {
+                        VodDataManager.fetchMetaData(rowId)
+                        VodDataManager.fetchThumbnail(rowId)
+                    }
                 }
             }
 
@@ -531,6 +541,7 @@ ListItem {
                     _clicked = false
                     _vodUrl = ""
                     _vodFilePath = ""
+                    _vodFileSize = 0
                     _width = 0
                     _height = 0
                     _formatId = ""
@@ -551,6 +562,10 @@ ListItem {
         if (rowid === rowId) {
             console.debug("meta data download failed rowid=" + rowid + " error=" + error)
             _metaDataDownloadFailed = true
+            if (_clicking || _clicked) {
+                 _clicked = false
+                _tryPlay()
+            }
         }
     }
 
@@ -560,12 +575,6 @@ ListItem {
             _vodDownloadFailed = true
             _downloading = false
         }
-    }
-
-    function _fetchThumbnail() {
-        VodDataManager.fetchThumbnail(rowId)
-        // also fetch a valid meta data from cache
-        VodDataManager.fetchMetaDataFromCache(rowId)
     }
 
     function _play() {
@@ -579,6 +588,7 @@ ListItem {
                         "vodAvailable rowid=" + rowid + " path=" + filePath + " progress=" + progress +
                         " size=" + fileSize + " width=" + width + " height=" + height + " formatId=" + formatId)
             _vodFilePath = filePath
+            _vodFileSize = fileSize
             if (-1 === _progress) {
                 _progress = progress
             } else if (_progress < progress) {
@@ -605,11 +615,12 @@ ListItem {
     function metaDataAvailable(rowid, vod) {
         if (rowid === rowId) {
             console.debug("metaDataAvailable rowid=" + rowid)
+            _metaDataDownloadFailed = false
             _vod = vod
             _vodTitle = vod.description.title
             VodDataManager.fetchThumbnail(rowId)
-            VodDataManager.queryVodFiles(rowId)
-            if (_clicking) {
+            if (_clicking || _clicked) {
+                 _clicked = false
                 _tryPlay()
             }
         }
@@ -728,7 +739,7 @@ ListItem {
     function _tryPlay() {
         if (!_tryingToPlay) {
             _tryingToPlay = true
-            if (_vodFilePath && progressOverlay.progress > 0) {
+            if (_vodFilePath && _vodFileSize > 0) {
                 // try download rest if incomplete and format matches
                 if (_vod && progressOverlay.progress < 1 && !_downloading) {
                     var index = _getVodFormatIndexFromId()

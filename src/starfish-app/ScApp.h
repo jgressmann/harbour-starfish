@@ -36,6 +36,7 @@ class ScApp : public QObject
     Q_PROPERTY(QString displayName READ displayName CONSTANT)
     Q_PROPERTY(bool isOnBroadband READ isOnBroadband NOTIFY isOnBroadbandChanged)
     Q_PROPERTY(bool isOnMobile READ isOnMobile NOTIFY isOnMobileChanged)
+    Q_PROPERTY(bool isOnline READ isOnline NOTIFY isOnlineChanged)
     Q_PROPERTY(QString dataDir READ dataDir CONSTANT)
     Q_PROPERTY(QString appDir READ appDir CONSTANT)
     Q_PROPERTY(QString logDir READ logDir CONSTANT)
@@ -50,6 +51,7 @@ public:
     QString logDir() const;
     bool isOnBroadband() const;
     bool isOnMobile() const;
+    bool isOnline() const;
     Q_INVOKABLE bool isUrl(const QString& str) const;
     Q_INVOKABLE bool unlink(const QString& filePath) const;
     Q_INVOKABLE bool copy(const QString& srcFilePath, const QString& dstFilePath) const;
@@ -60,6 +62,7 @@ public:
 signals:
     void isOnBroadbandChanged();
     void isOnMobileChanged();
+    void isOnlineChanged();
 
 private:
     QNetworkConfigurationManager* m_NetworkConfigurationManager;
