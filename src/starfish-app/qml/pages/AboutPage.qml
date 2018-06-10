@@ -32,10 +32,12 @@ Page {
     SilicaFlickable {
         anchors.fill: parent
         contentWidth: parent.width
+        contentHeight: column.height
 
         VerticalScrollDecorator {}
 
         Column {
+            id: column
             spacing: Theme.paddingLarge
             x: Theme.paddingMedium
             width: parent.width - 2*x
@@ -148,6 +150,20 @@ Should you feel you rights have been infringed please contact me and I'll remove
                  width: parent.width-2*x
                  text: App.displayName + " uses icons downloaded from <a href=\"https://www.flaticon.com\">flaticon</a> created by <a href=\"https://www.flaticon.com/authors/gregor-cresnar\">Gregor Cresnar</a>,
 and <a href=\"https://www.flaticon.com/authors/smashicons\">Smashicons</a>."
+                 wrapMode: Text.WordWrap
+                 font.pixelSize: Theme.fontSizeExtraSmall
+                 color: Theme.highlightColor
+                 textFormat: TextEdit.RichText
+            }
+
+            SectionHeader {
+                text: "Sources"
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                 width: parent.width-2*x
+                 text: "The sources are hosted on <a href=\"https://github.com/jgressmann/harbour-starfish\">GitHub</a>."
                  wrapMode: Text.WordWrap
                  font.pixelSize: Theme.fontSizeExtraSmall
                  color: Theme.highlightColor
