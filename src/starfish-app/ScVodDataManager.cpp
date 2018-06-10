@@ -2699,3 +2699,33 @@ ScVodDataManager::makeThumbnailFile(const QString& srcPath) {
 
     return QString();
 }
+
+void
+ScVodDataManager::deleteSeenVodFiles() {
+    RETURN_IF_ERROR;
+
+
+    QMutexLocker g(&m_Lock);
+
+    QSqlQuery q(m_Database);
+
+    if (!q.exec(QStringLiteral(
+                      "SELECT\n"
+                      "    f.file_name\n"
+                      "FROM vod_file_ref r\n"
+                      "INNER JOIN vods v ON v.id=r.vod_id\n"
+                      "INNER JOIN vod_files f ON f.id=r.vod_file_id\n"
+                      "WHERE v.seen=1\n"
+                      ))) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return;
+    }
+
+    while (q.next()) {
+        auto fileName = q.value(0).toString();
+        if (QFile::remove(m_VodDir + fileName)) {
+            qDebug() << "removed" << m_VodDir + fileName;
+        }
+    }
+}
+

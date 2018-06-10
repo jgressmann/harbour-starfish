@@ -88,6 +88,14 @@ Page {
             }
 
             Button {
+                text: "Delete seen VOD files"
+                onClicked: {
+                    console.debug("delete seen vod files")
+                    VodDataManager.deleteSeenVodFiles()
+                }
+            }
+
+            Button {
                 text: "Reset recent videos"
                 onClicked: {
                     recentlyUsedVideos.recreateTable()

@@ -121,6 +121,7 @@ public: //
     inline QVariant databaseVariant() const { return QVariant::fromValue(m_Database); }
     bool busy() const;
     Q_INVOKABLE QString makeThumbnailFile(const QString& srcPath);
+    Q_INVOKABLE void deleteSeenVodFiles();
 
 
 signals:
