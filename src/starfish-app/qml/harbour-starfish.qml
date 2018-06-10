@@ -123,6 +123,12 @@ ApplicationWindow {
         }
 
         ConfigurationValue {
+            id: settingNetworkContinueDownload
+            key: "/network/continue_download"
+            defaultValue: false
+        }
+
+        ConfigurationValue {
             id: settingExternalMediaPlayer
             key: "/playback/use_external_player"
             defaultValue: false

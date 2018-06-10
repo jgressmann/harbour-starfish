@@ -60,6 +60,7 @@ ListItem {
     property bool _tryingToPlay: false
     property bool _metaDataDownloadFailed: false
     property bool _vodDownloadFailed: false
+    property real _progress: -1
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -474,7 +475,11 @@ ListItem {
     }
 
     Component.onDestruction: {
-        _cancelDownload()
+        if (!settingNetworkContinueDownload.value) {
+            console.debug("canceling download for rowid=" + rowId)
+            _cancelDownload()
+        }
+
         VodDataManager.cancelFetchMetaData(rowId)
         console.debug("destroy match item rowid=" + rowId)
     }
@@ -574,6 +579,13 @@ ListItem {
                         "vodAvailable rowid=" + rowid + " path=" + filePath + " progress=" + progress +
                         " size=" + fileSize + " width=" + width + " height=" + height + " formatId=" + formatId)
             _vodFilePath = filePath
+            if (-1 === _progress) {
+                _progress = progress
+            } else if (_progress < progress) {
+                _downloading = true
+                _progress = progress
+            }
+
             progressOverlay.show = _downloading && progress > 0 && progress < 1
             progressOverlay.progress = progress
             _width = width
@@ -771,6 +783,7 @@ ListItem {
 
     function _cancelDownload() {
         VodDataManager.cancelFetchVod(rowId)
+        _progress = -1
         _downloading = false
         progressOverlay.show = false
     }

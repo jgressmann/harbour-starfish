@@ -112,6 +112,15 @@ Page {
             }
         }
 
+        TextSwitch {
+            text: "Continue VOD file download when page closes"
+            checked: settingNetworkContinueDownload.value
+            onCheckedChanged: {
+                console.debug("continue download=" + checked)
+                settingNetworkContinueDownload.value = checked
+            }
+        }
+
         SectionHeader {
             text: "Format"
         }
