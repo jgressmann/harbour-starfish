@@ -64,6 +64,8 @@ Page {
         // Why is this necessary?
         contentWidth: parent.width
 
+        TopMenu {}
+
         ViewPlaceholder {
             enabled: VodDataManager.ready && vodCount === 0
             text: "There seems to be nothing here."
