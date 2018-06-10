@@ -4,13 +4,13 @@
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 
 Name:       harbour-starfish
-Summary:    Get your StarCraft II and Brood War action going!
+Summary:    Get your Brood War and StarCraft II action going!
 Version:    1.0.0
 Release:    1
 Group:      Applications/Multimedia
 #Group:      Qt/Qt
 License:    MIT
-#URL:        http://foo.bar
+URL:        https://openrepos.net/content/jgressmann/starfish
 Source0:    %{name}-%{version}.tar.bz2
 
 BuildRequires:  pkgconfig(Qt5DBus)
