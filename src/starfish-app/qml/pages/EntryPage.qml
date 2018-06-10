@@ -78,11 +78,11 @@ BasePage {
             id: continueWatching
             width: parent.width
 
-            function updateVisible() {
-                var count = recentlyUsedVideos.rowCount()
-                visible = count > 0
-                recentlyWatchedVideoView.height = (Global.itemHeight + Theme.fontSizeMedium) * count
-            }
+//            function updateVisible() {
+//                var count = recentlyUsedVideos.rowCount()
+//                visible = count > 0
+//                recentlyWatchedVideoView.height = (Global.itemHeight + Theme.fontSizeMedium) * count
+//            }
 
             Label {
 
@@ -105,9 +105,14 @@ BasePage {
                 onClicked: function (obj, url, offset) {
                     Global.playVideoHandler(updater, obj, url, offset)
                 }
+
+                onCountChanged: {
+                    continueWatching.visible = count > 0
+                    height = (Global.itemHeight + Theme.fontSizeMedium) * count
+                }
             }
 
-            Component.onCompleted: updateVisible()
+//            Component.onCompleted: updateVisible()
         }
     }
 
