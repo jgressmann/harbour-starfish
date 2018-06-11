@@ -114,7 +114,7 @@ ListItem {
                         id: dateLabel
         //                    visible: showDate || _loading
                         anchors.left: parent.left
-                        anchors.right: loadCompleteImage.left
+                        anchors.right: loadCompleteImageHeading.left
         //                horizontalAlignment: Text.AlignLeft
                         font.pixelSize: Theme.fontSizeTiny
                         truncationMode: TruncationMode.Fade
@@ -143,18 +143,28 @@ ListItem {
                     }
 
                     Image {
-                        id: loadCompleteImage
+                        id: loadCompleteImageHeading
                         source: "image://theme/icon-s-cloud-download"
+                        visible: false
+                    }
+
+                    ProgressMaskEffect {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.right: parent.right
+                        anchors.fill: parent
+                        src: loadCompleteImageHeading
+                        progress: {
+                            var p = progressOverlay.show ? 0 : progressOverlay.progress
+                            var s = Math.max(0, Math.min(p, 1))
+                            if (s > 0) {
+                                if (s >= 1) {
+                                    return 1
+                                }
 
-                        layer.enabled: true
+                                return 0.1 + s * 0.8 // ignore transparent sides
+                            }
 
-                        ProgressMaskEffect {
-//                            show: !progressOverlay.show
-                            anchors.fill: parent
-                            src: parent
-                            progress: progressOverlay.show ? 0 : progressOverlay.progress
+                            return 0
                         }
                     }
                 }
@@ -329,18 +339,25 @@ ListItem {
                                 Image {
                                     id: loadCompleteImage2a
                                     source: "image://theme/icon-s-cloud-download"
-    //                                anchors.verticalCenter: parent.verticalCenter
-    //                                anchors.right: parent.right
+                                    visible: false
+                                }
+
+                                ProgressMaskEffect {
+                                    src: loadCompleteImage2a
+                                    width: loadCompleteImage2a.width
+                                    height: loadCompleteImage2a.height
                                     visible: !_vodDownloadFailed && progressOverlay.progress < 1
+                                    progress: {
+                                        var s = Math.max(0, Math.min(progressOverlay.progress, 1))
+                                        if (s > 0) {
+                                            if (s >= 1) {
+                                                return 1
+                                            }
 
-                                    layer.enabled: true
+                                            return 0.1 + s * 0.8 // ignore transparent sides
+                                        }
 
-                                    ProgressMaskEffect {
-                                        anchors.fill: parent
-                                        src: parent
-                                        inverse: true
-        //                                progress: progressOverlay.show ? 1 : (progressOverlay.progress >= 1 ? 1 : progressOverlay.progress)
-                                        progress: progressOverlay.progress
+                                        return 0
                                     }
                                 }
 

@@ -22,6 +22,26 @@
  */
 
 import QtQuick 2.0
+//import QtGraphicalEffects 1.0
+
+//OpacityMask {
+//    id: root
+//    property real progress: 0.314
+//    property alias src: root.source
+//    maskSource: Rectangle {
+//        id: rect
+//        anchors.fill: parent
+//        color: "black"
+//        height: parent.height
+//    }
+
+//    property bool inverse
+
+//    onProgressChanged: {
+//        var s = Math.max(0, Math.min(progress, 1))
+//        rect.width = parent.width * s
+//    }
+//}
 
 ShaderEffect {
 
@@ -29,6 +49,8 @@ ShaderEffect {
     property real progress: 0.314
     property bool inverse: false
     blending: false
+// doesn't work
+//    cullMode: ShaderEffect.BackFaceCulling
     vertexShader: "
 #ifndef GL_FRAGMENT_PRECISION_HIGH
 #define highp mediump
