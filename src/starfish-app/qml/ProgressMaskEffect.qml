@@ -48,7 +48,7 @@ ShaderEffect {
     property variant src
     property real progress: 0.314
     property bool inverse: false
-    blending: false
+    blending: true
 // doesn't work
 //    cullMode: ShaderEffect.BackFaceCulling
     vertexShader: "
