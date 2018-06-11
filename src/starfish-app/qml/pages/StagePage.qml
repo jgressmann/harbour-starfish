@@ -35,6 +35,7 @@ BasePage {
     property date _matchDate
     property string _side1
     property string _side2
+    property var itemPlaying: null
 
     SqlVodModel {
         id: sqlModel
@@ -146,6 +147,7 @@ BasePage {
 
 
                 onPlayRequest: function (self) {
+                    itemPlaying = self
                     Global.playVideoHandler(updater, {video_id: rowid}, self.vodUrl, self.startOffset)
                 }
             }
@@ -170,6 +172,25 @@ BasePage {
         if (_sameSides) {
             _side1 = sidesModel.data(sidesModel.index(0, 0))
             _side2 = sidesModel.data(sidesModel.index(0, 1))
+        }
+    }
+
+    onStatusChanged: {
+        switch (status) {
+        case PageStatus.Activating:
+            if (itemPlaying) {
+                itemPlaying.cancelImplicitVodFileFetch()
+                itemPlaying = null
+            }
+            break
+        }
+    }
+
+    Component.onDestruction: {
+        var contentItem = listView.contentItem
+        for(var index in contentItem.children) {
+            var item = contentItem.children[index]
+            item.ownerGone()
         }
     }
 }

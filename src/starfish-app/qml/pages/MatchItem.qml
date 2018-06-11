@@ -449,7 +449,7 @@ ListItem {
         _clicked = true
         if (!_vod && App.isOnline) {
             VodDataManager.fetchMetaData(rowId)
-        } else if (_vodFilePath) {
+        } else if (_vodFilePath || _vod) {
             _tryPlay()
         }
         _clicking = false
@@ -501,11 +501,6 @@ ListItem {
     }
 
     Component.onDestruction: {
-        if (!settingNetworkContinueDownload.value) {
-            console.debug("canceling download for rowid=" + rowId)
-            _cancelDownload()
-        }
-
         VodDataManager.cancelFetchMetaData(rowId)
         console.debug("destroy match item rowid=" + rowId)
     }
@@ -516,7 +511,7 @@ ListItem {
             MenuItem {
                 text: "Download VOD"
                 visible: rowId >= 0 && !!_vod && !_downloading && progressOverlay.progress < 1 && App.isOnline
-                onClicked: _download()
+                onClicked: _download(false)
             }
 
             MenuItem {
@@ -539,7 +534,6 @@ ListItem {
                     progressOverlay.progress = 0
                     _clicked = false
                     _vodUrl = ""
-//                    _vodFilePath = ""
                     _vod = null
                     VodDataManager.deleteMetaData(rowId)
                     if (App.isOnline) {
@@ -591,6 +585,8 @@ ListItem {
             console.debug("vod download failed rowid=" + rowid + " error=" + error)
             _vodDownloadFailed = true
             _downloading = false
+            progressOverlay.show = false
+            _progress = -1
         }
     }
 
@@ -761,7 +757,7 @@ ListItem {
                 if (_vod && progressOverlay.progress < 1 && !_downloading) {
                     var index = _getVodFormatIndexFromId()
                     if (index >= 0) {
-                        _downloadFormat(index)
+                        _downloadFormat(index, true)
                     }
                 }
 
@@ -790,23 +786,23 @@ ListItem {
         _play()
     }
 
-    function _downloadFormat(formatIndex) {
+    function _downloadFormat(formatIndex, autoStarted) {
         _vodDownloadFailed = false
-        VodDataManager.fetchVod(rowId, formatIndex)
+        VodDataManager.fetchVod(rowId, formatIndex, autoStarted)
         _downloading = true
     }
 
-    function _download() {
+    function _download(autoStarted) {
         var format = _getVideoFormatFromBearerMode()
         if (VM.VM_Any === format) {
             _selectFormat(function(index) {
-                _downloadFormat(index)
+                _downloadFormat(index, autoStarted)
             })
             return
         }
 
         var formatIndex = _findBestFormat(_vod, format)
-        _downloadFormat(formatIndex)
+        _downloadFormat(formatIndex, autoStarted)
     }
 
     function _cancelDownload() {
@@ -816,5 +812,19 @@ ListItem {
         progressOverlay.show = false
     }
 
+    function cancelImplicitVodFileFetch() {
+        if (VodDataManager.implicitlyStartedVodFetch(rowId)) {
+            console.debug("canceling download for rowid=" + rowId)
+            _cancelDownload()
+        }
+    }
+
+    function ownerGone() {
+        cancelImplicitVodFileFetch()
+        if (!settingNetworkContinueDownload.value) {
+            console.debug("canceling download for rowid=" + rowId)
+            _cancelDownload()
+        }
+    }
 }
 

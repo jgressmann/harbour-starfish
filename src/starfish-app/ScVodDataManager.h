@@ -99,7 +99,7 @@ public: //
     Q_INVOKABLE void fetchMetaDataFromCache(qint64 rowid);
     Q_INVOKABLE void fetchThumbnail(qint64 rowid);
     Q_INVOKABLE QString title(qint64 rowid);
-    Q_INVOKABLE void fetchVod(qint64 rowid, int formatIndex);
+    Q_INVOKABLE void fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted);
     Q_INVOKABLE void cancelFetchVod(qint64 rowid);
     Q_INVOKABLE void cancelFetchMetaData(qint64 rowid);
     Q_INVOKABLE void queryVodFiles(qint64 rowid);
@@ -122,6 +122,7 @@ public: //
     bool busy() const;
     Q_INVOKABLE QString makeThumbnailFile(const QString& srcPath);
     Q_INVOKABLE void deleteSeenVodFiles();
+    Q_INVOKABLE bool implicitlyStartedVodFetch(qint64 rowid) const;
 
 
 signals:
@@ -166,10 +167,11 @@ private:
     };
 
     struct VodmanFileRequest {
-        int formatIndex;
         qint64 token;
         qint64 vod_url_share_id;
         qint64 vod_file_id;
+        int formatIndex;
+        bool implicitlyStarted;
     };
 
     struct ThumbnailRequest {

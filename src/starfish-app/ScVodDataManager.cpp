@@ -1348,6 +1348,8 @@ void ScVodDataManager::onFileDownloadCompleted(qint64 token, const VMVodFileDown
         QSqlQuery q(m_Database);
         if (download.progress() >= 1 && download.error() == VMVodEnums::VM_ErrorNone) {
             updateVodDownloadStatus(r.vod_file_id, download);
+        } else {
+
         }
     }
 }
@@ -1749,7 +1751,7 @@ void ScVodDataManager::fetchThumbnailFromUrl(qint64 rowid, const QString& url) {
     m_ThumbnailRequests.insert(m_Manager->get(Sc::makeRequest(url)), r);
 }
 
-void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex) {
+void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted) {
     RETURN_IF_ERROR;
 
     if (formatIndex < 0) {
@@ -1914,6 +1916,7 @@ FetchVod:
                         r.token = m_Vodman->newToken();
                         r.vod_url_share_id = urlShareId;
                         r.vod_file_id = vodFileId;
+                        r.implicitlyStarted = implicitlyStarted;
                         m_VodmanFileRequests.insert(r.token, r);
                         m_Vodman->startFetchFile(r.token, vod, formatIndex, vodFilePath);
                     }
@@ -2728,4 +2731,46 @@ ScVodDataManager::deleteSeenVodFiles() {
         }
     }
 }
+
+bool
+ScVodDataManager::implicitlyStartedVodFetch(qint64 rowid) const {
+    RETURN_IF_ERROR;
+
+    QMutexLocker g(&m_Lock);
+
+    QSqlQuery q(m_Database);
+
+    if (!q.prepare(QStringLiteral(
+"SELECT u.id FROM vods AS v INNER JOIN vod_url_share "
+"AS u ON v.vod_url_share_id=u.id WHERE v.id=?"))) {
+        qCritical() << "failed to prepare query" << q.lastError();
+        return false;
+    }
+
+    q.addBindValue(rowid);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return false;
+    }
+
+    if (!q.next()) {
+        qDebug() << "rowid" << rowid << "gone";
+        return false;
+    }
+
+    const auto urlShareId = qvariant_cast<qint64>(q.value(0));
+
+    auto beg = m_VodmanFileRequests.cbegin();
+    auto end = m_VodmanFileRequests.cend();
+    for (auto it = beg; it != end; ++it) {
+        const VodmanFileRequest& r = it.value();
+        if (r.vod_url_share_id == urlShareId) {
+            return r.implicitlyStarted;
+        }
+    }
+
+    return false;
+}
+
 

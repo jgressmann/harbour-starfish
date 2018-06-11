@@ -29,6 +29,8 @@ import ".."
 BasePage {
     id: page
 
+    property var itemPlaying: null
+
     SqlVodModel {
         id: sqlModel
         dataManager: VodDataManager
@@ -79,9 +81,8 @@ BasePage {
                         ListView.view.currentIndex = index
                     }
 
-
-
-                    onPlayRequest: function (self) {
+                    onPlayRequest: function (self, callback) {
+                        itemPlaying = self
                         Global.playVideoHandler(updater, {video_id: rowid}, self.vodUrl, self.startOffset)
                     }
                 }
@@ -97,6 +98,25 @@ BasePage {
 
     Component.onCompleted: {
         listView.positionViewAtBeginning()
+    }
+
+    onStatusChanged: {
+        switch (status) {
+        case PageStatus.Activating:
+            if (itemPlaying) {
+                itemPlaying.cancelImplicitVodFileFetch()
+                itemPlaying = null
+            }
+            break
+        }
+    }
+
+    Component.onDestruction: {
+        var contentItem = listView.contentItem
+        for(var index in contentItem.children) {
+            var item = contentItem.children[index]
+            item.ownerGone()
+        }
     }
 }
 

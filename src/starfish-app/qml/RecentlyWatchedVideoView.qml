@@ -33,9 +33,9 @@ SilicaListView {
 
     model: recentlyUsedVideos
 
-    signal clicked(var obj, string playbackUrl, int offset)
+    signal clicked(var obj, string playbackUrl, int offset, var matchItem)
 
-
+    property var matchItems: []
 
     delegate: Component {
         Loader {
@@ -163,7 +163,8 @@ SilicaListView {
                                              url: url
                                          },
                                          url,
-                                         offset)
+                                         offset,
+                                         null)
                     }
 
 
@@ -235,7 +236,7 @@ SilicaListView {
                                     console.debug("ARRRRRRRRRRRRRRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGG")
                                 }
 
-                                listView.clicked({video_id: rowId}, self.vodUrl, xoffset)
+                                listView.clicked({video_id: rowId}, self.vodUrl, xoffset, self)
                             }
 
                             menu: Component {
@@ -246,6 +247,18 @@ SilicaListView {
                                             recentlyUsedVideos.remove({ video_id: matchItem.rowId })
                                         }
                                     }
+                                }
+                            }
+
+                            Component.onCompleted: {
+                                matchItems.push(matchItem)
+                            }
+
+                            Component.onDestruction: {
+                                var i = matchItems.indexOf(matchItem)
+                                if (i >= 0) {
+                                    matchItems[i] = matchItems[matchItems.length-1]
+                                    matchItems.pop()
                                 }
                             }
                         }
@@ -271,5 +284,14 @@ SilicaListView {
     ViewPlaceholder {
         text: "No recent videos."
         hintText: "This list will fill with the videos you have watched."
+    }
+
+    function getMatchItemById(id) {
+        for (var i = 0; i < matchItems.length; ++i) {
+            var item = matchItems[i]
+            if (item.rowId === id) {
+                return item
+            }
+        }
     }
 }

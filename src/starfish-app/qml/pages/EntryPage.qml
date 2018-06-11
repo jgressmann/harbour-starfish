@@ -29,6 +29,9 @@ import ".."
 BasePage {
     id: page
 
+//    property var itemPlaying: null
+    property int _videoId: -1
+
     VisualItemModel {
         id: visualModel
 
@@ -78,12 +81,6 @@ BasePage {
             id: continueWatching
             width: parent.width
 
-//            function updateVisible() {
-//                var count = recentlyUsedVideos.rowCount()
-//                visible = count > 0
-//                recentlyWatchedVideoView.height = (Global.itemHeight + Theme.fontSizeMedium) * count
-//            }
-
             Label {
 
                 x: Theme.horizontalPageMargin
@@ -102,7 +99,10 @@ BasePage {
                     id: updater
                 }
 
-                onClicked: function (obj, url, offset) {
+                onClicked: function (obj, url, offset, matchItem) {
+//                    itemPlaying = matchItem
+                    _videoId = obj["video_id"] || -1
+                    console.debug("clicked match item " + matchItem + " " + typeof(matchItem))
                     Global.playVideoHandler(updater, obj, url, offset)
                 }
 
@@ -111,8 +111,6 @@ BasePage {
                     height = (Global.itemHeight + Theme.fontSizeMedium) * count
                 }
             }
-
-//            Component.onCompleted: updateVisible()
         }
     }
 
@@ -137,8 +135,34 @@ BasePage {
     }
 
     onStatusChanged: {
-        if (PageStatus.Activating === status) {
-            continueWatching.updateVisible()
+        switch (status) {
+        case PageStatus.Activating:
+            if (-1 !== _videoId) {
+                var matchItem = recentlyWatchedVideoView.getMatchItemById(_videoId)
+                if (matchItem) {
+                    matchItem.cancelImplicitVodFileFetch()
+                }
+                _videoId = -1
+            }
+
+//            // THIS doens't work for some reason
+//            console.debug("playing match item " + page.itemPlaying + " " + typeof(page.itemPlaying))
+//            if (itemPlaying) {
+//                if (itemPlaying.gone) {
+//                    console.debug("AAAAAAAAAAAA")
+//                }
+
+//                itemPlaying.cancelImplicitVodFileFetch()
+//                itemPlaying = null
+//            }
+            break
+        }
+    }
+
+    Component.onDestruction: {
+        for(var i = 0; i < recentlyWatchedVideoView.matchItems.length; ++i) {
+            var item = recentlyWatchedVideoView.matchItems[index]
+            item.ownerGone()
         }
     }
 }
