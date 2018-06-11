@@ -298,7 +298,7 @@ ScVodman::onVodFileDownloadRemoved(qint64 handle, const QByteArray& result)
             s >> download;
         }
 
-        if (download.isValid()) {
+        if (download.isValid()) { // valid includes 'no error'
             emit fileDownloadCompleted(requestId, download);
         } else {
             emit downloadFailed(requestId, download.error());
