@@ -183,7 +183,9 @@ Page {
 
             property real startx: -1
             property real starty: -1
-            readonly property real dragDistance: Theme.iconSizeMedium / 2
+//            readonly property real dragDistance: Theme.iconSizeLarge / 2
+            readonly property real dragDistance: Theme.startDragDistance
+
             property bool held: false
             property int seekType: -1
             property real initialVolume: 0
@@ -211,7 +213,7 @@ Page {
                     seekRectangle.visible = seekType !== -1
                     switch (seekType) {
                     case 0: { // position
-                        var skipSeconds = dx / dragDistance
+                        var skipSeconds = computePositionSeek(dx)
                         var streamPosition = Math.max(0, Math.min(streamPositonS + skipSeconds, streamDurationS))
                         seekLabel.text = (dx >= 0 ? "+" : "-") + _toTime(Math.abs(skipSeconds)) + " (" + _toTime(streamPosition) + ")"
                     } break
@@ -243,11 +245,13 @@ Page {
                 switch (seekType) {
                 case 0: { // position
 
-                        var skipSeconds = dx / dragDistance
-                        var streamPosition = Math.floor(Math.max(0, Math.min(streamPositonS + skipSeconds, streamDurationS)))
-                        if (streamPosition !== streamPositonS) {
-                            console.debug("skip to=" + streamPosition)
-                            _seek(streamPosition * 1000)
+                        var skipSeconds = computePositionSeek(dx)
+                        if (Math.abs(skipSeconds) >= 3) { // prevent small skips
+                            var streamPosition = Math.floor(Math.max(0, Math.min(streamPositonS + skipSeconds, streamDurationS)))
+                            if (streamPosition !== streamPositonS) {
+                                console.debug("skip to=" + streamPosition)
+                                _seek(streamPosition * 1000)
+                            }
                         }
                 } break
                 case 1: { // volume
@@ -298,6 +302,12 @@ Page {
 //                seekRectangle.visible = false
 //                controlPanel.open = !controlPanel.open
 //            }
+
+            function computePositionSeek(dx) {
+                var sign = dx < 0 ? -1 : 1
+                var absDx = sign * dx
+                return sign * Math.pow(absDx / dragDistance, 1 + absDx / Screen.width)
+            }
 
             DockedPanel {
                 id: controlPanel
