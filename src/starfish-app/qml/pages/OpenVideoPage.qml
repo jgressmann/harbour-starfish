@@ -32,7 +32,7 @@ import ".."
 Page {
     id: root
 
-    signal videoSelected(var obj, string playbackUrl, int offset)
+    signal videoSelected(var obj, string playbackUrl, int offset, bool saveScreenShot)
 
     PageHeader {
         id: header
@@ -58,7 +58,8 @@ Page {
                                     url: Clipboard.text
                                 },
                                 Clipboard.text,
-                                0)
+                                0,
+                                true)
                 }
             }
             Button {
@@ -77,7 +78,8 @@ Page {
                                               url: selectedContentProperties.url
                                           },
                                           selectedContentProperties.url,
-                                          0)
+                                          0,
+                                          true)
                         }
                     }
                 }
@@ -102,7 +104,7 @@ Page {
             anchors.fill: parent
             clip: true
             onClicked: function (a, b, c) {
-                videoSelected(a, b, c)
+                videoSelected(a, b, c, false)
             }
         }
     }

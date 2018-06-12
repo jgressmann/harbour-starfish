@@ -52,7 +52,7 @@ PullDownMenu {
 
         onClicked: {
             var topPage = pageStack.currentPage
-            _openVideoPage(function (url, offset) {
+            _openVideoPage(function (url, offset, saveScreenShot) {
                 pageStack.pop(topPage, PageStackAction.Immediate)
 
                 if (settingExternalMediaPlayer.value && url.indexOf("http") !== 0) {
@@ -71,7 +71,7 @@ PullDownMenu {
                     }
                     playerPage.openHandler = callback
 
-                    playerPage.play(url, offset)
+                    playerPage.play(url, offset, saveScreenShot)
 
                     updater.playerPage = playerPage
 
@@ -82,11 +82,11 @@ PullDownMenu {
 
         function _openVideoPage(callback) {
             var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
-            openPage.videoSelected.connect(function (obj, url, offset) {
+            openPage.videoSelected.connect(function (obj, url, offset, saveScreenShot) {
                 recentlyUsedVideos.add(obj)
                 offset = Math.max(offset, recentlyUsedVideos.select(["offset"], obj)[0].offset)
                 updater.setKey(obj)
-                callback(url, offset)
+                callback(url, offset, saveScreenShot)
             })
         }
     }

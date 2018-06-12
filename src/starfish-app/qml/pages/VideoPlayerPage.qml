@@ -48,6 +48,7 @@ Page {
     property var openHandler
     readonly property bool closed: _closed
     property bool _closed: false
+    property bool _grabFrameWhenReady: false
 
     signal videoFrameCaptured(string filepath)
     signal videoCoverCaptured(string filepath)
@@ -74,6 +75,10 @@ Page {
                 console.debug("stalled")
             } else if (status === MediaPlayer.Buffered) {
                 console.debug("buffered")
+                if (_grabFrameWhenReady) {
+                    _grabFrameWhenReady = false
+                    _grabFrame()
+                }
             } else if (status === MediaPlayer.EndOfMedia) {
                 console.debug("end of media")
                 controlPanel.open = true
@@ -81,7 +86,6 @@ Page {
                 console.debug("loaded")
                 page.title = metaData.title
             }
-
 //            _forceBusyIndicator = false
 //            console.debug("_forceBusyIndicator=false")
         }
@@ -497,11 +501,12 @@ Page {
         }
     }
 
-    function play(url, offset) {
-        console.debug("play offset=" + offset + " url=" + url)
+    function play(url, offset, saveScreenShot) {
+        console.debug("play offset=" + offset + " url=" + url + " save screen shot=" + saveScreenShot)
         source = url
         mediaplayer.play()
         _startOffsetMs = offset * 1000
+        _grabFrameWhenReady = !!saveScreenShot
         if (_showVideo && _startOffsetMs > 0) {
             console.debug("seek to " + _startOffsetMs)
             _seek(_startOffsetMs)
@@ -527,15 +532,7 @@ Page {
 ////                frameCapturedSignalTimer.start()
 //                videoFrameCaptured(Global.videoFramePath)
 //            })
-            thumbnailOutput.grabToImage(function (a) {
-                a.saveToFile(Global.videoThumbnailPath)
-                videoThumbnailCaptured(Global.videoThumbnailPath)
-            })
-
-            coverOutput.grabToImage(function (a) {
-                a.saveToFile(Global.videoCoverPath)
-                videoCoverCaptured(Global.videoCoverPath)
-            })
+            _grabFrame()
         }
     }
 
@@ -562,6 +559,18 @@ Page {
         console.debug("_forceBusyIndicator=true")
         busyTimer.restart()
         mediaplayer.seek(position)
+    }
+
+    function _grabFrame() {
+        thumbnailOutput.grabToImage(function (a) {
+            a.saveToFile(Global.videoThumbnailPath)
+            videoThumbnailCaptured(Global.videoThumbnailPath)
+        })
+
+        coverOutput.grabToImage(function (a) {
+            a.saveToFile(Global.videoCoverPath)
+            videoCoverCaptured(Global.videoCoverPath)
+        })
     }
 }
 
