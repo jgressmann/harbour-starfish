@@ -159,17 +159,20 @@ Page {
 
         Rectangle {
             id: seekRectangle
-            color: Theme.rgba(Theme.secondaryColor, 0.5)
+//            color: Theme.rgba(Theme.secondaryColor, 0.5)
+            color: "white"
             width: Theme.horizontalPageMargin * 2 + seekLabel.width
-            height: 2*Theme.fontSizeMedium
+            height: 2*Theme.fontSizeExtraLarge
             visible: false
             anchors.centerIn: parent
 
             Label {
                 id: seekLabel
-                color: Theme.primaryColor
+                //color: Theme.primaryColor
+                color: "black"
                 text: "Sir Skipalot"
                 font.bold: true
+                font.pixelSize: Theme.fontSizeExtraLarge
                 anchors.centerIn: parent
             }
         }
