@@ -1590,7 +1590,7 @@ void ScVodDataManager::fetchThumbnail(qint64 rowid) {
     const auto vodUrl = q.value(1).toString();
     const auto vodUrlShareId = qvariant_cast<qint64>(q.value(2));
     if (thumbnailId) {
-        // entry in tabe
+        // entry in table
         if (!q.prepare(
                     QStringLiteral("SELECT file_name, url FROM vod_thumbnails WHERE id=?"))) {
             qCritical() << "failed to prepare query" << q.lastError();
