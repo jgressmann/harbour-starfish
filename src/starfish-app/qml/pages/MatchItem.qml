@@ -426,20 +426,6 @@ ListItem {
                     }
 
                 }
-
-//                Item {
-//                    id: loadingIndicator
-//                    visible: _clicked && !_vod
-//                    width: visible ? parent.height : 0
-//                    height: parent.height
-//                    anchors.right: parent.right
-
-//                    BusyIndicator {
-//                        size: BusyIndicatorSize.Medium
-//                        anchors.centerIn: parent
-//                        running: parent.visible
-//                    }
-//                }
             }
         }
     }
