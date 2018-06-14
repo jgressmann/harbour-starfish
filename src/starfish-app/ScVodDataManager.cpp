@@ -1559,7 +1559,17 @@ ScVodDataManager::fetchMetaData(qint64 rowid, bool download) {
     }
 }
 
-void ScVodDataManager::fetchThumbnail(qint64 rowid) {
+void
+ScVodDataManager::fetchThumbnail(qint64 rowid) {
+    fetchThumbnail(rowid, true);
+}
+
+void
+ScVodDataManager::fetchThumbnailFromCache(qint64 rowid) {
+    fetchThumbnail(rowid, false);
+}
+
+void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
     RETURN_IF_ERROR;
 
     Stopwatch sw("fetchThumbnail", 10);
@@ -1614,82 +1624,45 @@ void ScVodDataManager::fetchThumbnail(qint64 rowid) {
         if (QFileInfo::exists(thumbNailFilePath)) {
             emit thumbnailAvailable(rowid, thumbNailFilePath);
         } else {
-            auto thumbnailUrl = q.value(1).toString();
-            fetchThumbnailFromUrl(thumbnailId, thumbnailUrl);
+            if (download) {
+                auto thumbnailUrl = q.value(1).toString();
+                fetchThumbnailFromUrl(thumbnailId, thumbnailUrl);
+            }
         }
     } else { // thumb nail id not set
-        auto metaDataFilePath = m_MetaDataDir + QString::number(vodUrlShareId);
-        if (QFileInfo::exists(metaDataFilePath)) {
-            QFile file(metaDataFilePath);
-            if (file.open(QIODevice::ReadOnly)) {
-                VMVod vod;
-                {
-                    QDataStream s(&file);
-                    s >> vod;
-                }
-
-                if (vod.isValid()) {
-                    auto thumnailUrl = vod.description().thumbnailUrl();
-                    if (thumnailUrl.isEmpty()) {
-                        return;
+        if (download) {
+            auto metaDataFilePath = m_MetaDataDir + QString::number(vodUrlShareId);
+            if (QFileInfo::exists(metaDataFilePath)) {
+                QFile file(metaDataFilePath);
+                if (file.open(QIODevice::ReadOnly)) {
+                    VMVod vod;
+                    {
+                        QDataStream s(&file);
+                        s >> vod;
                     }
 
-                    if (!q.prepare(
-                                QStringLiteral("SELECT id FROM vod_thumbnails WHERE url=?"))) {
-                        qCritical() << "failed to prepare query" << q.lastError();
-                        return;
-                    }
-
-                    q.addBindValue(thumnailUrl);
-
-                    if (!q.exec()) {
-                        qCritical() << "failed to exec query" << q.lastError();
-                        return;
-                    }
-
-                    if (q.next()) { // url has been retrieved, set thumbnail id in vods
-                        thumbnailId = qvariant_cast<qint64>(q.value(0));
+                    if (vod.isValid()) {
+                        auto thumnailUrl = vod.description().thumbnailUrl();
+                        if (thumnailUrl.isEmpty()) {
+                            return;
+                        }
 
                         if (!q.prepare(
-                                    QStringLiteral("UPDATE vods SET thumbnail_id=? WHERE id=?"))) {
+                                    QStringLiteral("SELECT id FROM vod_thumbnails WHERE url=?"))) {
                             qCritical() << "failed to prepare query" << q.lastError();
                             return;
                         }
 
-                        q.addBindValue(thumbnailId);
-                        q.addBindValue(rowid);
+                        q.addBindValue(thumnailUrl);
 
                         if (!q.exec()) {
                             qCritical() << "failed to exec query" << q.lastError();
                             return;
                         }
-                    } else {
-                        auto lastDot = thumnailUrl.lastIndexOf(QChar('.'));
-                        auto extension = thumnailUrl.mid(lastDot);
-                        QTemporaryFile tempFile(m_ThumbnailDir + QStringLiteral("XXXXXX") + extension);
-                        tempFile.setAutoRemove(false);
-                        if (tempFile.open()) {
-                            auto thumbNailFilePath = tempFile.fileName();
-                            auto tempFileName = QFileInfo(thumbNailFilePath).fileName();
 
-                            // insert row for thumbnail
-                            if (!q.prepare(
-                                        QStringLiteral("INSERT INTO vod_thumbnails (url, file_name) VALUES (?, ?)"))) {
-                                qCritical() << "failed to prepare query" << q.lastError();
-                                return;
-                            }
+                        if (q.next()) { // url has been retrieved, set thumbnail id in vods
+                            thumbnailId = qvariant_cast<qint64>(q.value(0));
 
-                            q.addBindValue(thumnailUrl);
-                            q.addBindValue(tempFileName);
-
-                            if (!q.exec()) {
-                                qCritical() << "failed to exec query" << q.lastError();
-                                return;
-                            }
-
-                            thumbnailId = qvariant_cast<qint64>(q.lastInsertId());
-
-                            // update vod row
                             if (!q.prepare(
                                         QStringLiteral("UPDATE vods SET thumbnail_id=? WHERE id=?"))) {
                                 qCritical() << "failed to prepare query" << q.lastError();
@@ -1703,24 +1676,65 @@ void ScVodDataManager::fetchThumbnail(qint64 rowid) {
                                 qCritical() << "failed to exec query" << q.lastError();
                                 return;
                             }
-
-                            fetchThumbnailFromUrl(thumbnailId, thumnailUrl);
                         } else {
-                            qWarning() << "failed to allocate temporary file for thumbnail";
+                            auto lastDot = thumnailUrl.lastIndexOf(QChar('.'));
+                            auto extension = thumnailUrl.mid(lastDot);
+                            QTemporaryFile tempFile(m_ThumbnailDir + QStringLiteral("XXXXXX") + extension);
+                            tempFile.setAutoRemove(false);
+                            if (tempFile.open()) {
+                                auto thumbNailFilePath = tempFile.fileName();
+                                auto tempFileName = QFileInfo(thumbNailFilePath).fileName();
+
+                                // insert row for thumbnail
+                                if (!q.prepare(
+                                            QStringLiteral("INSERT INTO vod_thumbnails (url, file_name) VALUES (?, ?)"))) {
+                                    qCritical() << "failed to prepare query" << q.lastError();
+                                    return;
+                                }
+
+                                q.addBindValue(thumnailUrl);
+                                q.addBindValue(tempFileName);
+
+                                if (!q.exec()) {
+                                    qCritical() << "failed to exec query" << q.lastError();
+                                    return;
+                                }
+
+                                thumbnailId = qvariant_cast<qint64>(q.lastInsertId());
+
+                                // update vod row
+                                if (!q.prepare(
+                                            QStringLiteral("UPDATE vods SET thumbnail_id=? WHERE id=?"))) {
+                                    qCritical() << "failed to prepare query" << q.lastError();
+                                    return;
+                                }
+
+                                q.addBindValue(thumbnailId);
+                                q.addBindValue(rowid);
+
+                                if (!q.exec()) {
+                                    qCritical() << "failed to exec query" << q.lastError();
+                                    return;
+                                }
+
+                                fetchThumbnailFromUrl(thumbnailId, thumnailUrl);
+                            } else {
+                                qWarning() << "failed to allocate temporary file for thumbnail";
+                            }
                         }
+                    } else {
+                        // read invalid vod, try again
+                        file.close();
+                        file.remove();
+                        fetchMetaData(vodUrlShareId, vodUrl);
                     }
                 } else {
-                    // read invalid vod, try again
-                    file.close();
                     file.remove();
                     fetchMetaData(vodUrlShareId, vodUrl);
                 }
             } else {
-                file.remove();
                 fetchMetaData(vodUrlShareId, vodUrl);
             }
-        } else {
-            fetchMetaData(vodUrlShareId, vodUrl);
         }
     }
 }

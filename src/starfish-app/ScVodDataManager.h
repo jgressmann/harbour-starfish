@@ -98,6 +98,7 @@ public: //
     Q_INVOKABLE void fetchMetaData(qint64 rowid);
     Q_INVOKABLE void fetchMetaDataFromCache(qint64 rowid);
     Q_INVOKABLE void fetchThumbnail(qint64 rowid);
+    Q_INVOKABLE void fetchThumbnailFromCache(qint64 rowid);
     Q_INVOKABLE QString title(qint64 rowid);
     Q_INVOKABLE void fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted);
     Q_INVOKABLE void cancelFetchVod(qint64 rowid);
@@ -223,7 +224,7 @@ private:
     static void batchAddVods(void* ctx);
     void batchAddVods();
     void dropTables();
-
+    void fetchThumbnail(qint64 rowid, bool download);
 
 private:
     mutable QMutex m_Lock;

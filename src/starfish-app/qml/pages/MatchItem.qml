@@ -520,15 +520,14 @@ ListItem {
         VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
         _vodTitle = VodDataManager.title(rowId)
         seenButton.seen = VodDataManager.seen({"id": rowId}) >= 1
+        thumbnailGroup.downloadFailed = true
 
         // also fetch a valid meta data from cache
         VodDataManager.fetchMetaDataFromCache(rowId)
+        VodDataManager.fetchThumbnailFromCache(rowId)
         VodDataManager.queryVodFiles(rowId)
-
         if (App.isOnline) {
             VodDataManager.fetchThumbnail(rowId)
-        } else {
-            thumbnailGroup.downloadFailed = true
         }
 
         console.debug("create match item rowid=" + rowId)
@@ -665,6 +664,7 @@ ListItem {
     function thumbnailAvailable(rowid, filePath) {
         if (rowid === rowId) {
             console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
+            thumbnailGroup.downloadFailed = false
             thumbnail.source = "" // force reload
             thumbnail.source = filePath
         }
