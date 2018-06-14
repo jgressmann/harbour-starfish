@@ -24,7 +24,6 @@
 #include "ScApp.h"
 
 #include <QNetworkConfiguration>
-#include <QNetworkConfigurationManager>
 #include <QUrl>
 #include <QStandardPaths>
 #include <QFile>
@@ -35,7 +34,7 @@
 ScApp::ScApp(QObject* parent)
     : QObject(parent)
 {
-    m_NetworkConfigurationManager = new QNetworkConfigurationManager(this);
+    connect(&m_NetworkConfigurationManager, &QNetworkConfigurationManager::onlineStateChanged, this, &ScApp::onOnlineStateChanged);
 }
 
 QString
@@ -50,7 +49,7 @@ ScApp::displayName() const {
 
 bool
 ScApp::isOnBroadband() const {
-    auto configs = m_NetworkConfigurationManager->allConfigurations(QNetworkConfiguration::Active);
+    auto configs = m_NetworkConfigurationManager.allConfigurations(QNetworkConfiguration::Active);
     foreach (const auto& config, configs) {
         if (config.isValid()) {
             switch (config.bearerTypeFamily()) {
@@ -68,7 +67,7 @@ ScApp::isOnBroadband() const {
 
 bool
 ScApp::isOnMobile() const {
-    auto configs = m_NetworkConfigurationManager->allConfigurations(QNetworkConfiguration::Active);
+    auto configs = m_NetworkConfigurationManager.allConfigurations(QNetworkConfiguration::Active);
     foreach (const auto& config, configs) {
         if (config.isValid()) {
             switch (config.bearerTypeFamily()) {
@@ -88,7 +87,13 @@ ScApp::isOnMobile() const {
 
 bool
 ScApp::isOnline() const {
-    return m_NetworkConfigurationManager->isOnline();
+    return m_NetworkConfigurationManager.isOnline();
+}
+
+void
+ScApp::onOnlineStateChanged(bool online) {
+    Q_UNUSED(online)
+    emit isOnlineChanged();
 }
 
 bool

@@ -25,10 +25,10 @@
 
 #include <QObject>
 #include <QSqlDatabase>
+#include <QNetworkConfigurationManager>
 
 Q_DECLARE_METATYPE(QSqlDatabase)
 
-class QNetworkConfigurationManager;
 class ScApp : public QObject
 {
     Q_OBJECT
@@ -64,6 +64,9 @@ signals:
     void isOnMobileChanged();
     void isOnlineChanged();
 
+private slots:
+    void onOnlineStateChanged(bool online);
+
 private:
-    QNetworkConfigurationManager* m_NetworkConfigurationManager;
+    QNetworkConfigurationManager m_NetworkConfigurationManager;
 };
