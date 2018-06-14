@@ -59,9 +59,13 @@ ListItem {
     property int _height: 0
     property bool _seen: false
     property bool _tryingToPlay: false
-    property bool _metaDataDownloadFailed: false
+    property int _metaDataState: metaDataStateInitial
     property bool _vodDownloadFailed: false
     property real _progress: -1
+    readonly property int metaDataStateFetching: -2
+    readonly property int metaDataStateInitial: -1
+    readonly property int metaDataStateDownloadFailed: 0
+    readonly property int metaDataStateAvailable: 1
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -301,7 +305,7 @@ ListItem {
 
 
                             Item {
-                                visible: _clicked && !_vod && !_metaDataDownloadFailed
+                                visible: _metaDataState === metaDataStateFetching
                                 width: visible ? parent.height : 0
                                 height: parent.height
                                 anchors.verticalCenter: parent.verticalCenter
@@ -319,13 +323,13 @@ ListItem {
                                 height: Theme.iconSizeSmall
                                 sourceSize.width: width
                                 sourceSize.height: height
-                                source: _metaDataDownloadFailed
+                                source: _metaDataState == metaDataStateDownloadFailed
                                         ? //"/usr/share/harbour-starfish/icons/warning.png"
                                           "/usr/share/harbour-starfish/icons/flash.png"
                                         : "image://theme/icon-s-date"
 
                                 anchors.verticalCenter: parent.verticalCenter
-                                visible: !!_vod || _metaDataDownloadFailed
+                                visible: _metaDataState === metaDataStateAvailable || _metaDataState === metaDataStateDownloadFailed
                             }
 
 
@@ -433,16 +437,51 @@ ListItem {
     onClicked: {
         _clicking = true
         _clicked = true
-        if (!_vod && App.isOnline) {
-            VodDataManager.fetchMetaData(rowId)
-        } else if (_vodFilePath || _vod) {
-            _tryPlay()
-        }
-        _clicking = false
-    }
 
-    on_MetaDataDownloadFailedChanged: {
-        console.debug("_metaDataDownloadFailed=" + _metaDataDownloadFailed)
+        if (_vod) {
+            _tryPlay()
+        } else {
+            switch (_metaDataState) {
+            case metaDataStateAvailable:
+                // should have _vod then
+                console.debug("OHHH NOOOOOESS")
+                break
+            case metaDataStateDownloadFailed:
+                if (_vodFilePath) {
+                    _tryPlay()
+                }
+                break
+            case metaDataStateFetching:
+                // wait for meta data,
+                // playing now will abort md fetch
+                break
+            case metaDataStateInitial:
+                if (App.isOnline) {
+                    _fetchMetaData()
+                } else {
+                    _metaDataState = metaDataStateDownloadFailed
+                }
+                break
+            }
+        }
+
+//        if (!_vod) {
+//            if (_fetchingMetaData) {
+//                // don't play, player will cancel meta data fetch
+//            } else {
+//                if (App.isOnline) {
+//                    // Fetch meta data only if online
+//                    // Can't fetch in the background, onDestruction will
+//                    // cancel the fetch upon push of video player page
+
+//                } else {
+//                    _metaDataDownloadFailed = true
+//                }
+//            }
+//        } else if (_vodFilePath || _vod) {
+
+//        }
+        _clicking = false
     }
 
     on_ClickedChanged: {
@@ -463,7 +502,14 @@ ListItem {
         }
     }
 
-
+    Connections {
+        target: App
+        onIsOnlineChanged: {
+            if (App.isOnline && _metaDataState === metaDataStateDownloadFailed) {
+                _metaDataState = metaDataStateInitial
+            }
+        }
+    }
 
     Component.onCompleted: {
         VodDataManager.vodAvailable.connect(vodAvailable)
@@ -474,15 +520,17 @@ ListItem {
         VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
         _vodTitle = VodDataManager.title(rowId)
         seenButton.seen = VodDataManager.seen({"id": rowId}) >= 1
+
+        // also fetch a valid meta data from cache
+        VodDataManager.fetchMetaDataFromCache(rowId)
+        VodDataManager.queryVodFiles(rowId)
+
         if (App.isOnline) {
             VodDataManager.fetchThumbnail(rowId)
         } else {
             thumbnailGroup.downloadFailed = true
         }
 
-        // also fetch a valid meta data from cache
-        VodDataManager.fetchMetaDataFromCache(rowId)
-        VodDataManager.queryVodFiles(rowId)
         console.debug("create match item rowid=" + rowId)
     }
 
@@ -523,7 +571,7 @@ ListItem {
                     _vod = null
                     VodDataManager.deleteMetaData(rowId)
                     if (App.isOnline) {
-                        VodDataManager.fetchMetaData(rowId)
+                        _fetchMetaData()
                         VodDataManager.fetchThumbnail(rowId)
                     }
                 }
@@ -558,9 +606,20 @@ ListItem {
     function metaDataDownloadFailed(rowid, error) {
         if (rowid === rowId) {
             console.debug("meta data download failed rowid=" + rowid + " error=" + error)
-            _metaDataDownloadFailed = true
-            if (_clicking || _clicked) {
-                 _clicked = false
+            _metaDataState = metaDataStateDownloadFailed
+            _clicked = false
+        }
+    }
+
+    function metaDataAvailable(rowid, vod) {
+        if (rowid === rowId) {
+            console.debug("metaDataAvailable rowid=" + rowid)
+            _metaDataState = metaDataStateAvailable
+            _vod = vod
+            _vodTitle = vod.description.title
+            _clicked = false
+            VodDataManager.fetchThumbnail(rowId)
+            if (_clicking) {
                 _tryPlay()
             }
         }
@@ -608,20 +667,6 @@ ListItem {
             console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
             thumbnail.source = "" // force reload
             thumbnail.source = filePath
-        }
-    }
-
-    function metaDataAvailable(rowid, vod) {
-        if (rowid === rowId) {
-            console.debug("metaDataAvailable rowid=" + rowid)
-            _metaDataDownloadFailed = false
-            _vod = vod
-            _vodTitle = vod.description.title
-            VodDataManager.fetchThumbnail(rowId)
-            if (_clicking || _clicked) {
-                 _clicked = false
-                _tryPlay()
-            }
         }
     }
 
@@ -796,6 +841,11 @@ ListItem {
         _progress = -1
         _downloading = false
         progressOverlay.show = false
+    }
+
+    function _fetchMetaData() {
+        _metaDataState = metaDataStateFetching
+        VodDataManager.fetchMetaData(rowId)
     }
 
     function cancelImplicitVodFileFetch() {
