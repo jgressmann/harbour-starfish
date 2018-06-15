@@ -1536,12 +1536,14 @@ ScVodDataManager::fetchMetaData(qint64 rowid, bool download) {
                     file.close();
                     file.remove();
                     if (download) {
+                        emit fetchingMetaData(rowid);
                         fetchMetaData(urlShareId, vodUrl);
                     }
                 }
             } else {
                 file.remove();
                 if (download) {
+                    emit fetchingMetaData(rowid);
                     fetchMetaData(urlShareId, vodUrl);
                 }
             }
@@ -1549,11 +1551,13 @@ ScVodDataManager::fetchMetaData(qint64 rowid, bool download) {
             // vod links probably expired
             file.remove();
             if (download) {
+                emit fetchingMetaData(rowid);
                 fetchMetaData(urlShareId, vodUrl);
             }
         }
     } else {
         if (download) {
+            emit fetchingMetaData(rowid);
             fetchMetaData(urlShareId, vodUrl);
         }
     }
@@ -1726,13 +1730,16 @@ void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
                         // read invalid vod, try again
                         file.close();
                         file.remove();
+                        emit fetchingMetaData(rowid);
                         fetchMetaData(vodUrlShareId, vodUrl);
                     }
                 } else {
                     file.remove();
+                    emit fetchingMetaData(rowid);
                     fetchMetaData(vodUrlShareId, vodUrl);
                 }
             } else {
+                emit fetchingMetaData(rowid);
                 fetchMetaData(vodUrlShareId, vodUrl);
             }
         }

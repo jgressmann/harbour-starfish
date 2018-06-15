@@ -130,7 +130,9 @@ signals:
     void readyChanged();
     void errorChanged();
     void vodsChanged();
+    void fetchingMetaData(qint64 rowid);
     void metaDataAvailable(qint64 rowid, VMVod vod);
+    void metaDataDownloadFailed(qint64 rowid, int error);
     void vodAvailable(qint64 rowid, QString filePath, qreal progress, quint64 fileSize, int width, int height, QString formatId);
     void thumbnailAvailable(qint64 rowid, QString filePath);
     void thumbnailDownloadFailed(qint64 rowid, int error, QString url);
@@ -141,7 +143,7 @@ signals:
     void vodsCleared();
     void vodmanError(int error);
     void vodDownloadFailed(qint64 rowid, int error);
-    void metaDataDownloadFailed(qint64 rowid, int error);
+
 
 public slots:
     void excludeEvent(const ScEvent& event, bool* exclude);

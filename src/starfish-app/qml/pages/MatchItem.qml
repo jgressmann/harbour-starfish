@@ -60,12 +60,18 @@ ListItem {
     property bool _seen: false
     property bool _tryingToPlay: false
     property int _metaDataState: metaDataStateInitial
+    property int _thumbnailState: thumbnailStateInitial
     property bool _vodDownloadFailed: false
     property real _progress: -1
+    property string _thumbnailFilePath
     readonly property int metaDataStateFetching: -2
     readonly property int metaDataStateInitial: -1
     readonly property int metaDataStateDownloadFailed: 0
     readonly property int metaDataStateAvailable: 1
+    readonly property int thumbnailStateFetching: -2
+    readonly property int thumbnailStateInitial: -1
+    readonly property int thumbnailStateDownloadFailed: 0
+    readonly property int thumbnailStateAvailable: 1
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -184,7 +190,6 @@ ListItem {
                     width: Global.itemHeight
                     height: Global.itemHeight
                     anchors.verticalCenter: parent.verticalCenter
-                    property bool downloadFailed: false
 
                     Image {
                         id: thumbnail
@@ -194,27 +199,13 @@ ListItem {
                         fillMode: Image.PreserveAspectFit
                         // prevents the image from loading on device
                         //asynchronous: true
-                        visible: status === Image.Ready && !thumbnailGroup.downloadFailed
+                        visible: status === Image.Ready && _thumbnailState !== thumbnailStateFetching
+                        source: _thumbnailState === thumbnailStateAvailable ? _thumbnailFilePath : "image://theme/icon-m-reload"
 
                         MouseArea {
                             anchors.fill: parent
                             enabled: parent.visible
-                            onClicked: VodDataManager.fetchThumbnail(rowId)
-                        }
-                    }
-
-                    Image {
-                        id: reloadThumbnail
-                        source: source = "image://theme/icon-m-reload"
-                        anchors.centerIn: parent
-                        visible: thumbnailGroup.downloadFailed
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                thumbnailGroup.downloadFailed = false
-                                VodDataManager.fetchThumbnail(rowId)
-                            }
+                            onClicked: _fetchThumbnail()
                         }
                     }
 
@@ -222,7 +213,7 @@ ListItem {
                         size: BusyIndicatorSize.Medium
                         anchors.centerIn: parent
                         running: visible
-                        visible: !thumbnail.visible && !reloadThumbnail.visible
+                        visible: _thumbnailState === thumbnailStateFetching
                     }
                 }
 
@@ -505,8 +496,14 @@ ListItem {
     Connections {
         target: App
         onIsOnlineChanged: {
-            if (App.isOnline && _metaDataState === metaDataStateDownloadFailed) {
-                _metaDataState = metaDataStateInitial
+            if (App.isOnline) {
+                if (_metaDataState === metaDataStateDownloadFailed) {
+                    _metaDataState = metaDataStateInitial
+                }
+
+                if (_thumbnailState === thumbnailStateDownloadFailed) {
+                    _thumbnailState = thumbnailStateInitial
+                }
             }
         }
     }
@@ -515,19 +512,19 @@ ListItem {
         VodDataManager.vodAvailable.connect(vodAvailable)
         VodDataManager.thumbnailAvailable.connect(thumbnailAvailable)
         VodDataManager.thumbnailDownloadFailed.connect(thumbnailDownloadFailed)
+        VodDataManager.fetchingMetaData.connect(fetchingMetaData)
         VodDataManager.metaDataAvailable.connect(metaDataAvailable)
         VodDataManager.metaDataDownloadFailed.connect(metaDataDownloadFailed)
         VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
         _vodTitle = VodDataManager.title(rowId)
         seenButton.seen = VodDataManager.seen({"id": rowId}) >= 1
-        thumbnailGroup.downloadFailed = true
 
         // also fetch a valid meta data from cache
         VodDataManager.fetchMetaDataFromCache(rowId)
         VodDataManager.fetchThumbnailFromCache(rowId)
         VodDataManager.queryVodFiles(rowId)
         if (App.isOnline) {
-            VodDataManager.fetchThumbnail(rowId)
+            _fetchThumbnail()
         }
 
         console.debug("create match item rowid=" + rowId)
@@ -571,7 +568,7 @@ ListItem {
                     VodDataManager.deleteMetaData(rowId)
                     if (App.isOnline) {
                         _fetchMetaData()
-                        VodDataManager.fetchThumbnail(rowId)
+                        _fetchThumbnail()
                     }
                 }
             }
@@ -595,10 +592,27 @@ ListItem {
         }
     }
 
+    function thumbnailAvailable(rowid, filePath) {
+        if (rowid === rowId) {
+            console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
+            _thumbnailFilePath = "" // force reload
+            _thumbnailFilePath = filePath
+            _thumbnailState = thumbnailStateAvailable
+        }
+    }
+
     function thumbnailDownloadFailed(rowid, error, url) {
         if (rowid === rowId) {
             console.debug("thumbnail download failed rowid=" + rowid + " error=" + error + " url=" + url)
-            thumbnailGroup.downloadFailed = true
+            _thumbnailState = thumbnailStateDownloadFailed
+        }
+    }
+
+
+
+    function fetchingMetaData(rowid) {
+        if (rowid === rowId) {
+            _metaDataState = metaDataStateFetching
         }
     }
 
@@ -607,6 +621,9 @@ ListItem {
             console.debug("meta data download failed rowid=" + rowid + " error=" + error)
             _metaDataState = metaDataStateDownloadFailed
             _clicked = false
+            if (_thumbnailState === thumbnailStateFetching) {
+                _thumbnailState = thumbnailStateDownloadFailed
+            }
         }
     }
 
@@ -617,7 +634,10 @@ ListItem {
             _vod = vod
             _vodTitle = vod.description.title
             _clicked = false
-            VodDataManager.fetchThumbnail(rowId)
+            if (App.isOnline) {
+                _fetchThumbnail()
+            }
+
             if (_clicking) {
                 _tryPlay()
             }
@@ -661,14 +681,7 @@ ListItem {
         }
     }
 
-    function thumbnailAvailable(rowid, filePath) {
-        if (rowid === rowId) {
-            console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
-            thumbnailGroup.downloadFailed = false
-            thumbnail.source = "" // force reload
-            thumbnail.source = filePath
-        }
-    }
+
 
     function _getVideoFormatFromBearerMode() {
         var formatId
@@ -846,6 +859,11 @@ ListItem {
     function _fetchMetaData() {
         _metaDataState = metaDataStateFetching
         VodDataManager.fetchMetaData(rowId)
+    }
+
+    function _fetchThumbnail() {
+        _thumbnailState = thumbnailStateFetching
+        VodDataManager.fetchThumbnail(rowId)
     }
 
     function cancelImplicitVodFileFetch() {
