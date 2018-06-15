@@ -4,7 +4,7 @@
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 
 Name:       harbour-starfish
-Summary:    Get your Brood War and StarCraft II action going!
+Summary:    Get your StarCraft Brood War and StarCraft II action going!
 Version:    1.0.0
 Release:    1
 Group:      Applications/Multimedia
@@ -30,8 +30,7 @@ BuildRequires:  zlib-devel
 Requires:   sailfishsilica-qt5 >= 0.10.9
 Requires:   libvodman >= 1.0.3
 Requires:   vodman-service >= 1.0.3
-#Requires:   libstarfish = %{version}
-Requires:   zlib
+#Requires:   zlib
 
 
 %description
@@ -44,37 +43,11 @@ Requires:   zlib
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 %{_datadir}/%{name}/qml/*
-#%{_datadir}/%{name}/xml/*
 %{_datadir}/%{name}/media/*
 %{_datadir}/%{name}/icons.json.gz
 %{_datadir}/%{name}/classifier.json.gz
 %{_datadir}/%{name}/COPYING
 %{_datadir}/%{name}/icons/*
-
-
-#%package -n libstarfish
-#Summary: starfish library.
-#Group: Development/Libraries
-#Provides: libstarfish = %{version}
-
-#%description -n libstarfish
-#%{summary}
-
-#%files -n libstarfish
-#%defattr(-,root,root,-)
-#%{_libdir}/*
-
-#%package -n starfish-tools
-#Summary: starfish tools.
-#Group: Development/Libraries
-#Requires:   libstarfish = %{version}
-
-#%description -n starfish-tools
-#%{summary}
-
-#%files -n starfish-tools
-#%defattr(-,root,root,-)
-#%attr(0755,root,root) %{_bindir}/starfish-fetch
 
 
 
@@ -89,9 +62,3 @@ Requires:   zlib
 rm -rf %{buildroot}
 %qmake5_install
 
-
-#%post -n libstarfish
-#/sbin/ldconfig
-
-#%postun -n libstarfish
-#/sbin/ldconfig
