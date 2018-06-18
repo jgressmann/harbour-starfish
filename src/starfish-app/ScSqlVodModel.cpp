@@ -26,9 +26,47 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
+#include <QDateTime>
 
 
 // https://wiki.qt.io/How_to_Use_a_QSqlQueryModel_in_QML
+
+namespace  {
+
+
+class Stopwatch {
+public:
+    ~Stopwatch() {
+        auto stop = QDateTime::currentMSecsSinceEpoch();
+        auto duration = stop - m_Start;
+        if (duration > m_Threshold) {
+            qWarning("%s took %d [ms]\n", qPrintable(m_Name), (int)duration);
+        } else {
+            qDebug("%s took %d [ms]\n", qPrintable(m_Name), (int)duration);
+        }
+    }
+    Stopwatch(const char* name, int millisBeforeWarn = 100)
+        : m_Name(QLatin1String(name))
+        , m_Start(QDateTime::currentMSecsSinceEpoch())
+        , m_Threshold(millisBeforeWarn)
+    {
+
+    }
+
+    Stopwatch(const QString& str, int millisBeforeWarn = 100)
+        : m_Name(str)
+        , m_Start(QDateTime::currentMSecsSinceEpoch())
+        , m_Threshold(millisBeforeWarn)
+    {
+
+    }
+
+private:
+    QString m_Name;
+    qint64 m_Start;
+    int m_Threshold;
+};
+} // anon
 
 ScSqlVodModel::~ScSqlVodModel() {
 
@@ -102,6 +140,7 @@ ScSqlVodModel::setDataManager(ScVodDataManager* newValue) {
 
 void
 ScSqlVodModel::update() {
+    Stopwatch sw("update", 10);
     if (m_Dirty) {
         m_Dirty = !tryConfigureModel();
     } else {
