@@ -57,7 +57,7 @@ ListItem {
             anchors.right: parent.right
 
             onClicked: {
-                console.debug("seen=" + seen)
+                console.debug("seen=" + progress)
                 var newValue = progress >= 1 ? false : true
                 progress = newValue ? 1 : 0
                 VodDataManager.setSeen(_myFilters, newValue)
@@ -81,7 +81,7 @@ ListItem {
 
 
     function update() {
-        seenButton.seen = VodDataManager.seen(_myFilters)
+        seenButton.progress = VodDataManager.seen(_myFilters)
     }
 }
 

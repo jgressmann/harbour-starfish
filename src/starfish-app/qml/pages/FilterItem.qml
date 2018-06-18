@@ -46,7 +46,7 @@ ListItem {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2*x
                 height: parent.height
-//                visible: !grid
+
 
                 Item {
                     id: image
@@ -83,7 +83,7 @@ ListItem {
                     anchors.right: parent.right
 
                     onClicked: {
-                        console.debug("seen=" + seen)
+                        console.debug("seen=" + progress)
                         var newValue = progress >= 1 ? false : true
                         if (newValue) {
                             progress = 1
