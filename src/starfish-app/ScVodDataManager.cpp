@@ -555,18 +555,19 @@ ScVodDataManager::setupDatabase() {
         "    file_name TEXT NOT NULL\n"
         ")\n",
 
-        "CREATE INDEX IF NOT EXISTS vods_id ON vods (id)\n",
+//        "CREATE INDEX IF NOT EXISTS vods_id ON vods (id)\n",
+        // must have indices to have decent 'seen' query performance (80+ -> 8 ms)
         "CREATE INDEX IF NOT EXISTS vods_game ON vods (game)\n",
         "CREATE INDEX IF NOT EXISTS vods_year ON vods (year)\n",
         "CREATE INDEX IF NOT EXISTS vods_season ON vods (season)\n",
         "CREATE INDEX IF NOT EXISTS vods_event_name ON vods (event_name)\n",
-        "CREATE INDEX IF NOT EXISTS vods_seen ON vods (seen)\n",
-        "CREATE INDEX IF NOT EXISTS vod_thumbnails_id ON vod_thumbnails (id)\n",
-        "CREATE INDEX IF NOT EXISTS vod_thumbnails_url ON vod_thumbnails (url)\n",
-        "CREATE INDEX IF NOT EXISTS vod_files_id ON vod_files (id)\n",
-        "CREATE INDEX IF NOT EXISTS vod_url_share_id ON vod_url_share (id)\n",
-        "CREATE INDEX IF NOT EXISTS vod_url_share_video_id ON vod_url_share (video_id)\n",
-        "CREATE INDEX IF NOT EXISTS vod_url_share_type ON vod_url_share (type)\n"
+//        "CREATE INDEX IF NOT EXISTS vods_seen ON vods (seen)\n",
+//        "CREATE INDEX IF NOT EXISTS vod_thumbnails_id ON vod_thumbnails (id)\n",
+//        "CREATE INDEX IF NOT EXISTS vod_thumbnails_url ON vod_thumbnails (url)\n",
+//        "CREATE INDEX IF NOT EXISTS vod_files_id ON vod_files (id)\n",
+//        "CREATE INDEX IF NOT EXISTS vod_url_share_id ON vod_url_share (id)\n",
+//        "CREATE INDEX IF NOT EXISTS vod_url_share_video_id ON vod_url_share (video_id)\n",
+//        "CREATE INDEX IF NOT EXISTS vod_url_share_type ON vod_url_share (type)\n"
             //"CREATE INDEX IF NOT EXISTS vod_file_ref_vod_id ON vod_file_ref (vod_id)\n",
             //"CREATE INDEX IF NOT EXISTS vod_file_ref_vod_file_id ON vod_file_ref (vod_file_id)\n"
     };
@@ -2553,30 +2554,26 @@ ScVodDataManager::seen(const QVariantMap& filters) const {
     auto beg = filters.cbegin();
     auto end = filters.cend();
 
+    static const QString And = QStringLiteral(" AND ");
+    static const QString Placeholder = QStringLiteral("=?");
+
     for (auto it = beg; it != end; ++it) {
         if (query.size() > 0) {
-            query += QStringLiteral(" AND ");
+            query += And;
         }
 
-        query += it.key() + QStringLiteral("=?");
-//        qDebug() << it.key() << it.value();
+        query += it.key() + Placeholder;
     }
 
-    if (!q.prepare(QStringLiteral(
-                      "SELECT\n"
-                      "    c.total, s.seen\n"
-                      "FROM\n"
-                      "    (SELECT COUNT(id) AS total FROM vods WHERE ") + query
-                      + QStringLiteral(
-                       ") AS c,\n"
-                       "    (SELECT COUNT(id) AS seen FROM vods WHERE ") + query
-                      + QStringLiteral(" AND seen=1) AS s\n"))) {
+    static const QString part0 = QStringLiteral(
+                "SELECT\n"
+                "    SUM(seen)/(1.0 * COUNT(seen))\n"
+                "FROM\n"
+                "    vods\n"
+                "WHERE\n");
+    if (!q.prepare(part0 + query)) {
         qCritical() << "failed to prepare query" << q.lastError();
         return -1;
-    }
-
-    for (auto it = beg; it != end; ++it) {
-        q.addBindValue(it.value());
     }
 
     for (auto it = beg; it != end; ++it) {
@@ -2590,13 +2587,7 @@ ScVodDataManager::seen(const QVariantMap& filters) const {
 
     q.next();
 
-    auto total = q.value(0).toInt();
-    auto seen = q.value(1).toInt();
-
-    auto result = static_cast<qreal>(seen) / total;
-
-//    qDebug() << result;
-    return result;
+    return q.value(0).toReal();
 }
 
 void
