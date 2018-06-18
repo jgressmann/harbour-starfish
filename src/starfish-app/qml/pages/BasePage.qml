@@ -50,6 +50,8 @@ Page {
         return false
     }
 
+    property bool wasActive: false
+
     DockedPanel {
 
         id: _progressPanel
@@ -113,6 +115,14 @@ Page {
     onVisibleChildrenChanged: {
 //        console.debug("visible children changed")
         _moveToTop()
+    }
+
+    onStatusChanged: {
+        switch (status) {
+        case PageStatus.Active:
+            wasActive = true
+            break
+        }
     }
 
     function _moveToTop() {

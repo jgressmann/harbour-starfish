@@ -30,7 +30,7 @@ IconButton {
     width: Theme.iconSizeMedium
     height: Theme.iconSizeMedium
     icon.source: "image://theme/icon-m-favorite"
-    property real seen: 0.5
+    property real progress: 0.5
 
 
 //    layer.enabled: true
@@ -46,7 +46,7 @@ IconButton {
 
         anchors.fill: parent
         progress: {
-            var s = Math.max(0, Math.min(seen, 1))
+            var s = Math.max(0, Math.min(root.progress, 1))
             if (s > 0) {
                 if (s >= 1) {
                     return 1

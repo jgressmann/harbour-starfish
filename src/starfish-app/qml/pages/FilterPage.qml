@@ -35,7 +35,7 @@ BasePage {
     property bool ascending: Global.sortKey(key) === 1
     property bool grid: false
     property bool _grid: grid && Global.hasIcon(key)
-
+    property var _view
 
     SqlVodModel {
         id: sqlModel
@@ -45,14 +45,12 @@ BasePage {
             var sql = "select distinct "+ key +" from vods"
             sql += Global.whereClause(filters)
             sql += " order by " + key + " " + (ascending ? "asc" : "desc")
-            console.debug(title + ": " + sql)
+//            console.debug(title + ": " + sql)
             return sql
         }
     }
 
     SilicaFlickable {
-
-
         id: flickable
         anchors.fill: parent
 
@@ -61,106 +59,117 @@ BasePage {
 
 
         VerticalScrollDecorator {}
-
         TopMenu {}
-//        BottomMenu {}
 
 
+        Component {
+            id: listComponent
 
-        HighlightingListView {
-            id: listView
-            anchors.fill: parent
-            model: sqlModel
-            visible: !_grid
-            header: PageHeader {
-                title: page.title
-                VodDataManagerBusyIndicator {}
-            }
-
-            delegate: FilterItem {
-                width: listView.width
-                //height: Global.itemHeight
-                contentHeight: Global.itemHeight // FilterItem is a ListItem
-                key: page.key
-                value: sqlModel.data(sqlModel.index(index, 0), 0)
-                filters: page.filters
-                grid: page.grid
-                foo: index * 0.1
-
-                onClicked: {
-                    ListView.view.currentIndex = index
+            HighlightingListView {
+                id: listView
+                anchors.fill: parent
+                model: sqlModel
+//                visible: !_grid
+                header: PageHeader {
+                    title: page.title
+                    VodDataManagerBusyIndicator {}
                 }
 
-//                Component.onCompleted: {
-//                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
-//                }
+                delegate: FilterItem {
+                    width: listView.width
+                    //height: Global.itemHeight
+                    contentHeight: Global.itemHeight // FilterItem is a ListItem
+                    key: page.key
+                    value: sqlModel.data(sqlModel.index(index, 0), 0)
+                    filters: page.filters
+                    grid: page.grid
+
+                    onClicked: {
+                        ListView.view.currentIndex = index
+                    }
+
+    //                Component.onCompleted: {
+    //                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
+    //                }
+                }
+
+                ViewPlaceholder {
+                    enabled: listView.count === 0
+                    text: "nothing here"
+                }
+
+
+                Component.onCompleted: {
+                    currentIndex = -1
+                    _view = listView
+                }
             }
-
-            ViewPlaceholder {
-                enabled: listView.count === 0
-                text: "nothing here"
-            }
-
-
         }
 
-        SilicaGridView {
-            id: gridView
-            anchors.fill: parent
-            model: sqlModel
-            visible: _grid
-            header: PageHeader {
-                title: page.title
+        Component {
+            id: gridComponent
 
-                VodDataManagerBusyIndicator {}
-            }
-
-//                    cellWidth: 2*Theme.horizontalPageMargin + 2*Theme.iconSizeExtraLarge
-//                    cellHeight: 3*Theme.paddingLarge + 2*Theme.iconSizeExtraLarge
-            cellWidth: parent.width / 2
-            cellHeight: parent.height / (Global.gridItemsPerPage / 2)
-            highlight: Rectangle {
-                color: Theme.primaryColor
-                opacity: Global.pathTraceOpacity
-            }
-
-            delegate: FilterItem {
-                key: page.key
-                value: sqlModel.data(sqlModel.index(index, 0), 0)
-                filters: page.filters
-                grid: page.grid
-                contentHeight: gridView.cellHeight // FilterItem is a ListItem
-                width: gridView.cellWidth
-
-
-                onClicked: {
-                    GridView.view.currentIndex = index
+            SilicaGridView {
+                id: gridView
+                anchors.fill: parent
+                model: sqlModel
+//                visible: _grid
+                header: PageHeader {
+                    title: page.title
+                    VodDataManagerBusyIndicator {}
                 }
 
-//                Component.onCompleted: {
-//                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
-//                }
-            }
+    //                    cellWidth: 2*Theme.horizontalPageMargin + 2*Theme.iconSizeExtraLarge
+    //                    cellHeight: 3*Theme.paddingLarge + 2*Theme.iconSizeExtraLarge
+                cellWidth: parent.width / 2
+                cellHeight: parent.height / (Global.gridItemsPerPage / 2)
+                highlight: Rectangle {
+                    color: Theme.primaryColor
+                    opacity: Global.pathTraceOpacity
+                }
 
-            ViewPlaceholder {
-                enabled: gridView.count === 0
-                text: "nothing here"
-            }
+                delegate: FilterItem {
+                    key: page.key
+                    value: sqlModel.data(sqlModel.index(index, 0), 0)
+                    filters: page.filters
+                    grid: page.grid
+                    contentHeight: gridView.cellHeight // FilterItem is a ListItem
+                    width: gridView.cellWidth
 
-            Component.onCompleted: {
-                currentIndex = -1
+
+
+                    onClicked: {
+                        GridView.view.currentIndex = index
+                    }
+
+    //                Component.onCompleted: {
+    //                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
+    //                }
+                }
+
+                ViewPlaceholder {
+                    enabled: gridView.count === 0
+                    text: "nothing here"
+                }
+
+                Component.onCompleted: {
+                    currentIndex = -1
+                    _view = gridView
+                }
             }
+        }
+
+        Loader {
+            sourceComponent: grid ? gridComponent : listComponent
+            onLoaded: item.parent = flickable.contentItem
         }
     }
 
-
     onStatusChanged: {
         // update items after activation
-        if (status === PageStatus.Active) {
-            var contentItem = grid ? gridView.contentItem : listView.contentItem
-            for(var index in contentItem.children) {
-                var item = contentItem.children[index]
-                item.update()
+        if (wasActive && status === PageStatus.Activating) {
+            if (_view.currentItem) {
+                _view.currentItem.updateSeen()
             }
         }
     }

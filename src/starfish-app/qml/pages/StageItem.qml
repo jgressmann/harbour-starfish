@@ -58,8 +58,8 @@ ListItem {
 
             onClicked: {
                 console.debug("seen=" + seen)
-                var newValue = seen >= 1 ? false : true
-                seen = newValue ? 1 : 0
+                var newValue = progress >= 1 ? false : true
+                progress = newValue ? 1 : 0
                 VodDataManager.setSeen(_myFilters, newValue)
             }
         }
