@@ -202,28 +202,16 @@ Item { // Components can't declare functions
         for (var change = true; change; ) {
             change = false
             var newRem = []
-//            for (var i = 0; i < rem.length; ++i) {
-//                var sql = "select distinct "+ rem[i] +" from vods" + whereClause(myFilters)
-//                var v = values(sql)
-//                if (v.length === 1) {
-//                    console.debug("performNext single value " + rem[i] + "=" + v[0])
-//                    myFilters[rem[i]] = v[0]
-//                    change = true
-//                } else {
-//                    newRem.push(rem[i])
-//                }
-//            }
 
             if (rem.length > 0) {
-                var w = whereClause(myFilters);
-                var xsql = "select * from\n";
+                var xsql = "select \n";
                 for (var i = 0; i < rem.length; ++i) {
                     if (i > 0) {
-                        xsql += " cross join "
+                        xsql += ",\n"
                     }
-                    xsql += "(select distinct "+ rem[i] +" from vods" + w + ") CROSS JOIN (select count(distinct "+ rem[i] +") from vods" + w + ")\n"
+                    xsql += "count(distinct " + rem[i] + ")," + rem[i]
                 }
-                xsql += "limit 1\n"
+                xsql += " from vods" + whereClause(myFilters) + " limit 1";
 
 //                console.debug(xsql);
 
@@ -231,8 +219,8 @@ Item { // Components can't declare functions
                 _model.select = xsql
 
                 for (var i = 0; i < rem.length; ++i) {
-                    var value = _model.data(_model.index(0, i*2), 0)
-                    var count = _model.data(_model.index(0, i*2+1), 0)
+                    var count = _model.data(_model.index(0, i*2), 0)
+                    var value = _model.data(_model.index(0, i*2+1), 0)
                     console.debug("count=" + count + " value=" + value)
                     if (count === 1) {
                         myFilters[rem[i]] = value
