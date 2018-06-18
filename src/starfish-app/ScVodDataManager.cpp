@@ -66,7 +66,7 @@ namespace  {
 const QString s_IconsUrl = QStringLiteral("https://www.dropbox.com/s/p2640l82i3u1zkg/icons.json.gz?dl=1");
 const QString s_ClassifierUrl = QStringLiteral("https://www.dropbox.com/s/3cckgyzlba8kev9/classifier.json.gz?dl=1");
 
-const int BatchSize = 8;
+const int BatchSize = 1<<13;
 
 class Stopwatch {
 public:
@@ -534,7 +534,8 @@ ScVodDataManager::setupDatabase() {
         "    seen INTEGER DEFAULT 0,\n"
         "    match_number INTEGER NOT NULL,\n"
         "    thumbnail_id INTEGER REFERENCES vod_thumbnails(id) ON DELETE SET NULL,\n"
-        "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE\n"
+        "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
+        "    UNIQUE (event_name, game, match_date, match_name, match_number, season, stage_name, year) ON CONFLICT REPLACE\n"
         ")\n",
 
         "CREATE TABLE IF NOT EXISTS vod_file_ref (\n"
@@ -889,8 +890,6 @@ ScVodDataManager::exists(
 
     Q_ASSERT(_exists);
 
-    QSqlQuery q(m_Database);
-
     ScRecord record;
     if (!event.fullName().isEmpty()) {
         record.eventFullName = event.fullName();
@@ -946,8 +945,10 @@ ScVodDataManager::exists(
         record.valid |= ScRecord::ValidSides;
     }
 
+    QSqlQuery q(m_Database);
+
     qint64 id;
-    if (!exists(record, &id)) {
+    if (!exists(q, record, &id)) {
         return false;
     }
 
@@ -958,7 +959,7 @@ ScVodDataManager::exists(
 
 
 bool
-ScVodDataManager::exists(const ScRecord& record, qint64* id) const {
+ScVodDataManager::exists(QSqlQuery& q, const ScRecord& record, qint64* id) const {
 
     Q_ASSERT(id);
     Q_ASSERT(record.isValid(
@@ -972,21 +973,20 @@ ScVodDataManager::exists(const ScRecord& record, qint64* id) const {
 
     *id = -1;
 
-    QSqlQuery q(m_Database);
-
-    if (!q.prepare(QStringLiteral(
-                       "SELECT\n"
-                       "    id\n"
-                       "FROM\n"
-                       "    vods\n"
-                       "WHERE\n"
-                       "    event_name=?\n"
-                       "    AND year=?\n"
-                       "    AND game=?\n"
-                       "    AND season=?\n"
-                       "    AND match_name=?\n"
-                       "    AND match_date=?\n"
-                       "    AND stage_name=?\n"))) {
+    static const QString sql = QStringLiteral(
+                "SELECT\n"
+                "    id\n"
+                "FROM\n"
+                "    vods\n"
+                "WHERE\n"
+                "    event_name=?\n"
+                "    AND year=?\n"
+                "    AND game=?\n"
+                "    AND season=?\n"
+                "    AND match_name=?\n"
+                "    AND match_date=?\n"
+                "    AND stage_name=?\n");
+    if (!q.prepare(sql)) {
         qCritical() << "failed to prepare match select" << q.lastError();
         return false;
     }
@@ -1051,7 +1051,8 @@ ScVodDataManager::hasRecord(const ScRecord& record, bool* _exists) {
                        ScRecord::ValidMatchDate |
                        ScRecord::ValidMatchName)) {
         qint64 id = -1;
-        if (!exists(record, &id)) {
+        QSqlQuery q(m_Database);
+        if (!exists(q, record, &id)) {
             *_exists = false;
         } else {
             *_exists = id != -1;
@@ -1079,7 +1080,7 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
     Stopwatch sw("_addVods", 100);
     QSqlQuery q(m_Database);
 
-    if (!q.exec("BEGIN TRANSACTION")) {
+    if (!q.exec(QStringLiteral("BEGIN IMMEDIATE"))) {
         qCritical() << "failed to start transaction" << q.lastError();
         return false;
     }
@@ -1092,10 +1093,10 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
     for (int i = 0; i < records.size(); ++i) {
         const ScRecord& record = records[i];
 
-        qint64 id;
-        if (!exists(record, &id) || id != -1) {
-            continue;
-        }
+//        qint64 id;
+//        if (!exists(q, record, &id) || id != -1) {
+//            continue;
+//        }
 
         int urlType, startOffset;
 
@@ -1108,7 +1109,8 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
         qint64 urlShareId = 0;
 
         if (UT_Unknown != urlType) {
-            if (!q.prepare(QStringLiteral("SELECT id FROM vod_url_share WHERE video_id=? AND type=?"))) {
+            static const QString sql = QStringLiteral("SELECT id FROM vod_url_share WHERE video_id=? AND type=?");
+            if (!q.prepare(sql)) {
                 qCritical() << "failed to prepare query" << q.lastError();
                 continue;
             }
@@ -1124,7 +1126,8 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
             if (q.next()) {
                 urlShareId = qvariant_cast<qint64>(q.value(0));
             } else {
-                if (!q.prepare(QStringLiteral("INSERT INTO vod_url_share (video_id, url, type) VALUES (?, ?, ?)"))) {
+                static const QString sql = QStringLiteral("INSERT INTO vod_url_share (video_id, url, type) VALUES (?, ?, ?)");
+                if (!q.prepare(sql)) {
                     qCritical() << "failed to prepare query" << q.lastError();
                     continue;
                 }
@@ -1141,7 +1144,8 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
                 urlShareId = qvariant_cast<qint64>(q.lastInsertId());
             }
         } else {
-            if (!q.prepare(QStringLiteral("INSERT INTO vod_url_share (url, type) VALUES (?, ?)"))) {
+            static const QString sql = QStringLiteral("INSERT INTO vod_url_share (url, type) VALUES (?, ?)");
+            if (!q.prepare(sql)) {
                 qCritical() << "failed to prepare query" << q.lastError();
                 break;
             }
@@ -1157,25 +1161,25 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
             urlShareId = qvariant_cast<qint64>(q.lastInsertId());
         }
 
-        if (!q.prepare(
-                    QStringLiteral(
-                        "INSERT INTO vods (\n"
-                        "   event_name,\n"
-                        "   event_full_name,\n"
-                        "   season,\n"
-                        "   game,\n"
-                        "   year,\n"
-                        "   stage_name,\n"
-                        "   match_name,\n"
-                        "   match_date,\n"
-                        "   side1_name,\n"
-                        "   side2_name,\n"
-                        "   side1_race,\n"
-                        "   side2_race,\n"
-                        "   vod_url_share_id,\n"
-                        "   offset,\n"
-                        "   match_number\n"
-                        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n"))) {
+        static const QString sql = QStringLiteral(
+                    "INSERT INTO vods (\n"
+                    "   event_name,\n"
+                    "   event_full_name,\n"
+                    "   season,\n"
+                    "   game,\n"
+                    "   year,\n"
+                    "   stage_name,\n"
+                    "   match_name,\n"
+                    "   match_date,\n"
+                    "   side1_name,\n"
+                    "   side2_name,\n"
+                    "   side1_race,\n"
+                    "   side2_race,\n"
+                    "   vod_url_share_id,\n"
+                    "   offset,\n"
+                    "   match_number\n"
+                    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n");
+        if (!q.prepare(sql)) {
             qCritical() << "failed to prepare vod insert" << q.lastError();
             continue;
         }
@@ -1216,16 +1220,17 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
         const ScRecord& record = records[index];
 
         // see if any record with similar values has a valid game
-        if (!q.prepare(QStringLiteral(
-                           "SELECT\n"
-                           "    game\n"
-                           "FROM\n"
-                           "    vods\n"
-                           "WHERE\n"
-                           "    event_name=?\n"
-                           "    AND year=?\n"
-                           "    AND season=?\n"
-                           "    AND game!=-1\n"))) {
+        static const QString sql = QStringLiteral(
+                    "SELECT\n"
+                    "    game\n"
+                    "FROM\n"
+                    "    vods\n"
+                    "WHERE\n"
+                    "    event_name=?\n"
+                    "    AND year=?\n"
+                    "    AND season=?\n"
+                    "    AND game!=-1\n");
+        if (!q.prepare(sql)) {
             qCritical() << "failed to prepare match select" << q.lastError();
             break;
         }
@@ -1242,8 +1247,8 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
         if (q.next()) {
             auto game = q.value(0);
 
-            if (!q.prepare(QStringLiteral(
-                               "UPDATE vods SET game=? WHERE id=?"))) {
+            static const QString sql = QStringLiteral("UPDATE vods SET game=? WHERE id=?");
+            if (!q.prepare(sql)) {
                 qCritical() << "failed to prepare match select" << q.lastError();
                 continue;
             }
@@ -1258,7 +1263,7 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
         }
     }
 
-    if (!q.exec("END TRANSACTION")) {
+    if (!q.exec("COMMIT")) {
         qCritical() << "failed to end transaction" << q.lastError();
         return false;
     }
@@ -1495,9 +1500,10 @@ ScVodDataManager::fetchMetaData(qint64 rowid, bool download) {
 
     QSqlQuery q(m_Database);
 
-    if (!q.prepare(QStringLiteral(
-"SELECT u.url, u.id FROM vods AS v INNER JOIN vod_url_share "
-"AS u ON v.vod_url_share_id=u.id WHERE v.id=?"))) {
+    static const QString sql = QStringLiteral(
+                "SELECT u.url, u.id FROM vods AS v INNER JOIN vod_url_share "
+                "AS u ON v.vod_url_share_id=u.id WHERE v.id=?");
+    if (!q.prepare(sql)) {
         qCritical() << "failed to prepare query" << q.lastError();
         return;
     }
@@ -1581,9 +1587,10 @@ void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
 
     QSqlQuery q(m_Database);
 
-    if (!q.prepare(QStringLiteral(
-"SELECT v.thumbnail_id, u.url, u.id FROM vods AS v INNER JOIN vod_url_share "
-"AS u ON v.vod_url_share_id=u.id WHERE v.id=?"))) {
+    static const QString sql = QStringLiteral(
+                "SELECT v.thumbnail_id, u.url, u.id FROM vods AS v INNER JOIN vod_url_share "
+                "AS u ON v.vod_url_share_id=u.id WHERE v.id=?");
+    if (!q.prepare(sql)) {
         qCritical() << "failed to prepare query" << q.lastError();
         return;
     }
@@ -1605,8 +1612,8 @@ void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
     const auto vodUrlShareId = qvariant_cast<qint64>(q.value(2));
     if (thumbnailId) {
         // entry in table
-        if (!q.prepare(
-                    QStringLiteral("SELECT file_name, url FROM vod_thumbnails WHERE id=?"))) {
+        static const QString sql = QStringLiteral("SELECT file_name, url FROM vod_thumbnails WHERE id=?");
+        if (!q.prepare(sql)) {
             qCritical() << "failed to prepare query" << q.lastError();
             return;
         }
@@ -1651,8 +1658,8 @@ void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
                             return;
                         }
 
-                        if (!q.prepare(
-                                    QStringLiteral("SELECT id FROM vod_thumbnails WHERE url=?"))) {
+                        static const QString sql = QStringLiteral("SELECT id FROM vod_thumbnails WHERE url=?");
+                        if (!q.prepare(sql)) {
                             qCritical() << "failed to prepare query" << q.lastError();
                             return;
                         }
@@ -1667,8 +1674,8 @@ void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
                         if (q.next()) { // url has been retrieved, set thumbnail id in vods
                             thumbnailId = qvariant_cast<qint64>(q.value(0));
 
-                            if (!q.prepare(
-                                        QStringLiteral("UPDATE vods SET thumbnail_id=? WHERE id=?"))) {
+                            static const QString sql = QStringLiteral("UPDATE vods SET thumbnail_id=? WHERE id=?");
+                            if (!q.prepare(sql)) {
                                 qCritical() << "failed to prepare query" << q.lastError();
                                 return;
                             }
@@ -1690,8 +1697,8 @@ void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
                                 auto tempFileName = QFileInfo(thumbNailFilePath).fileName();
 
                                 // insert row for thumbnail
-                                if (!q.prepare(
-                                            QStringLiteral("INSERT INTO vod_thumbnails (url, file_name) VALUES (?, ?)"))) {
+                                static const QString sql = QStringLiteral("INSERT INTO vod_thumbnails (url, file_name) VALUES (?, ?)");
+                                if (!q.prepare(sql)) {
                                     qCritical() << "failed to prepare query" << q.lastError();
                                     return;
                                 }
@@ -1707,8 +1714,8 @@ void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
                                 thumbnailId = qvariant_cast<qint64>(q.lastInsertId());
 
                                 // update vod row
-                                if (!q.prepare(
-                                            QStringLiteral("UPDATE vods SET thumbnail_id=? WHERE id=?"))) {
+                                static const QString sql2 = QStringLiteral("UPDATE vods SET thumbnail_id=? WHERE id=?");
+                                if (!q.prepare(sql2)) {
                                     qCritical() << "failed to prepare query" << q.lastError();
                                     return;
                                 }
@@ -1784,10 +1791,10 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
     QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);
-
-    if (!q.prepare(QStringLiteral(
-"SELECT u.url, u.id FROM vods AS v INNER JOIN vod_url_share "
-"AS u ON v.vod_url_share_id=u.id WHERE v.id=?"))) {
+    static const QString sql = QStringLiteral(
+                "SELECT u.url, u.id FROM vods AS v INNER JOIN vod_url_share "
+                "AS u ON v.vod_url_share_id=u.id WHERE v.id=?");
+    if (!q.prepare(sql)) {
         qCritical() << "failed to prepare query" << q.lastError();
         return;
     }
@@ -1822,19 +1829,20 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
                     qWarning() << "invalid format index (>), not fetching vod" << formatIndex;
                 } else {
                     auto format = vod._formats()[formatIndex];
-                    if (!q.prepare(QStringLiteral(
-                                       "SELECT\n"
-                                       "    f.file_name,\n"
-                                       "    f.id,\n"
-                                       "    f.progress,\n"
-                                       "    f.width,\n"
-                                       "    f.height,\n"
-                                       "    f.format\n"
-                                       "FROM vod_file_ref r\n"
-                                       "INNER JOIN vods v ON v.id=r.vod_id\n"
-                                       "INNER JOIN vod_files f ON f.id=r.vod_file_id\n"
-                                       "WHERE v.id=? AND f.format=?\n"
-                                       ))) {
+                    static const QString sql = QStringLiteral(
+                                "SELECT\n"
+                                "    f.file_name,\n"
+                                "    f.id,\n"
+                                "    f.progress,\n"
+                                "    f.width,\n"
+                                "    f.height,\n"
+                                "    f.format\n"
+                                "FROM vod_file_ref r\n"
+                                "INNER JOIN vods v ON v.id=r.vod_id\n"
+                                "INNER JOIN vod_files f ON f.id=r.vod_file_id\n"
+                                "WHERE v.id=? AND f.format=?\n"
+                                );
+                    if (!q.prepare(sql)) {
                         qCritical() << "failed to prepare query" << q.lastError();
                         return;
                     }
@@ -1877,9 +1885,10 @@ FetchVod:
                                 auto tempFileName = QFileInfo(thumbNailFilePath).fileName();
                                 vodFilePath = m_VodDir + tempFileName;
 
-                                if (!q.prepare(QStringLiteral(
-                                                   "INSERT INTO vod_files (file_name, format, width, height, progress) "
-                                                   "VALUES (?, ?, ?, ?, ?)"))) {
+                                static const QString sql = QStringLiteral(
+                                            "INSERT INTO vod_files (file_name, format, width, height, progress) "
+                                            "VALUES (?, ?, ?, ?, ?)");
+                                if (!q.prepare(sql)) {
                                     qCritical() << "failed to prepare query" << q.lastError();
                                     return;
                                 }
@@ -1897,8 +1906,8 @@ FetchVod:
 
                                 vodFileId = qvariant_cast<qint64>(q.lastInsertId());
 
-                                if (!q.prepare(QStringLiteral(
-                                                   "INSERT INTO vod_file_ref (vod_id, vod_file_id) VALUES (?, ?)"))) {
+                                static const QString sql2 = QStringLiteral("INSERT INTO vod_file_ref (vod_id, vod_file_id) VALUES (?, ?)");
+                                if (!q.prepare(sql2)) {
                                     qCritical() << "failed to prepare query" << q.lastError();
                                     return;
                                 }
@@ -2536,7 +2545,7 @@ ScVodDataManager::seen(const QVariantMap& filters) const {
         return -1;
     }
 
-    QMutexLocker g(&m_Lock);
+//    QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);
 
@@ -2672,7 +2681,7 @@ ScVodDataManager::batchAddVods() {
     }
 
     if (!records.isEmpty()) {
-        QMutexLocker g(&m_Lock);
+//        QMutexLocker g(&m_Lock);
         _addVods(records);
     }
 }

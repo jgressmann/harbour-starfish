@@ -218,7 +218,7 @@ private:
             const ScMatch& match,
             bool* exists) const;
 
-    bool exists(const ScRecord& record, qint64* id) const;
+    bool exists(QSqlQuery& query, const ScRecord& record, qint64* id) const;
     void updateVodDownloadStatus(qint64 vodFileId, const VMVodFileDownload& download);
     void fetchMetaData(qint64 rowid, bool download);
     void iconRequestFinished(QNetworkReply* reply, IconRequest& r);
