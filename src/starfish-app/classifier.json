@@ -10,7 +10,7 @@
             ],
             "-": [
                 {
-                    "regex": "asl.*prime|hots|lotv|^\\s*proleague\\s*$|starleague$|wol"
+                    "regex": "asl.*prime|hots|lotv|^\\s*proleague\\s*$|^starleague$|wol"
                 }
             ],
             "remove": [

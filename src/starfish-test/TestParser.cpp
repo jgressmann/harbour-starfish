@@ -472,6 +472,10 @@ TestParser::autocompleteFromMatch_data() {
     record.matchName = " Episode 56";
     record.matchNumber = 56;
     QTest::newRow(record.matchName.toLocal8Bit()) << record;
+
+    record.valid = 0;
+    record.matchName = " Dandy vs kogeT";
+    QTest::newRow(record.matchName.toLocal8Bit()) << record;
 #endif
 }
 
