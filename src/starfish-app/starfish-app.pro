@@ -100,14 +100,12 @@ gzclassifier.target = classifier.json.gz
 gzclassifier.commands = cat $$PWD/classifier.json | gzip --best > $$PWD/$$gzclassifier.target
 
 QMAKE_EXTRA_TARGETS += gzicons gzclassifier
+PRE_TARGETDEPS += $$gzicons.target $$gzclassifier.target
 
 misc.files = $$gzicons.target $$gzclassifier.target ../../COPYING
 misc.path = /usr/share/$${TARGET}
 misc.depends = gzicons gzclassifier
 INSTALLS += misc
-
-
-
 
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 256x256
