@@ -32,6 +32,11 @@
             "extension": ".png"
         },
         {
+            "regex": "bombastic starleague",
+            "url": "https://www.dropbox.com/s/q17m4kaw9dzu9na/bombasticstarleague.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "code s",
             "url": "https://www.dropbox.com/s/1v9lmxurko6rtgw/codes.png?dl=1",
             "extension": ".png"
@@ -157,6 +162,11 @@
             "extension": ".png"
         },
         {
+            "regex": "moo proleague",
+            "url": "https://www.dropbox.com/s/zp9d0akg2c4dbi9/mooproleague.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "nasl|north american starleague",
             "url": "https://www.dropbox.com/s/ghe3hfyd7zpeg2q/nasl.jpg?dl=1",
             "extension": ".jpg"
@@ -187,8 +197,13 @@
             "extension": ".jpg"
         },
         {
-            "regex": "proleague",
+            "regex": "^proleague",
             "url": "https://www.dropbox.com/s/wjei8zeezccqerk/proleague.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "psistorm",
+            "url": "https://www.dropbox.com/s/lgzwotl34qg4c0r/psistormgaming.png?dl=1",
             "extension": ".png"
         },
         {
