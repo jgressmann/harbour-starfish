@@ -69,7 +69,7 @@ TestParser::autocompleteFromEvent_data() {
 
     ScRecord record;
 
-#if 0
+#if 1
 
     record.valid =  ScRecord::ValidYear | ScRecord::ValidGame;
     record.eventName = "IEM Kiev";
@@ -157,14 +157,14 @@ TestParser::autocompleteFromEvent_data() {
     record.season = 4;
     record.game = ScRecord::GameSc2;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-
+#endif
 
     record.valid =  ScRecord::ValidGame;
     record.eventName = "Go4SC2 Cup";
     record.eventFullName = "Go4SC2 Cup";
     record.game = ScRecord::GameSc2;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-
+#if 1
     record.valid =  ScRecord::ValidGame;
     record.eventName = "OCS Masters";
     record.eventFullName = "OCS Masters";
@@ -300,7 +300,7 @@ TestParser::autocompleteFromEvent_data() {
     record.year = 2017;
     record.season = 1;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-#endif
+
     record.valid = ScRecord::ValidGame;
     record.eventName = "17173.com World Cup";
     record.eventFullName = "17173.com Starcraft 2 World Cup";
@@ -319,6 +319,14 @@ TestParser::autocompleteFromEvent_data() {
     record.eventName = "StarCraft 20th Anniversary";
     record.eventFullName = "StarCraft 20th Anniversary";
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame | ScRecord::ValidSeason;
+    record.eventName = "Bombastic StarLeague";
+    record.eventFullName = "Bombastic StarLeague 4";
+    record.game = ScRecord::GameBroodWar;
+    record.season = 4;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+#endif
 }
 
 
@@ -359,7 +367,7 @@ TestParser::autocompleteFromStage_data() {
 
     ScRecord record;
 
-
+#if 1
     record.valid = ScRecord::ValidGame;
     record.stage = "Pro SC2 VOD";
     record.game = ScRecord::GameSc2;
@@ -374,6 +382,7 @@ TestParser::autocompleteFromStage_data() {
     record.stage = "vvv gaming";
     record.game = ScRecord::GameSc2;
     QTest::newRow(record.stage.toLocal8Bit()) << record;
+#endif
 }
 
 void
@@ -453,7 +462,7 @@ TestParser::autocompleteFromMatch_data() {
     record.matchName = "ret - StrinterN";
     record.game = ScRecord::GameSc2;
     QTest::newRow(record.matchName.toLocal8Bit()) << record;
-#endif
+
     record.valid = ScRecord::ValidMatchNumber;
     record.matchName = "Match  32";
     record.matchNumber = 32;
@@ -463,6 +472,7 @@ TestParser::autocompleteFromMatch_data() {
     record.matchName = " Episode 56";
     record.matchNumber = 56;
     QTest::newRow(record.matchName.toLocal8Bit()) << record;
+#endif
 }
 
 void
@@ -507,7 +517,7 @@ TestParser::autocomplete_data() {
 
     ScRecord record;
 
-
+#if 1
     record.valid = ScRecord::ValidGame | ScRecord::ValidEventFullName |
             ScRecord::ValidStage | ScRecord::ValidYear |
             ScRecord::ValidMatchDate | ScRecord::ValidMatchName |
@@ -538,6 +548,7 @@ TestParser::autocomplete_data() {
     record.side2Name = "free";
     record.season = 1;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+#endif
 }
 
 void

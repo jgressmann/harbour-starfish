@@ -5,7 +5,7 @@
         "event": {
             "+": [
                 {
-                    "regex": "afreeca(?:tv)? starleague|^\\s*asl|\\(bw\\)|broodwar|ssl\\s+classic|starcraft 1|starleague\\s+classic"
+                    "regex": "afreeca(?:tv)? starleague|^\\s*asl|bombastic starleague|\\(bw\\)|broodwar|ssl\\s+classic|starcraft 1|starleague\\s+classic"
                 }
             ],
             "-": [
@@ -37,7 +37,7 @@
         "match": {
             "+": [
                 {
-                    "regex": "effort|eonzerg|terror|trutacz"
+                    "regex": "effort|dewalt|eonzerg|terror|trutacz"
                 }
             ],
             "-": [
@@ -57,7 +57,7 @@
         "event": {
             "+": [
                 {
-                    "regex": "100 friday|after hours gaming league|ariel cup|asl.*prime|basetrade|beastqt|bstl|bronze league|btsl|corsair cup|crank|day\\[9\\] eu|dreamhack|drunken cast|esl euro cup|gsl|gstl|homestory cup|hots|iem|i love starcraft|ipl|ipsl|iptl|iron squid|legacy of the void|lotv|lowko|kung fu cup|mlg|nasl|nationwars|nation wars|neuro|ocs masters|olimoleague|pig|plantronics|pro level big|proleague|red bull|^sc2\\s+|\\s+sc2\\s+|\\s+sc2$|screddit|shoutcraft|^starcraft\\s*2\\s+|\\s+starcraft\\s*2\\s+|\\s+starcraft\\s*2$|starcraft ii|^\\s*starleague\\s*$|taketv|ting|vortex championship|vsl team league|vvv|wcs|wesg|winterstarcraft|wardi|wol|zotac"
+                    "regex": "100 friday|after hours gaming league|ariel cup|asl.*prime|basetrade|beastqt|bstl|bronze league|btsl|corsair cup|crank|day\\[9\\] eu|dreamhack|drunken cast|esl euro cup|go4sc2|gsl|gstl|homestory cup|hots|iem|i love starcraft|ipl|ipsl|iptl|iron squid|legacy of the void|lotv|lowko|kung fu cup|mlg|nasl|nationwars|nation wars|neuro|ocs masters|olimoleague|pig|plantronics|pro level big|proleague|red bull|^sc2\\s+|\\s+sc2\\s+|\\s+sc2$|screddit|shoutcraft|^starcraft\\s*2\\s+|\\s+starcraft\\s*2\\s+|\\s+starcraft\\s*2$|starcraft ii|^\\s*starleague\\s*$|taketv|ting|vortex championship|vsl team league|vvv|wcs|wesg|winterstarcraft|wardi|wol|zotac"
                 }
             ],
             "-": [
