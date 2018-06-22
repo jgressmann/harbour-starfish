@@ -175,6 +175,10 @@ Sc2LinksDotCom::requestFinished(QNetworkReply* reply) {
                 ScEvent event = m_EventRequestQueue.first();
                 m_EventRequestQueue.pop_front();
 
+//                if (event.name().startsWith("Bombastic")) {
+//                    qDebug("asdfs");
+//                }
+
                 QNetworkReply* reply = makeRequest(event.url());
                 m_RequestStage.insert(reply, event);
                 m_PendingRequests.insert(reply, 1);
@@ -242,7 +246,6 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
             year = yearRegex.cap(0).toInt();
         }
 
-        ScRecord record;
         record.eventFullName = name;
         record.valid = ScRecord::ValidEventFullName;
 
@@ -312,11 +315,6 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
     QList<ScStage> stages;
     ScEvent& event = m_RequestStage[reply];
     ScEventData& eventData = event.data();
-
-    //if (!event.name().startsWith("GSL Season One Code S 2017")) {
-//    if (!event.name().startsWith("GSL")) {
-//        return;
-//    }
 
 
     for (int stageStart = 0, stageFound = tournamentPageStageNameRegex.indexIn(soup, stageStart), stageIndex = 0;
@@ -539,6 +537,7 @@ Sc2LinksDotCom::completeRecord(const ScEventData& event, const ScStageData& stag
     toRecord(event, stage, match, _record);
 
     ScRecord& record = *_record;
+
     record.autoComplete(*classifier());
 
     if (!record.isValid(ScRecord::ValidGame)) {
