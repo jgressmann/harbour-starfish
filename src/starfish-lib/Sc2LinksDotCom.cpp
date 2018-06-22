@@ -179,7 +179,7 @@ Sc2LinksDotCom::requestFinished(QNetworkReply* reply) {
                 m_RequestStage.insert(reply, event);
                 m_PendingRequests.insert(reply, 1);
                 ++m_TotalUrlsToFetched;
-                setProgressDescription(tr("Fetching ") + event.name());
+                setProgressDescription(tr("Fetching ") + event.fullName());
 
                 qDebug() << "fetch event" << event.name() << event.year() << event.game() << event.season();
             }

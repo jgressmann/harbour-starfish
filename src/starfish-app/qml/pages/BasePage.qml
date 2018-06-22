@@ -65,12 +65,24 @@ Page {
 //            console.debug("progress panel open=" + open)
 //        }
 
-        ProgressBar {
-            anchors.verticalCenter: parent.verticalCenter
+        Column {
             width: parent.width - buttonRow.width
-            indeterminate: vodDatabaseDownloader.progressIndeterminate
-            value: vodDatabaseDownloader.progress
-            label: vodDatabaseDownloader.progressDescription
+            anchors.verticalCenter: parent.verticalCenter
+
+            ProgressBar {
+                width: parent.width
+                indeterminate: vodDatabaseDownloader.progressIndeterminate
+                value: vodDatabaseDownloader.progress
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * x
+                text: vodDatabaseDownloader.progressDescription
+                truncationMode: TruncationMode.Fade
+                font.pixelSize: Theme.fontSizeSmall
+                horizontalAlignment: contentWidth >= width ? Text.AlignLeft : Text.AlignHCenter
+            }
         }
 
         Row {
@@ -106,6 +118,9 @@ Page {
                 }
             }
         }
+
+
+
     }
 
     Component.onCompleted: {
