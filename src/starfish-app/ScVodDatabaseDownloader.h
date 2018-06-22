@@ -145,7 +145,6 @@ private:
     QList<QString> m_YearUrls;
     int m_PendingActions;
     DownloadState m_DownloadState;
-    bool m_Skip;
     bool m_ProgressIsIndeterminate;
 };
 

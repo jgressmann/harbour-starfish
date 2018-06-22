@@ -72,7 +72,7 @@ public:
     virtual QList<ScRecord> vods() const = 0;
     bool canCancelFetch() const;
     bool canStartFetch() const;
-    virtual bool canSkip() const;
+    bool canSkip() const;
     inline ScClassifier* classifier() const { return m_Classifier; }
     inline void setClassifier(ScClassifier* value) { m_Classifier = value; }
     inline QString id() const { return _id(); }
@@ -93,10 +93,13 @@ signals:
 public slots:
     void startFetch();
     void cancelFetch();
+    void skip();
 
 protected:
+    virtual bool _canSkip() const;
     virtual void _fetch() = 0;
     virtual void _cancel();
+    virtual void _skip();
     virtual QString _id() const = 0;
     void setStatus(Status value);
     void setError(Error error);

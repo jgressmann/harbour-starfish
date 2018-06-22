@@ -39,12 +39,14 @@ public:
 
 public: //
     virtual QList<ScRecord> vods() const { return m_Vods; }
-    virtual bool canSkip() const Q_DECL_OVERRIDE;
+
 
 protected:
     virtual void _fetch() Q_DECL_OVERRIDE;
     virtual void _cancel() Q_DECL_OVERRIDE;
     virtual QString _id() const Q_DECL_OVERRIDE;
+    virtual bool _canSkip() const Q_DECL_OVERRIDE;
+    virtual void _skip() Q_DECL_OVERRIDE;
 
 private slots:
     void requestFinished(QNetworkReply* reply);
@@ -73,5 +75,6 @@ private:
     qreal m_VodFetchingProgress;
     int m_TotalUrlsToFetched;
     int m_CurrentUrlsToFetched;
+    bool m_Skip;
 };
 

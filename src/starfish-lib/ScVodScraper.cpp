@@ -147,6 +147,26 @@ ScVodScraper::lock() const {
 }
 
 bool
-ScVodScraper::canSkip() const {
+ScVodScraper::_canSkip() const {
     return false;
+}
+
+bool
+ScVodScraper::canSkip() const {
+    return _canSkip();
+}
+
+void
+ScVodScraper::skip() {
+    QMutexLocker g(lock());
+    if (_canSkip()) {
+        _skip();
+    } else {
+        qWarning("scraper %s doesn't support skipping\n", qPrintable(_id()));
+    }
+}
+
+void
+ScVodScraper::_skip() {
+
 }

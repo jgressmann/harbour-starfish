@@ -63,7 +63,6 @@ ScVodDatabaseDownloader::ScVodDatabaseDownloader(QObject *parent)
     m_YearMax = -1;
     m_DownloadState = DS_None;
     m_PendingActions = 0;
-    m_Skip = false;
     m_ProgressIsIndeterminate = false;
     m_Scraper = Q_NULLPTR;
 
@@ -144,7 +143,12 @@ void ScVodDatabaseDownloader::_downloadNew()
 void
 ScVodDatabaseDownloader::skip() {
     QMutexLocker g(&m_Lock);
-    m_Skip = true;
+    if (!m_Scraper) {
+        qCritical() << "scraper not set";
+        return;
+    }
+
+    m_Scraper->skip();
 }
 
 void
@@ -181,7 +185,7 @@ ScVodDatabaseDownloader::downloadNew() {
     setError(Error_None);
     setStatus(Status_Downloading);
     setProgress(0);
-    m_Skip = false;
+//    setNewVodsAdded(0);
 
     _downloadNew();
 }
@@ -362,8 +366,6 @@ ScVodDatabaseDownloader::excludeEvent(const ScEvent& event, bool* exclude) {
 
     Q_ASSERT(exclude);
 
-    m_Skip = false;
-
     if (event.year() < m_LimitMarker.year()) {
         *exclude = true;
     } else {
@@ -376,12 +378,7 @@ ScVodDatabaseDownloader::excludeStage(const ScStage& stage, bool* exclude) {
     QMutexLocker g(&m_Lock);
     Q_ASSERT(exclude);
 
-    if (m_Skip) {
-        *exclude = true;
-        qDebug() << "skip" << stage.name();
-    } else {
-        m_DataManager->excludeStage(stage, exclude);
-    }
+    m_DataManager->excludeStage(stage, exclude);
 }
 
 void
@@ -389,10 +386,7 @@ ScVodDatabaseDownloader::excludeMatch(const ScMatch& match, bool* exclude) {
     QMutexLocker g(&m_Lock);
     Q_ASSERT(exclude);
 
-    if (m_Skip) {
-        *exclude = true;
-        qDebug() << "skip" << match.name();
-    } else if (match.date() < m_LimitMarker) {
+    if (match.date() < m_LimitMarker) {
         *exclude = true;
     } else {
         m_DataManager->excludeMatch(match, exclude);

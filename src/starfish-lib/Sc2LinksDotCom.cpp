@@ -76,9 +76,10 @@ int s_StaticsInitialized = InitializeStatics();
 Sc2LinksDotCom::Sc2LinksDotCom(QObject *parent)
     : ScVodScraper(parent)
 {
+    (void)s_StaticsInitialized;
     m_TotalUrlsToFetched = 0;
     m_CurrentUrlsToFetched = 0;
-    (void)s_StaticsInitialized;
+    m_Skip = false;
 
     connect(networkAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(requestFinished(QNetworkReply*)));
 }
@@ -90,6 +91,7 @@ Sc2LinksDotCom::_fetch() {
     m_PendingRequests.insert(reply, 0);
     m_TotalUrlsToFetched = 1;
     m_CurrentUrlsToFetched = 0;
+    m_Skip = false;
     setProgressDescription(tr("Fetching list of events"));
     updateVodFetchingProgress();
     qDebug("fetch started");
@@ -169,6 +171,7 @@ Sc2LinksDotCom::requestFinished(QNetworkReply* reply) {
                 setProgressDescription(QString());
                 qDebug("fetch finished");
             } else {
+                m_Skip = false;
                 ScEvent event = m_EventRequestQueue.first();
                 m_EventRequestQueue.pop_front();
 
@@ -297,6 +300,10 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
 
 void
 Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
+    if (m_Skip) {
+        return;
+    }
+
     QString soup = QString::fromUtf8(reply->readAll());
 //    qDebug("%s\n", qPrintable(soup));
 
@@ -354,6 +361,10 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
         for (int matchStart = 0, matchFound = tournamentPageMatchRegex.indexIn(matchPart, matchStart);
              matchFound != -1;
              matchStart = matchFound + tournamentPageMatchRegex.cap(0).length(), matchFound = tournamentPageMatchRegex.indexIn(matchPart, matchStart)) {
+
+            if (m_Skip) {
+                return;
+            }
 
             QString link = tournamentPageMatchRegex.cap(1);
             QString matchOrEpisode = tournamentPageMatchRegex.cap(2);
@@ -428,6 +439,10 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
 
 void
 Sc2LinksDotCom::parseLevel2(QNetworkReply* reply) {
+    if (m_Skip) {
+        return;
+    }
+
     QString soup = QString::fromUtf8(reply->readAll());
     //qDebug() << soup;
 
@@ -509,7 +524,7 @@ Sc2LinksDotCom::pruneInvalidSeries() {
 }
 
 bool
-Sc2LinksDotCom::canSkip() const {
+Sc2LinksDotCom::_canSkip() const {
     return true;
 }
 
@@ -625,5 +640,19 @@ Sc2LinksDotCom::saveRecords() {
                 toRecord(event, stage, match, &m_Vods.back());
             }
         }
+    }
+}
+
+void
+Sc2LinksDotCom::_skip() {
+    m_Skip = true;
+
+    qDebug() << "skip: canceling requests for event";
+    foreach (const auto& key, m_RequestMatch.keys()) {
+        key->abort();
+    }
+
+    foreach (const auto& key, m_RequestVod.keys()) {
+        key->abort();
     }
 }
