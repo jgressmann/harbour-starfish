@@ -50,7 +50,6 @@ class ScVodDatabaseDownloader : public QObject
 
 public:
     enum Status {
-        Status_Ready,
         Status_Downloading,
         Status_Finished,
         Status_Canceled,
@@ -72,12 +71,8 @@ public:
     explicit ScVodDatabaseDownloader(QObject *parent = nullptr);
 
 public:
-    Q_INVOKABLE void downloadNew();
-    Q_INVOKABLE void cancel();
-    Q_INVOKABLE void skip();
     Status status() const { return m_Status; }
     Error error() const { return m_Error; }
-//    QList<ScEvent> vods() const { return m_Vods; }
     ScVodScraper* scraper() const { return m_Scraper; }
     void setScraper(ScVodScraper* value);
     ScVodDataManager* dataManager() const { return m_DataManager; }
@@ -86,6 +81,11 @@ public:
     QString progressDescription() const { return m_ProgressDescription; }
     bool progressIndeterminate() const;
     bool canDownloadNew() const;
+
+public slots:
+    void downloadNew();
+    void cancel();
+    void skip();
 
 signals:
     void statusChanged();
@@ -127,7 +127,6 @@ private:
         DS_FetchingDatabases,
         DS_Scraping,
         DS_Canceling,
-        DS_AddingVods,
     };
 
 private:

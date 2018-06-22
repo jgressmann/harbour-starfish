@@ -109,7 +109,7 @@ public: //
     Q_INVOKABLE void fetchIcons();
     Q_INVOKABLE void fetchClassifier();
     Q_INVOKABLE void resetDownloadMarker();
-    void addVods(const QList<ScRecord>& records);
+    void queueVodsToAdd(const QList<ScRecord>& records);
     QDate downloadMarker() const;
     QString downloadMarkerString() const;
     void setDownloadMarker(QDate value);
@@ -143,6 +143,8 @@ signals:
     void vodsCleared();
     void vodmanError(int error);
     void vodDownloadFailed(qint64 rowid, int error);
+    void vodsAdded(int count);
+
 
 
 public slots:
@@ -191,7 +193,7 @@ private slots:
     void onFileDownloadCompleted(qint64 token, const VMVodFileDownload& download);
     void onDownloadFailed(qint64 token, int serviceErrorCode);
     void requestFinished(QNetworkReply* reply);
-    void vodsAdded();
+    void vodAddWorkerFinished();
 
 private:
     static bool tryGetEvent(QString& inoutSrc, QString* location);

@@ -36,6 +36,7 @@ ApplicationWindow {
     initialPage: Qt.resolvedUrl("pages/StartPage.qml")
     cover: Qt.resolvedUrl("cover/CoverPage.qml")
     allowedOrientations: defaultAllowedOrientations
+    property int _vodsAdded: 0
 
     Sc2LinksDotComScraper {
         id: sc2LinksDotComScraper
@@ -52,11 +53,16 @@ ApplicationWindow {
 
         onStatusChanged: {
             switch (status) {
+            case VodDatabaseDownloader.Status_Downloading:
+                _vodsAdded = 0
+                break
             case VodDatabaseDownloader.Status_Canceled:
             case VodDatabaseDownloader.Status_Finished:
                 settingLastUpdateTimestamp.value = Global.secondsSinceTheEpoch()
                 break
             }
+
+            _notifyOfAddedVods();
         }
 
         onErrorChanged: {
@@ -184,7 +190,16 @@ ApplicationWindow {
          appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
     }
 
+    Notification {
+        id: newVodNotification
+//        category: "x-nemo.transfer.complete"
+        appName: App.displayName
+        appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+    }
+
     Component.onCompleted: {
+        VodDataManager.vodsAdded.connect(_onVodsAdded)
+        VodDataManager.busyChanged.connect(_busyChanged)
         VodDataManager.vodman.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
         _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
@@ -209,6 +224,27 @@ ApplicationWindow {
             vodDatabaseDownloader.scraper = sc2CastsDotComScraper
         } else if (sc2LinksDotComScraper.id === settingNetworkScraper.value) {
             vodDatabaseDownloader.scraper = sc2LinksDotComScraper
+        }
+    }
+
+    function _onVodsAdded(count) {
+        console.debug("vods added " + count)
+        _vodsAdded += count
+    }
+
+    function _busyChanged() {
+        _notifyOfAddedVods();
+    }
+
+    function _notifyOfAddedVods() {
+        switch (vodDatabaseDownloader.status) {
+        case VodDatabaseDownloader.Status_Canceled:
+        case VodDatabaseDownloader.Status_Finished:
+            if (!VodDataManager.busy && _vodsAdded) {
+                newVodNotification.body = newVodNotification.previewBody = _vodsAdded + " new VODs"
+                newVodNotification.publish()
+            }
+            break
         }
     }
 }

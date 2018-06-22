@@ -200,14 +200,12 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     fetchIcons();
     fetchClassifier();
 
-//    m_AddThread = Thread::create(AddThreadMain, this);
     auto adder = new ScWorker(&ScVodDataManager::batchAddVods, this);
     adder->moveToThread(&m_AddThread);
-//    connect(m_Adder, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
     connect(this, &ScVodDataManager::vodsToAdd, adder, &ScWorker::process);
-    connect(adder, &ScWorker::finished, this, &ScVodDataManager::vodsAdded);
+    connect(adder, &ScWorker::finished, this, &ScVodDataManager::vodAddWorkerFinished);
     connect(&m_AddThread, &QThread::finished, adder, &QObject::deleteLater);
-    m_AddThread.start(QThread::IdlePriority);
+    m_AddThread.start(QThread::LowestPriority);
 }
 
 void
@@ -1064,7 +1062,7 @@ ScVodDataManager::hasRecord(const ScRecord& record, bool* _exists) {
 }
 
 void
-ScVodDataManager::addVods(const QList<ScRecord>& records) {
+ScVodDataManager::queueVodsToAdd(const QList<ScRecord>& records) {
     if (!records.isEmpty()) {
         QMutexLocker g(&m_Lock);
         QMutexLocker g2(&m_AddQueueLock);
@@ -1078,7 +1076,7 @@ ScVodDataManager::addVods(const QList<ScRecord>& records) {
 
 bool
 ScVodDataManager::_addVods(const QList<ScRecord>& records) {
-    Stopwatch sw("_addVods", 100);
+    Stopwatch sw("_addVods", 10000);
     QSqlQuery q(m_Database);
 
     if (!q.exec(QStringLiteral("BEGIN IMMEDIATE"))) {
@@ -1088,16 +1086,11 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
 
     QList<qint64> unknownGameRowids;
     QList<int> unknownGameIndices;
-
+    auto count = 0;
     QString cannonicalUrl, videoId;
-    bool addedVods = false;
+
     for (int i = 0; i < records.size(); ++i) {
         const ScRecord& record = records[i];
-
-//        qint64 id;
-//        if (!exists(q, record, &id) || id != -1) {
-//            continue;
-//        }
 
         int urlType, startOffset;
 
@@ -1206,13 +1199,19 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
             continue;
         }
 
+        if (q.lastInsertId().isValid()) {
+            ++count;
+        } else {
+            qDebug() << "duplicate record" << record;
+        }
+
         if (!record.isValid(ScRecord::ValidGame)) {
             unknownGameRowids << qvariant_cast<qint64>(q.lastInsertId());
             unknownGameIndices << i;
         }
-
-        addedVods = true;
     }
+
+
 
     // try to fix game column
     for (int i = 0; i < unknownGameIndices.size(); ++i) {
@@ -1269,7 +1268,11 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
         return false;
     }
 
-    return addedVods;
+    if (count) {
+        emit vodsAdded(count);
+    }
+
+    return count > 0;
 }
 
 void ScVodDataManager::onMetaDataDownloadCompleted(qint64 token, const VMVod& vod) {
@@ -2672,14 +2675,13 @@ ScVodDataManager::batchAddVods() {
     }
 
     if (!records.isEmpty()) {
-//        QMutexLocker g(&m_Lock);
         _addVods(records);
     }
 }
 
 
 void
-ScVodDataManager::vodsAdded() {
+ScVodDataManager::vodAddWorkerFinished() {
     QMutexLocker g(&m_Lock);
     resumeVodsChangedEvents();
 
@@ -2689,7 +2691,7 @@ ScVodDataManager::vodsAdded() {
 bool
 ScVodDataManager::busy() const {
     QMutexLocker g(&m_AddQueueLock);
-    return !m_AddQueue.isEmpty();
+    return m_SuspendedVodsChangedEventCount > 0 || !m_AddQueue.isEmpty();
 }
 
 QString

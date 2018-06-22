@@ -56,7 +56,7 @@ ScVodDatabaseDownloader::ScVodDatabaseDownloader(QObject *parent)
     : QObject(parent)
     , m_Lock(QMutex::Recursive)
 {
-    m_Status = Status_Ready;
+    m_Status = Status_Finished;
     m_Error = Error_None;
     m_Progress = 0;
     m_YearMin = -1;
@@ -64,8 +64,8 @@ ScVodDatabaseDownloader::ScVodDatabaseDownloader(QObject *parent)
     m_DownloadState = DS_None;
     m_PendingActions = 0;
     m_ProgressIsIndeterminate = false;
-    m_Scraper = Q_NULLPTR;
-
+    m_Scraper = nullptr;
+    m_DataManager = nullptr;
 
     connect(&m_NetworkAccessManager, &QNetworkAccessManager::finished,
             this, &ScVodDatabaseDownloader::onRequestFinished);
@@ -155,7 +155,6 @@ void
 ScVodDatabaseDownloader::downloadNew() {
     QMutexLocker g(&m_Lock);
     switch (m_Status) {
-    case Status_Ready:
     case Status_Finished:
     case Status_Error:
     case Status_Canceled:
@@ -185,7 +184,6 @@ ScVodDatabaseDownloader::downloadNew() {
     setError(Error_None);
     setStatus(Status_Downloading);
     setProgress(0);
-//    setNewVodsAdded(0);
 
     _downloadNew();
 }
@@ -224,7 +222,8 @@ ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
                     if (loadFromXml(xml, &events)) {
                         m_DataManager->setDownloadMarker(m_TargetMarker);
                         ++m_PendingActions;
-                        m_DataManager->addVods(events);
+//                        m_PendingVodAdds += events.size();
+                        m_DataManager->queueVodsToAdd(events);
                         actionFinished();
                     } else {
                         setError(Error_DataInvalid);
@@ -430,11 +429,10 @@ ScVodDatabaseDownloader::onScraperStatusChanged() {
     switch (m_Scraper->status()) {
     case ScVodScraper::Status_VodFetchingComplete:
     case ScVodScraper::Status_VodFetchingCanceled:
-    case ScVodScraper::Status_Error:
-        m_DownloadState = DS_AddingVods;
-        m_DataManager->addVods(m_Scraper->vods());
+    case ScVodScraper::Status_Error: {
+        m_DataManager->queueVodsToAdd(m_Scraper->vods());
         actionFinished();
-        break;
+    }   break;
     default:
         break;
     }
@@ -445,27 +443,12 @@ ScVodDatabaseDownloader::onScraperStatusChanged() {
 void
 ScVodDatabaseDownloader::onScraperProgressChanged() {
     QMutexLocker g(&m_Lock);
-//    switch (m_DownloadState) {
-//    case DS_Scraping:
-//        setProgress(m_Scraper->progress());
-//        break;
-//    default:
-//        break;
-//    }
-
     updateProgressDescription();
 }
 
 void
 ScVodDatabaseDownloader::onScraperProgressDescriptionChanged() {
     QMutexLocker g(&m_Lock);
-//    switch (m_DownloadState) {
-//    case DS_Scraping:
-//        setProgressDescription(m_Scraper->progressDescription());
-//        break;
-//    default:
-//        break;
-//    }
 
     updateProgressDescription();
 }
@@ -606,7 +589,6 @@ ScVodDatabaseDownloader::updateProgressDescription() {
             setProgress(m_Scraper->progress());
             setProgressDescription(m_Scraper->progressDescription());
             break;
-        case DS_AddingVods:
         case DS_Canceling:
             setProgressIndeterminate(true);
             setProgressDescription(QStringLiteral("Adding VODs"));
@@ -632,4 +614,3 @@ ScVodDatabaseDownloader::setProgressIndeterminate(bool value) {
         emit progressIndeterminateChanged();
     }
 }
-
