@@ -37,7 +37,7 @@ Item {
     property alias playerPage: videoPlayerPageConnections.target
     property var _key
 
-//    signal thumbnailUpdated()
+    signal dataSaved(var key, int offset, string thumbnailPath)
 
     Connections {
         id: videoPlayerPageConnections
@@ -100,6 +100,7 @@ Item {
             }
 
             recentlyUsedVideos.update({ offset: _playbackOffset, thumbnail_path: _thumbnailFilePath}, k)
+            dataSaved(k, _playbackOffset, _thumbnailFilePath)
 
 //            _thumbnailFilePath = ""
             _playbackOffset = 0

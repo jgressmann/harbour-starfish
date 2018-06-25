@@ -278,6 +278,24 @@ Item { // Components can't declare functions
         return str
     }
 
+    function secondsToTimeString(n) {
+        n = Math.round(n)
+        var h = Math.floor(n / 3600)
+        n = n - 3600 * h
+        var m = Math.floor(n / 60)
+        n = n - 60 * m
+        var s = Math.floor(n)
+
+        var result = ""
+        if (h > 0) {
+            result = (h < 10 ? ("0" + h.toString()) : h.toString()) + ":"
+        }
+
+        result = result + (m < 10 ? ("0" + m.toString()) : m.toString()) + ":"
+        result = result + (s < 10 ? ("0" + s.toString()) : s.toString())
+        return result
+    }
+
     SqlVodModel {
         id: _model
         columns: ["count"]

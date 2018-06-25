@@ -2756,6 +2756,10 @@ ScVodDataManager::deleteSeenVodFiles() {
         }
     }
 
+    if (count) {
+        emit vodsChanged();
+    }
+
     return count;
 }
 

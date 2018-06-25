@@ -148,6 +148,14 @@ ListItem {
                                 result += _width + "x" + _height
                             }
 
+//                            if (startOffset > 0) {
+//                                if (result) {
+//                                    result += ", "
+//                                }
+
+//                                result += Global.secondsToTimeString(startOffset)
+//                            }
+
                             return result
                         }
                     }
@@ -272,11 +280,6 @@ ListItem {
                                     result = Qt.formatDate(matchDate)
                                 }
 
-    //                            if (result.length > 0) {
-    //                                result += ", "
-    //                            }
-
-                                //result += (progressOverlay.progress * 100).toFixed(0) + "% loaded"
                                 if (_width > 0) {
                                     if (result) {
                                         result += ", "
@@ -284,6 +287,14 @@ ListItem {
 
                                     result += _width + "x" + _height
                                 }
+
+//                                if (startOffset > 0) {
+//                                    if (result) {
+//                                        result += ", "
+//                                    }
+
+//                                    result += Global.secondsToTimeString(startOffset)
+//                                }
 
                                 return result
                             }

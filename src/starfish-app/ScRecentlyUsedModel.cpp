@@ -264,7 +264,7 @@ ScRecentlyUsedModel::select(const QStringList& columns, const QVariantMap& where
 
             if (q.exec()) {
                 while (q.next()) {
-                    QVariantMap row;
+                    QVariantMap row; // NOTE: using a variant list doesn't seem to work with QML
                     for (int i = 0; i < cols->size(); ++i) {
                         row.insert((*cols)[i], q.value(i));
                     }

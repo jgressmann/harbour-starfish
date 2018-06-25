@@ -123,6 +123,12 @@ BasePage {
 
             RecentlyWatchedVideoUpdater {
                 id: updater
+
+                onDataSaved: function (key, offset, thumbnailFilePath) {
+                    if (itemPlaying && (key["video_id"] || -1) === itemPlaying.rowId) {
+                        itemPlaying.updateStartOffset()
+                    }
+                }
             }
 
             delegate: MatchItem {
@@ -135,21 +141,27 @@ BasePage {
                 matchName: match_name
                 matchDate: match_date
                 rowId: rowid
-                startOffset: offset
                 showDate: !_sameDate
                 showSides: !_sameSides
-//                    vodLabel: !_side2 ? "Episode" : "Match"
-
-//                    Component.onCompleted: {
-//                        console.debug("match item id=" + rowId)
-//                    }
-
 
 
                 onPlayRequest: function (self) {
                     itemPlaying = self
                     Global.playVideoHandler(updater, {video_id: rowid}, self.vodUrl, self.startOffset)
                 }
+
+                function updateStartOffset() {
+                    var rows = recentlyUsedVideos.select(["offset"], {video_id: rowid});
+                    if (rows.length === 1) {
+                        startOffset = rows[0].offset
+                    } else {
+                        startOffset = offset // base offset into multi match video
+                    }
+
+//                    console.debug("rowid=" + rowid + " start=" + Global.secondsToTimeString(startOffset))
+                }
+
+                Component.onCompleted: updateStartOffset()
             }
 
             ViewPlaceholder {
@@ -180,7 +192,7 @@ BasePage {
         case PageStatus.Activating:
             if (itemPlaying) {
                 itemPlaying.cancelImplicitVodFileFetch()
-                itemPlaying = null
+//                itemPlaying = null
             }
             break
         }
