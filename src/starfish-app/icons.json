@@ -52,6 +52,11 @@
             "extension": ".jpg"
         },
         {
+            "regex": "danjjing",
+            "url": "https://www.dropbox.com/s/4p9jc08uolrsubb/danjjing.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "day9|day\\[9\\]",
             "url": "https://www.dropbox.com/s/tfg6hzm4dy9xhj6/day9.png?dl=1",
             "extension": ".png"
