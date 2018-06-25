@@ -2726,10 +2726,9 @@ ScVodDataManager::makeThumbnailFile(const QString& srcPath) {
     return QString();
 }
 
-void
+int
 ScVodDataManager::deleteSeenVodFiles() {
     RETURN_IF_ERROR;
-
 
     QMutexLocker g(&m_Lock);
 
@@ -2744,15 +2743,20 @@ ScVodDataManager::deleteSeenVodFiles() {
                       "WHERE v.seen=1\n"
                       ))) {
         qCritical() << "failed to exec query" << q.lastError();
-        return;
+        return 0;
     }
+
+    auto count = 0;
 
     while (q.next()) {
         auto fileName = q.value(0).toString();
         if (QFile::remove(m_VodDir + fileName)) {
             qDebug() << "removed" << m_VodDir + fileName;
+            ++count;
         }
     }
+
+    return count;
 }
 
 bool

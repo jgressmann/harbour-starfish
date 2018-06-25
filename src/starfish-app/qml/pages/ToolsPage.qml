@@ -32,9 +32,6 @@ import ".."
 Page {
     id: root
 
-
-
-
     VisualItemModel {
         id: model
 
@@ -91,7 +88,11 @@ Page {
                 text: "Delete seen VOD files"
                 onClicked: {
                     console.debug("delete seen vod files")
-                    VodDataManager.deleteSeenVodFiles()
+                    var count = VodDataManager.deleteSeenVodFiles()
+                    if (count) {
+                        newVodNotification.body = newVodNotification.previewBody = count + " VOD files deleted"
+                        newVodNotification.publish()
+                    }
                 }
             }
 
