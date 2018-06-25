@@ -396,51 +396,84 @@ Page {
                         }
                     }
 
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: Theme.paddingLarge
+                    Item {
+                        width: parent.width
+                        height: functionalButtonRow.height
 
-                        IconButton {
-                            icon.source: mediaplayer.playbackState === MediaPlayer.PlayingState ? "image://theme/icon-m-pause" : "image://theme/icon-m-play"
-                            anchors.verticalCenter: parent.verticalCenter
-                            onClicked: {
-                                console.debug("play/pause")
-                                switch (mediaplayer.playbackState) {
-                                case MediaPlayer.PlayingState:
+                        Item {
+                            id: leftMargin2
+                            width: Theme.horizontalPageMargin
+                            height: parent.height
+                            anchors.left: parent.left
+                        }
+
+                        Item {
+                            id: rightMargin2
+                            width: Theme.horizontalPageMargin
+                            height: parent.height
+                            anchors.right: parent.right
+                        }
+
+                        Row {
+                            id: functionalButtonRow
+                            anchors.centerIn: parent
+                            spacing: Theme.paddingLarge
+
+                            IconButton {
+                                icon.source: mediaplayer.playbackState === MediaPlayer.PlayingState ? "image://theme/icon-m-pause" : "image://theme/icon-m-play"
+                                anchors.verticalCenter: parent.verticalCenter
+                                onClicked: {
+                                    console.debug("play/pause")
+                                    switch (mediaplayer.playbackState) {
+                                    case MediaPlayer.PlayingState:
+                                        mediaplayer.pause()
+                                        break
+                                    case MediaPlayer.PausedState:
+                                    case MediaPlayer.StoppedState:
+                                        mediaplayer.play()
+                                        break
+                                    }
+                                }
+                            }
+
+                            IconButton {
+                                visible: false
+    //                            source: "image://theme/icon-m-close"
+                                icon.source: "image://theme/icon-m-back"
+
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                onClicked: {
+                                    console.debug("close")
+                                    pageStack.pop()
+                                }
+                            }
+
+                            IconButton {
+                                icon.source: "image://theme/icon-m-folder"
+                                visible: !!openHandler
+
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                onClicked: {
+                                    console.debug("open")
                                     mediaplayer.pause()
-                                    break
-                                case MediaPlayer.PausedState:
-                                case MediaPlayer.StoppedState:
-                                    mediaplayer.play()
-                                    break
+                                    controlPanel.open = false
+                                    openHandler()
                                 }
                             }
                         }
 
-                        IconButton {
-                            visible: false
-//                            source: "image://theme/icon-m-close"
-                            icon.source: "image://theme/icon-m-back"
-
+                        Row {
                             anchors.verticalCenter: parent.verticalCenter
+                            anchors.right: rightMargin2.left
 
-                            onClicked: {
-                                console.debug("close")
-                                pageStack.pop()
-                            }
-                        }
-
-                        IconButton {
-                            icon.source: "image://theme/icon-m-folder"
-                            visible: !!openHandler
-
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            onClicked: {
-                                console.debug("open")
-                                mediaplayer.pause()
-                                controlPanel.open = false
-                                openHandler()
+                            Image {
+                                visible: _hasSource
+                                width: Theme.iconSizeSmall
+                                height: Theme.iconSizeSmall
+                                sourceSize: Qt.size(width, height)
+                                source: (page.source || "").indexOf("file://") === 0 ? "image://theme/icon-s-like" : "image://theme/icon-s-cloud-download"
                             }
                         }
                     }
