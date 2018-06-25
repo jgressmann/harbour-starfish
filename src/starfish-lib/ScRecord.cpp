@@ -113,6 +113,8 @@ int s_StaticsInitialized = InitializeStatics();
 bool
 tryGetSeason(QString& inoutSrc, int* season) {
 
+    inoutSrc = inoutSrc.trimmed();
+
     // season one, season two, season three, ...
     for (size_t i = 0; i < _countof(EnglishWordSeasons); ++i) {
         int index = inoutSrc.indexOf(EnglishWordSeasons[i], 0, Qt::CaseInsensitive);
@@ -314,11 +316,15 @@ ScRecord::ScRecord()
 
 void
 ScRecord::autoComplete(const ScClassifier& classifier) {
+    QString str;
     for (bool change = true; change; ) {
         change = false;
 
         if (isValid(ValidEventFullName)) {
-            auto str = eventFullName;
+            if (str.isEmpty()) {
+                str = eventFullName;
+            }
+
             // to remove parts of str
             QDate date;
             auto result = tryGetDate(str, &date);
@@ -356,7 +362,7 @@ ScRecord::autoComplete(const ScClassifier& classifier) {
 //                classifier.cleanEvent((Game)game, str);
 //            }
 
-            if (!isValid(ValidEventName)) {
+            if (!isValid(ValidEventName) || str.size() < eventName.size()) {
                 removeCrud(str);
                 eventName = str;
                 valid |= ScRecord::ValidEventName;

@@ -157,14 +157,14 @@ TestParser::autocompleteFromEvent_data() {
     record.season = 4;
     record.game = ScRecord::GameSc2;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-#endif
+
 
     record.valid =  ScRecord::ValidGame;
     record.eventName = "Go4SC2 Cup";
     record.eventFullName = "Go4SC2 Cup";
     record.game = ScRecord::GameSc2;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-#if 1
+
     record.valid =  ScRecord::ValidGame;
     record.eventName = "OCS Masters";
     record.eventFullName = "OCS Masters";
@@ -326,6 +326,36 @@ TestParser::autocompleteFromEvent_data() {
     record.game = ScRecord::GameBroodWar;
     record.season = 4;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+#endif
+    record.valid = ScRecord::ValidGame | ScRecord::ValidSeason;
+    record.eventName = "Bombastic StarLeague";
+    record.eventFullName = "Bombastic StarLeague 4 (BW)";
+    record.game = ScRecord::GameBroodWar;
+    record.season = 4;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+#if 1
+
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "Moo Proleague";
+    record.eventFullName = "Moo Proleague";
+    record.game = ScRecord::GameBroodWar;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "Moo Proleague";
+    record.eventFullName = "Moo Proleague (BW)";
+    record.game = ScRecord::GameBroodWar;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame | ScRecord::ValidSeason;
+    record.eventName = "DanJJING Star League";
+    record.eventFullName = "DanJJING Star League Season 3 (BW)";
+    record.game = ScRecord::GameBroodWar;
+    record.season = 3;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+
 #endif
 }
 
