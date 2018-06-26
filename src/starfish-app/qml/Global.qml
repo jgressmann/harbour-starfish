@@ -236,6 +236,15 @@ Item { // Components can't declare functions
         return result
     }
 
+    function performOwnerGone(contentItem) {
+        for(var i = 0; i < contentItem.length; ++i) {
+            var item = contentItem.children[i]
+            if (item.objectName === "MatchItem") {
+                item.ownerGone()
+            }
+        }
+    }
+
     SqlVodModel {
         id: _model
         columns: ["count"]

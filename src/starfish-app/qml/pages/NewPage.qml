@@ -116,12 +116,6 @@ BasePage {
         }
     }
 
-    Component.onDestruction: {
-        var contentItem = listView.contentItem
-        for(var index in contentItem.children) {
-            var item = contentItem.children[index]
-            item.ownerGone()
-        }
-    }
+    Component.onDestruction: Global.performOwnerGone(listView.contentItem)
 }
 

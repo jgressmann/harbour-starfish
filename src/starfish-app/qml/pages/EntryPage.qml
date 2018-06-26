@@ -184,11 +184,6 @@ BasePage {
         }
     }
 
-    Component.onDestruction: {
-        for(var i = 0; i < recentlyWatchedVideoView.matchItems.length; ++i) {
-            var item = recentlyWatchedVideoView.matchItems[index]
-            item.ownerGone()
-        }
-    }
+    Component.onDestruction: Global.performOwnerGone(recentlyWatchedVideoView.matchItems)
 }
 

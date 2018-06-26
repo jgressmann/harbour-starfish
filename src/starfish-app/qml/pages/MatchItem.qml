@@ -28,6 +28,7 @@ import ".."
 
 ListItem {
     id: root
+    objectName: "MatchItem" // poor type check to call ownerGone()
     property string table
     property string eventFullName
     property string stageName
