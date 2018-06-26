@@ -190,13 +190,6 @@ Item { // Components can't declare functions
                 where: _where
             },
                     rem]
-        } else if (1 === rem.length) {
-            return [Qt.resolvedUrl("pages/FilterPage.qml"), {
-                                title: VodDataManager.label(rem[0]),
-                                table: _table,
-                                where: _where,
-                                key: rem[0],
-                            },rem]
         } else {
             return [Qt.resolvedUrl("pages/FilterPage.qml"), {
                                 title: VodDataManager.label(rem[0]),
@@ -204,11 +197,6 @@ Item { // Components can't declare functions
                                 where: _where,
                                 key: rem[0],
                             },rem]
-//            return [Qt.resolvedUrl("pages/SelectionPage.qml"), {
-//                            title: "Filter",
-//                            filters: myFilters,
-//                            remainingKeys: rem,
-//                    },rem]
         }
     }
 
