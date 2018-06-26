@@ -24,6 +24,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Nemo.Configuration 1.0
+import Nemo.DBus 2.0
 import Nemo.Notifications 1.0
 import org.duckdns.jgressmann 1.0
 import "."
@@ -192,9 +193,31 @@ ApplicationWindow {
 
     Notification {
         id: newVodNotification
-//        category: "x-nemo.transfer.complete"
         appName: App.displayName
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+        icon: "icon-lock-application-update"
+        remoteActions: [ {
+             "name": "default",
+             "displayName": "Show new VODs",
+             "icon": "icon-lock-application-update",
+             "service": "org.duckdns.jgressmann.starfish.app",
+             "path": "/instance",
+             "iface": "org.duckdns.jgressmann.starfish.app",
+             "method": "showNewVods",
+//             "arguments": [ download.filePath ]
+         } ]
+    }
+
+    DBusAdaptor {
+        id: dbus
+        bus: DBus.SessionBus
+        service: 'org.duckdns.jgressmann.starfish.app'
+        iface: 'org.duckdns.jgressmann.starfish.app'
+        path: '/instance'
+
+        function showNewVods() {
+            pageStack.push(Qt.resolvedUrl("pages/NewPage.qml"))
+        }
     }
 
     Component.onCompleted: {
