@@ -76,7 +76,7 @@ public:
         if (duration > m_Threshold) {
             qWarning("%s took %d [ms]\n", qPrintable(m_Name), (int)duration);
         } else {
-            qDebug("%s took %d [ms]\n", qPrintable(m_Name), (int)duration);
+//            qDebug("%s took %d [ms]\n", qPrintable(m_Name), (int)duration);
         }
     }
     Stopwatch(const char* name, int millisBeforeWarn = 100)
