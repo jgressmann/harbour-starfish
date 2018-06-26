@@ -19,6 +19,10 @@
         <source>Continue watching</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Offline available VODs</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewPage</name>

@@ -226,6 +226,7 @@ SilicaListView {
                             matchDate: match_date
                             rowId: video_id
                             startOffset: offset
+                            table: "vods"
 
                             onPlayRequest: function (self) {
                                 console.debug("xvideo_id=" + xvideo_id)

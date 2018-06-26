@@ -157,10 +157,10 @@ ScSqlVodModel::tryConfigureModel() {
         setQuery(m_Select, m_DataManager->database());
         beginResetModel();
         for (int i = 0; i < m_Columns.count(); ++i) {
-            setHeaderData(0, Qt::Horizontal, m_Columns[i]);
+
+            setHeaderData(0, Qt::Horizontal, m_ColumnAliases.value(m_Columns[i], m_Columns[i]).toString());
         }
         endResetModel();
-//        refresh();
 
         return true;
     }
@@ -173,7 +173,7 @@ ScSqlVodModel::refresh() {
     beginResetModel();
     setQuery(m_Select, m_DataManager->database());
     for (int i = 0; i < m_Columns.count(); ++i) {
-        setHeaderData(0, Qt::Horizontal, m_Columns[i]);
+        setHeaderData(0, Qt::Horizontal, m_ColumnAliases.value(m_Columns[i], m_Columns[i]).toString());
     }
     endResetModel();
 }
@@ -187,10 +187,29 @@ void
 ScSqlVodModel::setColumns(const QStringList& newValue) {
     m_Dirty = true;
     m_Columns = newValue;
+    updateColumns();
+    emit columnsChanged();
+}
+
+QVariantMap
+ScSqlVodModel::columnAliases() const {
+    return m_ColumnAliases;
+}
+
+void
+ScSqlVodModel::setColumnAliases(const QVariantMap& newValue) {
+    m_Dirty = true;
+    m_ColumnAliases = newValue;
+    updateColumns();
+    emit columnAliasesChanged();
+}
+
+void
+ScSqlVodModel::updateColumns() {
     m_RoleNames.clear();
     for (int i = 0; i < m_Columns.count(); ++i) {
-        m_RoleNames[Qt::UserRole + i + 1] = m_Columns[i].toLocal8Bit();
+        m_RoleNames[Qt::UserRole + i + 1] = m_ColumnAliases.value(m_Columns[i], m_Columns[i]).toString().toLocal8Bit();
     }
-    emit columnsChanged();
+
     update();
 }

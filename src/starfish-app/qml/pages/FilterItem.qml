@@ -28,12 +28,13 @@ import ".."
 
 ListItem {
     id: root
-    property string key: ""
+    property string table
+    property string where
+    property string key
     property var value: undefined
-    property var filters: undefined
     property bool showImage: Global.showIcon(key)
     property bool grid: false
-    property var _myFilters: undefined
+    property string _where
     property var updateSeen: function () {}
 
     Item {
@@ -91,12 +92,12 @@ ListItem {
                             progress = 0
                         }
 
-                        VodDataManager.setSeen(_myFilters, newValue)
+                        VodDataManager.setSeen(table, _where, newValue)
                     }
 
                     Component.onCompleted: {
                         root.updateSeen = function () {
-                            progress = VodDataManager.seen(_myFilters)
+                            progress = VodDataManager.seen(table, _where)
                         }
                     }
                 }
@@ -138,13 +139,17 @@ ListItem {
 
     onClicked: {
         //console.debug("filter item click " + key + "=" + value)
-        var result = Global.performNext(_myFilters)
+        var result = Global.performNext(table, _where)
         pageStack.push(result[0], result[1])
     }
 
     Component.onCompleted: {
-        _myFilters = Global.clone(filters)
-        _myFilters[key] = value
+        var myFilter = key + "='" + value + "'"
+        if (where.length > 0) {
+            _where = where + " and " + myFilter
+        } else {
+            _where = " where " + myFilter
+        }
 
         updateSeen()
     }

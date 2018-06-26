@@ -70,7 +70,32 @@ BasePage {
                             Qt.resolvedUrl("FilterPage.qml"),
                             {
                                 title: qsTr("Game"),
-                                filters: {},
+                                table: "vods",
+                                key: "game",
+                                grid: true,
+                            })
+            }
+        }
+
+        ListItem {
+            contentHeight: Global.itemHeight
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: page.width - 2*x
+                text: qsTr("Offline available VODs")
+
+                font.pixelSize: Global.labelFontSize
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            onClicked: {
+                pageStack.push(
+                            Qt.resolvedUrl("FilterPage.qml"),
+                            {
+                                title: qsTr("Game"),
+                                table: "offline_vods",
+                                where: " where progress>0",
                                 key: "game",
                                 grid: true,
                             })

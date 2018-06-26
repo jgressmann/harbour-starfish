@@ -32,6 +32,7 @@ class ScSqlVodModel : public QSqlQueryModel {
     Q_PROPERTY(QString select READ select WRITE setSelect NOTIFY selectChanged)
     Q_PROPERTY(ScVodDataManager* dataManager READ dataManager WRITE setDataManager NOTIFY dataManagerChanged)
     Q_PROPERTY(QStringList columns READ columns WRITE setColumns NOTIFY columnsChanged)
+    Q_PROPERTY(QVariantMap columnAliases READ columnAliases WRITE setColumnAliases NOTIFY columnAliasesChanged)
 public:
     ~ScSqlVodModel();
     explicit ScSqlVodModel(QObject* parent = Q_NULLPTR);
@@ -43,6 +44,8 @@ public:
     void setDataManager(ScVodDataManager* newValue);
     QStringList columns() const;
     void setColumns(const QStringList& newValue);
+    QVariantMap columnAliases() const;
+    void setColumnAliases(const QVariantMap& newValue);
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
     QHash<int,QByteArray> roleNames() const Q_DECL_OVERRIDE;
 
@@ -50,17 +53,20 @@ signals:
     void selectChanged();
     void dataManagerChanged();
     void columnsChanged();
+    void columnAliasesChanged();
 
 private:
     void update();
     bool tryConfigureModel();
     void refresh();
+    void updateColumns();
 
 private:
+    QStringList m_Columns;
+    QVariantMap m_ColumnAliases;
     QHash<int, QByteArray> m_RoleNames;
     QString m_Select;
     ScVodDataManager* m_DataManager;
-    QStringList m_Columns;
     bool m_Dirty;
 };
 

@@ -28,6 +28,7 @@ import ".."
 
 ListItem {
     id: root
+    property string table
     property string eventFullName
     property string stageName
     property string side1
@@ -428,7 +429,7 @@ ListItem {
                     onClicked: {
                         seen = !seen
                         console.debug("seen=" + seen)
-                        VodDataManager.setSeen({"id": rowId}, seen)
+                        VodDataManager.setSeen(table, {"id": rowId}, seen)
                     }
 
                 }
@@ -528,7 +529,7 @@ ListItem {
         VodDataManager.metaDataDownloadFailed.connect(metaDataDownloadFailed)
         VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
         _vodTitle = VodDataManager.title(rowId)
-        seenButton.seen = VodDataManager.seen({"id": rowId}) >= 1
+        seenButton.seen = VodDataManager.seen(table, {"id": rowId}) >= 1
 
         // also fetch a valid meta data from cache
         VodDataManager.fetchMetaDataFromCache(rowId)

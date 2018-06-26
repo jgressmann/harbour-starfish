@@ -28,7 +28,8 @@ import ".."
 
 BasePage {
     id: page
-    property var filters: undefined
+    property string table
+    property string where
     property alias stage: header.title
     property bool _sameDate: false
     property bool _sameSides: false
@@ -40,15 +41,20 @@ BasePage {
     SqlVodModel {
         id: sqlModel
         dataManager: VodDataManager
-        columns: ["side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "rowid", "offset"]
-        select: "select " + columns.join(",") + " from vods " + Global.whereClause(filters) + " order by match_date desc, match_number asc, match_name desc"
+        columns: ["side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset"]
+        columnAliases: {
+            var x = {}
+            x["id"] = "vod_id"
+            return x
+        }
+        select: "select " + columns.join(",") + " from " + table + where + " order by match_date desc, match_number asc, match_name desc"
     }
 
     SqlVodModel {
         id: matchModel
         dataManager: VodDataManager
         columns: ["match_date"]
-        select: "select distinct " + columns.join(",") + " from vods " + Global.whereClause(filters)
+        select: "select distinct " + columns.join(",") + " from " + table + where
 
         onModelReset: _updateSameMatchDate()
         Component.onCompleted: _updateSameMatchDate()
@@ -58,7 +64,7 @@ BasePage {
         id: sidesModel
         dataManager: VodDataManager
         columns: ["side1_name", "side2_name"]
-        select: "select distinct " + columns.join(",") + " from vods " + Global.whereClause(filters)
+        select: "select distinct " + columns.join(",") + " from " + table + where
 
         onModelReset: _updateSameSides()
         Component.onCompleted: _updateSameSides()
@@ -74,7 +80,6 @@ BasePage {
 
         VerticalScrollDecorator {}
         TopMenu {}
-//        BottomMenu {}
 
         PageHeader {
             id: header
@@ -140,25 +145,25 @@ BasePage {
                 race2: side2_race
                 matchName: match_name
                 matchDate: match_date
-                rowId: rowid
+                rowId: vod_id
                 showDate: !_sameDate
                 showSides: !_sameSides
-
+                table: page.table
 
                 onPlayRequest: function (self) {
                     itemPlaying = self
-                    Global.playVideoHandler(updater, {video_id: rowid}, self.vodUrl, self.startOffset)
+                    Global.playVideoHandler(updater, {video_id: vod_id}, self.vodUrl, self.startOffset)
                 }
 
                 function updateStartOffset() {
-                    var rows = recentlyUsedVideos.select(["offset"], {video_id: rowid});
+                    var rows = recentlyUsedVideos.select(["offset"], {video_id: vod_id});
                     if (rows.length === 1) {
                         startOffset = rows[0].offset
                     } else {
                         startOffset = offset // base offset into multi match video
                     }
 
-//                    console.debug("rowid=" + rowid + " start=" + Global.secondsToTimeString(startOffset))
+//                    console.debug("rowid=" + vod_id + " start=" + Global.secondsToTimeString(startOffset))
                 }
 
                 Component.onCompleted: updateStartOffset()

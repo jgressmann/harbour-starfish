@@ -30,8 +30,9 @@ ListItem {
     id: root
 
     property alias stageName: label.text
-    property var filters: undefined
-    property var _myFilters: undefined
+    property string table
+    property string where
+    property string _where
 
     Item {
         x: Theme.horizontalPageMargin
@@ -40,8 +41,6 @@ ListItem {
 
         Label {
             id: label
-//            height: parent.height
-            //anchors { left: image.right; right: parent.right; }
             width: parent.width
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
@@ -60,28 +59,33 @@ ListItem {
                 console.debug("seen=" + progress)
                 var newValue = progress >= 1 ? false : true
                 progress = newValue ? 1 : 0
-                VodDataManager.setSeen(_myFilters, newValue)
+                VodDataManager.setSeen(table, _where, newValue)
             }
         }
     }
 
     onClicked: {
         pageStack.push(Qt.resolvedUrl("StagePage.qml"), {
-            filters: filters,
+            table: table,
+            where: _where,
             stage: stageName,
         })
     }
 
     Component.onCompleted: {
-        _myFilters = Global.clone(filters)
-        _myFilters["stage_name"] = stageName
+        var myFilters = "stage_name='" + stageName + "'"
+        if (where.length > 0) {
+            _where = where + " and " + myFilters
+        } else {
+            _where = " where " + myFilters
+        }
 
         update()
     }
 
 
     function update() {
-        seenButton.progress = VodDataManager.seen(_myFilters)
+        seenButton.progress = VodDataManager.seen(table, _where)
     }
 }
 

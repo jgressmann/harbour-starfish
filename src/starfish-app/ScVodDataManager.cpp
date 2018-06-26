@@ -568,6 +568,13 @@ ScVodDataManager::setupDatabase() {
 //        "CREATE INDEX IF NOT EXISTS vod_url_share_type ON vod_url_share (type)\n"
             //"CREATE INDEX IF NOT EXISTS vod_file_ref_vod_id ON vod_file_ref (vod_id)\n",
             //"CREATE INDEX IF NOT EXISTS vod_file_ref_vod_file_id ON vod_file_ref (vod_file_id)\n"
+
+        "CREATE VIEW IF NOT EXISTS offline_vods AS\n"
+        "   SELECT *\n"
+        "   FROM vods v\n"
+        "   INNER JOIN vod_file_ref r ON v.id=r.vod_id\n"
+        "   INNER JOIN vod_files f ON f.id=r.vod_file_id\n"
+        "\n",
     };
 
 
@@ -2541,47 +2548,52 @@ ScVodDataManager::queryVodFiles(qint64 rowid) {
 }
 
 qreal
-ScVodDataManager::seen(const QVariantMap& filters) const {
+ScVodDataManager::seen(const QString& table, const QString& where) const {
     RETURN_IF_ERROR;
 
-    if (filters.isEmpty()) {
-        qWarning() << "no filters";
+    if (table.isEmpty()) {
+        qWarning() << "no table";
         return -1;
     }
+
+//    if (filters.isEmpty()) {
+//        qWarning() << "no filters";
+//        return -1;
+//    }
 
 //    QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);
 
-    QString query;
-    auto beg = filters.cbegin();
-    auto end = filters.cend();
+//    QString query;
+//    auto beg = filters.cbegin();
+//    auto end = filters.cend();
 
-    static const QString And = QStringLiteral(" AND ");
-    static const QString Placeholder = QStringLiteral("=?");
+//    static const QString And = QStringLiteral(" AND ");
+//    static const QString Placeholder = QStringLiteral("=?");
 
-    for (auto it = beg; it != end; ++it) {
-        if (query.size() > 0) {
-            query += And;
-        }
+//    for (auto it = beg; it != end; ++it) {
+//        if (query.size() > 0) {
+//            query += And;
+//        }
 
-        query += it.key() + Placeholder;
-    }
+//        query += it.key() + Placeholder;
+//    }
 
     static const QString part0 = QStringLiteral(
                 "SELECT\n"
                 "    SUM(seen)/(1.0 * COUNT(seen))\n"
                 "FROM\n"
-                "    vods\n"
-                "WHERE\n");
-    if (!q.prepare(part0 + query)) {
+                "    %1\n"
+                "%2\n");
+    if (!q.prepare(part0.arg(table, where))) {
         qCritical() << "failed to prepare query" << q.lastError();
         return -1;
     }
 
-    for (auto it = beg; it != end; ++it) {
-        q.addBindValue(it.value());
-    }
+//    for (auto it = beg; it != end; ++it) {
+//        q.addBindValue(it.value());
+//    }
 
     if (!q.exec()) {
         qCritical() << "failed to exec query" << q.lastError();
@@ -2594,32 +2606,37 @@ ScVodDataManager::seen(const QVariantMap& filters) const {
 }
 
 void
-ScVodDataManager::setSeen(const QVariantMap& filters, bool value) {
+ScVodDataManager::setSeen(const QString& table, const QString& where, bool value) {
     RETURN_IF_ERROR;
 
-    if (filters.isEmpty()) {
-        qWarning() << "no filters";
+    if (table.isEmpty()) {
+        qWarning() << "no table";
         return;
     }
+
+//    if (filters.isEmpty()) {
+//        qWarning() << "no filters";
+//        return;
+//    }
 
     QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);
 
     QString query;
-    auto beg = filters.cbegin();
-    auto end = filters.cend();
+//    auto beg = filters.cbegin();
+//    auto end = filters.cend();
 
-    for (auto it = beg; it != end; ++it) {
-        if (query.size() > 0) {
-            query += QStringLiteral(" AND ");
-        }
+//    for (auto it = beg; it != end; ++it) {
+//        if (query.size() > 0) {
+//            query += QStringLiteral(" AND ");
+//        }
 
-        query += it.key() + QStringLiteral("=?");
-//        qDebug() << it.key() << it.value();
-    }
+//        query += it.key() + QStringLiteral("=?");
+////        qDebug() << it.key() << it.value();
+//    }
 
-    query = QStringLiteral("UPDATE vods SET seen=? WHERE\n") + query;
+    query = QStringLiteral("UPDATE vods SET seen=? WHERE id IN (SELECT id FROM %1 %2)").arg(table, where);
 
 
     if (!q.prepare(query)) {
@@ -2629,9 +2646,9 @@ ScVodDataManager::setSeen(const QVariantMap& filters, bool value) {
 
     q.addBindValue(value);
 
-    for (auto it = beg; it != end; ++it) {
-        q.addBindValue(it.value());
-    }
+//    for (auto it = beg; it != end; ++it) {
+//        q.addBindValue(it.value());
+//    }
 
     if (!q.exec()) {
         qCritical() << "failed to exec query" << q.lastError();
@@ -2734,14 +2751,7 @@ ScVodDataManager::deleteSeenVodFiles() {
 
     QSqlQuery q(m_Database);
 
-    if (!q.exec(QStringLiteral(
-                      "SELECT\n"
-                      "    f.file_name\n"
-                      "FROM vod_file_ref r\n"
-                      "INNER JOIN vods v ON v.id=r.vod_id\n"
-                      "INNER JOIN vod_files f ON f.id=r.vod_file_id\n"
-                      "WHERE v.seen=1\n"
-                      ))) {
+    if (!q.exec(QStringLiteral("SELECT file_name FROM offline_vods WHERE seen=1"))) {
         qCritical() << "failed to exec query" << q.lastError();
         return 0;
     }
@@ -2754,6 +2764,16 @@ ScVodDataManager::deleteSeenVodFiles() {
             qDebug() << "removed" << m_VodDir + fileName;
             ++count;
         }
+    }
+
+    if (!q.exec(QStringLiteral(
+        "UPDATE vod_files\n"
+        "SET\n"
+        "   progress=0\n"
+        "WHERE\n"
+        "   id IN (SELECT vod_file_id FROM offline_vods WHERE seen=1)\n"))) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return 0;
     }
 
     if (count) {

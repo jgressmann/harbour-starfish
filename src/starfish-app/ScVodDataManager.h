@@ -115,8 +115,8 @@ public: //
     void setDownloadMarker(QDate value);
     void suspendVodsChangedEvents();
     void resumeVodsChangedEvents();
-    Q_INVOKABLE qreal seen(const QVariantMap& filters) const;
-    Q_INVOKABLE void setSeen(const QVariantMap& filters, bool value);
+    Q_INVOKABLE qreal seen(const QString& table, const QString& where) const;
+    Q_INVOKABLE void setSeen(const QString& table, const QString& where, bool value);
     inline ScVodman* vodman() const { return m_Vodman; }
     inline ScClassifier* classifier() const { return const_cast<ScClassifier*>(&m_Classifier); }
     inline QVariant databaseVariant() const { return QVariant::fromValue(m_Database); }

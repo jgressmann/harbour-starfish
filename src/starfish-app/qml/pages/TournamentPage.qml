@@ -29,13 +29,14 @@ import ".."
 BasePage {
     id: page
 
-    property var filters: undefined
+    property string table
+    property string where
 
     SqlVodModel {
         id: sqlModel
         dataManager: VodDataManager
         columns: ["event_full_name", "stage_name" ]
-        select: "select distinct " + columns.join(",") + " from vods " + Global.whereClause(filters) + " order by match_date desc"
+        select: "select distinct " + columns.join(",") + " from " + table + where + " order by match_date desc"
     }
 
     SilicaFlickable {
@@ -60,12 +61,17 @@ BasePage {
 
             delegate: StageItem {
                 width: listView.width
-                //height: Global.itemHeight
                 contentHeight: Global.itemHeight // StageItem is a ListItem
-                //stageName: sqlModel.at(index, 1)
-                //stageName: sqlModel.data(sqlModel.index(index, 1), 0)
                 stageName: stage_name
-                filters: Global.merge(page.filters, { "stage_name": stageName })
+                table: page.table
+                where: {
+                    var myFilter = "stage_name='" + stageName + "'"
+                    if (page.where.length > 0) {
+                        return page.where + " and " + myFilter
+                    }
+
+                    return " where " + myFilter
+                }
 
                 onClicked: {
                     ListView.view.currentIndex = index

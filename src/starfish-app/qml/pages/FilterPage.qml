@@ -29,8 +29,9 @@ import ".."
 BasePage {
     id: page
 
-    property string title: undefined
-    property var filters: undefined
+    property string title
+    property string table
+    property string where
     property string key: undefined
     property bool ascending: Global.sortKey(key) === 1
     property bool grid: false
@@ -42,10 +43,9 @@ BasePage {
         dataManager: VodDataManager
         columns: [key]
         select: {
-            var sql = "select distinct "+ key +" from vods"
-            sql += Global.whereClause(filters)
+            var sql = "select distinct "+ key +" from " + table + where
             sql += " order by " + key + " " + (ascending ? "asc" : "desc")
-//            console.debug(title + ": " + sql)
+            console.debug(title + ": " + sql)
             return sql
         }
     }
@@ -79,9 +79,10 @@ BasePage {
                     width: listView.width
                     //height: Global.itemHeight
                     contentHeight: Global.itemHeight // FilterItem is a ListItem
+                    table: page.table
                     key: page.key
                     value: sqlModel.data(sqlModel.index(index, 0), 0)
-                    filters: page.filters
+                    where: page.where
                     grid: page.grid
 
                     onClicked: {
@@ -95,7 +96,7 @@ BasePage {
 
                 ViewPlaceholder {
                     enabled: listView.count === 0
-                    text: "nothing here"
+                    text: "There seems to be nothing here."
                 }
 
 
@@ -129,9 +130,10 @@ BasePage {
                 }
 
                 delegate: FilterItem {
+                    table: page.table
                     key: page.key
                     value: sqlModel.data(sqlModel.index(index, 0), 0)
-                    filters: page.filters
+                    where: page.where
                     grid: page.grid
                     contentHeight: gridView.cellHeight // FilterItem is a ListItem
                     width: gridView.cellWidth
@@ -149,7 +151,7 @@ BasePage {
 
                 ViewPlaceholder {
                     enabled: gridView.count === 0
-                    text: "nothing here"
+                    text: "There seems to be nothing here."
                 }
 
                 Component.onCompleted: {

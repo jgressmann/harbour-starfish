@@ -40,51 +40,6 @@ Item { // Components can't declare functions
     readonly property real pathTraceOpacity: 0.25
     property var playVideoHandler
 
-    function whereClause(filters) {
-        var where = ""
-        if (typeof(filters) === "object") {
-            for (var key in filters) {
-                var skey = sanitize(key.toString())
-                var value = sanitize(filters[key].toString())
-                if (where.length > 0) {
-                    where += " and "
-                } else {
-                    where += " where "
-                }
-
-                where += skey + "='" + value + "'"
-            }
-        }
-
-        return where;
-    }
-
-    function sanitize(str) {
-        str = _replaceWhileChange(str, "\\", "")
-        str = _replaceWhileChange(str, ";", "")
-        str = _replaceWhileChange(str, "'", "\\'")
-        str = _replaceWhileChange(str, "\"", "\\\"")
-//        var index = str.indexOf(" ")
-//        if (index >= 0) {
-//            str = "\"" + str + "\""
-//        }
-
-        return str
-    }
-
-    function _replaceWhileChange(str, needle, replacement) {
-        var index = str.indexOf(needle)
-        if (index >= 0) {
-            var x = str;
-            do {
-                str = x;
-                x = str.replace(needle, replacement)
-            } while (x !== str)
-        }
-
-        return str
-    }
-
     function values(sql) {
 //        console.debug(sql)
 
@@ -152,25 +107,13 @@ Item { // Components can't declare functions
         return key !== "year" && key !== "season"
     }
 
-//    function singleRemainingKey(filters) {
-//        var rem = undefined
-//        for (var key in filters) {
-//            var index = filterKeys.indexOf(key)
-//            if (index === -1) {
-//                rem = key
-//                break
-//            }
-//        }
-
-//        return rem
-//    }
-
-    function remainingKeys(filters) {
+    function remainingKeys(where) {
         var result = []
 
         for (var i = 0; i < filterKeys.length; ++i) {
             var key = filterKeys[i]
-            if (key in filters) {
+            var index = where.indexOf(key)
+            if (index >= 0) {
                 continue
             }
 
@@ -195,8 +138,8 @@ Item { // Components can't declare functions
         }[key] || 1
     }
 
-    function performNext(myFilters) {
-        var rem = remainingKeys(myFilters)
+    function performNext(_table, _where) {
+        var rem = remainingKeys(_where)
 
         // we need to figure out if there is only as single value for any of the subkeys
         for (var change = true; change; ) {
@@ -204,14 +147,14 @@ Item { // Components can't declare functions
             var newRem = []
 
             if (rem.length > 0) {
-                var xsql = "select \n";
+                var xsql = "select\n";
                 for (var i = 0; i < rem.length; ++i) {
                     if (i > 0) {
                         xsql += ",\n"
                     }
                     xsql += "count(distinct " + rem[i] + ")," + rem[i]
                 }
-                xsql += " from vods" + whereClause(myFilters) + " limit 1";
+                xsql += " from " + _table + _where + " limit 1";
 
 //                console.debug(xsql);
 
@@ -223,7 +166,13 @@ Item { // Components can't declare functions
                     var value = _model.data(_model.index(0, i*2+1), 0)
                     console.debug("count=" + count + " value=" + value)
                     if (count === 1) {
-                        myFilters[rem[i]] = value
+                        var newFilter = rem[i] + "='" + value + "'"
+                        if (_where.length > 0) {
+                            _where += " and " + newFilter
+                        } else {
+                            _where = " where " + newFilter
+                        }
+
                         change = true
                     } else if (count > 1) {
                         newRem.push(rem[i])
@@ -237,19 +186,22 @@ Item { // Components can't declare functions
         if (0 === rem.length) {
             // exhausted all filter keys, show tournament
             return [Qt.resolvedUrl("pages/TournamentPage.qml"), {
-                filters: myFilters
+                table: _table,
+                where: _where
             },
                     rem]
         } else if (1 === rem.length) {
             return [Qt.resolvedUrl("pages/FilterPage.qml"), {
                                 title: VodDataManager.label(rem[0]),
-                                filters: myFilters,
+                                table: _table,
+                                where: _where,
                                 key: rem[0],
                             },rem]
         } else {
             return [Qt.resolvedUrl("pages/FilterPage.qml"), {
                                 title: VodDataManager.label(rem[0]),
-                                filters: myFilters,
+                                table: _table,
+                                where: _where,
                                 key: rem[0],
                             },rem]
 //            return [Qt.resolvedUrl("pages/SelectionPage.qml"), {

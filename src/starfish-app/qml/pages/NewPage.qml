@@ -34,7 +34,12 @@ BasePage {
     SqlVodModel {
         id: sqlModel
         dataManager: VodDataManager
-        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "rowid", "offset"]
+        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset"]
+        columnAliases: {
+            var x = {}
+            x["id"] = "vod_id"
+            return x
+        }
         select: "select " + columns.join(",") + " from vods where seen=0 order by match_date desc, match_name asc"
     }
 
@@ -46,7 +51,6 @@ BasePage {
 
         VerticalScrollDecorator {}
         TopMenu {}
-//        BottomMenu {}
 
         HighlightingListView {
             id: listView
@@ -74,8 +78,9 @@ BasePage {
                     race2: side2_race
                     matchName: match_name
                     matchDate: match_date
-                    rowId: rowid
+                    rowId: vod_id
                     startOffset: offset
+                    table: "vods"
 
                     onClicked: {
                         ListView.view.currentIndex = index
@@ -83,7 +88,7 @@ BasePage {
 
                     onPlayRequest: function (self, callback) {
                         itemPlaying = self
-                        Global.playVideoHandler(updater, {video_id: rowid}, self.vodUrl, self.startOffset)
+                        Global.playVideoHandler(updater, {video_id: vod_id}, self.vodUrl, self.startOffset)
                     }
                 }
             }
@@ -91,7 +96,7 @@ BasePage {
             ViewPlaceholder {
                 enabled: listView.count === 0
                 text: "There are no new VODs available."
-                hintText: "Pull down to search for new VODs."
+                hintText: "Pull down to fetch new VODs."
             }
         }
     }
