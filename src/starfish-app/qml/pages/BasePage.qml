@@ -81,7 +81,7 @@ Page {
                 text: vodDatabaseDownloader.progressDescription
                 truncationMode: TruncationMode.Fade
                 font.pixelSize: Theme.fontSizeSmall
-                horizontalAlignment: contentWidth >= width ? Text.AlignLeft : Text.AlignHCenter
+                horizontalAlignment: _fadeText ? Text.AlignLeft : Text.AlignHCenter
             }
         }
 
