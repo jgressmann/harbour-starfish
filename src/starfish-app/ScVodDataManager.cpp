@@ -1593,7 +1593,7 @@ ScVodDataManager::fetchThumbnailFromCache(qint64 rowid) {
 void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
     RETURN_IF_ERROR;
 
-    Stopwatch sw("fetchThumbnail", 10);
+    Stopwatch sw("fetchThumbnail", 50);
     QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);
