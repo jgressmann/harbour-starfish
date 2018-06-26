@@ -40,7 +40,7 @@ BasePage {
             x["id"] = "vod_id"
             return x
         }
-        select: "select " + columns.join(",") + " from vods where seen=0 order by match_date desc, match_name asc"
+        select: "select " + columns.join(",") + " from vods where seen=0 order by match_date desc, event_full_name asc, match_name asc"
     }
 
     SilicaFlickable {
