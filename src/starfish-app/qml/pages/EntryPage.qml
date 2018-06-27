@@ -228,6 +228,6 @@ BasePage {
         }
     }
 
-    Component.onDestruction: Global.performOwnerGone(recentlyWatchedVideoView.matchItems)
+//    Component.onDestruction: Global.performOwnerGone(recentlyWatchedVideoView.matchItems)
 }
 

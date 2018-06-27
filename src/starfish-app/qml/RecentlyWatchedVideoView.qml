@@ -35,7 +35,7 @@ SilicaListView {
 
     signal clicked(var obj, string playbackUrl, int offset, var matchItem)
 
-    property var matchItems: []
+//    property var matchItems: []
 
     delegate: Component {
         Loader {
@@ -198,16 +198,6 @@ SilicaListView {
                     readonly property int xindex: index
                     readonly property int xoffset: offset
                     readonly property int xvideo_id: video_id
-//                    readonly property string xevent_full_name: event_full_name
-//                    readonly property string xstage_name: stage_name
-//                    readonly property string xside1_name: side1_name
-//                    readonly property string xside2_name: side2_name
-//                    readonly property string xmatch_name: match_name
-//                    readonly property date xmatch_date: match_date
-//                    readonly property int xside1_race: side1_race
-//                    readonly property int xside2_race: side2_race
-//                    readonly property int xvideo_id: video_id
-//                    readonly property int xoffset: offset
 
                     delegate: Component {
                         MatchItem {
@@ -251,17 +241,25 @@ SilicaListView {
                                 }
                             }
 
-                            Component.onCompleted: {
-                                matchItems.push(matchItem)
-                            }
+//                            Component.onCompleted: {
+//                                console.debug("pre completed item index " + xindex + " matchItems: " + matchItems)
+//                                matchItems.push(matchItem)
+//                                console.debug("post completed item index " + xindex + " matchItems: " + matchItems)
+//                            }
 
-                            Component.onDestruction: {
-                                var i = matchItems.indexOf(matchItem)
-                                if (i >= 0) {
-                                    matchItems[i] = matchItems[matchItems.length-1]
-                                    matchItems.pop()
-                                }
-                            }
+//                            Component.onDestruction: {
+
+//                                if (listView.matchItems) { // aparently happens on destruction
+//                                    console.debug("pre destruction index " + xindex + " matchItems: " + listView.matchItems)
+//                                    var i = listView.matchItems.indexOf(matchItem)
+//                                    if (i >= 0) {
+//                                        listView.matchItems[i] = listView.matchItems[listView.matchItems.length-1]
+//                                        listView.matchItems.pop()
+//                                    }
+//                                    console.debug("post destruction index " + xindex + " matchItems: " + listView.matchItems)
+//                                }
+
+//                            }
                         }
                     }
 
@@ -287,12 +285,18 @@ SilicaListView {
         hintText: "This list will fill with the videos you have watched."
     }
 
-    function getMatchItemById(id) {
-        for (var i = 0; i < matchItems.length; ++i) {
-            var item = matchItems[i]
-            if (item.rowId === id) {
-                return item
-            }
-        }
+    function getMatchItemById(_id) {
+//        if (matchItems) {
+//            for (var i = 0; i < matchItems.length; ++i) {
+//                var item = matchItems[i]
+//                if (item.rowId === _id) {
+//                    return item
+//                }
+//            }
+//        }
     }
+
+//    Component.onDestruction: {
+//        console.debug("RecentlyWatchedVideoView destruction, matchItems: " + matchItems)
+//    }
 }
