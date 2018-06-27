@@ -43,7 +43,7 @@ BasePage {
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
 
-                text: qsTr("New VODs")
+                text: qsTr("New")
 
                 font.pixelSize: Global.labelFontSize
                 anchors.verticalCenter: parent.verticalCenter
@@ -71,7 +71,7 @@ BasePage {
             Label {
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
-                text: qsTr("Browse VODs")
+                text: qsTr("Browse")
 
                 font.pixelSize: Global.labelFontSize
                 anchors.verticalCenter: parent.verticalCenter
@@ -96,7 +96,7 @@ BasePage {
             Label {
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
-                text: qsTr("Offline available VODs")
+                text: qsTr("Offline available")
 
                 font.pixelSize: Global.labelFontSize
                 anchors.verticalCenter: parent.verticalCenter
