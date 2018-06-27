@@ -30,7 +30,6 @@ BasePage {
     id: page
 
     property var itemPlaying: null
-    property string _ids: "()"
 
     SqlVodModel {
         id: sqlModel
@@ -133,8 +132,13 @@ BasePage {
     Component.onDestruction: Global.performOwnerGone(listView.contentItem)
 
     function _vodDownloadsChanged() {
-        _ids = "(" + VodDataManager.vodsBeingDownloaded().join(",") + ")"
-        sqlModel.select = "select " + sqlModel.columns.join(",") + " from vods where id in " + _ids + " order by match_date desc, event_full_name asc, match_name asc"
+        var ids =
+        sqlModel.select =
+                "select "
+                + sqlModel.columns.join(",")
+                + " from vods where id in ("
+                + VodDataManager.vodsBeingDownloaded().join(",")
+                + ") order by match_date desc, event_full_name asc, match_name asc"
     }
 }
 
