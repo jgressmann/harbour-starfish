@@ -305,12 +305,12 @@ void removeCrud(QString& inoutSrc) {
 ScRecord::ScRecord()
 {
     valid = 0;
-    year = 0;
-    game = 0;
-    season = 0;
-    side1Race = 0;
-    side2Race = 0;
-    matchNumber = 0;
+    year = -1;
+    game = -1;
+    season = -1;
+    side1Race = -1;
+    side2Race = -1;
+    matchNumber = -1;
 }
 
 

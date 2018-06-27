@@ -222,6 +222,7 @@ TestParser::autocompleteFromEvent_data() {
     record.season = 4;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 
+
     record.valid = ScRecord::ValidGame | ScRecord::ValidYear;
     record.eventName = "Proleague";
     record.eventFullName = "Proleague (2012-2013)";
@@ -326,14 +327,14 @@ TestParser::autocompleteFromEvent_data() {
     record.game = ScRecord::GameBroodWar;
     record.season = 4;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-#endif
+
     record.valid = ScRecord::ValidGame | ScRecord::ValidSeason;
     record.eventName = "Bombastic StarLeague";
     record.eventFullName = "Bombastic StarLeague 4 (BW)";
     record.game = ScRecord::GameBroodWar;
     record.season = 4;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-#if 1
+
 
 
     record.valid = ScRecord::ValidGame;
@@ -355,7 +356,11 @@ TestParser::autocompleteFromEvent_data() {
     record.season = 3;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 
-
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "Have at you!";
+    record.eventFullName = "Have at you!";
+    record.game = ScRecord::GameBroodWar;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 #endif
 }
 
@@ -471,11 +476,6 @@ TestParser::autocompleteFromMatch_data() {
     record.valid = ScRecord::ValidGame;
     record.matchName = "SLush - Psy";
     record.game = ScRecord::GameSc2;
-    QTest::newRow(record.matchName.toLocal8Bit()) << record;
-
-    record.valid = ScRecord::ValidGame;
-    record.matchName = "Jaedong - fantasy";
-    record.game = ScRecord::GameBroodWar;
     QTest::newRow(record.matchName.toLocal8Bit()) << record;
 
     record.valid = ScRecord::ValidGame;
