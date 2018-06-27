@@ -203,7 +203,9 @@ ListItem {
 
                     Image {
                         id: thumbnail
-                        anchors.fill: parent
+                        anchors.centerIn: parent
+                        height: _thumbnailState === thumbnailStateAvailable ? parent.height : thumbnailBusyIndicator.height
+                        width: _thumbnailState === thumbnailStateAvailable ? parent.width : thumbnailBusyIndicator.width
                         sourceSize.width: width
                         sourceSize.height: height
                         fillMode: Image.PreserveAspectFit
@@ -220,6 +222,7 @@ ListItem {
                     }
 
                     BusyIndicator {
+                        id: thumbnailBusyIndicator
                         size: BusyIndicatorSize.Medium
                         anchors.centerIn: parent
                         running: visible
