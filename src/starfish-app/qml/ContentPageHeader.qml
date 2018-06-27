@@ -16,7 +16,7 @@ PageHeader {
         icon.source: "image://theme/icon-m-home"
         icon.width: width
         icon.height: height
-        onClicked: pageStack.replace(Qt.resolvedUrl("pages/EntryPage.qml"))
+        onClicked: pageStack.replaceAbove(null, Qt.resolvedUrl("pages/EntryPage.qml"))
     }
 
     VodDataManagerBusyIndicator {
