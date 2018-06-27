@@ -38,7 +38,6 @@ ListItem {
     property int race1: -1
     property int race2: -1
     property date matchDate
-    property bool seen: false
     property bool showDate: true
     property bool showSides: (side1 && side2) || (side1 && !_vodTitle)
     property bool showTitle: !side2
@@ -59,7 +58,6 @@ ListItem {
     property bool _downloading: false
     property int _width: 0
     property int _height: 0
-    property bool _seen: false
     property bool _tryingToPlay: false
     property int _metaDataState: metaDataStateInitial
     property int _thumbnailState: thumbnailStateInitial
@@ -428,9 +426,6 @@ ListItem {
 
                 IconButton {
                     id: seenButton
-//                    width: parent.height
-//                    height: parent.height
-//                    anchors.right: loadingIndicator.left
                     anchors.right: parent.right
                     enabled: rowId >= 0
                     icon.source: seen ? "image://theme/icon-m-favorite-selected" : "image://theme/icon-m-favorite"
@@ -540,7 +535,7 @@ ListItem {
         VodDataManager.metaDataDownloadFailed.connect(metaDataDownloadFailed)
         VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
         _vodTitle = VodDataManager.title(rowId)
-        seenButton.seen = VodDataManager.seen(table, {"id": rowId}) >= 1
+        seenButton.seen = VodDataManager.seen(table, " where id=" + rowId) >= 1
 
         // also fetch a valid meta data from cache
         VodDataManager.fetchMetaDataFromCache(rowId)
