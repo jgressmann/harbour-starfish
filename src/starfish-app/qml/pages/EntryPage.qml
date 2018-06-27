@@ -148,7 +148,7 @@ BasePage {
             width: parent.width
 
             Label {
-
+                visible: recentlyWatchedVideoView.height > 0
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
                 text: qsTr("Continue watching")
