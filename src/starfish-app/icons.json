@@ -107,6 +107,11 @@
             "extension": ".jpg"
         },
         {
+            "regex": "have at you!",
+            "url": "https://www.dropbox.com/s/8posuwlxs42jv22/haveatyou.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "hsc|homestory cup|home story cup",
             "url": "https://www.dropbox.com/s/upb0a78gw5dx02s/hsc.png?dl=1",
             "extension": ".png"
