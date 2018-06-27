@@ -70,6 +70,7 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/pages/AboutPage.qml \
     qml/pages/ToolsPage.qml \
     qml/pages/OpenVideoPage.qml \
+    qml/pages/ActiveDownloadPage.qml \
     qml/TopMenu.qml \
     qml/Global.qml \
     qml/FormatComboBox.qml \

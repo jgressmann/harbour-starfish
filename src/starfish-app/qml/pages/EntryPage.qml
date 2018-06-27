@@ -126,6 +126,23 @@ BasePage {
             }
         }
 
+        ListItem {
+            id: downloadingVodsItem
+            contentHeight: visible ? Global.itemHeight : 0
+            visible: VodDataManager.vodDownloads > 0
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: page.width - 2*x
+                text: qsTr("Active downloads")
+
+                font.pixelSize: Global.labelFontSize
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            onClicked: pageStack.push(Qt.resolvedUrl("ActiveDownloadPage.qml"))
+        }
+
         Column {
             id: continueWatching
             width: parent.width

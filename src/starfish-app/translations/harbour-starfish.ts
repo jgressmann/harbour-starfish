@@ -2,15 +2,14 @@
 <!DOCTYPE TS>
 <TS version="2.1">
 <context>
+    <name>ActiveDownloadPage</name>
+    <message>
+        <source>Active downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EntryPage</name>
-    <message>
-        <source>New VODs</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Browse VODs</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Game</source>
         <translation type="unfinished"></translation>
@@ -20,7 +19,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Offline available VODs</source>
+        <source>Active downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Offline available</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

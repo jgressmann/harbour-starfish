@@ -73,6 +73,7 @@ class ScVodDataManager : public QObject {
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
     Q_PROPERTY(QVariant database READ databaseVariant CONSTANT)
+    Q_PROPERTY(int vodDownloads READ vodDownloads NOTIFY vodDownloadsChanged)
 
 public:
     enum Error {
@@ -124,6 +125,8 @@ public: //
     Q_INVOKABLE QString makeThumbnailFile(const QString& srcPath);
     Q_INVOKABLE int deleteSeenVodFiles();
     Q_INVOKABLE bool implicitlyStartedVodFetch(qint64 rowid) const;
+    int vodDownloads() const;
+    Q_INVOKABLE QVariantList vodsBeingDownloaded() const;
 
 
 signals:
@@ -144,6 +147,7 @@ signals:
     void vodmanError(int error);
     void vodDownloadFailed(qint64 rowid, int error);
     void vodsAdded(int count);
+    void vodDownloadsChanged();
 
 
 

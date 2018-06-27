@@ -1360,6 +1360,7 @@ void ScVodDataManager::onFileDownloadCompleted(qint64 token, const VMVodFileDown
     if (it != m_VodmanFileRequests.end()) {
         const VodmanFileRequest r = it.value();
         m_VodmanFileRequests.erase(it);
+        emit vodDownloadsChanged();
 
         QSqlQuery q(m_Database);
         if (download.progress() >= 1 && download.error() == VMVodEnums::VM_ErrorNone) {
@@ -1438,6 +1439,7 @@ ScVodDataManager::onDownloadFailed(qint64 token, int serviceErrorCode) {
     if (it != m_VodmanFileRequests.end()) {
         VodmanFileRequest r = it.value();
         m_VodmanFileRequests.erase(it);
+        emit vodDownloadsChanged();
 
         QSqlQuery q(m_Database);
         if (!q.prepare(
@@ -1960,6 +1962,7 @@ FetchVod:
                         r.implicitlyStarted = implicitlyStarted;
                         m_VodmanFileRequests.insert(r.token, r);
                         m_Vodman->startFetchFile(r.token, vod, formatIndex, vodFilePath);
+                        emit vodDownloadsChanged();
                     }
                 }
             } else {
@@ -2020,6 +2023,8 @@ ScVodDataManager::cancelFetchVod(qint64 rowid) {
             }
         }
     }
+
+    emit vodDownloadsChanged();
 }
 
 
@@ -2768,4 +2773,49 @@ ScVodDataManager::implicitlyStartedVodFetch(qint64 rowid) const {
     return false;
 }
 
+int
+ScVodDataManager::vodDownloads() const {
+    QMutexLocker g(&m_Lock);
+    return m_VodmanFileRequests.size();
+}
+
+QVariantList
+ScVodDataManager::vodsBeingDownloaded() const {
+    QMutexLocker g(&m_Lock);
+
+    QSqlQuery q(m_Database);
+    QVariantList result;
+
+    auto beg = m_VodmanFileRequests.cbegin();
+    auto end = m_VodmanFileRequests.cend();
+    for (auto it = beg; it != end; ++it) {
+        const VodmanFileRequest& r = it.value();
+
+        if (!q.prepare(
+                    QStringLiteral(
+                        "SELECT\n"
+                        "   v.id\n"
+                        "FROM vod_file_ref r\n"
+                        "INNER JOIN vods v ON v.id=r.vod_id\n"
+                        "INNER JOIN vod_files f ON f.id=r.vod_file_id\n"
+                        "WHERE f.id=?\n"))) {
+            qCritical() << "failed to prepare query" << q.lastError();
+            return result;
+        }
+
+        q.addBindValue(r.vod_file_id);
+
+        if (!q.exec()) {
+            qCritical() << "failed to exec query" << q.lastError();
+            return result;
+        }
+
+        while (q.next()) {
+            auto vodId = qvariant_cast<qint64>(q.value(0));
+            result << vodId;
+        }
+    }
+
+    return result;
+}
 
