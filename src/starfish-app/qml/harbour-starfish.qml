@@ -132,7 +132,7 @@ ApplicationWindow {
         ConfigurationValue {
             id: settingNetworkContinueDownload
             key: "/network/continue_download"
-            defaultValue: false
+            defaultValue: true
         }
 
         ConfigurationValue {
