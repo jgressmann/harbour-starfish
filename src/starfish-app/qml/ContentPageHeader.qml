@@ -13,7 +13,7 @@ PageHeader {
         id: homeButton
         width: Theme.iconSizeSmallPlus
         height: Theme.iconSizeSmallPlus
-        icon.source: "/usr/share/icons/hicolor/128x128/apps/harbour-starfish.png"
+        icon.source: "image://theme/icon-m-home"
         icon.width: width
         icon.height: height
         onClicked: pageStack.replace(Qt.resolvedUrl("pages/EntryPage.qml"))
