@@ -36,7 +36,8 @@ BasePage {
         id: visualModel
 
         ListItem {
-            contentHeight: Global.itemHeight
+            id: newVodsItem
+            contentHeight: visible ? Global.itemHeight : 0
 
             Label {
                 x: Theme.horizontalPageMargin
@@ -50,6 +51,17 @@ BasePage {
 
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("NewPage.qml"))
+            }
+
+            SqlVodModel {
+                id: newModel
+                dataManager: VodDataManager
+                columns: ["count"]
+                select: "select count(*) from vods where seen=0"
+            }
+
+            function update() {
+                visible = newModel.data(newModel.index(0, 0)) > 0
             }
         }
 
@@ -78,7 +90,8 @@ BasePage {
         }
 
         ListItem {
-            contentHeight: Global.itemHeight
+            id: offlineVodsItem
+            contentHeight: visible ? Global.itemHeight : 0
 
             Label {
                 x: Theme.horizontalPageMargin
@@ -99,6 +112,17 @@ BasePage {
                                 key: "game",
                                 grid: true,
                             })
+            }
+
+            SqlVodModel {
+                id: offlineModel
+                dataManager: VodDataManager
+                columns: ["count"]
+                select: "select count(*) from offline_vods where progress>0"
+            }
+
+            function update() {
+                visible = offlineModel.data(offlineModel.index(0, 0)) > 0
             }
         }
 
@@ -169,6 +193,9 @@ BasePage {
                 }
                 _videoId = -1
             }
+
+            offlineVodsItem.update()
+            newVodsItem.update()
 
 //            // THIS doens't work for some reason
 //            console.debug("playing match item " + page.itemPlaying + " " + typeof(page.itemPlaying))
