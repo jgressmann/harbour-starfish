@@ -56,10 +56,8 @@ BasePage {
             id: listView
             anchors.fill: parent
             model: sqlModel
-            header: PageHeader {
+            header: ContentPageHeader {
                 title: qsTr("New")
-
-                VodDataManagerBusyIndicator {}
             }
 
             RecentlyWatchedVideoUpdater {

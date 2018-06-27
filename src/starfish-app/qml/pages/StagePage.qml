@@ -81,10 +81,8 @@ BasePage {
         VerticalScrollDecorator {}
         TopMenu {}
 
-        PageHeader {
+        ContentPageHeader {
             id: header
-
-            VodDataManagerBusyIndicator {}
         }
 
         Column {

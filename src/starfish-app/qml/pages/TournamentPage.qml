@@ -53,10 +53,8 @@ BasePage {
             id: listView
             anchors.fill: parent
             model: sqlModel
-            header: PageHeader {
+            header: ContentPageHeader {
                 title: sqlModel.data(sqlModel.index(0, 0), 0)
-
-                VodDataManagerBusyIndicator {}
             }
 
             delegate: StageItem {

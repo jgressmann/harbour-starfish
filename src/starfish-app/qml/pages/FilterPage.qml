@@ -70,9 +70,8 @@ BasePage {
                 anchors.fill: parent
                 model: sqlModel
 //                visible: !_grid
-                header: PageHeader {
+                header: ContentPageHeader {
                     title: page.title
-                    VodDataManagerBusyIndicator {}
                 }
 
                 delegate: FilterItem {
@@ -115,9 +114,8 @@ BasePage {
                 anchors.fill: parent
                 model: sqlModel
 //                visible: _grid
-                header: PageHeader {
+                header: ContentPageHeader {
                     title: page.title
-                    VodDataManagerBusyIndicator {}
                 }
 
     //                    cellWidth: 2*Theme.horizontalPageMargin + 2*Theme.iconSizeExtraLarge
