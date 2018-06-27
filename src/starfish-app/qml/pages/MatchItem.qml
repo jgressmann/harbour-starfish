@@ -357,7 +357,7 @@ ListItem {
                                     src: loadCompleteImage2a
                                     width: loadCompleteImage2a.width
                                     height: loadCompleteImage2a.height
-                                    visible: !_vodDownloadFailed && progressOverlay.progress < 1
+                                    visible: !_downloading && !_vodDownloadFailed && progressOverlay.progress < 1
                                     progress: {
                                         var s = Math.max(0, Math.min(progressOverlay.progress, 1))
                                         if (s > 0) {
@@ -376,7 +376,7 @@ ListItem {
                                     source: "image://theme/icon-s-like"
     //                                anchors.verticalCenter: parent.verticalCenter
     //                                anchors.right: parent.right
-                                    visible: !_vodDownloadFailed && progressOverlay.progress >= 1
+                                    visible: !_downloading && !_vodDownloadFailed && progressOverlay.progress >= 1
                                 }
 
                                 Image {
@@ -386,7 +386,14 @@ ListItem {
                                     sourceSize.height: height
                                     source: "/usr/share/harbour-starfish/icons/flash.png"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    visible: _vodDownloadFailed
+                                    visible: !_downloading && _vodDownloadFailed
+                                }
+
+                                BusyIndicator {
+                                    id: downloadingVodIndicator
+                                    size: BusyIndicatorSize.Small
+                                    anchors.centerIn: parent
+                                    running: _downloading
                                 }
                             }
                         }
@@ -685,7 +692,7 @@ ListItem {
             if (-1 === _progress) {
                 _progress = progress
             } else if (_progress < progress) {
-                _downloading = true
+                _downloading = progress < 1
                 _progress = progress
             }
 
