@@ -72,6 +72,7 @@ ListItem {
     readonly property int thumbnailStateInitial: -1
     readonly property int thumbnailStateDownloadFailed: 0
     readonly property int thumbnailStateAvailable: 1
+    readonly property string _where: " where id=" + rowId
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -435,7 +436,7 @@ ListItem {
                     onClicked: {
                         seen = !seen
                         console.debug("seen=" + seen)
-                        VodDataManager.setSeen(table, {"id": rowId}, seen)
+                        VodDataManager.setSeen(table, _where, seen)
                     }
 
                 }
@@ -535,7 +536,7 @@ ListItem {
         VodDataManager.metaDataDownloadFailed.connect(metaDataDownloadFailed)
         VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
         _vodTitle = VodDataManager.title(rowId)
-        seenButton.seen = VodDataManager.seen(table, " where id=" + rowId) >= 1
+        seenButton.seen = VodDataManager.seen(table, _where) >= 1
 
         // also fetch a valid meta data from cache
         VodDataManager.fetchMetaDataFromCache(rowId)

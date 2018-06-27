@@ -2529,6 +2529,11 @@ ScVodDataManager::seen(const QString& table, const QString& where) const {
         return -1;
     }
 
+    if (where.isEmpty()) {
+        qWarning() << "no filters";
+        return -1;
+    }
+
     QSqlQuery q(m_Database);
 
 
@@ -2558,10 +2563,12 @@ ScVodDataManager::setSeen(const QString& table, const QString& where, bool value
         return;
     }
 
-//    if (filters.isEmpty()) {
-//        qWarning() << "no filters";
-//        return;
-//    }
+    if (where.isEmpty()) {
+        qWarning() << "no filters";
+        return;
+    }
+
+    qDebug() << where;
 
     QMutexLocker g(&m_Lock);
 
