@@ -90,8 +90,8 @@ Page {
                     console.debug("delete seen vod files")
                     var count = VodDataManager.deleteSeenVodFiles()
                     if (count) {
-                        newVodNotification.body = newVodNotification.previewBody = count + " VOD files deleted"
-                        newVodNotification.publish()
+                        deleteVodNotification.body = deleteVodNotification.previewBody = count + " VOD file" + (count > 1 ? "s" : "") + " deleted"
+                        deleteVodNotification.publish()
                     }
                 }
             }

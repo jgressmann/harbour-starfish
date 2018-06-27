@@ -204,8 +204,14 @@ ApplicationWindow {
              "path": "/instance",
              "iface": "org.duckdns.jgressmann.starfish.app",
              "method": "showNewVods",
-//             "arguments": [ download.filePath ]
          } ]
+    }
+
+    Notification {
+        id: deleteVodNotification
+        appName: App.displayName
+        appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+        icon: "icon-lock-information"
     }
 
     DBusAdaptor {
