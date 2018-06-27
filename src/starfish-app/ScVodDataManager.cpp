@@ -2302,39 +2302,7 @@ ScVodDataManager::parseTwitchOffset(const QString& str) {
 
 void
 ScVodDataManager::deleteVod(qint64 rowid) {
-    RETURN_IF_ERROR;
-
-
-    QMutexLocker g(&m_Lock);
-
-    QSqlQuery q(m_Database);
-
-    if (!q.prepare(QStringLiteral(
-                      "SELECT\n"
-                      "    f.file_name\n"
-                      "FROM vod_file_ref r\n"
-                      "INNER JOIN vods v ON v.id=r.vod_id\n"
-                      "INNER JOIN vod_files f ON f.id=r.vod_file_id\n"
-                      "WHERE v.id=?\n"
-                      ))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
-
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    while (q.next()) {
-        auto fileName = q.value(0).toString();
-        if (QFile::remove(m_VodDir + fileName)) {
-            qDebug() << "removed" << m_VodDir + fileName;
-        }
-    }
+    deleteVodsWhere(QStringLiteral("WHERE id=%1").arg(rowid));
 }
 
 void
@@ -2556,46 +2524,17 @@ ScVodDataManager::seen(const QString& table, const QString& where) const {
         return -1;
     }
 
-//    if (filters.isEmpty()) {
-//        qWarning() << "no filters";
-//        return -1;
-//    }
-
-//    QMutexLocker g(&m_Lock);
-
     QSqlQuery q(m_Database);
 
-//    QString query;
-//    auto beg = filters.cbegin();
-//    auto end = filters.cend();
 
-//    static const QString And = QStringLiteral(" AND ");
-//    static const QString Placeholder = QStringLiteral("=?");
-
-//    for (auto it = beg; it != end; ++it) {
-//        if (query.size() > 0) {
-//            query += And;
-//        }
-
-//        query += it.key() + Placeholder;
-//    }
-
-    static const QString part0 = QStringLiteral(
+    static const QString sql = QStringLiteral(
                 "SELECT\n"
                 "    SUM(seen)/(1.0 * COUNT(seen))\n"
                 "FROM\n"
                 "    %1\n"
                 "%2\n");
-    if (!q.prepare(part0.arg(table, where))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return -1;
-    }
 
-//    for (auto it = beg; it != end; ++it) {
-//        q.addBindValue(it.value());
-//    }
-
-    if (!q.exec()) {
+    if (!q.exec(sql.arg(table, where))) {
         qCritical() << "failed to exec query" << q.lastError();
         return -1;
     }
@@ -2745,13 +2684,18 @@ ScVodDataManager::makeThumbnailFile(const QString& srcPath) {
 
 int
 ScVodDataManager::deleteSeenVodFiles() {
+    return deleteVodsWhere(QStringLiteral("WHERE seen=1"));
+}
+
+int
+ScVodDataManager::deleteVodsWhere(const QString& where) {
     RETURN_IF_ERROR;
 
     QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);
 
-    if (!q.exec(QStringLiteral("SELECT file_name FROM offline_vods WHERE seen=1"))) {
+    if (!q.exec(QStringLiteral("SELECT file_name FROM offline_vods %1").arg(where))) {
         qCritical() << "failed to exec query" << q.lastError();
         return 0;
     }
@@ -2771,7 +2715,7 @@ ScVodDataManager::deleteSeenVodFiles() {
         "SET\n"
         "   progress=0\n"
         "WHERE\n"
-        "   id IN (SELECT vod_file_id FROM offline_vods WHERE seen=1)\n"))) {
+        "   id IN (SELECT vod_file_id FROM offline_vods %1)\n").arg(where))) {
         qCritical() << "failed to exec query" << q.lastError();
         return 0;
     }

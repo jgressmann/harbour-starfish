@@ -229,6 +229,7 @@ private:
     void batchAddVods();
     void dropTables();
     void fetchThumbnail(qint64 rowid, bool download);
+    int deleteVodsWhere(const QString& where);
 
 private:
     mutable QMutex m_Lock;
