@@ -114,6 +114,15 @@ Page {
                     newVodNotification.publish()
                 }
             }
+
+            Button {
+                visible: debugApp.value
+                text: "Reset last fetch timestamp"
+                onClicked: {
+                    console.debug("reset last fetch timestamp")
+                    settingLastUpdateTimestamp.value = 0
+                }
+            }
         }
 
     }

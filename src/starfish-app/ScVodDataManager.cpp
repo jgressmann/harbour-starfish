@@ -2377,15 +2377,9 @@ ScVodDataManager::deleteMetaData(qint64 rowid) {
 
 QDate
 ScVodDataManager::downloadMarker() const {
-    QSqlQuery q(m_Database);
-    if (!q.exec("SELECT value FROM settings WHERE key='download_marker'")) {
-        qCritical() << "failed to fetch download marker from settings table" << q.lastError();
-        return QDate();
-    }
-
-    // error handling
-    if (q.next()) {
-        return QDate::fromString(q.value(0).toString(), Qt::ISODate);
+    auto str = getPersistedValue(QStringLiteral("download_marker"));
+    if (!str.isEmpty()) {
+        return QDate::fromString(str, Qt::ISODate);
     }
 
     return QDate();
@@ -2403,20 +2397,7 @@ ScVodDataManager::resetDownloadMarker() {
 
 void
 ScVodDataManager::setDownloadMarker(QDate value) {
-    QSqlQuery q(m_Database);
-    if (!q.prepare("UPDATE settings SET value=? WHERE key='download_marker'")) {
-        qCritical() << "failed to prepare download marker update" << q.lastError();
-        return;
-    }
-
-    q.addBindValue(value.toString(Qt::ISODate));
-
-    // error handling
-    if (!q.exec()) {
-        qCritical() << "failed to exec download marker update" << q.lastError();
-        return;
-    }
-
+    setPersistedValue(QStringLiteral("download_marker"), value.toString(Qt::ISODate));
     emit downloadMarkerChanged();
 }
 
@@ -2826,3 +2807,39 @@ ScVodDataManager::vodsBeingDownloaded() const {
     return result;
 }
 
+QString
+ScVodDataManager::getPersistedValue(const QString& key, const QString& defaultValue) const {
+    QSqlQuery q(m_Database);
+    if (!q.prepare(QStringLiteral("SELECT value FROM settings WHERE key=?"))) {
+        qCritical() << "failed to prepare settings query" << q.lastError();
+        return QString();
+    }
+
+    q.addBindValue(key);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return QString();
+    }
+
+    if (q.next()) {
+        return q.value(0).toString();
+    }
+
+    return defaultValue;
+}
+
+void
+ScVodDataManager::setPersistedValue(const QString& key, const QString& value) {
+    QSqlQuery q(m_Database);
+    if (!q.prepare(QStringLiteral("UPDATE settings SET value=? WHERE key=?"))) {
+        qCritical() << "failed to prepare settings query" << q.lastError();
+    }
+
+    q.addBindValue(value);
+    q.addBindValue(key);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+    }
+}

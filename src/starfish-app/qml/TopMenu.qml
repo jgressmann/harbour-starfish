@@ -91,11 +91,12 @@ PullDownMenu {
         }
     }
 
-
-
     MenuItem {
         text: qsTr("Fetch new VODs")
         enabled: vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
-        onClicked: vodDatabaseDownloader.downloadNew()
+        onClicked: {
+            settingLastUpdateTimestamp.value = Global.secondsSinceTheEpoch() // in case debugging ends
+            vodDatabaseDownloader.downloadNew()
+        }
     }
 }

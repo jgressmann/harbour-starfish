@@ -121,6 +121,40 @@ Page {
             }
         }
 
+        TextSwitch {
+            text: "Periodically check for new VODs"
+            checked: settingNetworkAutoUpdate.value
+            onCheckedChanged: {
+                console.debug("auto update=" + checked)
+                settingNetworkAutoUpdate.value = checked
+            }
+        }
+
+
+        TextField {
+            enabled: settingNetworkAutoUpdate.value
+            width: parent.width
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
+            label: "Minutes between checks"
+            text: settingNetworkAutoUpdateIntervalM.value.toFixed(0)
+            EnterKey.iconSource: "image://theme/icon-m-enter-next"
+            EnterKey.onClicked: focus = false
+            validator: IntValidator {
+                bottom: debugApp.value ? 1 : 10
+            }
+
+            onTextChanged: {
+                console.debug("text: " + text)
+                if (acceptableInput) {
+                    var number = parseInt(text)
+                    console.debug("number: " + number)
+                    if (typeof(number) === "number" && number >= validator.bottom) {
+                        settingNetworkAutoUpdateIntervalM.value = number
+                    }
+                }
+            }
+        }
+
         SectionHeader {
             text: "Format"
         }

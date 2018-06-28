@@ -127,6 +127,8 @@ public: //
     Q_INVOKABLE bool implicitlyStartedVodFetch(qint64 rowid) const;
     int vodDownloads() const;
     Q_INVOKABLE QVariantList vodsBeingDownloaded() const;
+    Q_INVOKABLE QString getPersistedValue(const QString& key, const QString& defaultValue = QString()) const;
+    Q_INVOKABLE void setPersistedValue(const QString& key, const QString& value);
 
 
 signals:

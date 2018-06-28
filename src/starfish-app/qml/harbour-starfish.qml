@@ -39,6 +39,7 @@ ApplicationWindow {
     allowedOrientations: defaultAllowedOrientations
     property int _vodsAdded: 0
 
+
     Sc2LinksDotComScraper {
         id: sc2LinksDotComScraper
     }
@@ -133,6 +134,18 @@ ApplicationWindow {
             id: settingNetworkContinueDownload
             key: "/network/continue_download"
             defaultValue: true
+        }
+
+        ConfigurationValue {
+            id: settingNetworkAutoUpdate
+            key: "/network/auto_update"
+            defaultValue: true
+        }
+
+        ConfigurationValue {
+            id: settingNetworkAutoUpdateIntervalM
+            key: "/network/auto_update_interval_m"
+            defaultValue: 60
         }
 
         ConfigurationValue {
@@ -234,6 +247,43 @@ ApplicationWindow {
             if (!item || item.objectName !== "NewPage") {
                 pageStack.push(Qt.resolvedUrl("pages/NewPage.qml"))
             }
+        }
+    }
+
+    Timer {
+        repeat: true
+//        interval: {
+//            var diffS = Global.secondsSinceTheEpoch() - Global.lastUpdateTimeStamp
+//            if (diffS >= 60000 * settingNetworkAutoUpdateIntervalM.value) {
+//                return 1
+//            }
+//            return (60 * settingNetworkAutoUpdateIntervalM.value - diffS) * 1000
+//        }
+        interval: 60000 * settingNetworkAutoUpdateIntervalM.value
+        running: settingNetworkAutoUpdate.value && App.isOnline && vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
+        onTriggered: {
+            console.debug("Auto update timer expired")
+            settingLastUpdateTimestamp.value = Global.secondsSinceTheEpoch() // in case debugging ends
+            vodDatabaseDownloader.downloadNew()
+        }
+
+//        onIntervalChanged: {
+//            console.debug("interval=" + interval)
+//            if (running) {
+//                console.debug("restarting timer")
+//                restart()
+//            }
+//        }
+
+        onTriggeredOnStartChanged: {
+            console.debug("auto update timer triggered on start=" + triggeredOnStart)
+        }
+
+        triggeredOnStart: running * 0 + // tie into running changed
+            Global.secondsSinceTheEpoch() - settingLastUpdateTimestamp.value >= interval * 1e-3
+
+        onRunningChanged: {
+            console.debug("auto update timer running=" + running)
         }
     }
 
