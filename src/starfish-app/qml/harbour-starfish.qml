@@ -222,7 +222,10 @@ ApplicationWindow {
         path: '/instance'
 
         function showNewVods() {
-            pageStack.push(Qt.resolvedUrl("pages/NewPage.qml"))
+            var item = pageStack.currentPage
+            if (!item || item.objectName !== "NewPage") {
+                pageStack.push(Qt.resolvedUrl("pages/NewPage.qml"))
+            }
         }
     }
 

@@ -29,6 +29,8 @@ import ".."
 BasePage {
     id: page
 
+    objectName: "NewPage"
+
     property var itemPlaying: null
 
     SqlVodModel {
