@@ -189,13 +189,18 @@ ApplicationWindow {
          previewSummary: "Download failed"
          appName: App.displayName
          appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+//         icon: "icon-lock-transfer"
+         icon: appIcon
     }
 
     Notification {
         id: newVodNotification
         appName: App.displayName
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
-        icon: "icon-lock-application-update"
+        summary: "VODs added"
+//        icon: "icon-lock-application-update"
+        icon: appIcon
+//        icon: "icon-lock-information"
         remoteActions: [ {
              "name": "default",
              "displayName": "Show new VODs",
@@ -204,14 +209,17 @@ ApplicationWindow {
              "path": "/instance",
              "iface": "org.duckdns.jgressmann.starfish.app",
              "method": "showNewVods",
+             "arguments": []
          } ]
     }
 
     Notification {
         id: deleteVodNotification
         appName: App.displayName
+        summary: "Seen VODs deleted"
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
-        icon: "icon-lock-information"
+//        icon: "icon-lock-information"
+        icon: appIcon
     }
 
     DBusAdaptor {
@@ -273,7 +281,8 @@ ApplicationWindow {
         case VodDatabaseDownloader.Status_Canceled:
         case VodDatabaseDownloader.Status_Finished:
             if (!VodDataManager.busy && _vodsAdded) {
-                newVodNotification.body = newVodNotification.previewBody = _vodsAdded + " new VOD" + (_vodsAdded > 1 ? "s" : "")
+                newVodNotification.itemCount = _vodsAdded
+                newVodNotification.body = newVodNotification.previewBody = _vodsAdded + " VOD" + (_vodsAdded > 1 ? "s" : "") + " added"
                 newVodNotification.publish()
             }
             break

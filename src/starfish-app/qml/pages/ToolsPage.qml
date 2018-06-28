@@ -90,7 +90,8 @@ Page {
                     console.debug("delete seen vod files")
                     var count = VodDataManager.deleteSeenVodFiles()
                     if (count) {
-                        deleteVodNotification.body = deleteVodNotification.previewBody = count + " VOD file" + (count > 1 ? "s" : "") + " deleted"
+                        deleteVodNotification.itemCount = count
+                        deleteVodNotification.body = deleteVodNotification.previewBody = count + " seen VOD file" + (count > 1 ? "s" : "") + " deleted"
                         deleteVodNotification.publish()
                     }
                 }
@@ -100,6 +101,17 @@ Page {
                 text: "Reset recent videos"
                 onClicked: {
                     recentlyUsedVideos.recreateTable()
+                }
+            }
+
+            Button {
+                visible: debugApp.value
+                text: "Send new VODs notification"
+                onClicked: {
+                    console.debug("sending new vods notification")
+                    newVodNotification.itemCount = 42
+                    newVodNotification.body = newVodNotification.previewBody = "debug notification"
+                    newVodNotification.publish()
                 }
             }
         }
