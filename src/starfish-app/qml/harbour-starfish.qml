@@ -269,7 +269,7 @@ ApplicationWindow {
         running: settingNetworkAutoUpdate.value && App.isOnline && vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
         onTriggered: {
             console.debug("Auto update timer expired")
-
+            fetchNewVods()
         }
 
 //        onIntervalChanged: {
