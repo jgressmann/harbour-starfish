@@ -197,6 +197,11 @@
             "extension": ".jpg"
         },
         {
+            "regex": "natural expansion",
+            "url": "https://www.dropbox.com/s/jb07wzpcevm6atv/ne.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "neuro",
             "url": "https://www.dropbox.com/s/vpuy7faucbxhyab/neuro.jpg?dl=1",
             "extension": ".jpg"
