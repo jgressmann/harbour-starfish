@@ -171,6 +171,12 @@ ApplicationWindow {
             key: "/last_update_timestamp"
             defaultValue: 0
         }
+
+        ConfigurationValue {
+            id: settingNumberOfUpdates
+            key: "/stats/no_updates"
+            defaultValue: 0
+        }
     }
 
     RecentlyUsedModel {
@@ -263,8 +269,7 @@ ApplicationWindow {
         running: settingNetworkAutoUpdate.value && App.isOnline && vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
         onTriggered: {
             console.debug("Auto update timer expired")
-            settingLastUpdateTimestamp.value = Global.secondsSinceTheEpoch() // in case debugging ends
-            vodDatabaseDownloader.downloadNew()
+
         }
 
 //        onIntervalChanged: {
@@ -337,6 +342,13 @@ ApplicationWindow {
             }
             break
         }
+    }
+
+    function fetchNewVods() {
+        console.debug("fetch new vods")
+        settingNumberOfUpdates.value = settingNumberOfUpdates.value + 1
+        settingLastUpdateTimestamp.value = Global.secondsSinceTheEpoch() // in case debugging ends
+        vodDatabaseDownloader.downloadNew()
     }
 }
 

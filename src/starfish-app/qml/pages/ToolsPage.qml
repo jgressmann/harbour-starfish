@@ -47,8 +47,8 @@ Page {
         }
 
 
-        Column {
-            width: root.width
+        ButtonLayout {
+            width: parent.width
 
             Button {
                 text: "Reset VOD fetch marker"
@@ -57,7 +57,11 @@ Page {
                     VodDataManager.resetDownloadMarker()
                 }
             }
+
+
         }
+
+
 
         SectionHeader {
             text: "Data"

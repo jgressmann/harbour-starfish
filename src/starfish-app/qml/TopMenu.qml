@@ -43,6 +43,12 @@ PullDownMenu {
     }
 
     MenuItem {
+        visible: debugApp.value
+        text: "Stats"
+        onClicked: pageStack.push(Qt.resolvedUrl("pages/StatsPage.qml"))
+    }
+
+    MenuItem {
         id: openVideo
         text: qsTr("Open video")
 
@@ -94,9 +100,6 @@ PullDownMenu {
     MenuItem {
         text: qsTr("Fetch new VODs")
         enabled: vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
-        onClicked: {
-            settingLastUpdateTimestamp.value = Global.secondsSinceTheEpoch() // in case debugging ends
-            vodDatabaseDownloader.downloadNew()
-        }
+        onClicked: window.fetchNewVods()
     }
 }
