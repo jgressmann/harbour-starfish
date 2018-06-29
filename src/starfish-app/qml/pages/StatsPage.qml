@@ -63,14 +63,20 @@ Page {
             value: settingNumberOfUpdates.value.toFixed(0)
         }
 
+        DetailItem {
+            label: "Last VOD fetch"
+            value: Qt.formatDateTime(new Date(settingLastUpdateTimestamp.value * 1000))
+        }
+
         ButtonLayout {
-            width: parent.width
+            width: root.width
 
             Button {
                 text: "Reset"
                 onClicked: {
                     console.debug("reset stats")
                     settingNumberOfUpdates.value = 0
+                    settingLastUpdateTimestamp.value = 0
                 }
             }
         }
