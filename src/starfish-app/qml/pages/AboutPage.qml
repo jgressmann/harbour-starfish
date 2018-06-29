@@ -136,8 +136,7 @@ App.displayName + " lets you download and stream StarCraft Brood War " +
             Label {
                 x: Theme.horizontalPageMargin
                  width: parent.width-2*x
-                 text: "The application icon is copyright (c) by Blizzard Entertainment.
-This application uses StarCraft (tm) related media from various sites on the internet.
+                 text: "This application uses StarCraft (tm) related media from various sites on the internet.
 Should you feel you rights have been infringed please contact me and I'll remove the offending data."
                  wrapMode: Text.WordWrap
                  font.pixelSize: Theme.fontSizeExtraSmall
@@ -149,7 +148,7 @@ Should you feel you rights have been infringed please contact me and I'll remove
                 x: Theme.horizontalPageMargin
                  width: parent.width-2*x
                  text: App.displayName + " uses icons downloaded from <a href=\"https://www.flaticon.com\">flaticon</a> created by <a href=\"https://www.flaticon.com/authors/gregor-cresnar\">Gregor Cresnar</a>,
-and <a href=\"https://www.flaticon.com/authors/smashicons\">Smashicons</a>."
+<a href=\"https://www.flaticon.com/authors/freepik\">Freepik</a>, and <a href=\"https://www.flaticon.com/authors/smashicons\">Smashicons</a>."
                  wrapMode: Text.WordWrap
                  font.pixelSize: Theme.fontSizeExtraSmall
                  color: Theme.highlightColor
@@ -163,7 +162,8 @@ and <a href=\"https://www.flaticon.com/authors/smashicons\">Smashicons</a>."
             Label {
                 x: Theme.horizontalPageMargin
                  width: parent.width-2*x
-                 text: "The sources are hosted on <a href=\"https://github.com/jgressmann/harbour-starfish\">GitHub</a>."
+                 text: "The sources are available on <a href=\"https://github.com/jgressmann/harbour-starfish\">GitHub</a>.
+"
                  wrapMode: Text.WordWrap
                  font.pixelSize: Theme.fontSizeExtraSmall
                  color: Theme.highlightColor
