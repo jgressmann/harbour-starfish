@@ -58,7 +58,14 @@ Page {
                 }
             }
 
-
+            Button {
+                visible: debugApp.value
+                text: "Reset last fetch timestamp"
+                onClicked: {
+                    console.debug("reset last fetch timestamp")
+                    settingLastUpdateTimestamp.value = 0
+                }
+            }
         }
 
 
@@ -119,16 +126,17 @@ Page {
                 }
             }
 
+
+
             Button {
                 visible: debugApp.value
-                text: "Reset last fetch timestamp"
+                text: "Reset SQL patch level"
                 onClicked: {
-                    console.debug("reset last fetch timestamp")
-                    settingLastUpdateTimestamp.value = 0
+                    console.debug("reset sql patch level")
+                    VodDataManager.resetSqlPatchLevel()
                 }
             }
         }
-
     }
 
     SilicaFlickable {

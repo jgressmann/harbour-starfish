@@ -129,7 +129,7 @@ public: //
     Q_INVOKABLE QVariantList vodsBeingDownloaded() const;
     Q_INVOKABLE QString getPersistedValue(const QString& key, const QString& defaultValue = QString()) const;
     Q_INVOKABLE void setPersistedValue(const QString& key, const QString& value);
-
+    Q_INVOKABLE void resetSqlPatchLevel();
 
 signals:
     void readyChanged();
@@ -239,6 +239,7 @@ private:
     void fetchSqlPatches();
     void applySqlPatches(const QByteArray& bytes);
     void setPersistedValue(QSqlQuery& query, const QString& key, const QString& value);
+    void updateSql1(QSqlQuery& q);
 
 private:
     mutable QMutex m_Lock;

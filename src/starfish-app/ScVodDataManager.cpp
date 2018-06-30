@@ -67,6 +67,7 @@ namespace  {
 const QString s_IconsUrl = QStringLiteral("https://www.dropbox.com/s/p2640l82i3u1zkg/icons.json.gz?dl=1");
 const QString s_ClassifierUrl = QStringLiteral("https://www.dropbox.com/s/3cckgyzlba8kev9/classifier.json.gz?dl=1");
 const QString s_SqlPatchesUrl = QStringLiteral("https://www.dropbox.com/s/sip5esgcba6hwfo/sql_patches.json.gz?dl=1");
+const QString s_SqlPatchLevelKey = QStringLiteral("sql_patch_level");
 
 const int BatchSize = 1<<13;
 
@@ -169,6 +170,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     } else {
         qCritical("Could not open database '%s'. Error: %s\n", qPrintable(databaseFilePath), qPrintable(m_Database.lastError().text()));
         setReady(false);
+        setError(Error_Unknown);
     }
 
 
@@ -179,6 +181,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         if (!QFile::copy(src, iconsFileDestinationPath)) {
             qCritical() << "could not copy" << src << "to" << iconsFileDestinationPath;
             setReady(false);
+            setError(Error_Unknown);
         }
     }
 
@@ -193,6 +196,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         if (!QFile::copy(src, classifierFileDestinationPath)) {
             qCritical() << "could not copy" << src << "to" << iconsFileDestinationPath;
             setReady(false);
+            setError(Error_Unknown);
         }
     }
 
@@ -582,7 +586,7 @@ ScVodDataManager::setupDatabase() {
         ")\n",
 
         "CREATE TABLE IF NOT EXISTS settings (\n"
-        "    key TEXT NOT NULL,\n"
+        "    key TEXT NOT NULL UNIQUE,\n"
         "    value TEXT\n"
         ")\n",
 
@@ -617,7 +621,7 @@ ScVodDataManager::setupDatabase() {
 
 
 
-    const int Version = 1;
+    const int Version = 2;
 
 
     if (!q.exec("PRAGMA foreign_keys = ON")) {
@@ -659,7 +663,17 @@ ScVodDataManager::setupDatabase() {
     bool hasVersion = false;
     auto version = q.value(0).toInt(&hasVersion);
     if (hasVersion && version != Version) {
-        dropTables();
+
+        switch (version) {
+        case 1:
+            updateSql1(q);
+        default:
+            break;
+        }
+
+        if (m_Error) { // don't update version if there is an error
+            return;
+        }
 
         if (!q.exec(QStringLiteral("PRAGMA user_version = %1").arg(QString::number(Version)))) {
             qCritical() << "failed to set user version" << q.lastError();
@@ -671,43 +685,13 @@ ScVodDataManager::setupDatabase() {
 
     for (size_t i = 0; i < _countof(CreateSql); ++i) {
 //        qDebug() << CreateSql[i];
-        if (!q.prepare(CreateSql[i]) || !q.exec()) {
+        if (!q.exec(CreateSql[i])) {
             qCritical() << "failed to create table" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
             setReady(false);
             return;
         }
     }
-
-    const QString defaultValuesKeys[] = {
-        QStringLiteral("download_marker")
-    };
-
-    const QString defaultValuesValues[] = {
-        QDate().toString(Qt::ISODate)
-    };
-
-    // default values
-    for (size_t i = 0; i < _countof(defaultValuesKeys); ++i) {
-//        qDebug() << CreateSql[i];
-        if (!q.prepare("INSERT INTO settings (key, value) VALUES (?, ?)")) {
-            qCritical() << "failed to prepare settings insert" << q.lastError();
-            setError(Error_SqlTableManipError);
-            setReady(false);
-            return;
-        }
-
-        q.addBindValue(defaultValuesKeys[i]);
-        q.addBindValue(defaultValuesValues[i]);
-
-        if (!q.exec()) {
-            qCritical() << "failed to insert into settings table" << q.lastError();
-            setError(Error_SqlTableManipError);
-            setReady(false);
-            return;
-        }
-    }
-
 }
 
 void
@@ -738,7 +722,7 @@ ScVodDataManager::label(const QString& key, const QVariant& value) const {
             case ScRecord::GameSc2:
                 return QStringLiteral("StarCraft II");
             case ScRecord::GameOverwatch:
-                return tr("Overwatch");
+                return QStringLiteral("Overwatch");
             default:
                 return tr("Misc");
             }
@@ -2928,7 +2912,7 @@ ScVodDataManager::applySqlPatches(const QByteArray &buffer) {
     auto patches = root[QStringLiteral("patches")].toArray();
     QSqlQuery q(m_Database);
 
-    auto patchLevel = getPersistedValue(QStringLiteral("sql_patch_level"), QStringLiteral("0")).toInt();
+    auto patchLevel = getPersistedValue(s_SqlPatchLevelKey, QStringLiteral("0")).toInt();
     qDebug() << "sql patch level" << patchLevel;
 
     // apply missing patches
@@ -2938,6 +2922,8 @@ ScVodDataManager::applySqlPatches(const QByteArray &buffer) {
             qWarning() << "patch array contains empty strings" << i << version << buffer;
             return;
         }
+
+        qDebug() << "applying" << patch;
 
         if (!q.exec(QStringLiteral("BEGIN"))) {
             qWarning() << "failed to start transaction" << i << q.lastError();
@@ -2950,11 +2936,51 @@ ScVodDataManager::applySqlPatches(const QByteArray &buffer) {
             return;
         }
 
-        setPersistedValue(q, QStringLiteral("sql_patch_level"), QString::number(i + 1));
+        setPersistedValue(q, s_SqlPatchLevelKey, QString::number(i + 1));
 
         if (!q.exec(QStringLiteral("COMMIT"))) {
             qWarning() << "failed to commit transaction" << i << q.lastError();
             return;
         }
     }
+
+    emit vodsChanged();
+}
+
+
+void
+ScVodDataManager::resetSqlPatchLevel() {
+    setPersistedValue(s_SqlPatchLevelKey, QStringLiteral("0"));
+}
+
+void
+ScVodDataManager::updateSql1(QSqlQuery& q) {
+    qInfo("Begin update database v1 to v2\n");
+
+    const auto marker = downloadMarker();
+
+    static char const* const Sql[] = {
+        "DROP TABLE settings\n",
+        "CREATE TABLE settings (\n"
+        "    key TEXT NOT NULL UNIQUE,\n"
+        "    value TEXT\n"
+        ")\n",
+    };
+
+    // can't use new object, table will be locked
+//    QSqlQuery q(m_Database);
+
+    for (size_t i = 0; i < _countof(Sql); ++i) {
+        qDebug() << Sql[i];
+        if (!q.exec(Sql[i])) {
+            qCritical() << "failed to upgrade database from v1 to v2" << q.lastError();
+            setError(Error_CouldntCreateSqlTables);
+            setReady(false);
+            return;
+        }
+    }
+
+    setDownloadMarker(marker);
+
+    qInfo("Update database v1 to v2 completed successfully\n");
 }
