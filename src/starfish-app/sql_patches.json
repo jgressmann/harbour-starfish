@@ -1,0 +1,6 @@
+{
+    "version": 1,
+    "patches": [
+        "UPDATE vods SET year=2018 WHERE year=2081"
+    ]
+}

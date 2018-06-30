@@ -236,6 +236,9 @@ private:
     void dropTables();
     void fetchThumbnail(qint64 rowid, bool download);
     int deleteVodsWhere(const QString& where);
+    void fetchSqlPatches();
+    void applySqlPatches(const QByteArray& bytes);
+    void setPersistedValue(QSqlQuery& query, const QString& key, const QString& value);
 
 private:
     mutable QMutex m_Lock;
@@ -251,6 +254,7 @@ private:
     QHash<qint64, VodmanMetaDataRequest> m_VodmanMetaDataRequests;
     QHash<qint64, VodmanFileRequest> m_VodmanFileRequests;
     QNetworkReply* m_ClassfierRequest;
+    QNetworkReply* m_SqlPatchesRequest;
     ScIcons m_Icons;
     ScClassifier m_Classifier;
     QString m_ThumbnailDir;

@@ -60,11 +60,13 @@
 
 #define CLASSIFIER_FILE "/classifier.json.gz"
 #define ICONS_FILE "/icons.json.gz"
+#define SQL_PATCH_FILE "/sql_patches.json.gz"
 
 namespace  {
 
 const QString s_IconsUrl = QStringLiteral("https://www.dropbox.com/s/p2640l82i3u1zkg/icons.json.gz?dl=1");
 const QString s_ClassifierUrl = QStringLiteral("https://www.dropbox.com/s/3cckgyzlba8kev9/classifier.json.gz?dl=1");
+const QString s_SqlPatchesUrl = QStringLiteral("https://www.dropbox.com/s/sip5esgcba6hwfo/sql_patches.json.gz?dl=1");
 
 const int BatchSize = 1<<13;
 
@@ -146,6 +148,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     m_Error = Error_None;
     m_SuspendedVodsChangedEventCount = 0;
     m_ClassfierRequest = nullptr;
+    m_SqlPatchesRequest = nullptr;
 
 
     const auto databaseDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
@@ -199,6 +202,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
 
     fetchIcons();
     fetchClassifier();
+    fetchSqlPatches();
 
     auto adder = new ScWorker(&ScVodDataManager::batchAddVods, this);
     adder->moveToThread(&m_AddThread);
@@ -274,6 +278,40 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
                 default: {
                     qDebug() << "Network request failed: " << reply->errorString() << reply->url();
                 } break;
+                }
+            } else {
+                if (m_SqlPatchesRequest == reply) {
+                    m_SqlPatchesRequest = nullptr;
+
+                    switch (reply->error()) {
+                    case QNetworkReply::OperationCanceledError:
+                        break;
+                    case QNetworkReply::NoError: {
+                        // Get the http status code
+                        int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+                        if (v >= 200 && v < 300) {// Success
+                            // Here we got the final reply
+                            auto bytes = reply->readAll();
+                            bytes = Sc::gzipDecompress(bytes);
+                            applySqlPatches(bytes);
+                        }
+                        else if (v >= 300 && v < 400) {// Redirection
+
+                            // Get the redirection url
+                            QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+                            // Because the redirection url can be relative,
+                            // we have to use the previous one to resolve it
+                            newUrl = reply->url().resolved(newUrl);
+
+                            m_SqlPatchesRequest = m_Manager->get(Sc::makeRequest(newUrl));
+                        } else  {
+                            qDebug() << "Http status code:" << v;
+                        }
+                    } break;
+                    default: {
+                        qDebug() << "Network request failed: " << reply->errorString() << reply->url();
+                    } break;
+                    }
                 }
             }
         }
@@ -2610,6 +2648,17 @@ void ScVodDataManager::fetchClassifier() {
 }
 
 void
+ScVodDataManager::fetchSqlPatches() {
+    RETURN_IF_ERROR;
+
+    QMutexLocker g(&m_Lock);
+
+    if (!m_SqlPatchesRequest) {
+        m_SqlPatchesRequest = m_Manager->get(Sc::makeRequest(s_SqlPatchesUrl));
+    }
+}
+
+void
 ScVodDataManager::batchAddVods(void* ctx) {
     static_cast<ScVodDataManager*>(ctx)->batchAddVods();
 }
@@ -2832,14 +2881,80 @@ ScVodDataManager::getPersistedValue(const QString& key, const QString& defaultVa
 void
 ScVodDataManager::setPersistedValue(const QString& key, const QString& value) {
     QSqlQuery q(m_Database);
-    if (!q.prepare(QStringLiteral("UPDATE settings SET value=? WHERE key=?"))) {
+    setPersistedValue(q, key, value);
+}
+
+void
+ScVodDataManager::setPersistedValue(QSqlQuery& q, const QString& key, const QString& value) {
+    if (!q.prepare(QStringLiteral("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)"))) {
         qCritical() << "failed to prepare settings query" << q.lastError();
     }
 
-    q.addBindValue(value);
     q.addBindValue(key);
+    q.addBindValue(value);
 
     if (!q.exec()) {
         qCritical() << "failed to exec query" << q.lastError();
+    }
+}
+
+void
+ScVodDataManager::applySqlPatches(const QByteArray &buffer) {
+    QJsonParseError parseError;
+    auto doc = QJsonDocument::fromJson(buffer, &parseError);
+    if (doc.isEmpty()) {
+        qWarning("document is empty, error: %s\n%s\n", qPrintable(parseError.errorString()), qPrintable(buffer));
+        return;
+    }
+
+    if (!doc.isObject()) {
+        qWarning() << "document has no object root" << buffer;
+        return;
+    }
+
+    auto root = doc.object();
+
+    auto version = root[QStringLiteral("version")].toInt();
+    if (version <= 0) {
+        qWarning() << "invalid document version" << version << buffer;
+        return;
+    }
+
+    if (version > 1) {
+        qInfo() << "unsupported version" << version << buffer;
+        return;
+    }
+
+    auto patches = root[QStringLiteral("patches")].toArray();
+    QSqlQuery q(m_Database);
+
+    auto patchLevel = getPersistedValue(QStringLiteral("sql_patch_level"), QStringLiteral("0")).toInt();
+    qDebug() << "sql patch level" << patchLevel;
+
+    // apply missing patches
+    for (auto i = patchLevel; i < patches.size(); ++i) {
+        auto patch = patches[i].toString();
+        if (patch.isEmpty()) {
+            qWarning() << "patch array contains empty strings" << i << version << buffer;
+            return;
+        }
+
+        if (!q.exec(QStringLiteral("BEGIN"))) {
+            qWarning() << "failed to start transaction" << i << q.lastError();
+            return;
+        }
+
+        if (!q.exec(patch)) {
+            qWarning() << "failed to apply patch" << i << patch << q.lastError();
+            q.exec(QStringLiteral("ROLLBACK"));
+            return;
+        }
+
+        setPersistedValue(q, QStringLiteral("sql_patch_level"), QString::number(i + 1));
+
+        if (!q.exec(QStringLiteral("COMMIT"))) {
+            qWarning() << "failed to commit transaction" << i << q.lastError();
+            return;
+        }
     }
 }

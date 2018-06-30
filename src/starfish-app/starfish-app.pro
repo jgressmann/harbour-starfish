@@ -47,6 +47,7 @@ DISTFILES += qml/harbour-starfish.qml \
     classifier.json \
     database.json \
     icons.json \
+    sql_patches.json \
     harbour-starfish.desktop \
     media/* \
     icons/* \
@@ -102,8 +103,11 @@ gzicons.commands = cat $$PWD/icons.json | gzip --best > $$PWD/$$gzicons.target
 gzclassifier.target = classifier.json.gz
 gzclassifier.commands = cat $$PWD/classifier.json | gzip --best > $$PWD/$$gzclassifier.target
 
-QMAKE_EXTRA_TARGETS += gzicons gzclassifier
-PRE_TARGETDEPS += $$gzicons.target $$gzclassifier.target
+gzsqlpatches.target = sql_patches.json.gz
+gzsqlpatches.commands = cat $$PWD/sql_patches.json | gzip --best > $$PWD/$$gzsqlpatches.target
+
+QMAKE_EXTRA_TARGETS += gzicons gzclassifier gzsqlpatches
+PRE_TARGETDEPS += $$gzicons.target $$gzclassifier.target $$gzsqlpatches.target
 
 misc.files = $$gzicons.target $$gzclassifier.target ../../COPYING
 misc.path = /usr/share/$${TARGET}
