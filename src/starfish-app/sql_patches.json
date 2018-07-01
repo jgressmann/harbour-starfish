@@ -1,6 +1,7 @@
 {
     "version": 1,
     "patches": [
-        "UPDATE vods SET year=2018 WHERE year=2081 AND event_name='HomeStory Cup' AND season=17"
+        "UPDATE vods SET year=2018 WHERE year=2081 AND event_name='HomeStory Cup' AND season=17",
+        "UPDATE vods SET match_date=DATE(match_date, '-63 years') WHERE event_name='HomeStory Cup' AND season=17 AND match_date>='2081-01-01'"
     ]
 }
