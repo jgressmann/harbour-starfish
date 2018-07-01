@@ -68,6 +68,7 @@ const QString s_IconsUrl = QStringLiteral("https://www.dropbox.com/s/p2640l82i3u
 const QString s_ClassifierUrl = QStringLiteral("https://www.dropbox.com/s/3cckgyzlba8kev9/classifier.json.gz?dl=1");
 const QString s_SqlPatchesUrl = QStringLiteral("https://www.dropbox.com/s/sip5esgcba6hwfo/sql_patches.json.gz?dl=1");
 const QString s_SqlPatchLevelKey = QStringLiteral("sql_patch_level");
+const QString s_SqlPatchLevelDefault = QStringLiteral("0");
 
 const int BatchSize = 1<<13;
 
@@ -2912,8 +2913,8 @@ ScVodDataManager::applySqlPatches(const QByteArray &buffer) {
     auto patches = root[QStringLiteral("patches")].toArray();
     QSqlQuery q(m_Database);
 
-    auto patchLevel = getPersistedValue(s_SqlPatchLevelKey, QStringLiteral("0")).toInt();
-    qDebug() << "sql patch level" << patchLevel;
+    auto patchLevel = getPersistedValue(s_SqlPatchLevelKey, s_SqlPatchLevelDefault).toInt();
+    qInfo("sql patch level %d\n", patchLevel);
 
     // apply missing patches
     for (auto i = patchLevel; i < patches.size(); ++i) {
@@ -2950,7 +2951,7 @@ ScVodDataManager::applySqlPatches(const QByteArray &buffer) {
 
 void
 ScVodDataManager::resetSqlPatchLevel() {
-    setPersistedValue(s_SqlPatchLevelKey, QStringLiteral("0"));
+    setPersistedValue(s_SqlPatchLevelKey, s_SqlPatchLevelDefault);
 }
 
 void
