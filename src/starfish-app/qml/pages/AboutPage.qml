@@ -131,6 +131,7 @@ App.displayName + " lets you download and stream StarCraft Brood War " +
                  font.pixelSize: Theme.fontSizeExtraSmall
                  color: Theme.highlightColor
                  textFormat: TextEdit.RichText
+                 onLinkActivated: function (link) { Qt.openUrlExternally(link) }
             }
 
             Label {
@@ -142,6 +143,7 @@ Should you feel you rights have been infringed please contact me and I'll remove
                  font.pixelSize: Theme.fontSizeExtraSmall
                  color: Theme.highlightColor
                  textFormat: TextEdit.RichText
+                 onLinkActivated: function (link) { Qt.openUrlExternally(link) }
             }
 
             Label {
@@ -153,6 +155,7 @@ Should you feel you rights have been infringed please contact me and I'll remove
                  font.pixelSize: Theme.fontSizeExtraSmall
                  color: Theme.highlightColor
                  textFormat: TextEdit.RichText
+                 onLinkActivated: function (link) { Qt.openUrlExternally(link) }
             }
 
             SectionHeader {
@@ -168,6 +171,7 @@ Should you feel you rights have been infringed please contact me and I'll remove
                  font.pixelSize: Theme.fontSizeExtraSmall
                  color: Theme.highlightColor
                  textFormat: TextEdit.RichText
+                 onLinkActivated: function (link) { Qt.openUrlExternally(link) }
             }
         }
     }
