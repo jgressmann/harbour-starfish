@@ -299,5 +299,7 @@ ScClassifier::cleanEvent(ScRecord::Game game, QString& str) const {
             str.remove(regex);
         }
         break;
+    default:
+        break;
     }
 }
