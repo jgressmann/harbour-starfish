@@ -132,16 +132,17 @@ private:
 private:
     mutable QMutex m_Lock;
     QNetworkAccessManager m_NetworkAccessManager;
+    QList<QString> m_YearUrls;
     ScVodScraper* m_Scraper;
     ScVodDataManager* m_DataManager;
-    Status m_Status;
-    Error m_Error;
+    QNetworkReply* m_Reply;
+    QString m_ProgressDescription;
     QDate m_TargetMarker;
     QDate m_LimitMarker;
     qreal m_Progress;
-    QString m_ProgressDescription;
+    Status m_Status;
+    Error m_Error;
     int m_YearMin, m_YearMax;
-    QList<QString> m_YearUrls;
     int m_PendingActions;
     DownloadState m_DownloadState;
     bool m_ProgressIsIndeterminate;

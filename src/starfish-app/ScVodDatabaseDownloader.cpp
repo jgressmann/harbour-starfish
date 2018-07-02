@@ -66,6 +66,7 @@ ScVodDatabaseDownloader::ScVodDatabaseDownloader(QObject *parent)
     m_ProgressIsIndeterminate = false;
     m_Scraper = nullptr;
     m_DataManager = nullptr;
+    m_Reply = nullptr;
 
     connect(&m_NetworkAccessManager, &QNetworkAccessManager::finished,
             this, &ScVodDatabaseDownloader::onRequestFinished);
@@ -96,7 +97,7 @@ void ScVodDatabaseDownloader::_downloadNew()
     if (m_YearMin == -1) {
         setProgressDescription(QStringLiteral("Fetching database metadata"));
         auto url = QStringLiteral("https://www.dropbox.com/s/kahfxt2qqpve424/database.json?dl=1");
-        m_NetworkAccessManager.get(Sc::makeRequest(url));
+        m_Reply = m_NetworkAccessManager.get(Sc::makeRequest(url));
         m_DownloadState = DS_FetchingMetaData;
         m_LimitMarker = marker;
     } else if (m_YearMin == -2) {
@@ -131,7 +132,7 @@ void ScVodDatabaseDownloader::_downloadNew()
             m_Scraper->startFetch();
         } else {
             m_DownloadState = DS_FetchingDatabases;
-            m_NetworkAccessManager.get(Sc::makeRequest(url));
+            m_Reply = m_NetworkAccessManager.get(Sc::makeRequest(url));
         }
     }
 
@@ -193,6 +194,7 @@ void
 ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
     QMutexLocker guard(&m_Lock);
     reply->deleteLater();
+    m_Reply = nullptr;
 
     switch (reply->error()) {
     case QNetworkReply::OperationCanceledError:
@@ -250,7 +252,7 @@ ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
             newUrl = reply->url().resolved(newUrl);
 
             ++m_PendingActions;
-            m_NetworkAccessManager.get(Sc::makeRequest(newUrl));
+            m_Reply = m_NetworkAccessManager.get(Sc::makeRequest(newUrl));
         } else  {
             qDebug() << "Http status code:" << v;
             setError(Error_NetworkFailure);
@@ -456,6 +458,13 @@ ScVodDatabaseDownloader::onScraperProgressDescriptionChanged() {
 void
 ScVodDatabaseDownloader::cancel() {
     QMutexLocker g(&m_Lock);
+
+    qDebug() << "cancel";
+
+    if (m_Reply) {
+        m_Reply->abort();
+    }
+
     switch (m_Status) {
     case Status_Downloading:
         m_DownloadState = DS_Canceling;
