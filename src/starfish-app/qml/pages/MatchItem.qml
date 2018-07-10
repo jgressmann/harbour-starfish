@@ -451,27 +451,32 @@ ListItem {
         if (_vod) {
             _tryPlay()
         } else {
-            switch (_metaDataState) {
-            case metaDataStateAvailable:
-                // should have _vod then
-                console.debug("OHHH NOOOOOESS")
-                break
-            case metaDataStateDownloadFailed:
-                if (_vodFilePath) {
-                    _tryPlay()
+            if (_vodFilePath && _progress >= 1) {
+                // play fully downloaded vods immediately
+                _tryPlay()
+            } else {
+                switch (_metaDataState) {
+                case metaDataStateAvailable:
+                    // should have _vod then
+                    console.debug("OHHH NOOOOOESS")
+                    break
+                case metaDataStateDownloadFailed:
+                    if (_vodFilePath) {
+                        _tryPlay()
+                    }
+                    break
+                case metaDataStateFetching:
+                    // wait for meta data,
+                    // playing now will abort md fetch
+                    break
+                case metaDataStateInitial:
+                    if (App.isOnline) {
+                        _fetchMetaData()
+                    } else {
+                        _metaDataState = metaDataStateDownloadFailed
+                    }
+                    break
                 }
-                break
-            case metaDataStateFetching:
-                // wait for meta data,
-                // playing now will abort md fetch
-                break
-            case metaDataStateInitial:
-                if (App.isOnline) {
-                    _fetchMetaData()
-                } else {
-                    _metaDataState = metaDataStateDownloadFailed
-                }
-                break
             }
         }
 
