@@ -312,7 +312,7 @@ ApplicationWindow {
             } else {
                 console.debug("offset=" + offset)
                 var playerPage = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
-                playerPage.play(url, offset)
+                playerPage.play(Global.completeFileUrl(url), offset)
                 updater.playerPage = playerPage
                 updater.setKey(obj)
             }
