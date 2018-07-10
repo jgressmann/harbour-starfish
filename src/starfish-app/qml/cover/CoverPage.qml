@@ -171,9 +171,17 @@ CoverBackground {
             videoFrameImage.source = Global.videoCoverPath
             refreshTimer.restart()
             _updateUpdatingLabel()
+            if (Global.videoPlayerPage && settingPlaybackPauseInCoverMode.value) {
+                console.debug("pause video")
+                Global.videoPlayerPage.pause()
+            }
             break
         case PageStatus.Deactivating:
             refreshTimer.stop()
+            if (Global.videoPlayerPage) {
+                console.debug("resume video")
+                Global.videoPlayerPage.resume()
+            }
             break
         }
     }

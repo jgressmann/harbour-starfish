@@ -39,6 +39,7 @@ Item { // Components can't declare functions
     readonly property string videoCoverPath: App.dataDir + "/cover.png"
     readonly property real pathTraceOpacity: 0.25
     property var playVideoHandler
+    property var videoPlayerPage
 //    readonly property string autoUpdateLastTimestampKey: "/update_timestamp"
 //    property real lastUpdateTimeStamp: parseFloat(VodDataManager.getPersistedValue(autoUpdateLastTimestampKey, "0"))
 

@@ -44,7 +44,7 @@ Page {
     property bool _forceBusyIndicator: false
     property bool _hasSource: !!("" + source)
     property bool _showVideo: true
-    property bool _pausedOnPageDeactivation: false
+    property bool _paused: false
     property var openHandler
     readonly property bool closed: _closed
     property bool _closed: false
@@ -482,15 +482,14 @@ Page {
         }
     }
 
-//    Component.onCompleted: {
-//        if (source) {
-//            play(source, startOffset)
-//        }
-//    }
+    Component.onCompleted: {
+        Global.videoPlayerPage = page
+    }
 
     Component.onDestruction: {
-        console.debug("destruction")
+//        console.debug("destruction")
         _closed = true
+        Global.videoPlayerPage = null
     }
 
 //    Timer {
@@ -523,13 +522,11 @@ Page {
         switch (page.status) {
         case PageStatus.Deactivating: {
             console.debug("page status=deactivating")
-            _stopPlayback()
+            pause()
         } break
         case PageStatus.Activating:
             console.debug("page status=activating")
-            if (_pausedOnPageDeactivation) {
-                mediaplayer.play();
-            }
+            resume()
             break
         }
     }
@@ -546,27 +543,40 @@ Page {
         }
     }
 
-    function _stopPlayback() {
+    function pause() {
         if (mediaplayer.playbackState === MediaPlayer.PlayingState) {
             mediaplayer.pause()
-            _pausedOnPageDeactivation = true
+            _paused = true
         } else {
-            _pausedOnPageDeactivation = false
+            _paused = false
         }
 
         if (mediaplayer.playbackState === MediaPlayer.PausedState) {
-//            videoOutput.grabToImage(function (a) {
-////                    console.debug("video frame grabbed")
-////                    App.unlink(Global.videoFramePath)
-////                    console.debug("unlink")
-//                //var success = a.saveToFile(Global.videoFramePath)
-//                //console.debug("save frame to path=" + path + " success=" + success)
-//                a.saveToFile(Global.videoFramePath)
-////                frameCapturedSignalTimer.start()
-//                videoFrameCaptured(Global.videoFramePath)
-//            })
             _grabFrame()
         }
+    }
+
+    function resume() {
+        if (_paused) {
+            _paused = false
+            mediaplayer.play()
+        }
+    }
+
+    function _stopPlayback() {
+        pause()
+
+
+//        if (mediaplayer.playbackState === MediaPlayer.PlayingState) {
+//            mediaplayer.pause()
+//            _paused = true
+//        } else {
+//            _paused = false
+//        }
+
+//        if (mediaplayer.playbackState === MediaPlayer.PausedState) {
+//            _grabFrame()
+//        }
     }
 
     function _toTime(n) {

@@ -161,6 +161,12 @@ ApplicationWindow {
         }
 
         ConfigurationValue {
+            id: settingPlaybackPauseInCoverMode
+            key: "/playback/pause_in_cover_mode"
+            defaultValue: true
+        }
+
+        ConfigurationValue {
             id: debugApp
             key: "/debug"
             defaultValue: false

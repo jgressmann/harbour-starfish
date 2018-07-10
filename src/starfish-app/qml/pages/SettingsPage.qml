@@ -215,6 +215,15 @@ Page {
             }
         }
 
+        TextSwitch {
+            text: "Pause video playback when the cover page is active"
+            checked: settingPlaybackPauseInCoverMode.value
+            onCheckedChanged: {
+                console.debug("continue playback in cover mode=" + checked)
+                settingPlaybackPauseInCoverMode.value = checked
+            }
+        }
+
     }
 
     SilicaFlickable {
