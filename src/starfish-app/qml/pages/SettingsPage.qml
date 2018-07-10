@@ -113,15 +113,6 @@ Page {
         }
 
         TextSwitch {
-            text: "Continue VOD file download when page closes"
-            checked: settingNetworkContinueDownload.value
-            onCheckedChanged: {
-                console.debug("continue download=" + checked)
-                settingNetworkContinueDownload.value = checked
-            }
-        }
-
-        TextSwitch {
             text: "Periodically check for new VODs"
             checked: settingNetworkAutoUpdate.value
             onCheckedChanged: {
@@ -129,7 +120,6 @@ Page {
                 settingNetworkAutoUpdate.value = checked
             }
         }
-
 
         TextField {
             enabled: settingNetworkAutoUpdate.value
@@ -154,6 +144,16 @@ Page {
                 }
             }
         }
+
+        TextSwitch {
+            text: "Continue VOD file download when page closes"
+            checked: settingNetworkContinueDownload.value
+            onCheckedChanged: {
+                console.debug("continue download=" + checked)
+                settingNetworkContinueDownload.value = checked
+            }
+        }
+
 
         SectionHeader {
             text: "Format"
