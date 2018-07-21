@@ -69,6 +69,9 @@ const QString s_ClassifierUrl = QStringLiteral("https://www.dropbox.com/s/3cckgy
 const QString s_SqlPatchesUrl = QStringLiteral("https://www.dropbox.com/s/sip5esgcba6hwfo/sql_patches.json.gz?dl=1");
 const QString s_SqlPatchLevelKey = QStringLiteral("sql_patch_level");
 const QString s_SqlPatchLevelDefault = QStringLiteral("0");
+const QString s_ProtossIconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/protoss.png");
+const QString s_TerranIconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/terran.png");
+const QString s_ZergIconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/zerg.png");
 
 const int BatchSize = 1<<13;
 
@@ -800,6 +803,22 @@ ScVodDataManager::icon(const QString& key, const QVariant& value) const {
     }
 
     return QStringLiteral("image://theme/icon-m-sailfish");
+}
+
+QString
+ScVodDataManager::raceIcon(int race) const
+{
+    switch (race)
+    {
+    case ScRecord::RaceProtess:
+        return s_ProtossIconPath;
+    case ScRecord::RaceTerran:
+        return s_TerranIconPath;
+    case ScRecord::RaceZerg:
+        return s_ZergIconPath;
+    default:
+        return QString();
+    }
 }
 
 void

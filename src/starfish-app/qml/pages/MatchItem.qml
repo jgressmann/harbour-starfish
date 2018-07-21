@@ -73,6 +73,7 @@ ListItem {
     readonly property int thumbnailStateDownloadFailed: 0
     readonly property int thumbnailStateAvailable: 1
     readonly property string _where: " where id=" + rowId
+    readonly property bool _hasValidRaces: race1 >= 1 && race2 >= 1
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -227,7 +228,7 @@ ListItem {
                         running: visible
                         visible: _thumbnailState === thumbnailStateFetching
                     }
-                }
+                } // thumbnail group
 
                 Item {
                     id: imageSpacer
@@ -246,6 +247,7 @@ ListItem {
                         id: titleLabel
                         width: parent.width
                         truncationMode: TruncationMode.Fade
+                        visible: !sidesWithRaceLogosGroup.visible
                         text: {
                             if (showSides) {
                                 if (side2) {
@@ -261,7 +263,57 @@ ListItem {
 
                             return matchName
                         }
-                    }
+                    } // title/vs label
+
+                    Item {
+                        id: sidesWithRaceLogosGroup
+                        width: parent.width
+                        height: Math.max(race1Icon.height, side1Name.height)
+                        visible: showSides && _hasValidRaces
+                        property real labelWidth: (width - 2 * race1Icon.width) * 0.5
+
+                        Image {
+                            id: race1Icon
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Theme.iconSizeSmall
+                            height: Theme.iconSizeSmall
+                            sourceSize.width: width
+                            sourceSize.height: height
+                            source: VodDataManager.raceIcon(race1)
+                        }
+
+                        Label {
+                            id: side1Name
+                            anchors.left: race1Icon.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.labelWidth
+                            truncationMode: TruncationMode.Fade
+                            text: " " + side1
+                            horizontalAlignment: Text.AlignLeft
+                        }
+
+                        Label {
+                            id: side2Name
+                            anchors.right: race2Icon.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.labelWidth
+                            truncationMode: TruncationMode.Fade
+                            text: side2  + " "
+                            horizontalAlignment: Text.AlignRight
+                        }
+
+                        Image {
+                            id: race2Icon
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Theme.iconSizeSmall
+                            height: Theme.iconSizeSmall
+                            sourceSize.width: width
+                            sourceSize.height: height
+                            source: VodDataManager.raceIcon(race2)
+                        }
+                    } // vs label with race icons
 
                     Item {
                         height: dateLabel2.height
@@ -396,7 +448,7 @@ ListItem {
                                 }
                             }
                         }
-                    }
+                    } // date / format / status group
 
 
 //                    Label {

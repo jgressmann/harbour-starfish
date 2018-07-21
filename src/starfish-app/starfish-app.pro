@@ -90,7 +90,8 @@ DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 !CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
 
 media.path = /usr/share/$${TARGET}/media
-media.files = media/sc2.png media/bw.png media/random.png
+media.files += media/sc2.png media/bw.png media/random.png
+media.files += media/protoss.png media/terran.png media/zerg.png
 INSTALLS += media
 
 icons.path = /usr/share/$${TARGET}/icons

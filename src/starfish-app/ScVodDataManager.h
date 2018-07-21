@@ -130,6 +130,7 @@ public: //
     Q_INVOKABLE QString getPersistedValue(const QString& key, const QString& defaultValue = QString()) const;
     Q_INVOKABLE void setPersistedValue(const QString& key, const QString& value);
     Q_INVOKABLE void resetSqlPatchLevel();
+    Q_INVOKABLE QString raceIcon(int race) const;
 
 signals:
     void readyChanged();
