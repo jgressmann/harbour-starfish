@@ -810,7 +810,7 @@ ScVodDataManager::raceIcon(int race) const
 {
     switch (race)
     {
-    case ScRecord::RaceProtess:
+    case ScRecord::RaceProtoss:
         return s_ProtossIconPath;
     case ScRecord::RaceTerran:
         return s_TerranIconPath;

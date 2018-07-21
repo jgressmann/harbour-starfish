@@ -55,7 +55,7 @@ public:
 
     enum Race {
         RaceUnknown,
-        RaceProtess,
+        RaceProtoss,
         RaceTerran,
         RaceZerg,
     };

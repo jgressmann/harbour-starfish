@@ -141,7 +141,7 @@ getDate(const QString& str) {
 ScRecord::Race
 getRace(const QString& str) {
     if (str.startsWith(QStringLiteral("protoss"), Qt::CaseInsensitive)) {
-        return ScRecord::RaceProtess;
+        return ScRecord::RaceProtoss;
     }
 
     if (str.startsWith(QStringLiteral("terran"), Qt::CaseInsensitive)) {
