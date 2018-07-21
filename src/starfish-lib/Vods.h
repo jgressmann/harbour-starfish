@@ -69,6 +69,8 @@ struct ScMatchData : public ScBaseData
 {
     QString side1;
     QString side2;
+    QString race1;
+    QString race2;
     QDate matchDate;
     int matchNumber;
     QWeakPointer<ScStageData> owner;
@@ -82,6 +84,8 @@ class ScMatch
     Q_PROPERTY(QString url READ url CONSTANT)
     Q_PROPERTY(QString side1 READ side1 CONSTANT)
     Q_PROPERTY(QString side2 READ side2 CONSTANT)
+    Q_PROPERTY(QString race1 READ race1 CONSTANT)
+    Q_PROPERTY(QString race2 READ race2 CONSTANT)
     Q_PROPERTY(QDate date READ date CONSTANT)
     Q_PROPERTY(int number READ number CONSTANT)
 
@@ -97,6 +101,8 @@ public:
     QString url() const { return d->url; }
     QString side1() const { return d->side1; }
     QString side2() const { return d->side2; }
+    QString race1() const { return d->race1; }
+    QString race2() const { return d->race2; }
     QDate date() const { return d->matchDate; }
     int number() const { return d->matchNumber; }
     ScStage stage() const;

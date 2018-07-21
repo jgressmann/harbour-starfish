@@ -42,7 +42,7 @@ const QString EntryUrl = QStringLiteral("https://www.sc2links.com/vods/");
 const QRegExp aHrefRegex(QStringLiteral("<a href=['\"](https://www.sc2links.com/tournament/\\?match=\\d+)['\"][^>]*>([^>]+)</a></div><div\\s+class=['\"]voddate['\"][^>]*>([^>]+)</div>"));
 const QRegExp tournamentPageStageNameRegex(QStringLiteral("<h3>([^>]+)</h3>\\s*<h5>"));
 const QRegExp tournamentPageStageContent(QStringLiteral("<h3>([^>]+)</h3>\\s*(<h5>.*)<h"));
-const QRegExp tournamentPageMatchRegex(QStringLiteral("<h5>.*<a\\s+href\\s*=\\s*['\"](https://www.sc2links.com/match/\\?match=\\d+)['\"][^>]*>.*<div\\s+class\\s*=\\s*['\"]match['\"]\\s*>(\\w+)\\s+(\\d+)</div>\\s*</a>(.*)<div\\s+class\\s*=\\s*['\"]date['\"]\\s*>([^>]+)</div>.*</h5>"));
+const QRegExp tournamentPageMatchRegex(QStringLiteral("<h5>\\s*<div\\s+class=\"([^\"]*)\"\\s*>.*<a\\s+href\\s*=\\s*['\"](https://www.sc2links.com/match/\\?match=\\d+)['\"][^>]*>.*<div\\s+class\\s*=\\s*['\"]match['\"]\\s*>(\\w+)\\s+(\\d+)</div>\\s*</a>(.*)<div\\s+class\\s*=\\s*['\"]date['\"]\\s*>([^>]+)</div>.*</h5>"));
 const QRegExp iFrameRegex(QStringLiteral("<iframe\\s+(?:[^>]+\\s+)*src=['\"]([^'\"]+)['\"][^>]*>"));
 
 const QRegExp dateRegex(QStringLiteral("\\d{4}-\\d{2}-\\d{2}"));
@@ -50,6 +50,9 @@ const QRegExp fuzzyYearRegex(QStringLiteral(".*(\\d{4}).*"));
 const QRegExp yearRegex(QStringLiteral("\\d{4}"));
 const QRegExp tags(QStringLiteral("<[^>]+>"));
 const QRegExp englishMonthRegex(QStringLiteral("january|febuary|march|april|may|june|july|august|september|november|december"), Qt::CaseInsensitive);
+const QString s_Protoss = QStringLiteral("protoss");
+const QString s_Terran = QStringLiteral("terran");
+const QString s_Zerg = QStringLiteral("zerg");
 
 int InitializeStatics() {
     Q_ASSERT(aHrefRegex.isValid());
@@ -68,6 +71,40 @@ int InitializeStatics() {
 }
 
 int s_StaticsInitialized = InitializeStatics();
+
+ScRecord::Race getRace(const QString& str) {
+    if (str.size() == 1)
+    {
+        switch (str[0].toLatin1())
+        {
+        case 'p':
+        case 'P':
+            return ScRecord::RaceProtoss;
+        case 't':
+        case 'T':
+            return ScRecord::RaceTerran;
+        case 'z':
+        case 'Z':
+            return ScRecord::RaceZerg;
+        default:
+            return ScRecord::RaceUnknown;
+        }
+    }
+
+    if (str.compare(s_Protoss, Qt::CaseInsensitive) == 0) {
+        return ScRecord::RaceProtoss;
+    }
+
+    if (str.compare(s_Terran, Qt::CaseInsensitive) == 0) {
+        return ScRecord::RaceTerran;
+    }
+
+    if (str.compare(s_Zerg, Qt::CaseInsensitive) == 0) {
+        return ScRecord::RaceZerg;
+    }
+
+    return ScRecord::RaceUnknown;
+}
 
 } // anon
 
@@ -364,11 +401,12 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
                 return;
             }
 
-            QString link = tournamentPageMatchRegex.cap(1);
-            QString matchOrEpisode = tournamentPageMatchRegex.cap(2);
-            QString matchNumber = tournamentPageMatchRegex.cap(3);
-            QString junk = tournamentPageMatchRegex.cap(4);
-            QString matchDate = tournamentPageMatchRegex.cap(5).trimmed();
+            QString races = tournamentPageMatchRegex.cap(1);
+            QString link = tournamentPageMatchRegex.cap(2);
+            QString matchOrEpisode = tournamentPageMatchRegex.cap(3);
+            QString matchNumber = tournamentPageMatchRegex.cap(4);
+            QString junk = tournamentPageMatchRegex.cap(5);
+            QString matchDate = tournamentPageMatchRegex.cap(6).trimmed();
 
             junk.replace(tags, QString());
             junk.replace(QStringLiteral("&nbsp;"), QString());
@@ -382,13 +420,20 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
                 side1 = QStringLiteral("unknown");
             }
 
-            QStringList parts = matchDate.split(QChar('/'), QString::SkipEmptyParts);
-            if (parts.size() != 2) {
+            QString race1, race2;
+            auto raceParts = races.split(QChar(' '), QString::SkipEmptyParts);
+            if (raceParts.size() == 2) {
+                race1 = raceParts[0];
+                race2 = raceParts[1];
+            }
+
+            auto dateParts = matchDate.split(QChar('/'), QString::SkipEmptyParts);
+            if (dateParts.size() != 2) {
                 qDebug() << "date format mismatch, expected month/day got " << matchDate;
                 continue;
             }
 
-            QDate qmatchDate(event.year(), parts[0].toInt(), parts[1].toInt());
+            QDate qmatchDate(event.year(), dateParts[0].toInt(), dateParts[1].toInt());
             if (!qmatchDate.isValid()) {
                 qDebug() << "date invalid, got" << matchDate;
                 continue;
@@ -408,6 +453,8 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
             matchData.matchNumber = imatchNumber;
             matchData.side1 = side1;
             matchData.side2 = side2;
+            matchData.race1 = race1;
+            matchData.race2 = race2;
             matchData.name = matchOrEpisode + QStringLiteral(" ") + matchNumber;
             matchData.owner = stage.toWeak();
 
@@ -615,6 +662,12 @@ Sc2LinksDotCom::toRecord(const ScEventData& event, const ScStageData& stage, con
         record.side1Name = match.side1;
         record.side2Name = match.side2;
         record.valid |= ScRecord::ValidSides;
+    }
+
+    record.side1Race = getRace(match.race1);
+    record.side2Race = getRace(match.race2);
+    if (ScRecord::RaceUnknown != record.side1Race) {
+        record.valid |= ScRecord::ValidRaces;
     }
 
     if (match.matchNumber > 0) {
