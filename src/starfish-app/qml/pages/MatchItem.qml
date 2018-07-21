@@ -540,6 +540,7 @@ ListItem {
         VodDataManager.metaDataAvailable.connect(metaDataAvailable)
         VodDataManager.metaDataDownloadFailed.connect(metaDataDownloadFailed)
         VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
+        VodDataManager.vodDownloadCanceled.connect(vodDownloadCanceled)
         _vodTitle = VodDataManager.title(rowId)
         seenButton.seen = VodDataManager.seen(table, _where) >= 1
 
@@ -672,6 +673,16 @@ ListItem {
         if (rowid === rowId) {
             console.debug("vod download failed rowid=" + rowid + " error=" + error)
             _vodDownloadFailed = true
+            _downloading = false
+            progressOverlay.show = false
+            _progress = -1
+        }
+    }
+
+    function vodDownloadCanceled(rowid) {
+        if (rowid === rowId) {
+            console.debug("vod download canceled rowid=" + rowid)
+            _vodDownloadFailed = false
             _downloading = false
             progressOverlay.show = false
             _progress = -1

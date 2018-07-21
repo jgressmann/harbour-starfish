@@ -148,6 +148,7 @@ signals:
     void vodsCleared();
     void vodmanError(int error);
     void vodDownloadFailed(qint64 rowid, int error);
+    void vodDownloadCanceled(qint64 rowid);
     void vodsAdded(int count);
     void vodDownloadsChanged();
 
@@ -180,7 +181,6 @@ private:
     struct VodmanFileRequest {
         qint64 token;
         qint64 vod_url_share_id;
-        qint64 vod_file_id;
         int formatIndex;
         bool implicitlyStarted;
     };
@@ -227,7 +227,7 @@ private:
             bool* exists) const;
 
     bool exists(QSqlQuery& query, const ScRecord& record, qint64* id) const;
-    void updateVodDownloadStatus(qint64 vodFileId, const VMVodFileDownload& download);
+    void updateVodDownloadStatus(qint64 urlShareId, const VMVodFileDownload& download);
     void fetchMetaData(qint64 rowid, bool download);
     void iconRequestFinished(QNetworkReply* reply, IconRequest& r);
     void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
@@ -240,6 +240,7 @@ private:
     void applySqlPatches(const QByteArray& bytes);
     void setPersistedValue(QSqlQuery& query, const QString& key, const QString& value);
     void updateSql1(QSqlQuery& q);
+    void updateSql2(QSqlQuery& q);
 
 private:
     mutable QMutex m_Lock;
