@@ -45,6 +45,7 @@ Page {
     property bool _hasSource: !!("" + source)
     property bool _showVideo: true
     property bool _paused: false
+    property int _pauseCount: 0
     property var openHandler
     readonly property bool closed: _closed
     property bool _closed: false
@@ -61,7 +62,10 @@ Page {
         }
 
         mediaplayer.source = source
+        _paused = false
     }
+
+    property bool isPlaying: mediaplayer.playbackState === MediaPlayer.PlayingState
 
     MediaPlayer {
         id: mediaplayer
@@ -129,6 +133,7 @@ Page {
 
 
     Rectangle {
+        id: videoOutputRectangle
         anchors.fill: parent
         color: "black"
         visible: _showVideo
@@ -518,8 +523,8 @@ Page {
     }
 
     onStatusChanged: {
-        console.debug("page status=" + page.status)
-        switch (page.status) {
+        console.debug("page status=" + status)
+        switch (status) {
         case PageStatus.Deactivating: {
             console.debug("page status=deactivating")
             pause()
@@ -544,11 +549,14 @@ Page {
     }
 
     function pause() {
+        _pauseCount += 1
+        console.debug("pause count="+ _pauseCount)
         if (mediaplayer.playbackState === MediaPlayer.PlayingState) {
-            mediaplayer.pause()
+            console.debug("video player page pause playback")
+//            mediaplayer.pause()
+
             _paused = true
-        } else {
-            _paused = false
+            mediaplayer.pause()
         }
 
         if (mediaplayer.playbackState === MediaPlayer.PausedState) {
@@ -557,9 +565,16 @@ Page {
     }
 
     function resume() {
-        if (_paused) {
+        _pauseCount -= 1
+        console.debug("pause count="+ _pauseCount)
+        if (_pauseCount === 0 && _paused) {
+            console.debug("video player page resume playback")
             _paused = false
             mediaplayer.play()
+            // toggle item visibility to to unfreeze video
+            // after coming out of device lock
+            videoOutputRectangle.visible = false
+            videoOutputRectangle.visible = true
         }
     }
 

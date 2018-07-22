@@ -40,6 +40,7 @@ ApplicationWindow {
     property int _vodsAdded: 0
 
 
+
     Sc2LinksDotComScraper {
         id: sc2LinksDotComScraper
     }
@@ -163,6 +164,12 @@ ApplicationWindow {
         ConfigurationValue {
             id: settingPlaybackPauseInCoverMode
             key: "/playback/pause_in_cover_mode"
+            defaultValue: false
+        }
+
+        ConfigurationValue {
+            id: settingPlaybackPauseOnDeviceLock
+            key: "/playback/pause_on_device_lock"
             defaultValue: true
         }
 
@@ -248,7 +255,6 @@ ApplicationWindow {
     }
 
     DBusAdaptor {
-        id: dbus
         bus: DBus.SessionBus
         service: 'org.duckdns.jgressmann.starfish.app'
         iface: 'org.duckdns.jgressmann.starfish.app'
@@ -261,6 +267,56 @@ ApplicationWindow {
             }
         }
     }
+
+    DBusInterface {
+        bus: DBus.SystemBus
+        service: 'com.nokia.mce'
+        iface: 'com.nokia.mce.signal'
+        path: '/com/nokia/mce/signal'
+
+        signalsEnabled: true
+
+        function tklock_mode_ind(arg) {
+            console.debug("tklock_mode_ind=" + arg)
+            switch (arg) {
+            case "locked":
+                if (settingPlaybackPauseOnDeviceLock.value && Global.videoPlayerPage) {
+                    Global.videoPlayerPage.pause()
+                }
+
+//                Global.addPlaybackPause()
+                break;
+            case "unlocked":
+                if (settingPlaybackPauseOnDeviceLock.value && Global.videoPlayerPage) {
+                    Global.videoPlayerPage.resume()
+                }
+//                Global.removePlaybackPause()
+                break;
+            }
+        }
+    }
+
+//    DBusInterface {
+//        bus: DBus.SystemBus
+//        service: 'com.nokia.mce'
+//        iface: 'com.nokia.mce.request'
+//        path: '/com/nokia/mce/request'
+
+//        Component.onCompleted: {
+//            typedCall(
+//                "get_tklock_mode",
+//                undefined,
+//                function (result) {
+//                    console.debug("initial value of tklock_mode=" + result)
+//                    if ("locked" === result) {
+//                        if (settingPlaybackPauseOnDeviceLock.value &&  && Global.videoPlayerPage) {
+//                            Global.videoPlayerPage.pause()
+//                        }
+////                        Global.addPlaybackPause()
+//                    }
+//                })
+//        }
+//    }
 
     Timer {
         repeat: true

@@ -216,7 +216,16 @@ Page {
         }
 
         TextSwitch {
-            text: "Pause video playback when the cover page is active"
+            text: "Pause playback on device lock"
+            checked: settingPlaybackPauseOnDeviceLock.value
+            onCheckedChanged: {
+                console.debug("continue playback on device lock=" + checked)
+                settingPlaybackPauseOnDeviceLock.value = checked
+            }
+        }
+
+        TextSwitch {
+            text: "Pause playback when the cover page is shown"
             checked: settingPlaybackPauseInCoverMode.value
             onCheckedChanged: {
                 console.debug("continue playback in cover mode=" + checked)

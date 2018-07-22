@@ -40,6 +40,8 @@ Item { // Components can't declare functions
     readonly property real pathTraceOpacity: 0.25
     property var playVideoHandler
     property var videoPlayerPage
+//    property bool _pausedPlayback: false
+//    property int _pausedCount: 0
 //    readonly property string autoUpdateLastTimestampKey: "/update_timestamp"
 //    property real lastUpdateTimeStamp: parseFloat(VodDataManager.getPersistedValue(autoUpdateLastTimestampKey, "0"))
 
@@ -252,6 +254,30 @@ Item { // Components can't declare functions
             }
         }
     }
+
+//    function addPlaybackPause() {
+//        _pausedCount +=1
+//        console.debug("_pauseCount=" + _pausedCount)
+//        if (_pausedCount === 1) {
+//            _pausedPlayback = true
+//            if (videoPlayerPage) {
+//                console.debug("pause video")
+//                videoPlayerPage.pause()
+//            }
+//        }
+//    }
+
+//    function removePlaybackPause() {
+//        _pausedCount -=1
+//        console.debug("_pauseCount=" + _pausedCount)
+//        if (_pausedCount === 0 && _pausedPlayback) {
+//            _pausedPlayback = false
+//            if (videoPlayerPage) {
+//                console.debug("resume video")
+//                videoPlayerPage.resume()
+//            }
+//        }
+//    }
 
     SqlVodModel {
         id: _model

@@ -31,6 +31,7 @@ CoverBackground {
     id: root
 
     property int _newVodCount: 0
+//    property bool _pausedPlayback: false
 
     SqlVodModel {
         id: sqlModel
@@ -161,9 +162,12 @@ CoverBackground {
     }
 
     onStatusChanged: {
-//        console.debug("status=" + status)
+        console.debug("cover page status=" + status)
         switch (status) {
         case PageStatus.Activating:
+            // NOTE: the cover page will be active if the app menu is open
+            // NOTE: the cover page will go though an activating->active->deactivating->inactive
+            //       cycle if the device comes out of lock
             sqlModel.select = ""
             sqlModel.select = "select count(*) from vods where seen=0"
             _newVodCount = sqlModel.data(sqlModel.index(0, 0), 0)
@@ -171,17 +175,23 @@ CoverBackground {
             videoFrameImage.source = Global.videoCoverPath
             refreshTimer.restart()
             _updateUpdatingLabel()
-            if (Global.videoPlayerPage && settingPlaybackPauseInCoverMode.value) {
-                console.debug("pause video")
-                Global.videoPlayerPage.pause()
+            if (settingPlaybackPauseInCoverMode.value) {
+//                _pausedPlayback = true
+//                Global.addPlaybackPause()
+
+                // FIX ME this is actually buggy b/c it doesn't
+                // handle he 'out of device lock' case correctly
+                if (Global.videoPlayerPage.isPlaying) {
+                    Global.videoPlayerPage.pause()
+                }
             }
             break
         case PageStatus.Deactivating:
             refreshTimer.stop()
-            if (Global.videoPlayerPage) {
-                console.debug("resume video")
-                Global.videoPlayerPage.resume()
-            }
+//            if (_pausedPlayback) {
+//                _pausedPlayback = false
+//                Global.removePlaybackPause()
+//            }
             break
         }
     }
