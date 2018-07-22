@@ -308,8 +308,8 @@ ScRecord::ScRecord()
     year = -1;
     game = -1;
     season = -1;
-    side1Race = -1;
-    side2Race = -1;
+    side1Race = RaceUnknown;
+    side2Race = RaceUnknown;
     matchNumber = -1;
 }
 
