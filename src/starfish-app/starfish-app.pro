@@ -85,6 +85,7 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/RecentlyWatchedVideoView.qml \
     qml/RecentlyWatchedVideoUpdater.qml \
     qml/ContentPageHeader.qml \
+    qml/pages/VodDetailPage.qml
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 !CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT

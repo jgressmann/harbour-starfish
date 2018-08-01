@@ -666,6 +666,28 @@ ListItem {
                     VodDataManager.deleteVod(rowId)
                 }
             }
+
+            MenuItem {
+                text: "VOD details"
+                visible: rowId >= 0 && _vodFileSize > 0 && !!_vodFilePath
+                onClicked: pageStack.push(
+                               Qt.resolvedUrl("VodDetailPage.qml"),
+                               {
+                                   vodTitle: titleLabel.text,
+                                   vodFilePath: _vodFilePath,
+                                   vodFileSize: _vodFileSize,
+                                   vodWidth: _width,
+                                   vodHeight: _height,
+                                   vodRowId: rowId,
+                                   vodProgress: _progress
+                               })
+            }
+
+            MenuItem {
+                text: "Copy VOD file path to clipboard"
+                visible: rowId >= 0 && _vodFileSize > 0 && !!_vodFilePath
+                onClicked: Clipboard.text = _vodFilePath
+            }
         }
     }
 
