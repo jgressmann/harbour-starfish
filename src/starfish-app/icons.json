@@ -232,6 +232,11 @@
             "extension": ".png"
         },
         {
+            "regex": "qlash",
+            "url": "https://www.dropbox.com/s/iiap1ys96bdtfnl/qlash.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "red bull battle|red bull bg",
             "url": "https://www.dropbox.com/s/d7s2rxwj5rrnzha/rbbg.png?dl=1",
             "extension": ".png"
