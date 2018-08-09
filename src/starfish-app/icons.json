@@ -37,6 +37,11 @@
             "extension": ".png"
         },
         {
+            "regex": "cheeseadelphia",
+            "url": "https://www.dropbox.com/s/532n53grmahzwok/cheeseadelphia.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "code s",
             "url": "https://www.dropbox.com/s/1v9lmxurko6rtgw/codes.png?dl=1",
             "extension": ".png"
