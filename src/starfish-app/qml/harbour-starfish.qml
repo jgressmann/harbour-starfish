@@ -265,6 +265,8 @@ ApplicationWindow {
             if (!item || item.objectName !== "NewPage") {
                 pageStack.push(Qt.resolvedUrl("pages/NewPage.qml"))
             }
+
+            window.activate()
         }
     }
 
