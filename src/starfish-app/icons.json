@@ -37,6 +37,12 @@
             "extension": ".png"
         },
         {
+            "regex": "bsl\\s+continent",
+            "url": "https://www.dropbox.com/s/p8t7wfaj5jkd25v/bslcb.png?dl=1",
+            "extension": ".png",
+            "comment": "Bombastic Starleague Continent Battles"
+        },
+        {
             "regex": "cheeseadelphia",
             "url": "https://www.dropbox.com/s/532n53grmahzwok/cheeseadelphia.png?dl=1",
             "extension": ".png"
