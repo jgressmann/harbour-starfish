@@ -156,7 +156,7 @@ BasePage {
             anchors.fill: parent
             model: model
             header: PageHeader {
-                title: vodTitle
+                title: "VOD details"
             }
         }
     }
