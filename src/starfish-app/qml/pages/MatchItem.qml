@@ -855,7 +855,7 @@ ListItem {
             }
 
             if (formatIndex === -1) {
-                var target = targetWidth(formatId)
+                var target = _targetWidth(formatId)
                 var bestdelta = Math.abs(vod.format(0).height - target)
                 formatIndex = 0
                 for (var i = 1; i < vod.formats; ++i) {
@@ -987,6 +987,19 @@ ListItem {
         if (!settingNetworkContinueDownload.value) {
             console.debug("canceling download for rowid=" + rowId)
             _cancelDownload()
+        }
+    }
+
+    function _targetWidth(format) {
+        switch (format) {
+        case VM.VM_240p:
+            return 240
+        case VM.VM_360p:
+            return 360
+        case VM.VM_720p:
+            return 720
+        default:
+            return 1080
         }
     }
 }
