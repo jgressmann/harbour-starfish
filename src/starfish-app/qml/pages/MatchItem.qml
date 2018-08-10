@@ -618,7 +618,16 @@ ListItem {
             MenuItem {
                 text: "Download VOD"
                 visible: rowId >= 0 && !!_vod && !_downloading && progressOverlay.progress < 1 && App.isOnline
-                onClicked: _download(false)
+                onClicked: {
+                    var format = _getVideoFormatFromBearerMode()
+                    _download(false, format)
+                }
+            }
+
+            MenuItem {
+                text: "Download VOD with format..."
+                visible: rowId >= 0 && !!_vod && !_downloading && progressOverlay.progress < 1 && App.isOnline
+                onClicked: _download(false, VM.VM_Any)
             }
 
             MenuItem {
@@ -945,8 +954,7 @@ ListItem {
         _downloading = true
     }
 
-    function _download(autoStarted) {
-        var format = _getVideoFormatFromBearerMode()
+    function _download(autoStarted, format) {
         if (VM.VM_Any === format) {
             _selectFormat(function(index) {
                 _downloadFormat(index, autoStarted)
