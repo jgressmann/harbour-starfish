@@ -256,7 +256,7 @@ Page {
             }
 
             onPressed: function (e) {
-                console.debug("pressed")
+//                console.debug("pressed")
                 if (!controlPanel.open) {
                     startx = e.x;
                     starty = e.y;
@@ -265,7 +265,7 @@ Page {
             }
 
             onReleased: function (e) {
-                console.debug("released")
+//                console.debug("released")
 
                 var dx = e.x - startx
                 var dy = e.y - starty
