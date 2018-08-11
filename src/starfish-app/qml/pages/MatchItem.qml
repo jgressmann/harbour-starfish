@@ -216,7 +216,7 @@ ListItem {
 
                         MouseArea {
                             anchors.fill: parent
-                            enabled: parent.visible
+                            enabled: parent.visible && _thumbnailState !== thumbnailStateAvailable
                             onClicked: _fetchThumbnail()
                         }
                     }
