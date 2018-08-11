@@ -33,6 +33,8 @@ Page {
     property string source
     readonly property int startOffset: Math.floor(_startOffsetMs * 1000)
     property int _startOffsetMs: 0
+    property int _seekFixup: 0
+    property bool _startSeek: false
     property string title
 
     property int playbackAllowedOrientations: Orientation.Landscape | Orientation.LandscapeInverted
@@ -51,9 +53,14 @@ Page {
     property bool _closed: false
     property bool _grabFrameWhenReady: false
 
+
     signal videoFrameCaptured(string filepath)
     signal videoCoverCaptured(string filepath)
     signal videoThumbnailCaptured(string filepath)
+
+//    onPlaybackOffsetChanged: {
+//        console.debug("playback offset="+ playbackOffset)
+//    }
 
     onSourceChanged: {
         console.debug("onSourceChanged " + source)
@@ -101,6 +108,18 @@ Page {
 //        onVolumeChanged: {
 //            console.debug("media player volume=" + volume)
 //        }
+
+        onPositionChanged: {
+            // If the start offset seek ended up short of the target position,
+            // correct iteratively
+            if (_startSeek && position - _startOffsetMs < -1000) {
+                _seekFixup += 1000
+                console.debug("reseek from " + position + " to start offset " + _startOffsetMs + " + " + _seekFixup)
+                if (_startOffsetMs + _seekFixup < duration) {
+                    _seek(_startOffsetMs + _seekFixup)
+                }
+            }
+        }
     }
 
 
@@ -259,6 +278,7 @@ Page {
                             var streamPosition = Math.floor(Math.max(0, Math.min(streamPositonS + skipSeconds, streamDurationS)))
                             if (streamPosition !== streamPositonS) {
                                 console.debug("skip to=" + streamPosition)
+                                _startSeek = false
                                 _seek(streamPosition * 1000)
                             }
                         }
@@ -363,6 +383,7 @@ Page {
                             interval: 500
                             repeat: false
                             onTriggered: {
+                                _startSeek = false
                                 _seek(positionSlider.sliderValue)
                             }
                         }
@@ -542,8 +563,11 @@ Page {
         mediaplayer.play()
         _startOffsetMs = offset * 1000
         _grabFrameWhenReady = !!saveScreenShot
+        _startSeek = false
+        _seekFixup = 0
         if (_showVideo && _startOffsetMs > 0) {
             console.debug("seek to " + _startOffsetMs)
+            _startSeek = true
             _seek(_startOffsetMs)
         }
     }
