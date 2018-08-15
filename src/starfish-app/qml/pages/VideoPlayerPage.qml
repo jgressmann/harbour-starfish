@@ -25,12 +25,12 @@ import QtQuick 2.0
 import QtGraphicalEffects 1.0
 import QtMultimedia 5.0
 import Sailfish.Silica 1.0
+import Nemo.KeepAlive 1.1
 import org.duckdns.jgressmann 1.0
 import ".."
 
 Page {
     id: page
-    property string source
     readonly property int startOffset: Math.floor(_startOffsetMs * 1000)
     property int _startOffsetMs: 0
     property int _seekFixup: 0
@@ -44,7 +44,7 @@ Page {
     readonly property int streamPositonS: Math.floor(mediaplayer.position / 1000)
     readonly property int streamDurationS: Math.ceil(mediaplayer.duration / 1000)
     property bool _forceBusyIndicator: false
-    property bool _hasSource: !!("" + source)
+    property bool _hasSource: !!("" + mediaplayer.source)
     property bool _showVideo: true
     property bool _paused: false
     property int _pauseCount: 0
@@ -52,6 +52,7 @@ Page {
     readonly property bool closed: _closed
     property bool _closed: false
     property bool _grabFrameWhenReady: false
+    readonly property bool isPlaying: mediaplayer.playbackState === MediaPlayer.PlayingState
 
 
     signal videoFrameCaptured(string filepath)
@@ -62,17 +63,6 @@ Page {
 //        console.debug("playback offset="+ playbackOffset)
 //    }
 
-    onSourceChanged: {
-        console.debug("onSourceChanged " + source)
-        if (mediaplayer.source) {
-            _stopPlayback()
-        }
-
-        mediaplayer.source = source
-        _paused = false
-    }
-
-    property bool isPlaying: mediaplayer.playbackState === MediaPlayer.PlayingState
 
     MediaPlayer {
         id: mediaplayer
@@ -103,6 +93,27 @@ Page {
 
         onPlaybackStateChanged: {
             console.debug("media player playback state=" + playbackState)
+
+
+            switch (playbackState) {
+            case MediaPlayer.PlayingState:
+                console.debug("playing")
+                break
+            case MediaPlayer.PausedState:
+                console.debug("paused")
+                break
+            case MediaPlayer.StoppedState:
+                console.debug("stopped")
+                break
+            default:
+                console.debug("unhandled playback state")
+                break
+            }
+
+            // apparently isPlaying isn't updated here yet, sigh
+            console.debug("isPlaying=" + isPlaying)
+            DisplayBlanking.preventBlanking = playbackState === MediaPlayer.PlayingState
+            console.debug("prevent blank="+DisplayBlanking.preventBlanking)
         }
 
 //        onVolumeChanged: {
@@ -446,17 +457,17 @@ Page {
                             spacing: Theme.paddingLarge
 
                             IconButton {
-                                icon.source: mediaplayer.playbackState === MediaPlayer.PlayingState ? "image://theme/icon-m-pause" : "image://theme/icon-m-play"
+                                icon.source: isPlaying ? "image://theme/icon-m-pause" : "image://theme/icon-m-play"
                                 anchors.verticalCenter: parent.verticalCenter
                                 onClicked: {
                                     console.debug("play/pause")
                                     switch (mediaplayer.playbackState) {
                                     case MediaPlayer.PlayingState:
-                                        mediaplayer.pause()
+                                        page.pause()
                                         break
                                     case MediaPlayer.PausedState:
                                     case MediaPlayer.StoppedState:
-                                        mediaplayer.play()
+                                        page.resume()
                                         break
                                     }
                                 }
@@ -483,7 +494,7 @@ Page {
 
                                 onClicked: {
                                     console.debug("open")
-                                    mediaplayer.pause()
+                                    page.pause()
                                     controlPanel.open = false
                                     openHandler()
                                 }
@@ -499,7 +510,7 @@ Page {
                                 width: Theme.iconSizeSmall
                                 height: Theme.iconSizeSmall
                                 sourceSize: Qt.size(width, height)
-                                source: (page.source || "").indexOf("file://") === 0 ? "image://theme/icon-s-like" : "image://theme/icon-s-cloud-download"
+                                source: ((mediaplayer.source || "") + "").indexOf("file://") === 0 ? "image://theme/icon-s-like" : "image://theme/icon-s-cloud-download"
                             }
                         }
                     }
@@ -513,9 +524,15 @@ Page {
     }
 
     Component.onDestruction: {
-//        console.debug("destruction")
+        console.debug("destruction")
+        DisplayBlanking.preventBlanking = false
         _closed = true
         Global.videoPlayerPage = null
+        // save current frame
+        mediaplayer.pause()
+        if (mediaplayer.playbackState === MediaPlayer.PausedState) {
+            _grabFrame()
+        }
     }
 
 //    Timer {
@@ -548,23 +565,25 @@ Page {
         switch (status) {
         case PageStatus.Deactivating: {
             console.debug("page status=deactivating")
-            pause()
+            //pause()
         } break
         case PageStatus.Activating:
             console.debug("page status=activating")
-            resume()
+            //resume()
             break
         }
     }
 
     function play(url, offset, saveScreenShot) {
         console.debug("play offset=" + offset + " url=" + url + " save screen shot=" + saveScreenShot)
-        source = url
+        mediaplayer.source = url
         mediaplayer.play()
         _startOffsetMs = offset * 1000
         _grabFrameWhenReady = !!saveScreenShot
         _startSeek = false
         _seekFixup = 0
+        _pauseCount = 0;
+        _paused = false
         if (_showVideo && _startOffsetMs > 0) {
             console.debug("seek to " + _startOffsetMs)
             _startSeek = true
@@ -575,7 +594,7 @@ Page {
     function pause() {
         _pauseCount += 1
         console.debug("pause count="+ _pauseCount)
-        if (mediaplayer.playbackState === MediaPlayer.PlayingState) {
+        if (isPlaying) {
             console.debug("video player page pause playback")
 //            mediaplayer.pause()
 
