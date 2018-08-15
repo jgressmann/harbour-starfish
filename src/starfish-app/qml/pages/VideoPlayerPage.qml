@@ -495,7 +495,6 @@ Page {
                                 onClicked: {
                                     console.debug("open")
                                     page.pause()
-                                    controlPanel.open = false
                                     openHandler()
                                 }
                             }
@@ -578,6 +577,7 @@ Page {
         console.debug("play offset=" + offset + " url=" + url + " save screen shot=" + saveScreenShot)
         mediaplayer.source = url
         mediaplayer.play()
+        controlPanel.open = false
         _startOffsetMs = offset * 1000
         _grabFrameWhenReady = !!saveScreenShot
         _startSeek = false
