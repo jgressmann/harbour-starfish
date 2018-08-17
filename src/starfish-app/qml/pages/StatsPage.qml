@@ -32,6 +32,7 @@ import ".."
 Page {
     id: root
     property int _vodCount: 0
+    property int _seenVodCount: 0
 
     SqlVodModel {
         columns: ["count"]
@@ -50,12 +51,34 @@ Page {
         }
     }
 
+    SqlVodModel {
+        columns: ["count"]
+        dataManager: VodDataManager
+        onModelReset: {
+//            console.debug("sql model reset")
+            _seenVodCount = data(index(0, 0), 0)
+        }
+
+        Component.onCompleted: update()
+
+        function update() {
+            select = ""
+            select = "select count(*) as count from vods where seen=1"
+            _seenVodCount = data(index(0, 0), 0)
+        }
+    }
+
     VisualItemModel {
         id: model
 
         DetailItem {
             label: "No VODs"
             value: _vodCount.toFixed(0)
+        }
+
+        DetailItem {
+            label: "No new VODs"
+            value: (_vodCount - _seenVodCount).toFixed(0)
         }
 
         DetailItem {
