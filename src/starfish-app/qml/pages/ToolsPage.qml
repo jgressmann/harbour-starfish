@@ -125,8 +125,18 @@ Page {
                     newVodNotification.publish()
                 }
             }
+        }
 
+        TextField {
+            visible: debugApp.value
+            width: parent.width
+            label: "SQL patch level"
+            text: VodDataManager.sqlPatchLevel
+            readOnly: true
+        }
 
+        ButtonLayout {
+            width: parent.width
 
             Button {
                 visible: debugApp.value

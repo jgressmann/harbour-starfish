@@ -2895,7 +2895,7 @@ ScVodDataManager::applySqlPatches(const QByteArray &buffer) {
     auto patches = root[QStringLiteral("patches")].toArray();
     QSqlQuery q(m_Database);
 
-    auto patchLevel = getPersistedValue(s_SqlPatchLevelKey, s_SqlPatchLevelDefault).toInt();
+    auto patchLevel = sqlPatchLevel();
     qInfo("sql patch level %d\n", patchLevel);
 
     // apply missing patches
@@ -2925,6 +2925,8 @@ ScVodDataManager::applySqlPatches(const QByteArray &buffer) {
             qWarning() << "failed to commit transaction" << i << q.lastError();
             return;
         }
+
+        emit sqlPatchLevelChanged();
     }
 
     emit vodsChanged();
@@ -3027,4 +3029,10 @@ Error:
     setError(Error_CouldntCreateSqlTables);
     setReady(false);
     goto Exit;
+}
+
+int
+ScVodDataManager::sqlPatchLevel() const
+{
+    return getPersistedValue(s_SqlPatchLevelKey, s_SqlPatchLevelDefault).toInt();
 }

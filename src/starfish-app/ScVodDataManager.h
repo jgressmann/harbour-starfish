@@ -74,6 +74,7 @@ class ScVodDataManager : public QObject {
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
     Q_PROPERTY(QVariant database READ databaseVariant CONSTANT)
     Q_PROPERTY(int vodDownloads READ vodDownloads NOTIFY vodDownloadsChanged)
+    Q_PROPERTY(int sqlPatchLevel READ sqlPatchLevel NOTIFY sqlPatchLevelChanged)
 
 public:
     enum Error {
@@ -131,6 +132,7 @@ public: //
     Q_INVOKABLE void setPersistedValue(const QString& key, const QString& value);
     Q_INVOKABLE void resetSqlPatchLevel();
     Q_INVOKABLE QString raceIcon(int race) const;
+    int sqlPatchLevel() const;
 
 signals:
     void readyChanged();
@@ -152,7 +154,7 @@ signals:
     void vodDownloadCanceled(qint64 rowid);
     void vodsAdded(int count);
     void vodDownloadsChanged();
-
+    void sqlPatchLevelChanged();
 
 
 public slots:
