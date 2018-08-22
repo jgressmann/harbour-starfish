@@ -358,6 +358,12 @@ Page {
                 onOpenChanged: {
                     console.debug("control panel open=" + open)
                     //positionSlider.value = Math.max(0, mediaplayer.position)
+
+                    // Grab frame when closing again, better to have it than
+                    // to miss it :D
+                    if (_hasSource) {
+                        _grabFrame()
+                    }
                 }
 
                 Column {
@@ -529,9 +535,9 @@ Page {
         Global.videoPlayerPage = null
         // save current frame
         mediaplayer.pause()
-        if (mediaplayer.playbackState === MediaPlayer.PausedState) {
-            _grabFrame()
-        }
+//        if (mediaplayer.playbackState === MediaPlayer.PausedState) {
+//            _grabFrame()
+//        }
     }
 
 //    Timer {
