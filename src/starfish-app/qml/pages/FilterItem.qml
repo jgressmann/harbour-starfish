@@ -37,6 +37,13 @@ ListItem {
     property string _where
     property var updateSeen: function () {}
 
+    menu: ContextMenu {
+        MenuItem {
+            text: "Delete seen VOD files"
+            onClicked: Global.deleteSeenVodFiles(_where)
+        }
+    }
+
     Item {
         id: container
         anchors.fill: parent

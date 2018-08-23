@@ -375,6 +375,8 @@ ApplicationWindow {
                 updater.setKey(obj)
             }
         }
+
+        Global.deleteVodNotification = deleteVodNotification
     }
 
     function _setScraper() {

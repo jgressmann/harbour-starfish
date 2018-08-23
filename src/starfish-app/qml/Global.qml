@@ -24,6 +24,7 @@
 pragma Singleton
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Nemo.Notifications 1.0
 import org.duckdns.jgressmann 1.0
 
 Item { // Components can't declare functions
@@ -40,6 +41,7 @@ Item { // Components can't declare functions
     readonly property real pathTraceOpacity: 0.25
     property var playVideoHandler
     property var videoPlayerPage
+    property Notification deleteVodNotification
 //    property bool _pausedPlayback: false
 //    property int _pausedCount: 0
 //    readonly property string autoUpdateLastTimestampKey: "/update_timestamp"
@@ -278,6 +280,20 @@ Item { // Components can't declare functions
 //            }
 //        }
 //    }
+
+    function deleteSeenVodFiles(_where) {
+        if (!_where) {
+            _where = ""
+        }
+
+        console.debug("delete seen vod files where: " + _where)
+        var count = VodDataManager.deleteSeenVodFiles(_where)
+        if (count) {
+            deleteVodNotification.itemCount = count
+            deleteVodNotification.body = deleteVodNotification.previewBody = count + " seen VOD file" + (count > 1 ? "s" : "") + " deleted"
+            deleteVodNotification.publish()
+        }
+    }
 
     SqlVodModel {
         id: _model

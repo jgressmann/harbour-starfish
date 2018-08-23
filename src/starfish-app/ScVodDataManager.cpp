@@ -2702,8 +2702,20 @@ ScVodDataManager::makeThumbnailFile(const QString& srcPath) {
 }
 
 int
-ScVodDataManager::deleteSeenVodFiles() {
-    return deleteVodsWhere(QStringLiteral("WHERE seen=1"));
+ScVodDataManager::deleteSeenVodFiles(const QString& where) {
+    // FIX ME, select only non-shared vods
+    auto w = where.trimmed();
+    if (w.isEmpty()) {
+        w = QStringLiteral("WHERE seen=1");
+    } else {
+        if (w.startsWith("where ", Qt::CaseInsensitive)) {
+            w += QStringLiteral(" AND seen=1");
+        } else {
+            w = QStringLiteral("WHERE %1 AND seen=1").arg(where);
+        }
+    }
+
+    return deleteVodsWhere(w);
 }
 
 int

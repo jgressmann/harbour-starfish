@@ -34,6 +34,13 @@ ListItem {
     property string where
     property string _where
 
+    menu: ContextMenu {
+        MenuItem {
+            text: "Delete seen VOD files"
+            onClicked: Global.deleteSeenVodFiles(_where)
+        }
+    }
+
     Item {
         x: Theme.horizontalPageMargin
         width: parent.width - 2*x

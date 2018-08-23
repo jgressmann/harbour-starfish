@@ -124,7 +124,7 @@ public: //
     inline QVariant databaseVariant() const { return QVariant::fromValue(m_Database); }
     bool busy() const;
     Q_INVOKABLE QString makeThumbnailFile(const QString& srcPath);
-    Q_INVOKABLE int deleteSeenVodFiles();
+    Q_INVOKABLE int deleteSeenVodFiles(const QString& where);
     Q_INVOKABLE bool implicitlyStartedVodFetch(qint64 rowid) const;
     int vodDownloads() const;
     Q_INVOKABLE QVariantList vodsBeingDownloaded() const;

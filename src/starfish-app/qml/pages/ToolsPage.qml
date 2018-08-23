@@ -97,15 +97,7 @@ Page {
 
             Button {
                 text: "Delete seen VOD files"
-                onClicked: {
-                    console.debug("delete seen vod files")
-                    var count = VodDataManager.deleteSeenVodFiles()
-                    if (count) {
-                        deleteVodNotification.itemCount = count
-                        deleteVodNotification.body = deleteVodNotification.previewBody = count + " seen VOD file" + (count > 1 ? "s" : "") + " deleted"
-                        deleteVodNotification.publish()
-                    }
-                }
+                onClicked: Global.deleteSeenVodFiles()
             }
 
             Button {
