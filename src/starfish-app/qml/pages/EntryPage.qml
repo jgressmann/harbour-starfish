@@ -81,7 +81,7 @@ BasePage {
                 pageStack.push(
                             Qt.resolvedUrl("FilterPage.qml"),
                             {
-                                title: qsTr("Game"),
+                                title: VodDataManager.label("game"),
                                 table: "vods",
                                 key: "game",
                                 grid: true,
@@ -106,7 +106,7 @@ BasePage {
                 pageStack.push(
                             Qt.resolvedUrl("FilterPage.qml"),
                             {
-                                title: qsTr("Game"),
+                                title: VodDataManager.label("game"),
                                 table: "offline_vods",
                                 where: " where progress>0",
                                 key: "game",
@@ -207,7 +207,7 @@ BasePage {
             anchors.fill: parent
             model: visualModel
             header: PageHeader {
-                title: "Go go go"
+                title: "go go go"
 
                 VodDataManagerBusyIndicator {}
             }
