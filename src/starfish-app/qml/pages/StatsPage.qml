@@ -91,6 +91,11 @@ Page {
             value: Qt.formatDateTime(new Date(settingLastUpdateTimestamp.value * 1000))
         }
 
+        Label {
+            // spacer
+        }
+
+
         ButtonLayout {
             width: root.width
 
