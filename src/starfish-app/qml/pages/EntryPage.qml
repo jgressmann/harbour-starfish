@@ -143,41 +143,55 @@ BasePage {
             onClicked: pageStack.push(Qt.resolvedUrl("ActiveDownloadPage.qml"))
         }
 
-        Column {
-            id: continueWatching
-            width: parent.width
+        ListItem {
+            contentHeight: visible ? continueWatching.height : 0
+            visible: recentlyWatchedVideoView.height > 0
 
-            Label {
-                visible: recentlyWatchedVideoView.height > 0
-                x: Theme.horizontalPageMargin
-                width: page.width - 2*x
-                text: qsTr("Continue watching")
-                color: Theme.highlightColor
-                font.pixelSize: Global.labelFontSize
+            menu: ContextMenu {
+                MenuItem {
+                    text: "Clear"
+                    onClicked: recentlyWatchedVideoView.clear()
+                }
             }
 
-            RecentlyWatchedVideoView {
-                id: recentlyWatchedVideoView
-                height: 0
+            Column {
+                id: continueWatching
                 width: parent.width
 
-                RecentlyWatchedVideoUpdater {
-                    id: updater
+                Label {
+                    visible: recentlyWatchedVideoView.height > 0
+                    x: Theme.horizontalPageMargin
+                    width: page.width - 2*x
+                    text: qsTr("Continue watching")
+                    color: Theme.highlightColor
+                    font.pixelSize: Global.labelFontSize
                 }
 
-                onClicked: function (obj, url, offset, matchItem) {
-//                    itemPlaying = matchItem
-                    _videoId = obj["video_id"] || -1
-                    console.debug("clicked match item " + matchItem + " " + typeof(matchItem))
-                    Global.playVideoHandler(updater, obj, url, offset)
-                }
+                RecentlyWatchedVideoView {
+                    id: recentlyWatchedVideoView
+                    height: 0
+                    width: parent.width
 
-                onCountChanged: {
-                    continueWatching.visible = count > 0
-                    height = (Global.itemHeight + Theme.fontSizeMedium) * count
+                    RecentlyWatchedVideoUpdater {
+                        id: updater
+                    }
+
+                    onClicked: function (obj, url, offset, matchItem) {
+    //                    itemPlaying = matchItem
+                        _videoId = obj["video_id"] || -1
+                        console.debug("clicked match item " + matchItem + " " + typeof(matchItem))
+                        Global.playVideoHandler(updater, obj, url, offset)
+                    }
+
+                    onCountChanged: {
+                        continueWatching.visible = count > 0
+                        height = (Global.itemHeight + Theme.fontSizeMedium) * count
+                    }
                 }
             }
         }
+
+
     }
 
     SilicaFlickable {

@@ -296,6 +296,10 @@ SilicaListView {
 //        }
     }
 
+    function clear() {
+        recentlyUsedVideos.clear()
+    }
+
 //    Component.onDestruction: {
 //        console.debug("RecentlyWatchedVideoView destruction, matchItems: " + matchItems)
 //    }

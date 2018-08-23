@@ -211,6 +211,25 @@ ScRecentlyUsedModel::remove(const QVariantMap& pairs) {
     }
 }
 
+void
+ScRecentlyUsedModel::clear() {
+    if (m_Ready) {
+        auto sql = QStringLiteral("DELETE FROM %1").arg(m_Table);
+        QSqlQuery q(m_Db);
+        beginResetModel();
+        if (q.exec(sql)) {
+            qInfo().nospace().noquote() << "deleted " << q.numRowsAffected() << " rows";
+            m_RowCount = 0;
+            m_IndexCache = -1;
+        } else {
+            qWarning().nospace().noquote() << "failed to exec delete, error: " << q.lastError();
+        }
+        endResetModel();
+    } else {
+        qWarning().noquote().nospace() << "clear: not ready";
+    }
+}
+
 QVariantList
 ScRecentlyUsedModel::select(const QStringList& columns, const QVariantMap& where) {
     const QStringList* cols = &columns;

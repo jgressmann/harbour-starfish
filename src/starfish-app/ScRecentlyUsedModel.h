@@ -69,6 +69,7 @@ public:
     Q_INVOKABLE void remove(const QVariantMap& where);
     Q_INVOKABLE QVariantList select(const QStringList& columns, const QVariantMap& where);
     Q_INVOKABLE void recreateTable();
+    Q_INVOKABLE void clear();
 
 signals:
     void databaseChanged();
