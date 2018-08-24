@@ -2703,19 +2703,24 @@ ScVodDataManager::makeThumbnailFile(const QString& srcPath) {
 
 int
 ScVodDataManager::deleteSeenVodFiles(const QString& where) {
-    // FIX ME, select only non-shared vods
     auto w = where.trimmed();
-    if (w.isEmpty()) {
-        w = QStringLiteral("WHERE seen=1");
-    } else {
-        if (w.startsWith("where ", Qt::CaseInsensitive)) {
-            w += QStringLiteral(" AND seen=1");
-        } else {
-            w = QStringLiteral("WHERE %1 AND seen=1").arg(where);
-        }
+    if (w.startsWith("where ", Qt::CaseInsensitive)) {
+        w = w.mid(6).trimmed();
     }
 
-    return deleteVodsWhere(w);
+    if (w.isEmpty()) {
+        w = "1=1"; // dummy tautology
+    }
+
+    QString w2 = QStringLiteral(
+"WHERE vod_file_id IN (\n"
+"   SELECT DISTINCT vod_file_id FROM offline_vods WHERE vod_url_share_id IN (\n"
+"       SELECT DISTINCT vod_url_share_id FROM offline_vods WHERE %1 AND seen=1\n"
+"       EXCEPT\n"
+"       SELECT DISTINCT vod_url_share_id FROM offline_vods WHERE %1 AND seen=0)\n"
+"   )\n").arg(w);
+
+    return deleteVodsWhere(w2);
 }
 
 int
