@@ -892,12 +892,15 @@ ListItem {
 
         var dialog = pageStack.push(
             Qt.resolvedUrl("SelectFormatDialog.qml"), {
+                        "autoUpdateMenu": false,
                         "labels" : labels,
                         "values": values
                                     })
         dialog.accepted.connect(function () {
             callback(dialog.formatIndex)
         })
+        // instantiate the menu
+        dialog.updateMenu()
     }
 
     function _getVodFormatIndexFromId() {

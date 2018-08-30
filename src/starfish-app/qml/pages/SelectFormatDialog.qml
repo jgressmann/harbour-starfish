@@ -32,11 +32,12 @@ Dialog {
     canAccept: formatIndex !== -1
     property var values: []
     property var labels: []
+    property bool autoUpdateMenu: true
 
-    onLabelsChanged: _updateMenu()
-    onValuesChanged: _updateMenu()
+    onLabelsChanged: autoUpdateMenu && updateMenu()
+    onValuesChanged: autoUpdateMenu && updateMenu()
 
-    function _updateMenu() {
+    function updateMenu() {
         console.debug("currentIndex=" + comboBox.currentIndex)
         comboBox.currentIndex = -1
         if (values && labels && values.length === labels.length) {
