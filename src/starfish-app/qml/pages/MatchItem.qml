@@ -638,8 +638,14 @@ ListItem {
 
             MenuItem {
                 text: "Play stream"
-                visible: rowId >= 0 && !!_vod && !!_vodFilePath
+                visible: rowId >= 0 && !!_vod //&& !!_vodFilePath
                 onClicked: _playStream()
+            }
+
+            MenuItem {
+                text: "Play stream with format..."
+                visible: rowId >= 0 && !!_vod //&& !!_vodFilePath
+                onClicked: _playStreamWithFormat(VM.VM_Any)
             }
 
             MenuItem {
@@ -936,8 +942,12 @@ ListItem {
         }
     }
 
-    function _playStream() {
+    function _playStream(format) {
         var format = _getVideoFormatFromBearerMode()
+        _playStreamWithFormat(format)
+    }
+
+    function _playStreamWithFormat(format) {
         if (VM.VM_Any === format) {
             _selectFormat(function(index) {
                 _vodUrl = _vod.format(index).fileUrl
