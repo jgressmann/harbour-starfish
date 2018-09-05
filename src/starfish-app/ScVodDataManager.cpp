@@ -831,6 +831,8 @@ ScVodDataManager::dropTables() {
         "DROP INDEX IF EXISTS vods_event_name",
         "DROP INDEX IF EXISTS vods_seen",
 
+        "DROP VIEW IF EXISTS offline_vods",
+//        "DROP VIEW IF EXISTS url_share_vods",
 
 
         "DROP TABLE IF EXISTS vods",
