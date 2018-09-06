@@ -82,7 +82,7 @@ BasePage {
                             Qt.resolvedUrl("FilterPage.qml"),
                             {
                                 title: VodDataManager.label("game"),
-                                table: "vods",
+                                table: Global.defaultTable,
                                 key: "game",
                                 grid: true,
                             })
@@ -185,7 +185,7 @@ BasePage {
 
                     onCountChanged: {
                         continueWatching.visible = count > 0
-                        height = (Global.itemHeight + Theme.fontSizeMedium) * count
+                        height = Global.matchItemHeight * count
                     }
                 }
             }

@@ -554,6 +554,7 @@ ScVodDataManager::setupDatabase() {
         "CREATE TABLE IF NOT EXISTS vod_url_share (\n"
         "    id INTEGER PRIMARY KEY,\n"
         "    type INTEGER NOT NULL,\n"
+        "    length INTEGER NOT NULL DEFAULT 0,\n" // seconds
         "    url TEXT NOT NULL,\n"
         "    video_id TEXT,\n"
         "    title TEXT,\n"
@@ -630,6 +631,7 @@ ScVodDataManager::setupDatabase() {
         "       game,\n"
         "       year,\n"
         "       offset,\n"
+        "       length,\n"
         "       seen,\n"
         "       match_number,\n"
         "       thumbnail_id\n"
@@ -638,11 +640,41 @@ ScVodDataManager::setupDatabase() {
         "   INNER JOIN vod_files f ON f.id=u.vod_file_id\n"
         "\n",
 
+        "CREATE VIEW IF NOT EXISTS url_share_vods AS\n"
+        "   SELECT\n"
+        "       type,\n"
+        "       url,\n"
+        "       video_id,\n"
+        "       title,\n"
+        "       vod_file_id,\n"
+        "       v.id AS id,\n"
+        "       side1_name,\n"
+        "       side2_name,\n"
+        "       side1_race,\n"
+        "       side2_race,\n"
+        "       vod_url_share_id,\n"
+        "       event_name,\n"
+        "       event_full_name,\n"
+        "       season,\n"
+        "       stage_name,\n"
+        "       match_name,\n"
+        "       match_date,\n"
+        "       game,\n"
+        "       year,\n"
+        "       offset,\n"
+        "       length,\n"
+        "       seen,\n"
+        "       match_number,\n"
+        "       thumbnail_id\n"
+        "   FROM vods v\n"
+        "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
+        "\n",
+
     };
 
 
 
-    const int Version = 3;
+    const int Version = 4;
 
 
     if (!q.exec("PRAGMA foreign_keys = ON")) {
@@ -690,6 +722,8 @@ ScVodDataManager::setupDatabase() {
             updateSql1(q);
         case 2:
             updateSql2(q);
+        case 3:
+            updateSql3(q);
         default:
             break;
         }
@@ -779,9 +813,9 @@ ScVodDataManager::icon(const QString& key, const QVariant& value) const {
         QString url;
         if (m_Icons.getIconForEvent(event, &url)) {
             QSqlQuery q(m_Database);
-
-            if (!q.prepare(QStringLiteral(
-                               "SELECT file_name FROM icons WHERE url=?"))) {
+            static const QString sql = QStringLiteral(
+                        "SELECT file_name FROM icons WHERE url=?");
+            if (!q.prepare(sql)) {
                 qCritical() << "failed to prepare select" << q.lastError();
                 return false;
             }
@@ -832,7 +866,7 @@ ScVodDataManager::dropTables() {
         "DROP INDEX IF EXISTS vods_seen",
 
         "DROP VIEW IF EXISTS offline_vods",
-//        "DROP VIEW IF EXISTS url_share_vods",
+        "DROP VIEW IF EXISTS url_share_vods",
 
 
         "DROP TABLE IF EXISTS vods",
@@ -1310,15 +1344,17 @@ void ScVodDataManager::onMetaDataDownloadCompleted(qint64 token, const VMVod& vo
                 {
                     QSqlQuery q(m_Database);
 
-                    // update title from vod
+                    // update title, length from vod
                     {
-                        if (!q.prepare(QStringLiteral(
-                    "UPDATE vod_url_share SET title=? WHERE id=?"))) {
+                        static const QString sql = QStringLiteral(
+                                    "UPDATE vod_url_share SET title=?, length=? WHERE id=?");
+                        if (!q.prepare(sql)) {
                             qCritical() << "failed to prepare query" << q.lastError();
                             return;
                         }
 
                         q.addBindValue(vod.description().title());
+                        q.addBindValue(vod.description().duration());
                         q.addBindValue(r.vod_url_share_id);
 
                         if (!q.exec()) {
@@ -1329,8 +1365,9 @@ void ScVodDataManager::onMetaDataDownloadCompleted(qint64 token, const VMVod& vo
 
                     // emit metaDataAvailable
                     {
-                        if (!q.prepare(QStringLiteral(
-                    "SELECT id FROM vods WHERE vod_url_share_id=?"))) {
+                        static const QString sql = QStringLiteral(
+                                    "SELECT id FROM vods WHERE vod_url_share_id=?");
+                        if (!q.prepare(sql)) {
                             qCritical() << "failed to prepare query" << q.lastError();
                             return;
                         }
@@ -1410,7 +1447,7 @@ void ScVodDataManager::updateVodDownloadStatus(
         return;
     }
 
-    static const QString selectVodIdsSql =  QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=?");
+    static const QString selectVodIdsSql =  QStringLiteral("SELECT id, offset FROM vods WHERE vod_url_share_id=? ORDER BY offset DESC");
     if (!q.prepare(selectVodIdsSql)) {
         qCritical() << "failed to prepare query" << q.lastError();
         return;
@@ -1423,8 +1460,13 @@ void ScVodDataManager::updateVodDownloadStatus(
         return;
     }
 
+    auto lastOffset = download.description().duration();
+
     while (q.next()) {
         auto vodId = qvariant_cast<qint64>(q.value(0));
+        auto offset = qvariant_cast<int>(q.value(1));
+        auto end = lastOffset;
+        lastOffset = offset;
         emit vodAvailable(
                     vodId,
                     download.filePath(),
@@ -1432,7 +1474,9 @@ void ScVodDataManager::updateVodDownloadStatus(
                     download.fileSize(),
                     download.format().width(),
                     download.format().height(),
-                    download.format().id());
+                    download.format().id()/*,
+                    offset,
+                    end*/);
     }
 }
 
@@ -1809,7 +1853,8 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
                 "    progress,\n"
                 "    format,"
                 "    url,\n"
-                "    vod_url_share_id\n"
+                "    vod_url_share_id,\n"
+                "    offset\n"
                 "FROM offline_vods\n"
                 "WHERE id=?\n"
                 );
@@ -1830,6 +1875,7 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
     QString vodUrl;
     qint64 urlShareId = -1;
     QString formatId;
+    int offset = -1;
     float progress = 0;
     if (q.next()) {
         vodFilePath = m_VodDir + q.value(0).toString();
@@ -1837,11 +1883,13 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
         formatId = q.value(2).toString();
         vodUrl = q.value(3).toString();
         urlShareId = qvariant_cast<qint64>(q.value(4));
+        offset = q.value(5).toInt();
     } else {
         static const QString sql = QStringLiteral(
                     "SELECT\n"
                     "   u.url,\n"
-                    "   u.id\n"
+                    "   u.id,\n"
+                    "   v.offset\n"
                     "FROM vods v\n"
                     "INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
                     "WHERE v.id=?\n"
@@ -1865,6 +1913,7 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
 
         vodUrl = q.value(0).toString();
         urlShareId = qvariant_cast<qint64>(q.value(1));
+        offset = q.value(2).toInt();
     }
 
     for (auto& value : m_VodmanFileRequests) {
@@ -1913,7 +1962,7 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
                         auto tempFileName = QFileInfo(vodFilePath).fileName();
                         static const QString sql = QStringLiteral(
                                     "INSERT INTO vod_files (file_name, format, width, height, progress) "
-                                    "VALUES (?, ?, ?, ?, ?)");
+                                    "VALUES (?, ?, ?, ?, ?, ?)");
                         if (!q.prepare(sql)) {
                             qCritical() << "failed to prepare query" << q.lastError();
                             return;
@@ -1956,7 +2005,17 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
                     QFileInfo fi(vodFilePath);
                     if (fi.exists()) {
                         if (progress >= 1) {
-                            emit vodAvailable(rowid, vodFilePath, progress, fi.size(), format.width(), format.height(), formatId);
+                            auto end = getVodEndOffset(rowid, offset, vod.description().duration());
+                            emit vodAvailable(
+                                        rowid,
+                                        vodFilePath,
+                                        progress,
+                                        fi.size(),
+                                        format.width(),
+                                        format.height(),
+                                        formatId/*,
+                                        offset,
+                                        end*/);
                             return;
                         }
                     }
@@ -2487,7 +2546,9 @@ ScVodDataManager::queryVodFiles(qint64 rowid) {
                       "    progress,\n"
                       "    width,\n"
                       "    height,\n"
-                      "    format\n"
+                      "    format,\n"
+                      "    offset,\n"
+                      "    length\n"
                       "FROM offline_vods\n"
                       "WHERE id=?\n"
                       ))) {
@@ -2506,14 +2567,18 @@ ScVodDataManager::queryVodFiles(qint64 rowid) {
     QFileInfo fi;
     while (q.next()) {
         auto filePath = m_VodDir + q.value(0).toString();
-        auto progress = q.value(1).toFloat();
-        auto width = q.value(2).toInt();
-        auto height = q.value(3).toInt();
-        auto format = q.value(4).toString();
 
         fi.setFile(filePath);
         if (fi.exists()) {
-            emit vodAvailable(rowid, filePath, progress, fi.size(), width, height, format);
+            auto progress = q.value(1).toFloat();
+            auto width = q.value(2).toInt();
+            auto height = q.value(3).toInt();
+            auto format = q.value(4).toString();
+            auto offset = q.value(5).toInt();
+            auto length = q.value(6).toInt();
+
+            auto end = getVodEndOffset(rowid, offset, length);
+            emit vodAvailable(rowid, filePath, progress, fi.size(), width, height, format/*, offset, end*/);
         }
     }
 }
@@ -3050,8 +3115,232 @@ Error:
     goto Exit;
 }
 
+
+
+//void
+//ScVodDataManager::updateSql3(QSqlQuery& q) {
+//    qInfo("Begin update database v3 to v4\n");
+
+////    QVariantList vodFileIdsToDelete;
+
+//    static char const* const Sql1[] = {
+//        "ALTER TABLE vod_files ADD COLUMN length INTEGER NOT NULL DEFAULT -1",
+//    };
+
+//    for (size_t i = 0; i < _countof(Sql1); ++i) {
+//        qDebug() << Sql1[i];
+//        if (!q.exec(Sql1[i])) {
+//            qCritical() << "failed to upgrade database from v3 to v4" << q.lastError();
+//            goto Error;
+//        }
+//    }
+
+//    // find all existing vod files and update length from vod meta data
+//    if (!q.exec(QStringLiteral("SELECT vod_url_share_id, vod_file_id FROM offline_vods"))) {
+//        qCritical() << "failed to exec select" << q.lastError();
+//        goto Error;
+//    }
+
+//    qDebug() << "Updating length column from vod meta data";
+//    while (q.next()) {
+//        auto urlShareId = qvariant_cast<qint64>(q.value(0));
+//        auto vodFileId = qvariant_cast<qint64>(q.value(1));
+//        auto metaDataFilePath = m_MetaDataDir + QString::number(urlShareId);
+//        if (QFileInfo::exists(metaDataFilePath)) {
+//            QFile file(metaDataFilePath);
+//            if (file.open(QIODevice::ReadOnly)) {
+//                VMVod vod;
+//                {
+//                    QDataStream s(&file);
+//                    s >> vod;
+//                }
+
+//                if (vod.isValid()) {
+//                    QSqlQuery q2(m_Database);
+//                    if (!q2.prepare(QStringLiteral("UPDATE vod_files SET length=? WHERE id=?"))) {
+//                        qCritical() << "failed to prepare settings query" << q2.lastError();
+//                        goto Error;
+//                    }
+
+//                    q2.addBindValue(vod.description().duration());
+//                    q2.addBindValue(vodFileId);
+
+//                    if (!q2.exec()) {
+//                        qCritical() << "failed to exec query" << q2.lastError();
+//                        goto Error;
+//                    }
+//                } else {
+//                    file.close();
+//                    file.remove();
+////                    vodFileIdsToDelete << vodFileId;
+//                }
+//            } else {
+////                vodFileIdsToDelete << vodFileId;
+//            }
+//        } else {
+////            vodFileIdsToDelete << vodFileId;
+//        }
+//    }
+
+////    qDebug() << "remov"
+////    // remove vod file entries that have no meta data
+////    if (!q.prepare(QStringLiteral("DELETE FROM vod_files WHERE id=?"))) {
+////        qCritical() << "failed to prepare delete statement" << q.lastError();
+////        goto Error;
+////    }
+
+////    q.addBindValue(vodFileIdsToDelete);
+
+////    if (!q.execBatch()) {
+////        qCritical() << "failed to exec delete statement" << q.lastError();
+////        goto Error;
+////    }
+
+//    static char const* const Sql2[] = {
+//        "DELETE FROM vod_files WHERE length=-1",
+//        "DROP VIEW offline_vods",
+//    };
+
+//    for (size_t i = 0; i < _countof(Sql2); ++i) {
+//        qDebug() << Sql2[i];
+//        if (!q.exec(Sql2[i])) {
+//            qCritical() << "failed to upgrade database from v3 to v4" << q.lastError();
+//            goto Error;
+//        }
+//    }
+
+//    qInfo("Update database v3 to v4 completed successfully\n");
+//Exit:
+//    return;
+//Error:
+//    setError(Error_CouldntCreateSqlTables);
+//    setReady(false);
+//    goto Exit;
+//}
+
+
+void
+ScVodDataManager::updateSql3(QSqlQuery& q) {
+    qInfo("Begin update database v3 to v4\n");
+
+    static char const* const Sql1[] = {
+        "ALTER TABLE vod_url_share ADD COLUMN length INTEGER NOT NULL DEFAULT 0",
+    };
+
+    for (size_t i = 0; i < _countof(Sql1); ++i) {
+        qDebug() << Sql1[i];
+        if (!q.exec(Sql1[i])) {
+            qCritical() << "failed to upgrade database from v3 to v4" << q.lastError();
+            goto Error;
+        }
+    }
+
+    // find all existing vod files and update length from vod meta data
+    if (!q.exec(QStringLiteral("SELECT id FROM vod_url_share"))) {
+        qCritical() << "failed to exec select" << q.lastError();
+        goto Error;
+    }
+
+    qDebug() << "Updating length column from vod meta data";
+    while (q.next()) {
+        auto urlShareId = qvariant_cast<qint64>(q.value(0));
+        auto metaDataFilePath = m_MetaDataDir + QString::number(urlShareId);
+        if (QFileInfo::exists(metaDataFilePath)) {
+            QFile file(metaDataFilePath);
+            if (file.open(QIODevice::ReadOnly)) {
+                VMVod vod;
+                {
+                    QDataStream s(&file);
+                    s >> vod;
+                }
+
+                if (vod.isValid()) {
+                    QSqlQuery q2(m_Database);
+                    if (!q2.prepare(QStringLiteral("UPDATE vod_url_share SET length=? WHERE id=?"))) {
+                        qCritical() << "failed to prepare settings query" << q2.lastError();
+                        goto Error;
+                    }
+
+                    q2.addBindValue(vod.description().duration());
+                    q2.addBindValue(urlShareId);
+
+                    if (!q2.exec()) {
+                        qCritical() << "failed to exec query" << q2.lastError();
+                        goto Error;
+                    }
+
+                    qDebug() << "updated id" << urlShareId << "length" << vod.description().duration();
+                } else {
+                    qDebug() << "removing bad meta data file" << metaDataFilePath;
+                    file.close();
+                    file.remove();
+                }
+            } else {
+                qDebug() << "failed to open existing meta data file" << metaDataFilePath << "removing file";
+                file.remove();
+            }
+        }
+    }
+
+    static char const* const Sql2[] = {
+        "DROP VIEW offline_vods",
+    };
+
+    for (size_t i = 0; i < _countof(Sql2); ++i) {
+        qDebug() << Sql2[i];
+        if (!q.exec(Sql2[i])) {
+            qCritical() << "failed to upgrade database from v3 to v4" << q.lastError();
+            goto Error;
+        }
+    }
+
+    qInfo("Update database v3 to v4 completed successfully\n");
+Exit:
+    return;
+Error:
+    setError(Error_CouldntCreateSqlTables);
+    setReady(false);
+    goto Exit;
+}
+
 int
 ScVodDataManager::sqlPatchLevel() const
 {
     return getPersistedValue(s_SqlPatchLevelKey, s_SqlPatchLevelDefault).toInt();
+}
+
+int
+ScVodDataManager::getVodEndOffset(qint64 rowid, int offset, int vodLengthS) const
+{
+    static const QString sql = QStringLiteral(
+"SELECT\n"
+"   MIN(offset)\n"
+"FROM\n"
+"   offline_vods\n"
+"WHERE\n"
+"   offset>?\n"
+"   AND vod_url_share_id IN (SELECT vod_url_share_id FROM offline_vods WHERE id=?)\n");
+
+    QSqlQuery q(m_Database);
+    if (!q.prepare(sql)) {
+        qCritical() << "failed to prepare query" << q.lastError();
+        return -1;
+    }
+
+    q.addBindValue(offset);
+    q.addBindValue(rowid);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return -1;
+    }
+
+    if (q.next()) {
+        auto v = q.value(0);
+        if (!v.isNull()) {
+            return v.toInt();
+        }
+    }
+
+    return vodLengthS;
 }

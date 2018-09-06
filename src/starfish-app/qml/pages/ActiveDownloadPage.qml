@@ -30,17 +30,18 @@ BasePage {
     id: page
 
     property var itemPlaying: null
+    readonly property string _table: Global.defaultTable
 
     SqlVodModel {
         id: sqlModel
         dataManager: VodDataManager
-        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset"]
+        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset", "length"]
         columnAliases: {
             var x = {}
             x["id"] = "vod_id"
+            x["length"] = "vod_length"
             return x
         }
-
     }
 
     SilicaFlickable {
@@ -67,7 +68,7 @@ BasePage {
             delegate: Component {
                 MatchItem {
                     width: listView.width
-                    contentHeight: Global.itemHeight + Theme.fontSizeMedium // MatchItem is a ListItem
+//                    contentHeight: Global.itemHeight + Theme.fontSizeMedium // MatchItem is a ListItem
                     eventFullName: event_full_name
                     stageName: stage_name
                     side1: side1_name
@@ -78,7 +79,9 @@ BasePage {
                     matchDate: match_date
                     rowId: vod_id
                     startOffset: offset
-                    table: "vods"
+                    baseOffset: offset
+                    table: _table
+                    length: vod_length
 
                     onClicked: {
                         ListView.view.currentIndex = index
@@ -132,11 +135,10 @@ BasePage {
     Component.onDestruction: Global.performOwnerGone(listView.contentItem)
 
     function _vodDownloadsChanged() {
-        var ids =
         sqlModel.select =
                 "select "
                 + sqlModel.columns.join(",")
-                + " from vods where id in ("
+                + " from " + _table + " where id in ("
                 + VodDataManager.vodsBeingDownloaded().join(",")
                 + ") order by match_date desc, event_full_name asc, match_name asc"
     }

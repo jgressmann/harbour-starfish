@@ -30,6 +30,7 @@ import "pages"
 
 SilicaListView {
     id: listView
+    readonly property string _table: Global.defaultTable
 
     model: recentlyUsedVideos
 
@@ -53,7 +54,7 @@ SilicaListView {
                     id: listItem
 
                     width: listView.width
-                    contentHeight: Global.itemHeight + Theme.fontSizeMedium
+                    contentHeight: Global.matchItemHeight
 
 
                     menu: Component {
@@ -203,7 +204,7 @@ SilicaListView {
                         MatchItem {
                             id: matchItem
                             width: ListView.view.width
-                            contentHeight: Global.itemHeight + Theme.fontSizeMedium
+//                            contentHeight: Global.itemHeight + Theme.fontSizeMedium
                             onHeightChanged: wrapperView.height = height
 
                             eventFullName: event_full_name
@@ -216,7 +217,9 @@ SilicaListView {
                             matchDate: match_date
                             rowId: video_id
                             startOffset: offset
-                            table: "vods"
+                            baseOffset: vod_offset
+                            length: vod_length
+                            table: _table
 
                             onPlayRequest: function (self) {
                                 console.debug("xvideo_id=" + xvideo_id)
@@ -266,16 +269,20 @@ SilicaListView {
                     SqlVodModel {
                         id: sqlModel
                         dataManager: VodDataManager
-                        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "offset"]
-                        select: "select " + columns.join(",") + " from vods where id=" + video_id
+                        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "offset", "length"]
+                        columnAliases: {
+                            var x = {}
+                            x["length"] = "vod_length"
+                            x["offset"] = "vod_offset"
+                            return x
+                        }
+                        select: "select " + columns.join(",") + " from " + _table + " where id=" + video_id
                     }
 
                     Component.onCompleted: {
                         console.debug("index=" + index + " offset=" + offset + " video_id=" + video_id)
                     }
                 }
-
-
             }
         }
     }

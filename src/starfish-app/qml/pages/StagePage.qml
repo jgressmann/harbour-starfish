@@ -41,10 +41,11 @@ BasePage {
     SqlVodModel {
         id: sqlModel
         dataManager: VodDataManager
-        columns: ["side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset"]
+        columns: ["side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset", "length"]
         columnAliases: {
             var x = {}
             x["id"] = "vod_id"
+            x["length"] = "vod_length"
             return x
         }
         select: "select " + columns.join(",") + " from " + table + where + " order by match_date desc, match_number asc, match_name desc"
@@ -136,7 +137,6 @@ BasePage {
 
             delegate: MatchItem {
                 width: listView.width
-                contentHeight: Global.itemHeight // MatchItem is a ListItem
                 side1: side1_name
                 side2: side2_name
                 race1: side1_race
@@ -147,6 +147,8 @@ BasePage {
                 showDate: !_sameDate
                 showSides: !_sameSides
                 table: page.table
+                length: vod_length
+                baseOffset: offset
 
                 onPlayRequest: function (self) {
                     itemPlaying = self

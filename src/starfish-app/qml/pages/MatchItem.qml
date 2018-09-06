@@ -29,6 +29,7 @@ import ".."
 ListItem {
     id: root
     objectName: "MatchItem" // poor type check to call ownerGone()
+    contentHeight: Global.matchItemHeight
     property string table
     property string eventFullName
     property string stageName
@@ -58,6 +59,10 @@ ListItem {
     property bool _downloading: false
     property int _width: 0
     property int _height: 0
+    property int baseOffset: 0
+    property int length: 0
+    property int _endOffset: 0
+    property bool _validRange: baseOffset >= 0 && baseOffset < _endOffset
     property bool _tryingToPlay: false
     property int _metaDataState: metaDataStateInitial
     property int _thumbnailState: thumbnailStateInitial
@@ -74,6 +79,7 @@ ListItem {
     readonly property int thumbnailStateAvailable: 1
     readonly property string _where: " where id=" + rowId
     readonly property bool _hasValidRaces: race1 >= 1 && race2 >= 1
+    readonly property int requiredHeight: content.height + watchProgress.height
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -87,17 +93,18 @@ ListItem {
 
         anchors.fill: parent
 
-        Item {
+        Rectangle {
+            id: content
+            color: watchProgress._range <= 0 ? "yellow" : (watchProgress._range < 1 ? "red" : "green")
             x: Theme.horizontalPageMargin
             width: parent.width - 2*x
-            height: parent.height
+            height: heading.height + body.height
 
             Column {
                 id: heading
                 width: parent.width
 
                 Label {
-                    id: eventStageLabel
                     width: parent.width
                     visible: !!eventFullName || !!stageName
                     truncationMode: TruncationMode.Fade
@@ -115,84 +122,13 @@ ListItem {
                         return result
                     }
                 }
-
-                Item {
-                    height: dateLabel.height
-                    width: parent.width
-//                    visible: !!eventFullName || !!stageName
-                    visible: false
-
-                    Label {
-                        id: dateLabel
-        //                    visible: showDate || _loading
-                        anchors.left: parent.left
-                        anchors.right: loadCompleteImageHeading.left
-        //                horizontalAlignment: Text.AlignLeft
-                        font.pixelSize: Theme.fontSizeTiny
-                        truncationMode: TruncationMode.Fade
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: {
-                            var result = ""
-                            if (showDate) {
-                                result = Qt.formatDate(matchDate)
-                            }
-
-//                            if (result.length > 0) {
-//                                result += ", "
-//                            }
-
-                            //result += (progressOverlay.progress * 100).toFixed(0) + "% loaded"
-                            if (_width > 0) {
-                                if (result) {
-                                    result += ", "
-                                }
-
-                                result += _width + "x" + _height
-                            }
-
-//                            if (startOffset > 0) {
-//                                if (result) {
-//                                    result += ", "
-//                                }
-
-//                                result += Global.secondsToTimeString(startOffset)
-//                            }
-
-                            return result
-                        }
-                    }
-
-                    Image {
-                        id: loadCompleteImageHeading
-                        source: "image://theme/icon-s-cloud-download"
-                        visible: false
-                    }
-
-                    ProgressMaskEffect {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.right: parent.right
-                        anchors.fill: parent
-                        src: loadCompleteImageHeading
-                        progress: {
-                            var p = progressOverlay.show ? 0 : progressOverlay.progress
-                            var s = Math.max(0, Math.min(p, 1))
-                            if (s > 0) {
-                                if (s >= 1) {
-                                    return 1
-                                }
-
-                                return 0.1 + s * 0.8 // ignore transparent sides
-                            }
-
-                            return 0
-                        }
-                    }
-                }
             }
 
-            Item {
+            Rectangle {
+                id: body
+                color: watchProgress.visible ? "blue" : "transparent"
                 width: parent.width
-                height: parent.height - heading.height
+                height: thumbnailGroup.height
                 anchors.top: heading.bottom
 
                 Item {
@@ -494,6 +430,28 @@ ListItem {
                 }
             }
         }
+
+        Rectangle {
+            id: watchProgress
+            color: Theme.highlightColor
+            opacity: Theme.highlightBackgroundOpacity
+            width: parent.width * _range
+            visible: !seenButton.seen && _validRange
+            readonly property real _range:
+                startOffset < baseOffset
+                ? 0
+                : (startOffset > _endOffset ? 1 : (startOffset-baseOffset)/(_endOffset-baseOffset))
+//            height: Math.max(parent.height / 32, 2)
+            height: 4
+            anchors.top: content.bottom
+            onVisibleChanged: {
+                console.debug("rowid " + rowId + " watch progress visible " + visible)
+            }
+
+            onWidthChanged: {
+                console.debug("rowid=" + rowId + " range=" + _range)
+            }
+        }
     }
 
     onClicked: {
@@ -559,6 +517,10 @@ ListItem {
         console.debug("_vod=" + _vod)
     }
 
+    on_ValidRangeChanged: {
+        console.debug("value range " + _validRange)
+    }
+
     Connections {
         target: pageStack
         onBusyChanged: {
@@ -595,6 +557,9 @@ ListItem {
         VodDataManager.vodDownloadCanceled.connect(vodDownloadCanceled)
         _vodTitle = VodDataManager.title(rowId)
         seenButton.seen = VodDataManager.seen(table, _where) >= 1
+        console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
+        _endOffset = VodDataManager.getVodEndOffset(rowId, baseOffset, length)
+        console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
 
         // also fetch a valid meta data from cache
         VodDataManager.fetchMetaDataFromCache(rowId)
@@ -604,17 +569,37 @@ ListItem {
             _fetchThumbnail()
         }
 
-        console.debug("create match item rowid=" + rowId)
+//        console.debug("create match item rowid=" + rowId)
+
+//        if (height < Global.matchItemHeight) {
+//            console.warn("rowid " + rowId + " match item height is " + height + " which is less than Global.matchItemHeight " + Global.matchItemHeight)
+//        }
+        if (Global.matchItemHeight < requiredHeight) {
+            console.info("adjusting Global.matchItemHeight to " + requiredHeight)
+            Global.matchItemHeight = requiredHeight
+//            console.warn("rowid " + rowId + " match item height is " + height + " which is less than required height " + requiredHeight)
+        }
+
+        if (requiredHeight > height) {
+            console.warn("rowid " + rowId + " match item height is " + height + " which is less than required height " + requiredHeight)
+        }
     }
 
     Component.onDestruction: {
         VodDataManager.cancelFetchMetaData(rowId)
-        console.debug("destroy match item rowid=" + rowId)
+//        console.debug("destroy match item rowid=" + rowId)
     }
 
     Component {
         id: contextMenu
         ContextMenu {
+            MenuItem {
+                text: "Download meta data"
+                visible: rowId >= 0 && !_vod && App.isOnline
+                onClicked: {
+                    _fetchMetaData()
+                }
+            }
             MenuItem {
                 text: "Download VOD"
                 visible: rowId >= 0 && !!_vod && !_downloading && progressOverlay.progress < 1 && App.isOnline
@@ -638,13 +623,13 @@ ListItem {
 
             MenuItem {
                 text: "Play stream"
-                visible: rowId >= 0 && !!_vod //&& !!_vodFilePath
+                visible: rowId >= 0 && !!_vod && App.isOnline //&& !!_vodFilePath
                 onClicked: _playStream()
             }
 
             MenuItem {
                 text: "Play stream with format..."
-                visible: rowId >= 0 && !!_vod //&& !!_vodFilePath
+                visible: rowId >= 0 && !!_vod && App.isOnline //&& !!_vodFilePath
                 onClicked: _playStreamWithFormat(VM.VM_Any)
             }
 
@@ -708,7 +693,7 @@ ListItem {
 
     function thumbnailAvailable(rowid, filePath) {
         if (rowid === rowId) {
-            console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
+//            console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
             _thumbnailFilePath = "" // force reload
             _thumbnailFilePath = filePath
             _thumbnailState = thumbnailStateAvailable
@@ -748,6 +733,14 @@ ListItem {
             _vod = vod
             _vodTitle = vod.description.title
             _clicked = false
+
+            // now that we have meta data, we might
+            // be able to get a watch progress
+            console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
+            _endOffset = VodDataManager.getVodEndOffset(rowId, baseOffset, length)
+            console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
+
+
             if (App.isOnline) {
                 _fetchThumbnail()
             }

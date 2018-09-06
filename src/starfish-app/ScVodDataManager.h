@@ -132,6 +132,7 @@ public: //
     Q_INVOKABLE void setPersistedValue(const QString& key, const QString& value);
     Q_INVOKABLE void resetSqlPatchLevel();
     Q_INVOKABLE QString raceIcon(int race) const;
+    Q_INVOKABLE int getVodEndOffset(qint64 rowid, int startOffsetS, int vodLengthS) const;
     int sqlPatchLevel() const;
 
 signals:
@@ -141,7 +142,14 @@ signals:
     void fetchingMetaData(qint64 rowid);
     void metaDataAvailable(qint64 rowid, VMVod vod);
     void metaDataDownloadFailed(qint64 rowid, int error);
-    void vodAvailable(qint64 rowid, QString filePath, qreal progress, quint64 fileSize, int width, int height, QString formatId);
+    void vodAvailable(
+            qint64 rowid,
+            QString filePath,
+            qreal progress,
+            quint64 fileSize,
+            int width,
+            int height,
+            QString formatId);
     void thumbnailAvailable(qint64 rowid, QString filePath);
     void thumbnailDownloadFailed(qint64 rowid, int error, QString url);
     void downloadFailed(QString url, int error, QString filePath);
@@ -244,6 +252,7 @@ private:
     void setPersistedValue(QSqlQuery& query, const QString& key, const QString& value);
     void updateSql1(QSqlQuery& q);
     void updateSql2(QSqlQuery& q);
+    void updateSql3(QSqlQuery& q);
 
 private:
     mutable QMutex m_Lock;
