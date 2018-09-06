@@ -29,7 +29,7 @@ import ".."
 ListItem {
     id: root
     objectName: "MatchItem" // poor type check to call ownerGone()
-    contentHeight: Global.matchItemHeight
+    contentHeight: requiredHeight
     property string table
     property string eventFullName
     property string stageName
@@ -93,45 +93,35 @@ ListItem {
 
         anchors.fill: parent
 
-        Rectangle {
+        Column {
             id: content
-//            color: watchProgress._range <= 0 ? "yellow" : (watchProgress._range < 1 ? "red" : "green")
-            color: "transparent"
             x: Theme.horizontalPageMargin
             width: parent.width - 2*x
-            height: heading.height + body.height
 
-            Column {
-                id: heading
+            Label {
                 width: parent.width
-
-                Label {
-                    width: parent.width
-                    visible: !!eventFullName || !!stageName
-                    truncationMode: TruncationMode.Fade
-                    font.pixelSize: Theme.fontSizeSmall
-                    text: {
-                        var result = eventFullName
-                        if (stageName) {
-                            if (result) {
-                                result += " / " + stageName
-                            } else {
-                                result = stageName
-                            }
+                visible: !!eventFullName || !!stageName
+                truncationMode: TruncationMode.Fade
+                font.pixelSize: Theme.fontSizeSmall
+                text: {
+                    var result = eventFullName
+                    if (stageName) {
+                        if (result) {
+                            result += " / " + stageName
+                        } else {
+                            result = stageName
                         }
-
-                        return result
                     }
+
+                    return result
                 }
             }
 
             Rectangle {
                 id: body
-//                color: watchProgress.visible ? "blue" : "transparent"
                 color: "transparent"
                 width: parent.width
                 height: thumbnailGroup.height
-                anchors.top: heading.bottom
 
                 Item {
                     id: thumbnailGroup
@@ -445,13 +435,13 @@ ListItem {
                 : (startOffset > _endOffset ? 1 : (startOffset-baseOffset)/(_endOffset-baseOffset))
             height: 4
             anchors.top: content.bottom
-            onVisibleChanged: {
-                console.debug("rowid " + rowId + " watch progress visible " + visible)
-            }
+//            onVisibleChanged: {
+//                console.debug("rowid " + rowId + " watch progress visible " + visible)
+//            }
 
-            onWidthChanged: {
-                console.debug("rowid=" + rowId + " range=" + _range)
-            }
+//            onWidthChanged: {
+//                console.debug("rowid=" + rowId + " range=" + _range)
+//            }
         }
     }
 
@@ -518,9 +508,9 @@ ListItem {
         console.debug("_vod=" + _vod)
     }
 
-    on_ValidRangeChanged: {
-        console.debug("value range " + _validRange)
-    }
+//    on_ValidRangeChanged: {
+//        console.debug("value range " + _validRange)
+//    }
 
     Connections {
         target: pageStack
@@ -558,9 +548,9 @@ ListItem {
         VodDataManager.vodDownloadCanceled.connect(vodDownloadCanceled)
         _vodTitle = VodDataManager.title(rowId)
         seenButton.seen = VodDataManager.seen(table, _where) >= 1
-        console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
+//        console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
         _endOffset = VodDataManager.getVodEndOffset(rowId, baseOffset, length)
-        console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
+//        console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
 
         // also fetch a valid meta data from cache
         VodDataManager.fetchMetaDataFromCache(rowId)
@@ -571,15 +561,6 @@ ListItem {
         }
 
 //        console.debug("create match item rowid=" + rowId)
-
-//        if (height < Global.matchItemHeight) {
-//            console.warn("rowid " + rowId + " match item height is " + height + " which is less than Global.matchItemHeight " + Global.matchItemHeight)
-//        }
-        if (Global.matchItemHeight < requiredHeight) {
-            console.info("adjusting Global.matchItemHeight to " + requiredHeight)
-            Global.matchItemHeight = requiredHeight
-//            console.warn("rowid " + rowId + " match item height is " + height + " which is less than required height " + requiredHeight)
-        }
 
         if (requiredHeight > height) {
             console.warn("rowid " + rowId + " match item height is " + height + " which is less than required height " + requiredHeight)

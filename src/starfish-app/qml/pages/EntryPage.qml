@@ -185,7 +185,8 @@ BasePage {
 
                     onCountChanged: {
                         continueWatching.visible = count > 0
-                        height = Global.matchItemHeight * count
+                        /* overestimate, so that view is long enough */
+                        height = (Global.itemHeight + Theme.fontSizeHuge)  * count
                     }
                 }
             }

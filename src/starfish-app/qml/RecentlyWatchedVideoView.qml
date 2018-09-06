@@ -54,7 +54,7 @@ SilicaListView {
                     id: listItem
 
                     width: listView.width
-                    contentHeight: Global.matchItemHeight
+                    contentHeight: Global.itemHeight + Theme.fontSizeMedium
 
 
                     menu: Component {
