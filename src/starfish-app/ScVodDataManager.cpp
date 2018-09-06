@@ -1447,7 +1447,7 @@ void ScVodDataManager::updateVodDownloadStatus(
         return;
     }
 
-    static const QString selectVodIdsSql =  QStringLiteral("SELECT id, offset FROM vods WHERE vod_url_share_id=? ORDER BY offset DESC");
+    static const QString selectVodIdsSql =  QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=? ORDER BY offset DESC");
     if (!q.prepare(selectVodIdsSql)) {
         qCritical() << "failed to prepare query" << q.lastError();
         return;
@@ -1460,13 +1460,8 @@ void ScVodDataManager::updateVodDownloadStatus(
         return;
     }
 
-    auto lastOffset = download.description().duration();
-
     while (q.next()) {
         auto vodId = qvariant_cast<qint64>(q.value(0));
-        auto offset = qvariant_cast<int>(q.value(1));
-        auto end = lastOffset;
-        lastOffset = offset;
         emit vodAvailable(
                     vodId,
                     download.filePath(),
@@ -1474,9 +1469,7 @@ void ScVodDataManager::updateVodDownloadStatus(
                     download.fileSize(),
                     download.format().width(),
                     download.format().height(),
-                    download.format().id()/*,
-                    offset,
-                    end*/);
+                    download.format().id());
     }
 }
 
@@ -2005,7 +1998,6 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
                     QFileInfo fi(vodFilePath);
                     if (fi.exists()) {
                         if (progress >= 1) {
-                            auto end = getVodEndOffset(rowid, offset, vod.description().duration());
                             emit vodAvailable(
                                         rowid,
                                         vodFilePath,
@@ -2013,9 +2005,7 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
                                         fi.size(),
                                         format.width(),
                                         format.height(),
-                                        formatId/*,
-                                        offset,
-                                        end*/);
+                                        formatId);
                             return;
                         }
                     }
@@ -2546,9 +2536,7 @@ ScVodDataManager::queryVodFiles(qint64 rowid) {
                       "    progress,\n"
                       "    width,\n"
                       "    height,\n"
-                      "    format,\n"
-                      "    offset,\n"
-                      "    length\n"
+                      "    format\n"
                       "FROM offline_vods\n"
                       "WHERE id=?\n"
                       ))) {
@@ -2574,11 +2562,8 @@ ScVodDataManager::queryVodFiles(qint64 rowid) {
             auto width = q.value(2).toInt();
             auto height = q.value(3).toInt();
             auto format = q.value(4).toString();
-            auto offset = q.value(5).toInt();
-            auto length = q.value(6).toInt();
 
-            auto end = getVodEndOffset(rowid, offset, length);
-            emit vodAvailable(rowid, filePath, progress, fi.size(), width, height, format/*, offset, end*/);
+            emit vodAvailable(rowid, filePath, progress, fi.size(), width, height, format);
         }
     }
 }

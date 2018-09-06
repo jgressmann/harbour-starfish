@@ -95,7 +95,8 @@ ListItem {
 
         Rectangle {
             id: content
-            color: watchProgress._range <= 0 ? "yellow" : (watchProgress._range < 1 ? "red" : "green")
+//            color: watchProgress._range <= 0 ? "yellow" : (watchProgress._range < 1 ? "red" : "green")
+            color: "transparent"
             x: Theme.horizontalPageMargin
             width: parent.width - 2*x
             height: heading.height + body.height
@@ -126,7 +127,8 @@ ListItem {
 
             Rectangle {
                 id: body
-                color: watchProgress.visible ? "blue" : "transparent"
+//                color: watchProgress.visible ? "blue" : "transparent"
+                color: "transparent"
                 width: parent.width
                 height: thumbnailGroup.height
                 anchors.top: heading.bottom
@@ -441,7 +443,6 @@ ListItem {
                 startOffset < baseOffset
                 ? 0
                 : (startOffset > _endOffset ? 1 : (startOffset-baseOffset)/(_endOffset-baseOffset))
-//            height: Math.max(parent.height / 32, 2)
             height: 4
             anchors.top: content.bottom
             onVisibleChanged: {
