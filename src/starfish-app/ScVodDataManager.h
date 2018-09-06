@@ -75,6 +75,7 @@ class ScVodDataManager : public QObject {
     Q_PROPERTY(QVariant database READ databaseVariant CONSTANT)
     Q_PROPERTY(int vodDownloads READ vodDownloads NOTIFY vodDownloadsChanged)
     Q_PROPERTY(int sqlPatchLevel READ sqlPatchLevel NOTIFY sqlPatchLevelChanged)
+    Q_PROPERTY(QString dataDirectory READ dataDirectory NOTIFY dataDirectoryChanged)
 
 public:
     enum Error {
@@ -84,6 +85,10 @@ public:
         Error_CouldntStartTransaction,
         Error_CouldntEndTransaction,
         Error_SqlTableManipError,
+        Error_ProcessOutOfResources,
+        Error_ProcessTimeout,
+        Error_ProcessCrashed,
+        Error_ProcessFailed
     };
     Q_ENUMS(Error)
 
@@ -94,6 +99,31 @@ public:
         State_Finalizing
     };
     Q_ENUMS(State)
+
+
+    enum ClearFlags {
+        CF_MetaData = 0x01,
+        CF_Thumbnails = 0x02,
+        CF_Vods = 0x04,
+        CF_Icons = 0x08,
+        CF_Everthing =
+            CF_MetaData |
+            CF_Thumbnails |
+            CF_Vods |
+            CF_Icons
+    };
+    Q_ENUMS(ClearFlags)
+
+    enum DataDirectoryChangeType {
+        DDCT_StatCurrentDir,
+        DDCT_StatTargetDir,
+        DDCT_Copy,
+        DDCT_Move,
+        DDCT_Finished,
+    };
+    Q_ENUMS(DataDirectoryChangeType)
+
+
 
 public:
     ~ScVodDataManager();
@@ -141,6 +171,10 @@ public: //
     Q_INVOKABLE void resetSqlPatchLevel();
     Q_INVOKABLE QString raceIcon(int race) const;
     Q_INVOKABLE int getVodEndOffset(qint64 rowid, int startOffsetS, int vodLengthS) const;
+    Q_INVOKABLE void clear();
+    Q_INVOKABLE void clearCache(ClearFlags flags);
+    Q_INVOKABLE void moveDataDirectory(QString& targetDirectory);
+    QString dataDirectory() const;
     int sqlPatchLevel() const;
     Q_INVOKABLE void clearIcons();
 
@@ -172,6 +206,8 @@ signals:
     void vodsAdded(int count);
     void vodDownloadsChanged();
     void sqlPatchLevelChanged();
+    void dataDirectoryChanged();
+    void dataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
 
 
 public slots:
@@ -179,7 +215,6 @@ public slots:
     void excludeStage(const ScStage& stage, bool* exclude);
     void excludeMatch(const ScMatch& match, bool* exclude);
     void hasRecord(const ScRecord& record, bool* exclude);
-    void clear();
     void vacuum();
 
 private:

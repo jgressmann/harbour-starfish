@@ -56,6 +56,7 @@ public:
     Q_INVOKABLE bool unlink(const QString& filePath) const;
     Q_INVOKABLE bool copy(const QString& srcFilePath, const QString& dstFilePath) const;
     Q_INVOKABLE bool move(const QString& srcFilePath, const QString& dstFilePath) const;
+    Q_INVOKABLE bool isDir(const QString& str) const;
     static QString staticLogDir();
 
 

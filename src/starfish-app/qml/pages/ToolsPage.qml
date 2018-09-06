@@ -68,32 +68,78 @@ Page {
             }
         }
 
+        ExpandingSectionGroup {
+            currentIndex: -1
+            width: parent.width
+
+            ExpandingSection {
+                title: "Cache"
+                id: cacheSection
+                width: parent.width
+                content.sourceComponent: ButtonLayout {
+                    width: cacheSection.width
+
+                    Button {
+                        text: "Clear cache"
+        //                anchors.horizontalCenter: parent.horizontalCenter
+                        onClicked: {
+                            var dialog = pageStack.push(
+                                        Qt.resolvedUrl("ConfirmClearDialog.qml"),
+                                        {
+                                            acceptDestination: Qt.resolvedUrl("StartPage.qml"),
+                                            acceptDestinationAction: PageStackAction.Replace
+                                        })
+                            dialog.accepted.connect(function() {
+                                console.debug("clear")
+                                VodDataManager.clear()
+                                VodDataManager.fetchIcons()
+                            })
+                        }
+                    }
+
+                    Button {
+                        text: "Clear meta data"
+                        onClicked: {
+                            console.debug("clear meta data")
+                            VodDataManager.clearCache(VodDataManager.CF_MetaData)
+                        }
+                    }
+
+                    Button {
+                        text: "Clear thumbnails"
+                        onClicked: {
+                            console.debug("clear thumbnails")
+                            VodDataManager.clearCache(VodDataManager.CF_Thumbnails)
+                        }
+                    }
+
+                    Button {
+                        text: "Clear VODs"
+                        onClicked: {
+                            console.debug("clear vods")
+                            VodDataManager.clearCache(VodDataManager.CF_Vods)
+                        }
+                    }
+
+                    Button {
+                        text: "Clear icons"
+                        onClicked: {
+                            console.debug("clear icons")
+                            VodDataManager.clearCache(VodDataManager.CF_Icons)
+                            VodDataManager.fetchIcons()
+                        }
+                    }
+                }
+            }
+        }
 
 
         SectionHeader {
-            text: "Data"
+            text: "Seen"
         }
 
         ButtonLayout {
             width: parent.width
-
-            Button {
-                text: "Clear VOD data"
-//                anchors.horizontalCenter: parent.horizontalCenter
-                onClicked: {
-                    var dialog = pageStack.push(
-                                Qt.resolvedUrl("ConfirmClearDialog.qml"),
-                                {
-                                    acceptDestination: Qt.resolvedUrl("StartPage.qml"),
-                                    acceptDestinationAction: PageStackAction.Replace
-                                })
-                    dialog.accepted.connect(function() {
-                        console.debug("clear")
-                        VodDataManager.clear()
-                        VodDataManager.fetchIcons()
-                    })
-                }
-            }
 
             Button {
                 text: "Delete seen VOD files"

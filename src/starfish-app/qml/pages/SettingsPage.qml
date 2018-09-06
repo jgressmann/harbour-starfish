@@ -23,20 +23,123 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Pickers 1.0
 import org.duckdns.jgressmann 1.0
 import ".."
 
 
 Page {
     id: root
+    property string _currentdataDirectory
+    property string _targetdataDirectory
 
     Component.onDestruction: {
         settings.sync()
     }
 
+    Component.onCompleted: {
+        _currentdataDirectory = VodDataManager.dataDirectory
+        _targetdataDirectory = _currentdataDirectory
+    }
 
     VisualItemModel {
         id: model
+
+        SectionHeader {
+            text: "Data"
+        }
+
+        Column {
+            spacing: Theme.paddingSmall
+            width: parent.width
+
+            ComboBox {
+                id: saveDirectoryComboBox
+                width: parent.width
+                label: "Directory"
+                menu: ContextMenu {
+                    MenuItem { text: "Cache" }
+                    MenuItem { text: "Custom" }
+                }
+            }
+
+            TextField {
+                id: saveDirectoryTextField
+                width: parent.width
+                text: settingDefaultDirectory.value
+                label: "Directory for meta data, thumbnails, vods, etc."
+                placeholderText: "Data directory"
+                EnterKey.iconSource: "image://theme/icon-m-enter-close"
+                EnterKey.onClicked: focus = false
+
+                Component.onCompleted: {
+                    // combobox initially has index 0 which may be wrong
+                    _onSaveDirectoryTextFieldTextChanged()
+                }
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Pick directory"
+                onClicked: pageStack.push(filePickerPage)
+            }
+
+            Button {
+                enabled: !!_targetdataDirectory &&
+                         _currentdataDirectory !== _targetdataDirectory &&
+                         App.isDir(_targetdataDirectory)
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Apply change"
+                onClicked: pageStack.push(confirmMovePage)
+            }
+
+            Component {
+                id: confirmMovePage
+                Dialog {
+                    property string targetDirectory
+
+                    Column {
+                        width: parent.width - 2*x
+                        x: Theme.horizontalPageMargin
+
+                        DialogHeader { }
+
+                        Label {
+                            width: parent.width
+                            text: "The application's data will be moved to " + targetDirectory + ".
+This operation could take a long while. During this time you will not be able to use the application. Do you want to continue?"
+                        }
+
+                        BusyIndicator {
+                            id: busyIndicator
+//                            running: true
+                            size: BusyIndicatorSize.Large
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    onAccepted: {
+                        busyIndicator.running = true
+                        VodDataManager.moveDataDirectory(targetDirectory)
+                    }
+
+                    Component.onCompleted: {
+                        //VodDataManager.moveDataDirectory(targetDirectory)
+                    }
+                }
+            }
+
+            Component {
+                id: filePickerPage
+                FilePickerPage {
+                    //nameFilters: [ '*.pdf', '*.doc' ]
+                    nameFilters: []
+                    onSelectedContentPropertiesChanged: {
+                        _targetdataDirectory = saveDirectoryTextField.text = _getDirectory(selectedContentProperties.filePath)
+                    }
+                }
+            }
+        }
 
         SectionHeader {
             text: "Network"
@@ -284,6 +387,60 @@ Page {
             header: PageHeader {
                 title: "Settings"
             }
+        }
+    }
+
+    Connections {
+        id: saveDirectoryComboBoxConnections
+        target: saveDirectoryComboBox
+        onCurrentIndexChanged: {
+            saveDirectoryTextFieldConnections.target = null
+            _updateSaveDirectoryTextField()
+            saveDirectoryTextFieldConnections.target = saveDirectoryTextField
+        }
+    }
+
+    Connections {
+        id: saveDirectoryTextFieldConnections
+        target: saveDirectoryTextField
+        onTextChanged: _onSaveDirectoryTextFieldTextChanged()
+    }
+
+    function _getDirectory(str) {
+        var lastSlashIndex = str.lastIndexOf("/")
+        if (lastSlashIndex > 0) {
+            str = str.substr(0, lastSlashIndex);
+        }
+
+        return str
+    }
+
+    function _updateSaveDirectoryComboBox() {
+        settingDefaultDirectory.value = saveDirectoryTextField.text
+
+        if (settingDefaultDirectory.value === StandardPaths.cache) {
+            saveDirectoryComboBox.currentIndex = 0
+//        } else if (settingDefaultDirectory.value === StandardPaths.videos) {
+//            saveDirectoryComboBox.currentIndex = 1
+        } else {
+            saveDirectoryComboBox.currentIndex = 1
+        }
+    }
+
+    function _onSaveDirectoryTextFieldTextChanged() {
+        saveDirectoryComboBoxConnections.target = null
+        _updateSaveDirectoryComboBox()
+        saveDirectoryComboBoxConnections.target = saveDirectoryComboBox
+    }
+
+    function _updateSaveDirectoryTextField() {
+        switch (saveDirectoryComboBox.currentIndex) {
+        case 0:
+            _targetdataDirectory = saveDirectoryTextField.text = StandardPaths.cache
+            break
+        default:
+            pageStack.push(filePickerPage)
+            break
         }
     }
 }

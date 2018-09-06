@@ -253,6 +253,8 @@ ScVodman::onNewTokenReply(QDBusPendingCallWatcher *self) {
                      --m_CurrentFile;
                      scheduleNextFileRequest();
                      break;
+                 default: // squelch compiler warning
+                     break;
                  }
                  emit downloadFailed(requestId, VMVodEnums::VM_ErrorServiceUnavailable);
             }

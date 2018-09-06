@@ -27,6 +27,7 @@
 #include <QUrl>
 #include <QStandardPaths>
 #include <QFile>
+#include <QDir>
 #include <QDebug>
 
 
@@ -128,4 +129,9 @@ bool ScApp::copy(const QString& srcFilePath, const QString& dstFilePath) const {
 
 bool ScApp::move(const QString& srcFilePath, const QString& dstFilePath) const {
     return QFile::rename(srcFilePath, dstFilePath);
+}
+
+bool ScApp::isDir(const QString& str) const {
+    QDir d(str);
+    return d.exists();
 }
