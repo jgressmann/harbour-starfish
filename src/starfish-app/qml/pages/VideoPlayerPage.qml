@@ -63,6 +63,16 @@ Page {
 //        console.debug("playback offset="+ playbackOffset)
 //    }
 
+    Timer {
+        id: stallTimer
+        interval: 10000
+        onTriggered: {
+            console.debug("stall timer expired")
+            pause()
+            controlPanel.open = true
+        }
+    }
+
 
     MediaPlayer {
         id: mediaplayer
@@ -70,30 +80,40 @@ Page {
 
         onStatusChanged: {
             console.debug("media player status=" + status)
-            if (status === MediaPlayer.Buffering) {
+            switch (status) {
+            case MediaPlayer.Buffering:
                 console.debug("buffering")
-            } else if (status === MediaPlayer.Stalled) {
+                stallTimer.start()
+                break
+            case MediaPlayer.Stalled:
                 console.debug("stalled")
-            } else if (status === MediaPlayer.Buffered) {
+                stallTimer.start()
+                break
+            case MediaPlayer.Buffered:
                 console.debug("buffered")
+                stallTimer.stop()
                 if (_grabFrameWhenReady) {
                     _grabFrameWhenReady = false
                     _grabFrame()
                 }
-            } else if (status === MediaPlayer.EndOfMedia) {
+                break
+            case MediaPlayer.EndOfMedia:
                 console.debug("end of media")
                 controlPanel.open = true
-            } else if (status === MediaPlayer.Loaded) {
+                break
+            case MediaPlayer.Loaded:
                 console.debug("loaded")
                 page.title = metaData.title
+                break
+            case MediaPlayer.InvalidMedia:
+                console.debug("invalid media")
+                controlPanel.open = true
+                break
             }
-//            _forceBusyIndicator = false
-//            console.debug("_forceBusyIndicator=false")
         }
 
         onPlaybackStateChanged: {
             console.debug("media player playback state=" + playbackState)
-
 
             switch (playbackState) {
             case MediaPlayer.PlayingState:
@@ -111,7 +131,7 @@ Page {
             }
 
             // apparently isPlaying isn't updated here yet, sigh
-            console.debug("isPlaying=" + isPlaying)
+//            console.debug("isPlaying=" + isPlaying)
             DisplayBlanking.preventBlanking = playbackState === MediaPlayer.PlayingState
             console.debug("prevent blank="+DisplayBlanking.preventBlanking)
         }
