@@ -134,6 +134,7 @@ public: //
     Q_INVOKABLE QString raceIcon(int race) const;
     Q_INVOKABLE int getVodEndOffset(qint64 rowid, int startOffsetS, int vodLengthS) const;
     int sqlPatchLevel() const;
+    Q_INVOKABLE void clearIcons();
 
 signals:
     void readyChanged();

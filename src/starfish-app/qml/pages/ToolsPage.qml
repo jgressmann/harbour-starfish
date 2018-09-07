@@ -138,7 +138,16 @@ Page {
                     VodDataManager.resetSqlPatchLevel()
                 }
             }
+
+            Button {
+                text: "Delete icons"
+                onClicked: {
+                    VodDataManager.clearIcons()
+                    VodDataManager.fetchIcons()
+                }
+            }
         }
+
     }
 
     SilicaFlickable {
