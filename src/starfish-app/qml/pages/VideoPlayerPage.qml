@@ -361,7 +361,7 @@ Page {
 
                     // Grab frame when closing again, better to have it than
                     // to miss it :D
-                    if (_hasSource) {
+                    if (_hasSource && mediaplayer.status === MediaPlayer.Buffered) {
                         _grabFrame()
                     }
                 }
