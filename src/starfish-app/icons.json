@@ -73,6 +73,11 @@
             "extension": ".png"
         },
         {
+            "regex": "eschamp",
+            "url": "https://www.dropbox.com/s/i5qs80rdvbyivg7/eschamp.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "dreamhack",
             "url": "https://www.dropbox.com/s/n2lqxsuy0tgqkt7/dreamhack.png?dl=1",
             "extension": ".png"
