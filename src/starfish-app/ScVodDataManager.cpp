@@ -3108,112 +3108,11 @@ Exit:
     return;
 Error:
     setError(Error_CouldntCreateSqlTables);
-    setReady(false);
     goto Exit;
 }
 
 
 
-//void
-//ScVodDataManager::updateSql3(QSqlQuery& q) {
-//    qInfo("Begin update database v3 to v4\n");
-
-////    QVariantList vodFileIdsToDelete;
-
-//    static char const* const Sql1[] = {
-//        "ALTER TABLE vod_files ADD COLUMN length INTEGER NOT NULL DEFAULT -1",
-//    };
-
-//    for (size_t i = 0; i < _countof(Sql1); ++i) {
-//        qDebug() << Sql1[i];
-//        if (!q.exec(Sql1[i])) {
-//            qCritical() << "failed to upgrade database from v3 to v4" << q.lastError();
-//            goto Error;
-//        }
-//    }
-
-//    // find all existing vod files and update length from vod meta data
-//    if (!q.exec(QStringLiteral("SELECT vod_url_share_id, vod_file_id FROM offline_vods"))) {
-//        qCritical() << "failed to exec select" << q.lastError();
-//        goto Error;
-//    }
-
-//    qDebug() << "Updating length column from vod meta data";
-//    while (q.next()) {
-//        auto urlShareId = qvariant_cast<qint64>(q.value(0));
-//        auto vodFileId = qvariant_cast<qint64>(q.value(1));
-//        auto metaDataFilePath = m_MetaDataDir + QString::number(urlShareId);
-//        if (QFileInfo::exists(metaDataFilePath)) {
-//            QFile file(metaDataFilePath);
-//            if (file.open(QIODevice::ReadOnly)) {
-//                VMVod vod;
-//                {
-//                    QDataStream s(&file);
-//                    s >> vod;
-//                }
-
-//                if (vod.isValid()) {
-//                    QSqlQuery q2(m_Database);
-//                    if (!q2.prepare(QStringLiteral("UPDATE vod_files SET length=? WHERE id=?"))) {
-//                        qCritical() << "failed to prepare settings query" << q2.lastError();
-//                        goto Error;
-//                    }
-
-//                    q2.addBindValue(vod.description().duration());
-//                    q2.addBindValue(vodFileId);
-
-//                    if (!q2.exec()) {
-//                        qCritical() << "failed to exec query" << q2.lastError();
-//                        goto Error;
-//                    }
-//                } else {
-//                    file.close();
-//                    file.remove();
-////                    vodFileIdsToDelete << vodFileId;
-//                }
-//            } else {
-////                vodFileIdsToDelete << vodFileId;
-//            }
-//        } else {
-////            vodFileIdsToDelete << vodFileId;
-//        }
-//    }
-
-////    qDebug() << "remov"
-////    // remove vod file entries that have no meta data
-////    if (!q.prepare(QStringLiteral("DELETE FROM vod_files WHERE id=?"))) {
-////        qCritical() << "failed to prepare delete statement" << q.lastError();
-////        goto Error;
-////    }
-
-////    q.addBindValue(vodFileIdsToDelete);
-
-////    if (!q.execBatch()) {
-////        qCritical() << "failed to exec delete statement" << q.lastError();
-////        goto Error;
-////    }
-
-//    static char const* const Sql2[] = {
-//        "DELETE FROM vod_files WHERE length=-1",
-//        "DROP VIEW offline_vods",
-//    };
-
-//    for (size_t i = 0; i < _countof(Sql2); ++i) {
-//        qDebug() << Sql2[i];
-//        if (!q.exec(Sql2[i])) {
-//            qCritical() << "failed to upgrade database from v3 to v4" << q.lastError();
-//            goto Error;
-//        }
-//    }
-
-//    qInfo("Update database v3 to v4 completed successfully\n");
-//Exit:
-//    return;
-//Error:
-//    setError(Error_CouldntCreateSqlTables);
-//    setReady(false);
-//    goto Exit;
-//}
 
 
 void
