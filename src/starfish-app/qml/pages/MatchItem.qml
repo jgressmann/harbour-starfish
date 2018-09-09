@@ -716,6 +716,9 @@ ListItem {
             _vodTitle = vod.description.title
             _clicked = false
 
+            // also set length which might be zero if we just downloaded the meta data
+            length = vod.description.duration
+
             // now that we have meta data, we might
             // be able to get a watch progress
             console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
