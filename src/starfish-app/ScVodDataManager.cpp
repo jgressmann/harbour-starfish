@@ -1488,20 +1488,39 @@ void ScVodDataManager::updateVodDownloadStatus(
 void
 ScVodDataManager::onDownloadFailed(qint64 token, int serviceErrorCode) {
     QMutexLocker g(&m_Lock);
+
+    qint64 urlShareId = -1;
+    auto metaData = false;
+
     auto it = m_VodmanFileRequests.find(token);
     if (it != m_VodmanFileRequests.end()) {
         VodmanFileRequest r = it.value();
         m_VodmanFileRequests.erase(it);
         emit vodDownloadsChanged();
 
+        urlShareId = r.vod_url_share_id;
+        metaData = false;
+    } else {
+        auto it2 = m_VodmanMetaDataRequests.find(token);
+        if (it2 != m_VodmanMetaDataRequests.end()) {
+            VodmanMetaDataRequest r = it2.value();
+            m_VodmanMetaDataRequests.erase(it2);
+
+            urlShareId = r.vod_url_share_id;
+            metaData = true;
+        }
+    }
+
+    if (urlShareId >= 0) {
+        static const QString selectVodIdsSql =  QStringLiteral(
+                    "SELECT id FROM vods WHERE vod_url_share_id=?");
         QSqlQuery q(m_Database);
-        static const QString selectVodIdsSql =  QStringLiteral("SELECT id FROM vods WHERE url_share_id=?");
         if (!q.prepare(selectVodIdsSql)) {
             qCritical() << "failed to prepare query" << q.lastError();
             return;
         }
 
-        q.addBindValue(r.vod_url_share_id);
+        q.addBindValue(urlShareId);
 
         if (!q.exec()) {
             qCritical() << "failed to exec query" << q.lastError();
@@ -1510,32 +1529,11 @@ ScVodDataManager::onDownloadFailed(qint64 token, int serviceErrorCode) {
 
         while (q.next()) {
             auto rowid = qvariant_cast<qint64>(q.value(0));
-            emit vodDownloadFailed(rowid, serviceErrorCode);
-        }
-    }
-
-    auto it2 = m_VodmanMetaDataRequests.find(token);
-    if (it2 != m_VodmanMetaDataRequests.end()) {
-        VodmanMetaDataRequest r = it2.value();
-        m_VodmanMetaDataRequests.erase(it2);
-
-        QSqlQuery q(m_Database);
-        if (!q.prepare(QStringLiteral(
-    "SELECT id FROM vods WHERE vod_url_share_id=?"))) {
-            qCritical() << "failed to prepare query" << q.lastError();
-            return;
-        }
-
-        q.addBindValue(r.vod_url_share_id);
-
-        if (!q.exec()) {
-            qCritical() << "failed to exec query" << q.lastError();
-            return;
-        }
-
-        while (q.next()) {
-            auto rowid = qvariant_cast<qint64>(q.value(0));
-            emit metaDataDownloadFailed(rowid, serviceErrorCode);
+            if (metaData) {
+                emit metaDataDownloadFailed(rowid, serviceErrorCode);
+            } else {
+                emit vodDownloadFailed(rowid, serviceErrorCode);
+            }
         }
     }
 }
