@@ -1544,7 +1544,7 @@ void ScVodDataManager::updateVodDownloadStatus(
         return;
     }
 
-    static const QString selectVodIdsSql =  QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=? ORDER BY offset DESC");
+    static const QString selectVodIdsSql =  QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=?");
     if (!q.prepare(selectVodIdsSql)) {
         qCritical() << "failed to prepare query" << q.lastError();
         return;
