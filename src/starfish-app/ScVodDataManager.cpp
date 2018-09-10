@@ -75,6 +75,23 @@ const QString s_ZergIconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/m
 
 const int BatchSize = 1<<13;
 
+bool selectIdFromVodsWhereUrlShareIdEquals(QSqlQuery& q, qint64 urlShareId) {
+    static const QString s_SelectIdFromVodsWhereVodUrlShareId = QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=?");
+    if (!q.prepare(s_SelectIdFromVodsWhereVodUrlShareId)) {
+        qCritical() << "failed to prepare query" << q.lastError();
+        return false;
+    }
+
+    q.addBindValue(urlShareId);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return false;
+    }
+
+    return true;
+}
+
 class Stopwatch {
 public:
     ~Stopwatch() {
@@ -1462,17 +1479,7 @@ void ScVodDataManager::onMetaDataDownloadCompleted(qint64 token, const VMVod& vo
 
                     // emit metaDataAvailable
                     {
-                        static const QString sql = QStringLiteral(
-                                    "SELECT id FROM vods WHERE vod_url_share_id=?");
-                        if (!q.prepare(sql)) {
-                            qCritical() << "failed to prepare query" << q.lastError();
-                            return;
-                        }
-
-                        q.addBindValue(r.vod_url_share_id);
-
-                        if (!q.exec()) {
-                            qCritical() << "failed to exec query" << q.lastError();
+                        if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, r.vod_url_share_id))) {
                             return;
                         }
 
@@ -1544,16 +1551,7 @@ void ScVodDataManager::updateVodDownloadStatus(
         return;
     }
 
-    static const QString selectVodIdsSql =  QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=?");
-    if (!q.prepare(selectVodIdsSql)) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
-
-    q.addBindValue(urlShareId);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
+    if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, urlShareId))) {
         return;
     }
 
@@ -1597,18 +1595,8 @@ ScVodDataManager::onDownloadFailed(qint64 token, int serviceErrorCode) {
     }
 
     if (urlShareId >= 0) {
-        static const QString selectVodIdsSql =  QStringLiteral(
-                    "SELECT id FROM vods WHERE vod_url_share_id=?");
         QSqlQuery q(m_Database);
-        if (!q.prepare(selectVodIdsSql)) {
-            qCritical() << "failed to prepare query" << q.lastError();
-            return;
-        }
-
-        q.addBindValue(urlShareId);
-
-        if (!q.exec()) {
-            qCritical() << "failed to exec query" << q.lastError();
+        if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, urlShareId))) {
             return;
         }
 
@@ -2962,16 +2950,7 @@ ScVodDataManager::vodsBeingDownloaded() const {
     for (auto it = beg; it != end; ++it) {
         const VodmanFileRequest& r = it.value();
 
-        if (!q.prepare(
-                    QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=?"))) {
-            qCritical() << "failed to prepare query" << q.lastError();
-            return result;
-        }
-
-        q.addBindValue(r.vod_url_share_id);
-
-        if (!q.exec()) {
-            qCritical() << "failed to exec query" << q.lastError();
+        if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, r.vod_url_share_id))) {
             return result;
         }
 
