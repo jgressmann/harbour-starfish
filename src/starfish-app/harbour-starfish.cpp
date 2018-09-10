@@ -24,6 +24,8 @@
 #include <QGuiApplication>
 #include <QQuickView>
 #include <QStandardPaths>
+#include <QMetaObject>
+#include <QQuickItem>
 #include <qqml.h>
 
 #include "Sc2LinksDotCom.h"
