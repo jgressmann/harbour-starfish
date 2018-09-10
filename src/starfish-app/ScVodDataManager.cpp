@@ -1858,8 +1858,7 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
                 "    progress,\n"
                 "    format,"
                 "    url,\n"
-                "    vod_url_share_id,\n"
-                "    offset\n"
+                "    vod_url_share_id\n"
                 "FROM offline_vods\n"
                 "WHERE id=?\n"
                 );
@@ -1880,7 +1879,7 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
     QString vodUrl;
     qint64 urlShareId = -1;
     QString formatId;
-    int offset = -1;
+
     float progress = 0;
     if (q.next()) {
         vodFilePath = m_VodDir + q.value(0).toString();
@@ -1888,13 +1887,11 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
         formatId = q.value(2).toString();
         vodUrl = q.value(3).toString();
         urlShareId = qvariant_cast<qint64>(q.value(4));
-        offset = q.value(5).toInt();
     } else {
         static const QString sql = QStringLiteral(
                     "SELECT\n"
-                    "   u.url,\n"
-                    "   u.id,\n"
-                    "   v.offset\n"
+                    "   url,\n"
+                    "   vod_url_share_id\n"
                     "FROM vods v\n"
                     "INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
                     "WHERE v.id=?\n"
@@ -1918,7 +1915,6 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
 
         vodUrl = q.value(0).toString();
         urlShareId = qvariant_cast<qint64>(q.value(1));
-        offset = q.value(2).toInt();
     }
 
     for (auto& value : m_VodmanFileRequests) {
