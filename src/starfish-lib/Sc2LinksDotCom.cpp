@@ -442,7 +442,7 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
                 continue;
             }
 
-            QDate qmatchDate(event.year(), dateParts[0].toInt(), dateParts[1].toInt());
+            QDate qmatchDate(qlastMatchDate.isValid() ? qlastMatchDate.year() : event.year(), dateParts[0].toInt(), dateParts[1].toInt());
             if (!qmatchDate.isValid()) {
                 qDebug() << "date invalid, got" << matchDate;
                 continue;
