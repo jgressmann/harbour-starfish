@@ -5,7 +5,7 @@
 
 Name:       harbour-starfish
 Summary:    Get your StarCraft Brood War and StarCraft II action going!
-Version:    1.0.4
+Version:    1.0.5
 Release:    1
 Group:      Applications/Multimedia
 #Group:      Qt/Qt
