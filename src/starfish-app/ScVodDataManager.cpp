@@ -3066,6 +3066,8 @@ ScVodDataManager::applySqlPatches(const QByteArray &buffer) {
             return;
         }
 
+        qDebug() << "patch level now" << (i + 1);
+
         emit sqlPatchLevelChanged();
     }
 

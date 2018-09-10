@@ -381,6 +381,8 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
     stageOffsets << soup.length();
     ScRecord record;
 
+    QDate qlastMatchDate; // months seem to switch on a per stage basis
+
     for (int i = 0; i < stageOffsets.size() - 1; ++i) {
 
         ScStage& stage = stages[i];
@@ -446,10 +448,22 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
                 continue;
             }
 
+            // sometimes the event crosses the year boundary,
+            // sometimes within a stage there is a month flip but matches are close together
+            if (qlastMatchDate.isValid() &&
+                qmatchDate.month() > qlastMatchDate.month() &&
+                qmatchDate.toJulianDay() - qlastMatchDate.toJulianDay() > 7
+                    ) {
+                qDebug() << qlastMatchDate;
+                qmatchDate = QDate(qmatchDate.year()-1, qmatchDate.month(), qmatchDate.day());
+            }
+
             if (eventData.year == 0) {
                 qDebug() << "setting event year from first match to" << qmatchDate.year();
                 eventData.year = qmatchDate.year();
             }
+
+            qlastMatchDate = qmatchDate;
 
 
             int imatchNumber = matchNumber.toInt();

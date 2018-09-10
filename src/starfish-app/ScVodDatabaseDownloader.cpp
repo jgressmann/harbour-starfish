@@ -407,8 +407,10 @@ ScVodDatabaseDownloader::excludeRecord(const ScRecord& record, bool* exclude) {
 //        }
 //    }
 
-    if (record.valid & ScRecord::ValidMatchDate) {
-        if (record.matchDate < m_LimitMarker) {
+    if (record.isValid(ScRecord::ValidMatchDate | ScRecord::ValidYear)) {
+        if (record.matchDate < m_LimitMarker &&
+                // don't abort on events that cross year boundaries
+                record.matchDate.year() == record.year) {
             *exclude = true;
             m_Scraper->cancelFetch();
             return;
