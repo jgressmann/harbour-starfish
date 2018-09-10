@@ -181,7 +181,8 @@ CoverBackground {
 
                 // FIX ME this is actually buggy b/c it doesn't
                 // handle he 'out of device lock' case correctly
-                if (Global.videoPlayerPage.isPlaying) {
+                if (Global.videoPlayerPage &&
+                    Global.videoPlayerPage.isPlaying) {
                     Global.videoPlayerPage.pause()
                 }
             }
