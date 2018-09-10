@@ -1967,7 +1967,7 @@ void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySt
                         auto tempFileName = QFileInfo(vodFilePath).fileName();
                         static const QString sql = QStringLiteral(
                                     "INSERT INTO vod_files (file_name, format, width, height, progress) "
-                                    "VALUES (?, ?, ?, ?, ?, ?)");
+                                    "VALUES (?, ?, ?, ?, ?)");
                         if (!q.prepare(sql)) {
                             qCritical() << "failed to prepare query" << q.lastError();
                             return;
