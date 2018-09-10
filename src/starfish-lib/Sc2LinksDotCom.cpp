@@ -110,6 +110,9 @@ ScRecord::Race getRace(const QString& str) {
 
 } // anon
 
+Sc2LinksDotCom::~Sc2LinksDotCom() {
+    abort();
+}
 
 
 Sc2LinksDotCom::Sc2LinksDotCom(QObject *parent)

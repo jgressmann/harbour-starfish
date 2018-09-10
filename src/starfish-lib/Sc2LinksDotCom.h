@@ -35,6 +35,7 @@ class Sc2LinksDotCom : public ScVodScraper {
 
     Q_OBJECT
 public:
+    ~Sc2LinksDotCom();
     explicit Sc2LinksDotCom(QObject *parent = Q_NULLPTR);
 
 public: //

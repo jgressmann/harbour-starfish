@@ -105,6 +105,7 @@ protected:
     void setError(Error error);
     void setProgress(qreal value);
     void setProgressDescription(const QString& value);
+    void abort(); // called from derived dtor
     QMutex* lock() const;
 
 private:

@@ -45,9 +45,9 @@ public:
     void startFetchMetaData(qint64 token, const QString& url);
     void startFetchFile(qint64 token, const VMVod& vod, int formatIndex, const QString& filePath);
     void cancel(qint64 token);
-    void cancel();
     int maxConcurrentMetaDataDownloads() const { return m_MaxMeta; }
     void setMaxConcurrentMetaDataDownloads(int value);
+
 
 
 signals:
@@ -69,6 +69,7 @@ private slots:
 
 private:
     enum RequestType {
+        RT_Unknown, // this value will be used for default constructed Request objects
         RT_MetaData,
         RT_File,
     };
@@ -86,6 +87,7 @@ private:
     void scheduleNextFileRequest();
     void scheduleNextMetaDataRequest();
     void issueRequest(qint64 token, const Request& request);
+    void abort();
 
 private:
     QMutex m_Lock;
@@ -93,7 +95,7 @@ private:
     QList<QPair<qint64, Request>> m_PendingFileRequests;
     QList<QPair<qint64, Request>> m_PendingMetaDataRequests;
     QHash<qint64, Request> m_ActiveRequests;
-    QHash<QDBusPendingCallWatcher*, int> m_PendingDBusResponses;
+    QHash<QDBusPendingCallWatcher*, qint64> m_PendingDBusResponses;
     QHash<qint64, qint64> m_MetaDataTokenMap;
     QHash<qint64, qint64> m_FileTokenMap;
     QAtomicInteger<qint64> m_TokenGenerator;

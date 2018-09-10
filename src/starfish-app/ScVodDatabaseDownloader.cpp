@@ -38,6 +38,7 @@
 
 
 ScVodDatabaseDownloader::~ScVodDatabaseDownloader() {
+    cancel();
     while (true) {
         auto done = false;
         m_Lock.lock();

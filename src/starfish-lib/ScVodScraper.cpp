@@ -25,6 +25,7 @@
 
 #include <QDebug>
 #include <QNetworkAccessManager>
+#include <QThread>
 
 ScVodScraper::~ScVodScraper()
 {
@@ -169,4 +170,32 @@ ScVodScraper::skip() {
 void
 ScVodScraper::_skip() {
 
+}
+
+void
+ScVodScraper::abort() {
+    qDebug() << id() << "abort enter";
+    cancelFetch();
+
+    for (bool done = false; !done; ) {
+        {
+            QMutexLocker g(lock());
+
+            switch (status()) {
+            case Status_VodFetchingBeingCanceled:
+            case Status_VodFetchingInProgress:
+                done = false;
+                break;
+            default:
+                done = true;
+                break;
+            }
+        }
+
+        if (!done) {
+            QThread::msleep(100);
+        }
+    }
+
+    qDebug() << id() << "abort exit";
 }

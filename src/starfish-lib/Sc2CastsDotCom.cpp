@@ -157,7 +157,9 @@ getRace(const QString& str) {
 
 } // anon
 
-
+Sc2CastsDotCom::~Sc2CastsDotCom() {
+    abort();
+}
 
 Sc2CastsDotCom::Sc2CastsDotCom(QObject *parent)
     : ScVodScraper(parent)

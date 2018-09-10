@@ -36,6 +36,7 @@ class Sc2CastsDotCom : public ScVodScraper {
 
     Q_OBJECT
 public:
+    ~Sc2CastsDotCom();
     explicit Sc2CastsDotCom(QObject *parent = Q_NULLPTR);
 
 public: //

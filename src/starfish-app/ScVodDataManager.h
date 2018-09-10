@@ -87,6 +87,14 @@ public:
     };
     Q_ENUMS(Error)
 
+    enum State {
+        State_Initializing,
+        State_Ready,
+        State_Error,
+        State_Finalizing
+    };
+    Q_ENUMS(State)
+
 public:
     ~ScVodDataManager();
     explicit ScVodDataManager(QObject *parent = Q_NULLPTR);
@@ -94,7 +102,7 @@ public:
 public: //
     Q_INVOKABLE QString label(const QString& key, const QVariant& value = QVariant()) const;
     Q_INVOKABLE QString icon(const QString& key, const QVariant& value = QVariant()) const;
-    bool ready() const { return m_Ready; }
+    bool ready() const;
     Error error() const { return m_Error; }
     QSqlDatabase database() const { return m_Database; }
     Q_INVOKABLE void fetchMetaData(qint64 rowid);
@@ -186,7 +194,6 @@ private:
     };
 
     struct VodmanMetaDataRequest {
-        qint64 token;
         qint64 vod_url_share_id;
     };
 
@@ -217,7 +224,6 @@ private:
     static bool tryGetEvent(QString& inoutSrc, QString* location);
     static bool tryGetIcon(const QString& title, QString* iconPath);
     void setupDatabase();
-    void setReady(bool ready);
     void setError(Error value);
     void updateStatus();
     void setStatusFromRowCount();
@@ -251,6 +257,7 @@ private:
     void fetchSqlPatches();
     void applySqlPatches(const QByteArray& bytes);
     void setPersistedValue(QSqlQuery& query, const QString& key, const QString& value);
+    void setState(State state);
     void updateSql1(QSqlQuery& q);
     void updateSql2(QSqlQuery& q);
     void updateSql3(QSqlQuery& q);
@@ -277,6 +284,6 @@ private:
     QString m_VodDir;
     QString m_IconDir;
     int m_SuspendedVodsChangedEventCount;
-    bool m_Ready;
+    QAtomicInt m_State;
 };
 

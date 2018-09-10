@@ -416,6 +416,10 @@ ApplicationWindow {
         settingLastUpdateTimestamp.value = Global.secondsSinceTheEpoch() // in case debugging ends
         vodDatabaseDownloader.downloadNew()
     }
+
+    function aboutToQuit() {
+        console.debug("about to quit")
+    }
 }
 
 

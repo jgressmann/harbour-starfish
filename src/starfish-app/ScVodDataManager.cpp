@@ -52,7 +52,7 @@
 
 #define RETURN_IF_ERROR \
     do { \
-        if (!m_Ready) { \
+        if (m_State != State_Ready) { \
             qCritical("Not ready, return"); \
         } \
     } while (0)
@@ -123,14 +123,87 @@ void ScWorker::process() {
 }
 
 ScVodDataManager::~ScVodDataManager() {
+    qDebug() << "dtor entry";
+
+    setState(State_Finalizing);
+    qDebug() << "set finalizing";
+
+    if (m_Vodman) {
+        delete m_Vodman;
+        m_Vodman = nullptr;
+        qDebug() << "deleted vodman";
+    }
+
+    {
+        QMutexLocker guard(&m_Lock);
+
+        if (m_ClassfierRequest) {
+            m_ClassfierRequest->abort();
+            qDebug() << "aborted classifier request";
+        }
+
+
+        if (m_SqlPatchesRequest) {
+            m_SqlPatchesRequest->abort();
+            qDebug() << "aborted sql patches request";
+        }
+
+        foreach (auto& key, m_ThumbnailRequests.keys()) {
+            key->abort();
+        }
+        qDebug() << "aborted thumbnail requests";
+
+        foreach (auto& key, m_IconRequests.keys()) {
+            key->abort();
+        }
+        qDebug() << "aborted icons requests";
+    }
+
     m_AddThread.quit();
+
+    while (true) {
+        {
+            QMutexLocker guard(&m_Lock);
+
+            if (!m_ClassfierRequest &&
+                !m_SqlPatchesRequest &&
+                 m_ThumbnailRequests.isEmpty() &&
+                 m_IconRequests.isEmpty())
+            {
+                break;
+            }
+        }
+
+        QThread::msleep(100);
+        qDebug() << "wait for requests";
+        qDebug() << "classifier req gone" << (m_ClassfierRequest == nullptr);
+        qDebug() << "sql patch req gone" << (m_SqlPatchesRequest == nullptr);
+        qDebug() << "thumbnail reqs gone" << (m_ThumbnailRequests.isEmpty());
+        qDebug() << "icon reqs gone" << (m_IconRequests.isEmpty());
+    }
+
+    {
+        QMutexLocker guard(&m_Lock);
+        if (m_Manager) {
+            delete m_Manager;
+            m_Manager = nullptr;
+        }
+        qDebug() << "deleted network manager";
+    }
+
+    qDebug() << "dtor exit";
 }
 
 ScVodDataManager::ScVodDataManager(QObject *parent)
     : QObject(parent)
     , m_Lock(QMutex::Recursive)
-    , m_AddQueueLock(QMutex::NonRecursive) {
-
+    , m_AddQueueLock(QMutex::NonRecursive)
+    , m_Vodman(nullptr)
+    , m_Manager(nullptr)
+    , m_ClassfierRequest(nullptr)
+    , m_SqlPatchesRequest(nullptr)
+    , m_State(State_Initializing)
+{
     m_Manager = new QNetworkAccessManager(this);
     connect(m_Manager, &QNetworkAccessManager::finished, this,
             &ScVodDataManager::requestFinished);
@@ -149,12 +222,8 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     m_ThumbnailDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/thumbnails/";
     m_VodDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/vods/";
     m_IconDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/icons/";
-    m_Ready = true;
     m_Error = Error_None;
     m_SuspendedVodsChangedEventCount = 0;
-    m_ClassfierRequest = nullptr;
-    m_SqlPatchesRequest = nullptr;
-
 
     const auto databaseDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
 
@@ -173,8 +242,8 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         setupDatabase();
     } else {
         qCritical("Could not open database '%s'. Error: %s\n", qPrintable(databaseFilePath), qPrintable(m_Database.lastError().text()));
-        setReady(false);
         setError(Error_Unknown);
+        return;
     }
 
 
@@ -184,14 +253,17 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         auto src = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) ICONS_FILE);
         if (!QFile::copy(src, iconsFileDestinationPath)) {
             qCritical() << "could not copy" << src << "to" << iconsFileDestinationPath;
-            setReady(false);
             setError(Error_Unknown);
+            return;
         }
     }
 
     auto result = m_Icons.load(iconsFileDestinationPath);
-    Q_ASSERT(result);
-    (void)result;
+    if (!result) {
+        qCritical() << "failed to load icons data from" << iconsFileDestinationPath;
+        setError(Error_Unknown);
+        return;
+    }
 
     // classifier
     const auto classifierFileDestinationPath = databaseDir + QStringLiteral(CLASSIFIER_FILE);
@@ -199,14 +271,19 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         auto src = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) CLASSIFIER_FILE);
         if (!QFile::copy(src, classifierFileDestinationPath)) {
             qCritical() << "could not copy" << src << "to" << iconsFileDestinationPath;
-            setReady(false);
             setError(Error_Unknown);
+            return;
         }
     }
 
     result = m_Classifier.load(classifierFileDestinationPath);
-    Q_ASSERT(result);
-    (void)result;
+    if (!result) {
+        qCritical() << "failed to load classifier data from" << classifierFileDestinationPath;
+        setError(Error_Unknown);
+        return;
+    }
+
+    setState(State_Ready);
 
     fetchIcons();
     fetchClassifier();
@@ -218,27 +295,46 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(adder, &ScWorker::finished, this, &ScVodDataManager::vodAddWorkerFinished);
     connect(&m_AddThread, &QThread::finished, adder, &QObject::deleteLater);
     m_AddThread.start(QThread::LowestPriority);
+
 }
 
 void
 ScVodDataManager::requestFinished(QNetworkReply* reply) {
+#define RETURN_ON_REQUEST \
+    do { \
+        switch (m_State) { \
+        case State_Error: \
+        case State_Finalizing: \
+            return; \
+        } \
+    } while (0)
+
     Stopwatch sw("requestFinished");
     QMutexLocker guard(&m_Lock);
     reply->deleteLater();
+
     auto it = m_ThumbnailRequests.find(reply);
     if (it != m_ThumbnailRequests.end()) {
         auto r = it.value();
         m_ThumbnailRequests.erase(it);
+
+        RETURN_ON_REQUEST;
+
         thumbnailRequestFinished(reply, r);
     } else {
         auto it2 = m_IconRequests.find(reply);
         if (it2 != m_IconRequests.end()) {
             auto r = it2.value();
             m_IconRequests.erase(it2);
+
+            RETURN_ON_REQUEST;
+
             iconRequestFinished(reply, r);
         } else {
             if (m_ClassfierRequest == reply) {
                 m_ClassfierRequest = nullptr;
+
+                RETURN_ON_REQUEST;
 
                 switch (reply->error()) {
                 case QNetworkReply::OperationCanceledError:
@@ -291,6 +387,8 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
                 if (m_SqlPatchesRequest == reply) {
                     m_SqlPatchesRequest = nullptr;
 
+                    RETURN_ON_REQUEST;
+
                     switch (reply->error()) {
                     case QNetworkReply::OperationCanceledError:
                         break;
@@ -324,6 +422,8 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
             }
         }
     }
+
+#undef RETURN_ON_REQUEST
 }
 
 void
@@ -680,7 +780,6 @@ ScVodDataManager::setupDatabase() {
     if (!q.exec("PRAGMA foreign_keys = ON")) {
         qCritical() << "failed to enable foreign keys" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
-        setReady(false);
         return;
     }
 
@@ -688,28 +787,24 @@ ScVodDataManager::setupDatabase() {
     if (!q.exec("PRAGMA count_changes = OFF")) {
         qCritical() << "failed to disable change counting" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
-        setReady(false);
         return;
     }
 
     if (!q.exec("PRAGMA temp_store = MEMORY")) {
         qCritical() << "failed to set temp store to memory" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
-        setReady(false);
         return;
     }
 
     if (!q.exec("PRAGMA journal_mode = WAL")) {
         qCritical() << "failed to set journal mode to WAL" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
-        setReady(false);
         return;
     }
 
     if (!q.exec("PRAGMA user_version") || !q.next()) {
         qCritical() << "failed to query user version" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
-        setReady(false);
         return;
     }
 
@@ -735,7 +830,6 @@ ScVodDataManager::setupDatabase() {
         if (!q.exec(QStringLiteral("PRAGMA user_version = %1").arg(QString::number(Version)))) {
             qCritical() << "failed to set user version" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
-            setReady(false);
             return;
         }
     }
@@ -745,22 +839,14 @@ ScVodDataManager::setupDatabase() {
         if (!q.exec(CreateSql[i])) {
             qCritical() << "failed to create table" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
-            setReady(false);
             return;
         }
     }
 }
 
 void
-ScVodDataManager::setReady(bool value) {
-    if (m_Ready != value) {
-        m_Ready = value;
-        emit readyChanged();
-    }
-}
-
-void
 ScVodDataManager::setError(Error error) {
+    setState(State_Error);
     if (m_Error != error) {
         m_Error = error;
         emit errorChanged();
@@ -882,7 +968,6 @@ ScVodDataManager::dropTables() {
         if (!q.prepare(DropSql[i]) || !q.exec()) {
             qCritical() << "failed to drop table" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
-            setReady(false);
         }
     }
 }
@@ -1819,10 +1904,10 @@ void ScVodDataManager::fetchMetaData(qint64 urlShareId, const QString& url) {
     }
 
     VodmanMetaDataRequest r;
-    r.token = m_Vodman->newToken();
     r.vod_url_share_id = urlShareId;
-    m_VodmanMetaDataRequests.insert(r.token, r);
-    m_Vodman->startFetchMetaData(r.token, url);
+    auto token = m_Vodman->newToken();
+    m_VodmanMetaDataRequests.insert(token, r);
+    m_Vodman->startFetchMetaData(token, url);
 }
 
 void ScVodDataManager::fetchThumbnailFromUrl(qint64 rowid, const QString& url) {
@@ -2112,9 +2197,10 @@ ScVodDataManager::cancelFetchMetaData(qint64 rowid) {
 
     QSqlQuery q(m_Database);
 
-    if (!q.prepare(QStringLiteral(
-"SELECT u.id FROM vods AS v INNER JOIN vod_url_share "
-"AS u ON v.vod_url_share_id=u.id WHERE v.id=?"))) {
+    static const QString sql = QStringLiteral(
+                "SELECT vod_url_share_id FROM vods WHERE id=?");
+
+    if (!q.prepare(sql)) {
         qCritical() << "failed to prepare query" << q.lastError();
         return;
     }
@@ -2707,7 +2793,7 @@ ScVodDataManager::batchAddVods() {
         m_AddQueue.pop_front();
     }
 
-    if (!records.isEmpty()) {
+    if (!records.isEmpty() && ready()) {
         _addVods(records);
     }
 }
@@ -3035,7 +3121,6 @@ ScVodDataManager::updateSql1(QSqlQuery& q) {
         if (!q.exec(Sql[i])) {
             qCritical() << "failed to upgrade database from v1 to v2" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
-            setReady(false);
             return;
         }
     }
@@ -3189,7 +3274,6 @@ Exit:
     return;
 Error:
     setError(Error_CouldntCreateSqlTables);
-    setReady(false);
     goto Exit;
 }
 
@@ -3233,4 +3317,14 @@ ScVodDataManager::getVodEndOffset(qint64 rowid, int offset, int vodLengthS) cons
     }
 
     return vodLengthS;
+}
+
+void
+ScVodDataManager::setState(State state) {
+    m_State = state;
+}
+
+bool
+ScVodDataManager::ready() const {
+    return State_Ready == m_State;
 }
