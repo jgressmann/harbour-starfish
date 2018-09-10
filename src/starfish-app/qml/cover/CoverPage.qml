@@ -169,7 +169,7 @@ CoverBackground {
             // NOTE: the cover page will go though an activating->active->deactivating->inactive
             //       cycle if the device comes out of lock
             sqlModel.select = ""
-            sqlModel.select = "select count(*) from vods where seen=0"
+            sqlModel.select = "select count(*) from " + Global.defaultTable + " where " + Global.getNewVodsContstraints()
             _newVodCount = sqlModel.data(sqlModel.index(0, 0), 0)
             videoFrameImage.source = "" // force reload
             videoFrameImage.source = Global.videoCoverPath

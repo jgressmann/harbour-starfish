@@ -61,7 +61,7 @@ Page {
         }
 
         TextField {
-            width: parent.width
+            width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             label: "Max concurrent meta data downloads"
             text: settingNetworkMaxConcurrentMetaDataDownloads.value.toFixed(0)
@@ -123,7 +123,7 @@ Page {
 
         TextField {
             enabled: settingNetworkAutoUpdate.value
-            width: parent.width
+            width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             label: "Minutes between checks"
             text: settingNetworkAutoUpdateIntervalM.value.toFixed(0)
@@ -193,7 +193,7 @@ Page {
         }
 
         TextField {
-            width: parent.width
+            width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             label: "Number of recently watched videos to keep"
             text: settingPlaybackRecentVideosToKeep.value.toFixed(0)
@@ -230,6 +230,42 @@ Page {
             onCheckedChanged: {
                 console.debug("continue playback in cover mode=" + checked)
                 settingPlaybackPauseInCoverMode.value = checked
+            }
+        }
+
+        SectionHeader {
+            text: "New"
+        }
+
+        TextField {
+            width: root.width
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
+            label: "Number of days to keep a VOD in 'New'"
+            text: settingNewWindowDays.value.toFixed(0)
+            EnterKey.iconSource: "image://theme/icon-m-enter-next"
+            EnterKey.onClicked: focus = false
+            validator: IntValidator {
+                bottom: 1
+            }
+
+            onTextChanged: {
+                console.debug("text: " + text)
+                if (acceptableInput) {
+                    var number = parseFloat(text)
+                    console.debug("number: " + number)
+                    if (typeof(number) === "number") {
+                        settingNewWindowDays.value = number
+                    }
+                }
+            }
+        }
+
+        TextSwitch {
+            text: "Remove watched VODs from 'New'"
+            checked: settingNewRemoveSeen.value
+            onCheckedChanged: {
+                console.debug("remove seen vods from new=" + checked)
+                settingNewRemoveSeen.value = checked
             }
         }
 

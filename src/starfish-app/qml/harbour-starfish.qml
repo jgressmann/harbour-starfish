@@ -190,6 +190,18 @@ ApplicationWindow {
             key: "/stats/no_updates"
             defaultValue: 0
         }
+
+        ConfigurationValue {
+            id: settingNewWindowDays
+            key: "/new/window_days"
+            defaultValue: 30
+        }
+
+        ConfigurationValue {
+            id: settingNewRemoveSeen
+            key: "/new/remove_seen"
+            defaultValue: true
+        }
     }
 
     RecentlyUsedModel {
@@ -377,6 +389,10 @@ ApplicationWindow {
         }
 
         Global.deleteVodNotification = deleteVodNotification
+        Global.getNewVodsContstraints = function () {
+            return "match_date>=date('now', '-" + settingNewWindowDays.value.toFixed(0) + " days')" +
+                                    (settingNewRemoveSeen.value ? " and seen=0" : "")
+        }
     }
 
     function _setScraper() {

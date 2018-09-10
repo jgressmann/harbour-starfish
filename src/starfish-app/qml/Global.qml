@@ -43,6 +43,7 @@ Item { // Components can't declare functions
     property var playVideoHandler
     property var videoPlayerPage
     property Notification deleteVodNotification
+    property var getNewVodsContstraints
 //    property bool _pausedPlayback: false
 //    property int _pausedCount: 0
 //    readonly property string autoUpdateLastTimestampKey: "/update_timestamp"

@@ -32,7 +32,8 @@ BasePage {
     objectName: "NewPage"
 
     property var itemPlaying: null
-    readonly property string _table: Global.defaultTable
+    property string table
+    property string constraints: ""
 
     SqlVodModel {
         id: sqlModel
@@ -44,7 +45,9 @@ BasePage {
             x["length"] = "vod_length"
             return x
         }
-        select: "select " + columns.join(",") + " from " + _table + " where seen=0 order by match_date desc, event_full_name asc, match_name asc"
+        select: "select " + columns.join(",") + " from " + table + " where "
+                + (constraints.length > 0 ? constraints : "1=1")
+                + " order by match_date desc, event_full_name asc, match_name asc"
     }
 
     SilicaFlickable {
@@ -83,7 +86,7 @@ BasePage {
                     rowId: vod_id
                     startOffset: offset
                     baseOffset: offset
-                    table: _table
+                    table: page.table
                     length: vod_length
 
                     onClicked: {

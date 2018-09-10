@@ -39,6 +39,8 @@ BasePage {
             id: newVodsItem
             contentHeight: visible ? Global.itemHeight : 0
 
+            property string constraints
+
             Label {
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
@@ -50,18 +52,62 @@ BasePage {
             }
 
             onClicked: {
-                pageStack.push(Qt.resolvedUrl("NewPage.qml"))
+                pageStack.push(
+                            Qt.resolvedUrl("NewPage.qml"),
+                            {
+                                table: Global.defaultTable,
+                                constraints: constraints
+                            })
             }
 
             SqlVodModel {
                 id: newModel
                 dataManager: VodDataManager
                 columns: ["count"]
+            }
+
+            function update() {
+                constraints = Global.getNewVodsContstraints()
+                newModel.select = "select count(*) from " + Global.defaultTable + " where " + constraints
+                visible = newModel.data(newModel.index(0, 0)) > 0
+            }
+        }
+
+        ListItem {
+            id: unseenVodsItem
+            contentHeight: visible ? Global.itemHeight : 0
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: page.width - 2*x
+
+                text: qsTr("Not yet watched")
+
+                font.pixelSize: Global.labelFontSize
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            onClicked: {
+                pageStack.push(
+                            Qt.resolvedUrl("FilterPage.qml"),
+                            {
+                                title: VodDataManager.label("game"),
+                                table: Global.defaultTable,
+                                where: " where seen=0",
+                                key: "game",
+                                grid: true,
+                            })
+            }
+
+            SqlVodModel {
+                id: unseenModel
+                dataManager: VodDataManager
+                columns: ["count"]
                 select: "select count(*) from vods where seen=0"
             }
 
             function update() {
-                visible = newModel.data(newModel.index(0, 0)) > 0
+                visible = unseenModel.data(unseenModel.index(0, 0)) > 0
             }
         }
 
@@ -228,6 +274,7 @@ BasePage {
 
             offlineVodsItem.update()
             newVodsItem.update()
+            unseenVodsItem.update()
 
 //            // THIS doens't work for some reason
 //            console.debug("playing match item " + page.itemPlaying + " " + typeof(page.itemPlaying))

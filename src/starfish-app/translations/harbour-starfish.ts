@@ -30,6 +30,10 @@
         <source>Offline available</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Not yet watched</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewPage</name>
