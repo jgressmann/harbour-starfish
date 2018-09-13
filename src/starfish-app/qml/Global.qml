@@ -297,6 +297,15 @@ Item { // Components can't declare functions
         }
     }
 
+    function openNewVodPage(pageStack) {
+        pageStack.push(
+                    Qt.resolvedUrl("pages/NewPage.qml"),
+                    {
+                        table: defaultTable,
+                        constraints: getNewVodsContstraints()
+                    })
+    }
+
     SqlVodModel {
         id: _model
         columns: ["count"]

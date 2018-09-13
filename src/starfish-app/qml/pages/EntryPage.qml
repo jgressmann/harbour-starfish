@@ -51,14 +51,7 @@ BasePage {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            onClicked: {
-                pageStack.push(
-                            Qt.resolvedUrl("NewPage.qml"),
-                            {
-                                table: Global.defaultTable,
-                                constraints: constraints
-                            })
-            }
+            onClicked: Global.openNewVodPage(pageStack)
 
             SqlVodModel {
                 id: newModel
