@@ -45,6 +45,7 @@
 #include <QUrlQuery>
 #include <QMimeDatabase>
 #include <QMimeData>
+#include <stdio.h>
 
 #ifndef _countof
 #   define _countof(x) (sizeof(x)/sizeof((x)[0]))
@@ -139,6 +140,211 @@ void ScWorker::process() {
     emit finished();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+void DataDirectoryMover::move(const QString& currentDir, const QString& targetDir) {
+    _move(currentDir, targetDir);
+    deleteLater();
+}
+
+bool DataDirectoryMover::mountPoint(const QString& dir, QByteArray* mountPoint) {
+    QProcess process;
+    QStringList args;
+    args << QStringLiteral("-L") << QStringLiteral("-c") << QStringLiteral("%m") << dir;
+    process.start(QStringLiteral("stat"), args, QIODevice::ReadOnly);
+
+    // Wait for it to start
+    if (!process.waitForStarted()) {
+        emit dataDirectoryChanging(ScVodDataManager::DDCT_Finished, dir, 0, ScVodDataManager::Error_ProcessOutOfResources, QStringLiteral("Failed to start process"));
+        return false;
+    }
+
+    if (!process.waitForFinished()) {
+        process.kill();
+        emit dataDirectoryChanging(ScVodDataManager::DDCT_Finished, dir, 0, ScVodDataManager::Error_ProcessTimeout, QStringLiteral("Timeout after 30 s"));
+        return false;
+    }
+
+    if (process.exitStatus() != QProcess::NormalExit) {
+        emit dataDirectoryChanging(ScVodDataManager::DDCT_Finished, dir, 0, ScVodDataManager::Error_ProcessCrashed, QString());
+        return false;
+    }
+
+    if (process.exitCode() != 0) {
+        process.setReadChannel(QProcess::StandardError);
+        emit dataDirectoryChanging(ScVodDataManager::DDCT_Finished, dir, 0, ScVodDataManager::Error_ProcessFailed, QString::fromLocal8Bit(process.readAll()));
+        return false;
+    }
+
+    *mountPoint = process.readAll();
+    if (mountPoint->isEmpty() || (*mountPoint)[0] != '/') {
+        emit dataDirectoryChanging(
+                    ScVodDataManager::DDCT_Finished,
+                    dir,
+                    0,
+                    ScVodDataManager::Error_ProcessFailed,
+                    QStringLiteral("'stat %1' output: '%2'").arg(args.join(" "), QString::fromLocal8Bit(*mountPoint)));
+        return false;
+    }
+
+    return true;
+}
+
+void DataDirectoryMover::_move(const QString& currentDir, const QString& targetDir) {
+    QDir d(QDir(targetDir).canonicalPath());
+    if (!d.exists()) {
+        if (!d.mkpath(d.absolutePath())) {
+            qWarning() << "failed to create" << d.absolutePath();
+            emit dataDirectoryChanging(ScVodDataManager::DDCT_Finished, targetDir, 0, ScVodDataManager::Error_ProcessOutOfResources, QStringLiteral("Failed to create target directory").arg(targetDir));
+            return;
+        }
+    }
+
+    QByteArray currentMountPoint, targetMountPoint;
+
+
+    if (!mountPoint(currentDir, &currentMountPoint)) {
+        return;
+    }
+
+    if (!mountPoint(targetDir, &targetMountPoint)) {
+        return;
+    }
+
+    const QString names[] = {
+        QStringLiteral("/meta/"),
+        QStringLiteral("/thumbnails/"),
+        QStringLiteral("/vods/"),
+        QStringLiteral("/icons/"),
+    };
+
+    if (targetMountPoint == currentMountPoint) {
+        // move dirs
+        QDir d;
+        for (size_t i = 0; i < _countof(names); ++i) {
+            auto src = currentDir + names[i];
+            auto dst = targetDir + names[i];
+            if (!d.rename(src, dst)) {
+                // ouch
+                emit dataDirectoryChanging(
+                            ScVodDataManager::DDCT_Finished,
+                            src,
+                            0.25f * i,
+                            ScVodDataManager::Error_RenameFailed,
+                            QStringLiteral("Failed to move %1 to %2").arg(src, dst));
+                return;
+            }
+
+            emit dataDirectoryChanging(
+                        ScVodDataManager::DDCT_Move,
+                        src,
+                        0.25f * i,
+                        0,
+                        QStringLiteral("Moved %1 to %2").arg(src, dst));
+        }
+
+
+    } else {
+        // rsync dirs
+        QProcess process;
+//        connect(&process, SIGNAL(finished(int, QProcess::ExitStatus)),
+//                this, SLOT(onProcessFinished(int, QProcess::ExitStatus)));
+//        connect(&process, SIGNAL(error(QProcess::ProcessError)),
+//                this, SLOT(onProcessError(QProcess::ProcessError)));
+        connect(&process, &QProcess::readyReadStandardOutput,
+                this, &DataDirectoryMover::onProcessReadyRead);
+
+
+        // copy dirs to new fs
+        QStringList args;
+        for (size_t i = 0; i < _countof(names); ++i) {
+            auto src = currentDir + names[i];
+
+            args.clear();
+            args << QStringLiteral("-a") << src << targetDir;
+            process.start(QStringLiteral("rsync"), args, QIODevice::ReadOnly);
+            process.waitForFinished(-1);
+
+            if (m_Canceled != 0) {
+                emit dataDirectoryChanging(
+                            ScVodDataManager::DDCT_Finished,
+                            QString(),
+                            0.25f * i,
+                            ScVodDataManager::Error_Canceled,
+                            QString());
+                return;
+            }
+
+            if (process.exitCode() != 0) {
+                auto errorString = process.readAllStandardError();
+                emit dataDirectoryChanging(
+                            ScVodDataManager::DDCT_Finished,
+                            src,
+                            0.25f * i,
+                            ScVodDataManager::Error_ProcessFailed,
+                            QStringLiteral("'rsync %1' failed: %2").arg(args.join(" "), QString::fromLocal8Bit(errorString)));
+            }
+
+            emit dataDirectoryChanging(
+                        ScVodDataManager::DDCT_Copy,
+                        src,
+                        0.25f * i,
+                        0,
+                        QStringLiteral("Copied %1 to %2").arg(src, targetDir + names[i]));
+        }
+
+
+        // remove source dirs
+        for (size_t i = 0; i < _countof(names); ++i) {
+            auto src = currentDir + names[i];
+            if (!QDir(src).removeRecursively()) {
+                emit dataDirectoryChanging(
+                            ScVodDataManager::DDCT_Remove,
+                            src,
+                            1,
+                            ScVodDataManager::Error_Warning,
+                            QStringLiteral("Failed to remove directory %1").arg(src));
+            }
+
+            emit dataDirectoryChanging(
+                        ScVodDataManager::DDCT_Remove,
+                        src,
+                        1,
+                        0,
+                        QStringLiteral("Removed directory %1").arg(src));
+        }
+    }
+
+    emit dataDirectoryChanging(
+                ScVodDataManager::DDCT_Finished,
+                QString(),
+                1,
+                0,
+                QString());
+}
+
+void DataDirectoryMover::cancel() {
+    m_Canceled = 1;
+}
+
+//void DataDirectoryMover::onProcessFinished(int, QProcess::ExitStatus) {
+
+//}
+//void DataDirectoryMover::onProcessError(QProcess::ProcessError) {
+
+//}
+
+void DataDirectoryMover::onProcessReadyRead() {
+    QProcess* process = qobject_cast<QProcess*>(QObject::sender());
+    Q_ASSERT(process);
+
+    if (0 != m_Canceled) {
+        process->kill();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 ScVodDataManager::~ScVodDataManager() {
     qDebug() << "dtor entry";
 
@@ -177,6 +383,7 @@ ScVodDataManager::~ScVodDataManager() {
     }
 
     m_AddThread.quit();
+    m_AddThread.wait();
 
     while (true) {
         {
@@ -219,6 +426,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     , m_Manager(nullptr)
     , m_ClassfierRequest(nullptr)
     , m_SqlPatchesRequest(nullptr)
+    , m_DataDirectoryMover(nullptr)
     , m_State(State_Initializing)
 {
     m_Manager = new QNetworkAccessManager(this);
@@ -3348,16 +3556,22 @@ QString ScVodDataManager::dataDirectory() const
     return getPersistedValue(QStringLiteral("data-dir"), QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
 }
 
-void ScVodDataManager::moveDataDirectory(QString& targetDirectory)
+void ScVodDataManager::moveDataDirectory(const QString& _targetDirectory)
 {
     QMutexLocker g(&m_Lock);
     RETURN_IF_ERROR;
 
-    if (targetDirectory.isEmpty()) {
+    if (busy()) {
+        qWarning() << "data manager is busy; refusing to move directory to" << _targetDirectory;
+        return;
+    }
+
+    if (_targetDirectory.isEmpty()) {
         qWarning() << "empty target dir";
         return;
     }
 
+    QString targetDirectory = _targetDirectory;
     if (targetDirectory.endsWith('/')) {
         if (targetDirectory.size() == 1) {
             qWarning() << "refusing to move to root directory";
@@ -3367,97 +3581,108 @@ void ScVodDataManager::moveDataDirectory(QString& targetDirectory)
         targetDirectory.chop(1);
     }
 
-    QDir d(QDir(targetDirectory).canonicalPath());
-    if (!d.exists()) {
-        if (!d.mkpath(d.absolutePath())) {
-            qWarning() << "failed to create" << d.absolutePath();
-            return;
-        }
+    // unblock when done
+    suspendVodsChangedEvents();
+
+    m_DataDirectoryMover = new DataDirectoryMover;
+    m_DataDirectoryMover->moveToThread(&m_AddThread);
+    connect(&m_AddThread, &QThread::finished, m_DataDirectoryMover, &QObject::deleteLater);
+    connect(m_DataDirectoryMover, &DataDirectoryMover::dataDirectoryChanging, this, &ScVodDataManager::onDataDirectoryChanging);
+
+//    QDir d(QDir(targetDirectory).canonicalPath());
+//    if (!d.exists()) {
+//        if (!d.mkpath(d.absolutePath())) {
+//            qWarning() << "failed to create" << d.absolutePath();
+//            return;
+//        }
+//    }
+
+//    const auto currentDirectory = dataDirectory();
+//    auto work = [currentDirectory, targetDirectory]() {
+
+//    };
+
+
+
+//    QStringList args;
+//    args << QStringLiteral("-L") << QStringLiteral("-c") << QStringLiteral("%m");
+
+//    QByteArray currentMountPoint, targetMountPoint;
+
+//    auto fun = [&](const QString& dir, QByteArray* mountPoint) {
+//        //    process.setProcessChannelMode(QProcess::MergedChannels);
+//            QProcess process;
+//            args << dir;
+//            process.start(QStringLiteral("stat"), args, QIODevice::ReadOnly);
+
+//            // Wait for it to start
+//            if (!process.waitForStarted()) {
+//                emit dataDirectoryChanging(DDCT_Finished, dir, 0, Error_ProcessOutOfResources, QStringLiteral("Failed to start process"));
+//                return false;
+//            }
+
+//            if (!process.waitForFinished()) {
+//                process.kill();
+//                emit dataDirectoryChanging(DDCT_Finished, dir, 0, Error_ProcessTimeout, QStringLiteral("Timeout after 30 s"));
+//                return false;
+//            }
+
+//            if (process.exitStatus() != QProcess::NormalExit) {
+//                emit dataDirectoryChanging(DDCT_Finished, dir, 0, Error_ProcessCrashed, QString());
+//                return false;
+//            }
+
+//            if (process.exitCode() != 0) {
+//                process.setReadChannel(QProcess::StandardError);
+//                emit dataDirectoryChanging(DDCT_Finished, dir, 0, Error_ProcessFailed, QString::fromLocal8Bit(process.readAll()));
+//                return false;
+//            }
+
+//            *mountPoint = process.readAll();
+//            if (mountPoint->isEmpty() || (*mountPoint)[0] != '/') {
+//                emit dataDirectoryChanging(
+//                            DDCT_Finished,
+//                            dataDirectory(),
+//                            0,
+//                            Error_ProcessFailed,
+//                            QStringLiteral("'stat %1' output: '%2'").arg(args.join(" "), QString::fromLocal8Bit(*mountPoint)));
+//                return false;
+//            }
+
+//            args.pop_back();
+//            return true;
+//    };
+
+//    if (!fun(dataDirectory(), &currentMountPoint)) {
+//        return;
+//    }
+
+//    if (!fun(targetDirectory, &targetMountPoint)) {
+//        return;
+//    }
+
+//    if (targetMountPoint == currentMountPoint) {
+//        // move dirs
+//    } else {
+//        // rsync dirs
+//    }
+}
+
+void
+ScVodDataManager::cancelMoveDataDirectory() {
+    QMutexLocker g(&m_Lock);
+    if (m_DataDirectoryMover) {
+        m_DataDirectoryMover->cancel();
+    }
+}
+
+void
+ScVodDataManager::onDataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription) {
+    QMutexLocker g(&m_Lock);
+    if (DDCT_Finished == changeType) {
+        m_DataDirectoryMover = nullptr;
+        resumeVodsChangedEvents();
     }
 
-    QStringList args;
-    args << QStringLiteral("-L") << QStringLiteral("-c") << QStringLiteral("%m");
-
-    QProcess process;
-//    process.setProcessChannelMode(QProcess::MergedChannels);
-    args << dataDirectory();
-    process.start(QStringLiteral("stat"), args, QIODevice::ReadOnly);
-
-    // Wait for it to start
-    if (!process.waitForStarted()) {
-        emit dataDirectoryChanging(DDCT_Finished, dataDirectory(), 0, Error_ProcessOutOfResources, QStringLiteral("Failed to start process"));
-        return;
-    }
-
-    if (!process.waitForFinished()) {
-        process.kill();
-        emit dataDirectoryChanging(DDCT_Finished, dataDirectory(), 0, Error_ProcessTimeout, QStringLiteral("Timeout after 30 s"));
-        return;
-    }
-
-    if (process.exitStatus() != QProcess::NormalExit) {
-        emit dataDirectoryChanging(DDCT_Finished, dataDirectory(), 0, Error_ProcessCrashed, QString());
-        return;
-    }
-
-    if (process.exitCode() != 0) {
-        process.setReadChannel(QProcess::StandardError);
-        emit dataDirectoryChanging(DDCT_Finished, dataDirectory(), 0, Error_ProcessFailed, QString::fromLocal8Bit(process.readAll()));
-        return;
-    }
-
-    auto currentMountPoint = process.readAll();
-    if (currentMountPoint.isEmpty() || currentMountPoint[0] != '/') {
-        emit dataDirectoryChanging(
-                    DDCT_Finished,
-                    dataDirectory(),
-                    0,
-                    Error_ProcessFailed,
-                    QStringLiteral("'stat %1' output: '%2'").arg(args.join(" "), QString::fromLocal8Bit(currentMountPoint)));
-        return;
-    }
-
-    args.pop_back();
-    args << d.absolutePath();
-    process.start(QStringLiteral("stat"), args, QIODevice::ReadOnly);
-
-    // Wait for it to start
-    if (!process.waitForStarted()) {
-        emit dataDirectoryChanging(DDCT_Finished, d.absolutePath(), 0, Error_ProcessOutOfResources, QStringLiteral("Failed to start process"));
-        return;
-    }
-
-    if (!process.waitForFinished()) {
-        process.kill();
-        emit dataDirectoryChanging(DDCT_Finished, d.absolutePath(), 0, Error_ProcessTimeout, QStringLiteral("Timeout after 30 s"));
-        return;
-    }
-
-    if (process.exitStatus() != QProcess::NormalExit) {
-        emit dataDirectoryChanging(DDCT_Finished, d.absolutePath(), 0, Error_ProcessCrashed, QString());
-        return;
-    }
-
-    if (process.exitCode() != 0) {
-        process.setReadChannel(QProcess::StandardError);
-        emit dataDirectoryChanging(DDCT_Finished, d.absolutePath(), 0, Error_ProcessFailed, QString::fromLocal8Bit(process.readAll()));
-        return;
-    }
-
-    auto targetMountPoint = process.readAll();
-    if (targetMountPoint.isEmpty() || targetMountPoint[0] != '/') {
-        emit dataDirectoryChanging(
-                    DDCT_Finished,
-                    dataDirectory(),
-                    0,
-                    Error_ProcessFailed,
-                    QStringLiteral("'stat %1' output: '%2'").arg(args.join(" "), QString::fromLocal8Bit(targetMountPoint)));
-        return;
-    }
-
-    if (targetMountPoint == currentMountPoint) {
-        // move dirs
-    } else {
-        // rsync dirs
-    }
+    emit dataDirectoryChanging(changeType, path, progress, error, errorDescription);
 }

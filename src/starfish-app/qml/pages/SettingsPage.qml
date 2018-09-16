@@ -42,6 +42,79 @@ Page {
         _targetdataDirectory = _currentdataDirectory
     }
 
+    Component {
+        id: confirmMovePage
+        Dialog {
+
+            Flickable {
+                anchors.fill: parent
+                interactive: false
+
+                DialogHeader {
+                    id: dialogHeader
+                    title: "Confirm data directory move"
+                    acceptText: "Move"
+                }
+
+                Label {
+                    color: Theme.highlightColor
+                    anchors.top: dialogHeader.bottom
+                    anchors.bottom: parent.bottom
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2*x
+                    wrapMode: Text.Wrap
+                    text:
+"The application's data will be moved to " + _targetdataDirectory + ".
+This operation could take a long while. During this time you will not be able to use the application.
+
+Do you want to continue?"
+                }
+            }
+
+
+            onAccepted: {
+                pageStack.push(movePage)
+            }
+        }
+    }
+
+    Component {
+        id: movePage
+        Page {
+            PageHeader {
+                title: "Data directory move"
+            }
+
+            BusyIndicator {
+                id: busyIndicator
+                running: true
+                size: BusyIndicatorSize.Large
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Component.onCompleted: {
+                VodDataManager.dataDirectoryChanging.connect(dataDirectoryChanging)
+                VodDataManager.moveDataDirectory(_targetdataDirectory)
+            }
+
+            function dataDirectoryChanging(changeType, path, progress, error, errorDescription) {
+                console.debug("change type=" + changeType + ", path=" + path + ", progress=" + progress
+                              + ", error=" + error + ", error desc=" + errorDescription)
+            }
+        }
+    }
+
+    Component {
+        id: filePickerPage
+        FilePickerPage {
+            //nameFilters: [ '*.pdf', '*.doc' ]
+            nameFilters: []
+            onSelectedContentPropertiesChanged: {
+                _targetdataDirectory = saveDirectoryTextField.text = _getDirectory(selectedContentProperties.filePath)
+            }
+        }
+    }
+
     VisualItemModel {
         id: model
 
@@ -49,95 +122,48 @@ Page {
             text: "Data"
         }
 
-        Column {
-            spacing: Theme.paddingSmall
-            width: parent.width
 
-            ComboBox {
-                id: saveDirectoryComboBox
-                width: parent.width
-                label: "Directory"
-                menu: ContextMenu {
-                    MenuItem { text: "Cache" }
-                    MenuItem { text: "Custom" }
-                }
+        ComboBox {
+            id: saveDirectoryComboBox
+            width: root.width
+            label: "Directory"
+            menu: ContextMenu {
+                MenuItem { text: "Cache" }
+                MenuItem { text: "Custom" }
             }
+        }
 
-            TextField {
-                id: saveDirectoryTextField
-                width: parent.width
-                text: settingDefaultDirectory.value
-                label: "Directory for meta data, thumbnails, vods, etc."
-                placeholderText: "Data directory"
-                EnterKey.iconSource: "image://theme/icon-m-enter-close"
-                EnterKey.onClicked: focus = false
+        TextField {
+            id: saveDirectoryTextField
+            width: root.width
+            text: _currentdataDirectory
+            label: "Directory for VOD (meta) data"
+            placeholderText: "Data directory"
+            EnterKey.iconSource: "image://theme/icon-m-enter-close"
+            EnterKey.onClicked: focus = false
 
-                Component.onCompleted: {
-                    // combobox initially has index 0 which may be wrong
-                    _onSaveDirectoryTextFieldTextChanged()
-                }
+            Component.onCompleted: {
+                // combobox initially has index 0 which may be wrong
+                _onSaveDirectoryTextFieldTextChanged()
             }
+        }
+
+        ButtonLayout {
+            width: root.width
+//            spacing: Theme.paddingSmall
 
             Button {
-                anchors.horizontalCenter: parent.horizontalCenter
+//                anchors.horizontalCenter: parent.horizontalCenter
                 text: "Pick directory"
                 onClicked: pageStack.push(filePickerPage)
             }
 
             Button {
                 enabled: !!_targetdataDirectory &&
-                         _currentdataDirectory !== _targetdataDirectory &&
-                         App.isDir(_targetdataDirectory)
-                anchors.horizontalCenter: parent.horizontalCenter
+                         _currentdataDirectory !== _targetdataDirectory
+//                anchors.horizontalCenter: parent.horizontalCenter
                 text: "Apply change"
                 onClicked: pageStack.push(confirmMovePage)
-            }
-
-            Component {
-                id: confirmMovePage
-                Dialog {
-                    property string targetDirectory
-
-                    Column {
-                        width: parent.width - 2*x
-                        x: Theme.horizontalPageMargin
-
-                        DialogHeader { }
-
-                        Label {
-                            width: parent.width
-                            text: "The application's data will be moved to " + targetDirectory + ".
-This operation could take a long while. During this time you will not be able to use the application. Do you want to continue?"
-                        }
-
-                        BusyIndicator {
-                            id: busyIndicator
-//                            running: true
-                            size: BusyIndicatorSize.Large
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    onAccepted: {
-                        busyIndicator.running = true
-                        VodDataManager.moveDataDirectory(targetDirectory)
-                    }
-
-                    Component.onCompleted: {
-                        //VodDataManager.moveDataDirectory(targetDirectory)
-                    }
-                }
-            }
-
-            Component {
-                id: filePickerPage
-                FilePickerPage {
-                    //nameFilters: [ '*.pdf', '*.doc' ]
-                    nameFilters: []
-                    onSelectedContentPropertiesChanged: {
-                        _targetdataDirectory = saveDirectoryTextField.text = _getDirectory(selectedContentProperties.filePath)
-                    }
-                }
             }
         }
 
@@ -147,7 +173,7 @@ This operation could take a long while. During this time you will not be able to
 
         ComboBox {
             id: bearerModeComboBox
-            width: parent.width
+            width: root.width
             label: "Network connection type"
             menu: ContextMenu {
                 MenuItem { text: "Autodetect" }
@@ -187,6 +213,7 @@ This operation could take a long while. During this time you will not be able to
         }
 
         ComboBox {
+            width: root.width
             label: "VOD site"
             description: "This site is used to check for new VODs."
             menu: ContextMenu {
@@ -216,6 +243,7 @@ This operation could take a long while. During this time you will not be able to
         }
 
         TextSwitch {
+
             text: "Periodically check for new VODs"
             checked: settingNetworkAutoUpdate.value
             onCheckedChanged: {
@@ -263,6 +291,7 @@ This operation could take a long while. During this time you will not be able to
         }
 
         FormatComboBox {
+            width: root.width
             label: "Broadband"
             excludeAskEveryTime: false
             format: settingBroadbandDefaultFormat.value
@@ -273,6 +302,7 @@ This operation could take a long while. During this time you will not be able to
         }
 
         FormatComboBox {
+            width: root.width
             label: "Mobile"
             excludeAskEveryTime: false
             format: settingMobileDefaultFormat.value
@@ -416,9 +446,8 @@ This operation could take a long while. During this time you will not be able to
     }
 
     function _updateSaveDirectoryComboBox() {
-        settingDefaultDirectory.value = saveDirectoryTextField.text
-
-        if (settingDefaultDirectory.value === StandardPaths.cache) {
+        _targetdataDirectory = saveDirectoryTextField.text
+        if (saveDirectoryTextField.text === StandardPaths.cache) {
             saveDirectoryComboBox.currentIndex = 0
 //        } else if (settingDefaultDirectory.value === StandardPaths.videos) {
 //            saveDirectoryComboBox.currentIndex = 1
@@ -439,9 +468,10 @@ This operation could take a long while. During this time you will not be able to
             _targetdataDirectory = saveDirectoryTextField.text = StandardPaths.cache
             break
         default:
-            pageStack.push(filePickerPage)
+            //pageStack.push(filePickerPage)
             break
         }
     }
+
 }
 

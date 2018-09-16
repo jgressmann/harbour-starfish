@@ -64,6 +64,31 @@ private:
     void* m_Arg;
 };
 
+
+class DataDirectoryMover : public QObject
+{
+    Q_OBJECT
+public:
+    ~DataDirectoryMover() = default;
+    DataDirectoryMover() = default;
+signals:
+    void dataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
+public slots:
+    void move(const QString& currentDir, const QString& targetDir);
+    void cancel();
+//    void onProcessFinished(int, QProcess::ExitStatus);
+//    void onProcessError(QProcess::ProcessError);
+    void onProcessReadyRead();
+
+private:
+    void _move(const QString& currentDir, const QString& targetDir);
+    bool mountPoint(const QString& currentDir, QByteArray* mountPoint);
+private:
+    QAtomicInt m_Canceled;
+};
+
+
+
 class ScVodDataManager : public QObject {
 
     Q_OBJECT
@@ -88,7 +113,10 @@ public:
         Error_ProcessOutOfResources,
         Error_ProcessTimeout,
         Error_ProcessCrashed,
-        Error_ProcessFailed
+        Error_ProcessFailed,
+        Error_RenameFailed,
+        Error_Canceled,
+        Error_Warning,
     };
     Q_ENUMS(Error)
 
@@ -118,6 +146,7 @@ public:
         DDCT_StatCurrentDir,
         DDCT_StatTargetDir,
         DDCT_Copy,
+        DDCT_Remove,
         DDCT_Move,
         DDCT_Finished,
     };
@@ -173,7 +202,8 @@ public: //
     Q_INVOKABLE int getVodEndOffset(qint64 rowid, int startOffsetS, int vodLengthS) const;
     Q_INVOKABLE void clear();
     Q_INVOKABLE void clearCache(ClearFlags flags);
-    Q_INVOKABLE void moveDataDirectory(QString& targetDirectory);
+    Q_INVOKABLE void moveDataDirectory(const QString& targetDirectory);
+    Q_INVOKABLE void cancelMoveDataDirectory();
     QString dataDirectory() const;
     int sqlPatchLevel() const;
     Q_INVOKABLE void clearIcons();
@@ -247,6 +277,7 @@ private:
         QString url;
     };
 
+
 private slots:
     void onMetaDataDownloadCompleted(qint64 token, const VMVod& vod);
     void onFileDownloadChanged(qint64 token, const VMVodFileDownload& download);
@@ -254,6 +285,7 @@ private slots:
     void onDownloadFailed(qint64 token, int serviceErrorCode);
     void requestFinished(QNetworkReply* reply);
     void vodAddWorkerFinished();
+    void onDataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
 
 private:
     static bool tryGetEvent(QString& inoutSrc, QString* location);
@@ -312,6 +344,7 @@ private:
     QHash<qint64, VodmanFileRequest> m_VodmanFileRequests;
     QNetworkReply* m_ClassfierRequest;
     QNetworkReply* m_SqlPatchesRequest;
+    DataDirectoryMover* m_DataDirectoryMover;
     ScIcons m_Icons;
     ScClassifier m_Classifier;
     QString m_ThumbnailDir;
