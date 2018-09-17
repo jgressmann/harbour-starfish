@@ -81,7 +81,7 @@ public slots:
     void onProcessReadyRead();
 
 private:
-    void _move(const QString& currentDir, const QString& targetDir);
+    void _move(const QString& currentDir, QString targetDir);
     bool mountPoint(const QString& currentDir, QByteArray* mountPoint);
 private:
     QAtomicInt m_Canceled;
@@ -117,6 +117,7 @@ public:
         Error_RenameFailed,
         Error_Canceled,
         Error_Warning,
+        Error_StatFailed
     };
     Q_ENUMS(Error)
 
@@ -325,6 +326,8 @@ private:
     void applySqlPatches(const QByteArray& bytes);
     void setPersistedValue(QSqlQuery& query, const QString& key, const QString& value);
     void setState(State state);
+    void setDataDirectory(const QString& value);
+    void setDirectories();
     void updateSql1(QSqlQuery& q);
     void updateSql2(QSqlQuery& q);
     void updateSql3(QSqlQuery& q);

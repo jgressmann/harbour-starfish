@@ -42,65 +42,51 @@ Page {
         _targetdataDirectory = _currentdataDirectory
     }
 
-    Component {
-        id: confirmMovePage
-        Dialog {
-
-            Flickable {
-                anchors.fill: parent
-                interactive: false
-
-                DialogHeader {
-                    id: dialogHeader
-                    title: "Confirm data directory move"
-                    acceptText: "Move"
-                }
-
-                Label {
-                    color: Theme.highlightColor
-                    anchors.top: dialogHeader.bottom
-                    anchors.bottom: parent.bottom
-                    x: Theme.horizontalPageMargin
-                    width: parent.width - 2*x
-                    wrapMode: Text.Wrap
-                    text:
-"The application's data will be moved to " + _targetdataDirectory + ".
-This operation could take a long while. During this time you will not be able to use the application.
-
-Do you want to continue?"
-                }
-            }
-
-
-            onAccepted: {
-                pageStack.push(movePage)
-            }
+    onStatusChanged: {
+        switch (status) {
+        case PageStatus.Activating:
+            _currentdataDirectory = VodDataManager.dataDirectory
+            break
         }
     }
 
     Component {
-        id: movePage
-        Page {
-            PageHeader {
-                title: "Data directory move"
+        id: confirmMovePage
+        Dialog {
+
+            DialogHeader {
+                id: dialogHeader
+                title: "Confirm data directory move"
+                acceptText: "Move"
             }
 
-            BusyIndicator {
-                id: busyIndicator
-                running: true
-                size: BusyIndicatorSize.Large
-                anchors.verticalCenter: parent.verticalCenter
+            Label {
+                color: Theme.highlightColor
+                anchors.top: dialogHeader.bottom
+                anchors.bottom: parent.bottom
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2*x
+                wrapMode: Text.Wrap
+                text:
+"The application's data will be moved to " + _targetdataDirectory + ".
+This operation could take a good long while. During this time you will not be able to use the application.
+
+Do you want to continue?"
             }
 
-            Component.onCompleted: {
-                VodDataManager.dataDirectoryChanging.connect(dataDirectoryChanging)
-                VodDataManager.moveDataDirectory(_targetdataDirectory)
+//            acceptDestination:
+//            acceptDestinationAction: PageStackAction.Replace
+
+            // really don't know why the move page is created prior to the user accepting the dialog
+            onAccepted: {
+                pageStack.replace(
+                            Qt.resolvedUrl("MoveDataDirectoryPage.qml"),
+                            {
+                                "targetDirectory": _targetdataDirectory
+                            },
+                            PageStackAction.Immediate)
             }
 
-            function dataDirectoryChanging(changeType, path, progress, error, errorDescription) {
-                console.debug("change type=" + changeType + ", path=" + path + ", progress=" + progress
-                              + ", error=" + error + ", error desc=" + errorDescription)
-            }
         }
     }
 

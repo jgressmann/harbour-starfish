@@ -46,6 +46,10 @@
 #include <QMimeDatabase>
 #include <QMimeData>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 
 #ifndef _countof
 #   define _countof(x) (sizeof(x)/sizeof((x)[0]))
@@ -149,7 +153,8 @@ void DataDirectoryMover::move(const QString& currentDir, const QString& targetDi
 bool DataDirectoryMover::mountPoint(const QString& dir, QByteArray* mountPoint) {
     QProcess process;
     QStringList args;
-    args << QStringLiteral("-L") << QStringLiteral("-c") << QStringLiteral("%m") << dir;
+    // busybox doesn't have %m
+    args << QStringLiteral("-L") << QStringLiteral("-c") << QStringLiteral("%d") << dir;
     process.start(QStringLiteral("stat"), args, QIODevice::ReadOnly);
 
     // Wait for it to start
@@ -176,7 +181,7 @@ bool DataDirectoryMover::mountPoint(const QString& dir, QByteArray* mountPoint) 
     }
 
     *mountPoint = process.readAll();
-    if (mountPoint->isEmpty() || (*mountPoint)[0] != '/') {
+    if (mountPoint->isEmpty()) {
         emit dataDirectoryChanging(
                     ScVodDataManager::DDCT_Finished,
                     dir,
@@ -189,26 +194,53 @@ bool DataDirectoryMover::mountPoint(const QString& dir, QByteArray* mountPoint) 
     return true;
 }
 
-void DataDirectoryMover::_move(const QString& currentDir, const QString& targetDir) {
-    QDir d(QDir(targetDir).canonicalPath());
+void DataDirectoryMover::_move(const QString& currentDir, QString targetDir) {
+    qDebug() << "move from" << currentDir << "to" << targetDir;
+    QDir d(targetDir);
     if (!d.exists()) {
         if (!d.mkpath(d.absolutePath())) {
-            qWarning() << "failed to create" << d.absolutePath();
+            qWarning() << "failed to create" << targetDir;
             emit dataDirectoryChanging(ScVodDataManager::DDCT_Finished, targetDir, 0, ScVodDataManager::Error_ProcessOutOfResources, QStringLiteral("Failed to create target directory").arg(targetDir));
             return;
         }
     }
 
-    QByteArray currentMountPoint, targetMountPoint;
+    targetDir = d.absolutePath();
 
-
-    if (!mountPoint(currentDir, &currentMountPoint)) {
-        return;
+    dev_t device1, device2;
+    struct stat sb;
+    if (-1 == lstat(currentDir.toLocal8Bit().data(), &sb)) {
+        emit dataDirectoryChanging(
+                    ScVodDataManager::DDCT_Finished,
+                    currentDir,
+                    0,
+                    ScVodDataManager::Error_StatFailed,
+                    QStringLiteral("Failed to stat %1: %2 (%3)").arg(currentDir, QString::number(errno), QString::fromLocal8Bit(strerror(errno))));
     }
 
-    if (!mountPoint(targetDir, &targetMountPoint)) {
-        return;
+    device1 = sb.st_dev;
+
+    if (-1 == lstat(targetDir.toLocal8Bit().data(), &sb)) {
+        emit dataDirectoryChanging(
+                    ScVodDataManager::DDCT_Finished,
+                    targetDir,
+                    0,
+                    ScVodDataManager::Error_StatFailed,
+                    QStringLiteral("Failed to stat %1: %2 (%3)").arg(targetDir, QString::number(errno), QString::fromLocal8Bit(strerror(errno))));
     }
+
+    device2 = sb.st_dev;
+
+//    QByteArray currentMountPoint, targetMountPoint;
+
+
+//    if (!mountPoint(currentDir, &currentMountPoint)) {
+//        return;
+//    }
+
+//    if (!mountPoint(targetDir, &targetMountPoint)) {
+//        return;
+//    }
 
     const QString names[] = {
         QStringLiteral("/meta/"),
@@ -217,9 +249,10 @@ void DataDirectoryMover::_move(const QString& currentDir, const QString& targetD
         QStringLiteral("/icons/"),
     };
 
-    if (targetMountPoint == currentMountPoint) {
+    //if (targetMountPoint == currentMountPoint) {
+    if (device1 == device2) {
+        qDebug() << "directories are on the same device, using rename";
         // move dirs
-        QDir d;
         for (size_t i = 0; i < _countof(names); ++i) {
             auto src = currentDir + names[i];
             auto dst = targetDir + names[i];
@@ -244,6 +277,7 @@ void DataDirectoryMover::_move(const QString& currentDir, const QString& targetD
 
 
     } else {
+        qDebug() << "directories are on the diffrent device, using rsync";
         // rsync dirs
         QProcess process;
 //        connect(&process, SIGNAL(finished(int, QProcess::ExitStatus)),
@@ -316,7 +350,7 @@ void DataDirectoryMover::_move(const QString& currentDir, const QString& targetD
 
     emit dataDirectoryChanging(
                 ScVodDataManager::DDCT_Finished,
-                QString(),
+                targetDir,
                 1,
                 0,
                 QString());
@@ -350,6 +384,8 @@ ScVodDataManager::~ScVodDataManager() {
 
     setState(State_Finalizing);
     qDebug() << "set finalizing";
+
+    cancelMoveDataDirectory();
 
     if (m_Vodman) {
         delete m_Vodman;
@@ -443,11 +479,6 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(m_Vodman, &ScVodman::downloadFailed,
             this, &ScVodDataManager::onDownloadFailed);
 
-    m_MetaDataDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/meta/";
-    m_ThumbnailDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/thumbnails/";
-    m_VodDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/vods/";
-    m_IconDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/icons/";
-
     m_Error = Error_None;
     m_SuspendedVodsChangedEventCount = 0;
 
@@ -468,11 +499,8 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         return;
     }
 
-    const auto dataDir = dataDirectory();
-    m_MetaDataDir = dataDir + QStringLiteral("/meta/");
-    m_ThumbnailDir = dataDir + QStringLiteral("/thumbnails/");
-    m_VodDir = dataDir + QStringLiteral("/vods/");
-    m_IconDir = dataDir + QStringLiteral("/icons/");
+    setDirectories();
+
 
     d.mkpath(m_MetaDataDir);
     d.mkpath(m_ThumbnailDir);
@@ -3556,6 +3584,20 @@ QString ScVodDataManager::dataDirectory() const
     return getPersistedValue(QStringLiteral("data-dir"), QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
 }
 
+void ScVodDataManager::setDataDirectory(const QString& value)
+{
+    return setPersistedValue(QStringLiteral("data-dir"), value);
+}
+
+void ScVodDataManager::setDirectories()
+{
+    const auto dataDir = dataDirectory();
+    m_MetaDataDir = dataDir + QStringLiteral("/meta/");
+    m_ThumbnailDir = dataDir + QStringLiteral("/thumbnails/");
+    m_VodDir = dataDir + QStringLiteral("/vods/");
+    m_IconDir = dataDir + QStringLiteral("/icons/");
+}
+
 void ScVodDataManager::moveDataDirectory(const QString& _targetDirectory)
 {
     QMutexLocker g(&m_Lock);
@@ -3587,92 +3629,22 @@ void ScVodDataManager::moveDataDirectory(const QString& _targetDirectory)
     m_DataDirectoryMover = new DataDirectoryMover;
     m_DataDirectoryMover->moveToThread(&m_AddThread);
     connect(&m_AddThread, &QThread::finished, m_DataDirectoryMover, &QObject::deleteLater);
-    connect(m_DataDirectoryMover, &DataDirectoryMover::dataDirectoryChanging, this, &ScVodDataManager::onDataDirectoryChanging);
+    connect(m_DataDirectoryMover, &DataDirectoryMover::dataDirectoryChanging, this, &ScVodDataManager::onDataDirectoryChanging, Qt::QueuedConnection);
 
-//    QDir d(QDir(targetDirectory).canonicalPath());
-//    if (!d.exists()) {
-//        if (!d.mkpath(d.absolutePath())) {
-//            qWarning() << "failed to create" << d.absolutePath();
-//            return;
-//        }
-//    }
-
-//    const auto currentDirectory = dataDirectory();
-//    auto work = [currentDirectory, targetDirectory]() {
-
-//    };
-
-
-
-//    QStringList args;
-//    args << QStringLiteral("-L") << QStringLiteral("-c") << QStringLiteral("%m");
-
-//    QByteArray currentMountPoint, targetMountPoint;
-
-//    auto fun = [&](const QString& dir, QByteArray* mountPoint) {
-//        //    process.setProcessChannelMode(QProcess::MergedChannels);
-//            QProcess process;
-//            args << dir;
-//            process.start(QStringLiteral("stat"), args, QIODevice::ReadOnly);
-
-//            // Wait for it to start
-//            if (!process.waitForStarted()) {
-//                emit dataDirectoryChanging(DDCT_Finished, dir, 0, Error_ProcessOutOfResources, QStringLiteral("Failed to start process"));
-//                return false;
-//            }
-
-//            if (!process.waitForFinished()) {
-//                process.kill();
-//                emit dataDirectoryChanging(DDCT_Finished, dir, 0, Error_ProcessTimeout, QStringLiteral("Timeout after 30 s"));
-//                return false;
-//            }
-
-//            if (process.exitStatus() != QProcess::NormalExit) {
-//                emit dataDirectoryChanging(DDCT_Finished, dir, 0, Error_ProcessCrashed, QString());
-//                return false;
-//            }
-
-//            if (process.exitCode() != 0) {
-//                process.setReadChannel(QProcess::StandardError);
-//                emit dataDirectoryChanging(DDCT_Finished, dir, 0, Error_ProcessFailed, QString::fromLocal8Bit(process.readAll()));
-//                return false;
-//            }
-
-//            *mountPoint = process.readAll();
-//            if (mountPoint->isEmpty() || (*mountPoint)[0] != '/') {
-//                emit dataDirectoryChanging(
-//                            DDCT_Finished,
-//                            dataDirectory(),
-//                            0,
-//                            Error_ProcessFailed,
-//                            QStringLiteral("'stat %1' output: '%2'").arg(args.join(" "), QString::fromLocal8Bit(*mountPoint)));
-//                return false;
-//            }
-
-//            args.pop_back();
-//            return true;
-//    };
-
-//    if (!fun(dataDirectory(), &currentMountPoint)) {
-//        return;
-//    }
-
-//    if (!fun(targetDirectory, &targetMountPoint)) {
-//        return;
-//    }
-
-//    if (targetMountPoint == currentMountPoint) {
-//        // move dirs
-//    } else {
-//        // rsync dirs
-//    }
+    QMetaObject::invokeMethod(m_DataDirectoryMover, "move", Qt::QueuedConnection,
+                               Q_ARG( QString, dataDirectory() ),
+                              Q_ARG( QString, targetDirectory ));
 }
 
 void
 ScVodDataManager::cancelMoveDataDirectory() {
     QMutexLocker g(&m_Lock);
+
     if (m_DataDirectoryMover) {
-        m_DataDirectoryMover->cancel();
+        qDebug() << "canceling in progress data directory move";
+        QMetaObject::invokeMethod(m_DataDirectoryMover, "cancel", Qt::QueuedConnection);
+    } else {
+        qDebug() << "no data directory move in progress";
     }
 }
 
@@ -3682,6 +3654,14 @@ ScVodDataManager::onDataDirectoryChanging(int changeType, QString path, float pr
     if (DDCT_Finished == changeType) {
         m_DataDirectoryMover = nullptr;
         resumeVodsChangedEvents();
+
+        switch (error) {
+        case Error_None:
+        case Error_Warning:
+            setDataDirectory(path);
+            setDirectories();
+            break;
+        }
     }
 
     emit dataDirectoryChanging(changeType, path, progress, error, errorDescription);
