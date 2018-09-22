@@ -60,9 +60,23 @@ BasePage {
             }
 
             function update() {
-                constraints = Global.getNewVodsContstraints()
-                newModel.select = "select count(*) from " + Global.defaultTable + " where " + constraints
-                visible = newModel.data(newModel.index(0, 0)) > 0
+                if (Global.getNewVodsContstraints) { // gets called really early during setup of application page (before its .onCompleted runs)
+                    constraints = Global.getNewVodsContstraints()
+                    newModel.select = "select count(*) from " + Global.defaultTable + " where " + constraints
+                    visible = newModel.data(newModel.index(0, 0)) > 0
+                } else {
+                    visible = false
+                }
+            }
+
+            Connections {
+                target: Global
+                onGetNewVodsContstraintsChanged: {
+                    if (Global.getNewVodsContstraints) {
+                        target = null // one shot
+                        newVodsItem.update()
+                    }
+                }
             }
         }
 
