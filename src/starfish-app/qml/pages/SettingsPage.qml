@@ -69,22 +69,28 @@ Page {
                 wrapMode: Text.Wrap
                 text:
 "The application's data will be moved to " + _targetdataDirectory + ".
+
 This operation could take a good long while. During this time you will not be able to use the application.
 
 Do you want to continue?"
             }
 
-//            acceptDestination:
-//            acceptDestinationAction: PageStackAction.Replace
+            // page is created prior to onAccepted, see api reference doc
+            acceptDestination: Qt.resolvedUrl("MoveDataDirectoryPage.qml")
+            acceptDestinationAction: PageStackAction.Replace
+            acceptDestinationProperties: {
+                "targetDirectory": _targetdataDirectory
+            }
 
-            // really don't know why the move page is created prior to the user accepting the dialog
+
             onAccepted: {
-                pageStack.replace(
-                            Qt.resolvedUrl("MoveDataDirectoryPage.qml"),
-                            {
-                                "targetDirectory": _targetdataDirectory
-                            },
-                            PageStackAction.Immediate)
+                VodDataManager.moveDataDirectory(_targetdataDirectory)
+//                pageStack.replace(
+//                            Qt.resolvedUrl("MoveDataDirectoryPage.qml"),
+//                            {
+//                                "targetDirectory": _targetdataDirectory
+//                            },
+//                            PageStackAction.Immediate)
             }
 
         }
@@ -123,7 +129,7 @@ Do you want to continue?"
             id: saveDirectoryTextField
             width: root.width
             text: _currentdataDirectory
-            label: "Directory for VOD (meta) data"
+            label: "Directory for VOD and meta data"
             placeholderText: "Data directory"
             EnterKey.iconSource: "image://theme/icon-m-enter-close"
             EnterKey.onClicked: focus = false

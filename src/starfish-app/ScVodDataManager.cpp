@@ -49,6 +49,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <errno.h>
 
 
 #ifndef _countof
@@ -249,7 +250,6 @@ void DataDirectoryMover::_move(const QString& currentDir, QString targetDir) {
         QStringLiteral("/icons/"),
     };
 
-    //if (targetMountPoint == currentMountPoint) {
     if (device1 == device2) {
         qDebug() << "directories are on the same device, using rename";
         // move dirs
@@ -277,7 +277,7 @@ void DataDirectoryMover::_move(const QString& currentDir, QString targetDir) {
 
 
     } else {
-        qDebug() << "directories are on the diffrent device, using rsync";
+        qDebug() << "directories are on diffrent devices, using rsync";
         // rsync dirs
         QProcess process;
 //        connect(&process, SIGNAL(finished(int, QProcess::ExitStatus)),
@@ -292,9 +292,10 @@ void DataDirectoryMover::_move(const QString& currentDir, QString targetDir) {
         QStringList args;
         for (size_t i = 0; i < _countof(names); ++i) {
             auto src = currentDir + names[i];
+            src.chop(1); // remove trailing slash
 
             args.clear();
-            args << QStringLiteral("-a") << src << targetDir;
+            args << QStringLiteral("-av") << src << targetDir; // use -v to have a frequent callback to enable cancel
             process.start(QStringLiteral("rsync"), args, QIODevice::ReadOnly);
             process.waitForFinished(-1);
 
@@ -308,14 +309,47 @@ void DataDirectoryMover::_move(const QString& currentDir, QString targetDir) {
                 return;
             }
 
-            if (process.exitCode() != 0) {
-                auto errorString = process.readAllStandardError();
+            auto exitCode = process.exitCode();
+            auto err = process.readAllStandardError();
+
+//            auto out = process.readAllStandardOutput();
+            qDebug() << "rsync exited with code" << exitCode;
+//            qDebug() << "rsync stdout";
+//            qDebug() << out;
+            qDebug() << "rsync stderr";
+            qDebug() << err;
+            switch (exitCode) {
+            case 0:
+                break;
+            case 11: // error in file i/o
+                err.push_back('\0');
+                if (strstr(err.data(), "(28)")) {
+                    // no space left on device
+                    emit dataDirectoryChanging(
+                                ScVodDataManager::DDCT_Finished,
+                                src,
+                                0.25f * i,
+                                ScVodDataManager::Error_NoSpaceLeftOnDevice,
+                                QStringLiteral("no space left on device"));
+                } else {
+                    err.chop(1);
+                    emit dataDirectoryChanging(
+                                ScVodDataManager::DDCT_Finished,
+                                src,
+                                0.25f * i,
+                                ScVodDataManager::Error_ProcessFailed,
+                                QStringLiteral("'rsync %1' failed: %2").arg(args.join(" "), QString::fromLocal8Bit(err)));
+                }
+                return;
+            default: {
                 emit dataDirectoryChanging(
                             ScVodDataManager::DDCT_Finished,
                             src,
                             0.25f * i,
                             ScVodDataManager::Error_ProcessFailed,
-                            QStringLiteral("'rsync %1' failed: %2").arg(args.join(" "), QString::fromLocal8Bit(errorString)));
+                            QStringLiteral("'rsync %1' failed: %2").arg(args.join(" "), QString::fromLocal8Bit(err)));
+                return;
+            } break;
             }
 
             emit dataDirectoryChanging(
@@ -352,20 +386,13 @@ void DataDirectoryMover::_move(const QString& currentDir, QString targetDir) {
                 ScVodDataManager::DDCT_Finished,
                 targetDir,
                 1,
-                0,
+                ScVodDataManager::Error_None,
                 QString());
 }
 
 void DataDirectoryMover::cancel() {
     m_Canceled = 1;
 }
-
-//void DataDirectoryMover::onProcessFinished(int, QProcess::ExitStatus) {
-
-//}
-//void DataDirectoryMover::onProcessError(QProcess::ProcessError) {
-
-//}
 
 void DataDirectoryMover::onProcessReadyRead() {
     QProcess* process = qobject_cast<QProcess*>(QObject::sender());
@@ -374,6 +401,9 @@ void DataDirectoryMover::onProcessReadyRead() {
     if (0 != m_Canceled) {
         process->kill();
     }
+
+    // erase stdout
+    process->readAllStandardOutput();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

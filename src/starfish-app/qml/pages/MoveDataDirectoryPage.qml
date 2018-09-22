@@ -23,6 +23,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Nemo.Notifications 1.0
 import org.duckdns.jgressmann 1.0
 import ".."
 
@@ -30,6 +31,8 @@ Page {
     backNavigation: false
 
     property string targetDirectory
+    property string warnings: ""
+    property bool _done: false
 
     PageHeader {
         title: "Data directory move"
@@ -39,9 +42,23 @@ Page {
         width: parent.width
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.paddingLarge
-        ProgressBar {
+
+        Label {
+            wrapMode: Text.WordWrap
+            x: Theme.horizontalPageMargin
+            width: parent.width - 2*x
+            font.pixelSize: Theme.fontSizeLarge
+            color: Theme.highlightColor
+            text: "The data directory is being moved. Do not close the application forcefully or you might end up in an inconsistent state.
+
+You can cancel the move at any time using the button below."
+        }
+
+        ProgressCircle {
+            anchors.horizontalCenter: parent.horizontalCenter
             id: progressBar
-            width: parent.width
+            width:  Theme.iconSizeLarge
+            height: width
         }
 
         Button {
@@ -52,38 +69,103 @@ Page {
                 VodDataManager.cancelMoveDataDirectory()
             }
         }
+
+        Label {
+            id: description
+            wrapMode: Text.WordWrap
+            x: Theme.horizontalPageMargin
+            width: parent.width - 2*x
+            font.pixelSize: Theme.fontSizeMedium
+            color: Theme.highlightColor
+        }
     }
 
     Component.onCompleted: {
         VodDataManager.dataDirectoryChanging.connect(dataDirectoryChanging)
-        VodDataManager.moveDataDirectory(targetDirectory)
+//        VodDataManager.moveDataDirectory(targetDirectory)
     }
 
     function dataDirectoryChanging(changeType, path, progress, error, errorDescription) {
         console.debug("change type=" + changeType + ", path=" + path + ", progress=" + progress
                       + ", error=" + error + ", error desc=" + errorDescription)
 
-        progressBar.progressValue = progress
+        progressBar.value = progress
+
+        if (VodDataManager.Error_Warning === error) {
+            warnings += errorDescription + "\n"
+        }
+
         switch (changeType) {
         case VodDataManager.DDCT_Copy:
-            progressBar.label = "Copying " + path
+            description.text = "Copying " + path
             break
         case VodDataManager.DDCT_Remove:
-            progressBar.label = "Removing " + path
+            description.text = "Removing " + path
             break
         case VodDataManager.DDCT_Move:
-            progressBar.label = "Moving " + path
+            description.text = "Moving " + path
             break
         case VodDataManager.DDCT_Finished:
+            _done = true
             switch (error) {
             case VodDataManager.Error_None:
+                if (warnings.length > 0) {
+                    notification.previewBody = notification.summary = "Data directory moved"
+                    notification.body = "Data directory moved to " + targetDirectory + ".
+
+    " + warnings
+                    notification.category = "x-nemo.general.warning"
+                } else {
+                    notification.previewBody = notification.summary = "Data directory moved"
+                    notification.body = "Data directory moved to " + targetDirectory
+                }
                 break
             case VodDataManager.Error_Warning:
+                //x-nemo.general.warning
+                //notification.icon = "icon-lock-warning"
+                notification.previewBody = notification.summary = "Data directory moved"
+                notification.body = "Data directory moved to " + targetDirectory + ".
+
+" + errorDescription
+                notification.category = "x-nemo.general.warning"
                 break
+            case VodDataManager.Error_Canceled:
+                notification.previewBody = notification.summary = "Data directory move canceled"
+                break
+            case VodDataManager.Error_NoSpaceLeftOnDevice:
+                notification.category = "x-nemo.transfer.error"
+                notification.previewBody = notification.summary = "Data directory moved failed"
+                notification.body = "There is no space left on the device."
+                break;
+            default:
+                notification.category = "x-nemo.transfer.error"
+                //notification.icon = "icon-lock-warning"
+                notification.previewBody = notification.summary = "Data directory moved failed"
+                notification.body = errorDescription
+                break;
             }
 
-            pageStack.pop()
+            notification.publish()
+            _tryPop()
             break
         }
     }
+
+    Notification {
+         id: notification
+         appName: App.displayName
+         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+    }
+
+    Connections {
+        target: pageStack
+        onBusyChanged: _tryPop()
+    }
+
+    function _tryPop() {
+        if (_done && !pageStack.busy) {
+            pageStack.pop()
+        }
+    }
+
 }

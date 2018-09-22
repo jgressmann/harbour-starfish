@@ -76,8 +76,6 @@ signals:
 public slots:
     void move(const QString& currentDir, const QString& targetDir);
     void cancel();
-//    void onProcessFinished(int, QProcess::ExitStatus);
-//    void onProcessError(QProcess::ProcessError);
     void onProcessReadyRead();
 
 private:
@@ -117,7 +115,8 @@ public:
         Error_RenameFailed,
         Error_Canceled,
         Error_Warning,
-        Error_StatFailed
+        Error_StatFailed,
+        Error_NoSpaceLeftOnDevice,
     };
     Q_ENUMS(Error)
 
