@@ -26,6 +26,7 @@
 #include "Vods.h"
 #include "Sc.h"
 #include "ScRecord.h"
+#include "ScStopwatch.h"
 
 #include <vodman/VMVodFileDownload.h>
 
@@ -98,38 +99,7 @@ bool selectIdFromVodsWhereUrlShareIdEquals(QSqlQuery& q, qint64 urlShareId) {
     return true;
 }
 
-class Stopwatch {
-public:
-    ~Stopwatch() {
-        auto stop = QDateTime::currentMSecsSinceEpoch();
-        auto duration = stop - m_Start;
-        if (duration > m_Threshold) {
-            qWarning("%s took %d [ms]\n", qPrintable(m_Name), (int)duration);
-        } else {
-//            qDebug("%s took %d [ms]\n", qPrintable(m_Name), (int)duration);
-        }
-    }
-    Stopwatch(const char* name, int millisBeforeWarn = 100)
-        : m_Name(QLatin1String(name))
-        , m_Start(QDateTime::currentMSecsSinceEpoch())
-        , m_Threshold(millisBeforeWarn)
-    {
 
-    }
-
-    Stopwatch(const QString& str, int millisBeforeWarn = 100)
-        : m_Name(str)
-        , m_Start(QDateTime::currentMSecsSinceEpoch())
-        , m_Threshold(millisBeforeWarn)
-    {
-
-    }
-
-private:
-    QString m_Name;
-    qint64 m_Start;
-    int m_Threshold;
-};
 
 } // anon
 
@@ -600,7 +570,7 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
         } \
     } while (0)
 
-    Stopwatch sw("requestFinished");
+    ScStopwatch sw("requestFinished");
     QMutexLocker guard(&m_Lock);
     reply->deleteLater();
 
@@ -1174,7 +1144,7 @@ ScVodDataManager::label(const QString& key, const QVariant& value) const {
 
 QString
 ScVodDataManager::icon(const QString& key, const QVariant& value) const {
-//    Stopwatch sw("icon", 5);
+//    ScStopwatch sw("icon", 5);
     if (QStringLiteral("game") == key) {
         auto game = value.toInt();
         switch (game) {
@@ -1535,7 +1505,7 @@ ScVodDataManager::queueVodsToAdd(const QList<ScRecord>& records) {
 
 bool
 ScVodDataManager::_addVods(const QList<ScRecord>& records) {
-    Stopwatch sw("_addVods", 10000);
+    ScStopwatch sw("_addVods", 10000);
     QSqlQuery q(m_Database);
 
     if (!q.exec(QStringLiteral("BEGIN IMMEDIATE"))) {
@@ -1925,7 +1895,7 @@ void
 ScVodDataManager::fetchMetaData(qint64 rowid, bool download) {
     RETURN_IF_ERROR;
 
-    Stopwatch sw("fetchMetaData", 10);
+    ScStopwatch sw("fetchMetaData", 10);
     QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);
@@ -2012,7 +1982,7 @@ ScVodDataManager::fetchThumbnailFromCache(qint64 rowid) {
 void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
     RETURN_IF_ERROR;
 
-    Stopwatch sw("fetchThumbnail", 50);
+    ScStopwatch sw("fetchThumbnail", 50);
     QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);

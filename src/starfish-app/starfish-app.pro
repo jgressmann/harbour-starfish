@@ -22,7 +22,8 @@ SOURCES += harbour-starfish.cpp \
     ScVodDatabaseDownloader.cpp \
     ScIcons.cpp \
     ScSqlVodModel.cpp \
-    ScRecentlyUsedModel.cpp
+    ScRecentlyUsedModel.cpp \
+    ScStopwatch.cpp
 
 
 
@@ -33,7 +34,8 @@ HEADERS += \
     ScVodDatabaseDownloader.h \
     ScIcons.h \
     ScSqlVodModel.h \
-    ScRecentlyUsedModel.h
+    ScRecentlyUsedModel.h \
+    ScStopwatch.h
 
 #../../rpm/harbour-starfish.changes.run.in \
 #../../rpm/harbour-starfish.yaml \
