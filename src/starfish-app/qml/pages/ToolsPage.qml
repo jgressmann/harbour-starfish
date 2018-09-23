@@ -32,6 +32,8 @@ import ".."
 Page {
     id: root
 
+    RemorsePopup { id: remorse }
+
     VisualItemModel {
         id: model
 
@@ -53,9 +55,9 @@ Page {
             Button {
                 text: "Reset VOD fetch marker"
                 anchors.horizontalCenter: parent.horizontalCenter
-                onClicked: {
+                onClicked: remorse.execute(text, function() {
                     VodDataManager.resetDownloadMarker()
-                }
+                })
             }
 
             Button {
@@ -101,7 +103,10 @@ Page {
                         text: "Clear meta data"
                         onClicked: {
                             console.debug("clear meta data")
-                            VodDataManager.clearCache(VodDataManager.CF_MetaData)
+                            remorse.execute(text, function() {
+                                VodDataManager.clearCache(VodDataManager.CF_MetaData)
+                            })
+
                         }
                     }
 
@@ -109,15 +114,20 @@ Page {
                         text: "Clear thumbnails"
                         onClicked: {
                             console.debug("clear thumbnails")
-                            VodDataManager.clearCache(VodDataManager.CF_Thumbnails)
+                            remorse.execute(text, function() {
+                                VodDataManager.clearCache(VodDataManager.CF_Thumbnails)
+                            })
                         }
                     }
 
                     Button {
-                        text: "Clear VODs"
+                        text: "Clear VOD files"
                         onClicked: {
                             console.debug("clear vods")
-                            VodDataManager.clearCache(VodDataManager.CF_Vods)
+                            remorse.execute(text, function() {
+                                VodDataManager.clearCache(VodDataManager.CF_Vods)
+                            })
+
                         }
                     }
 
@@ -125,8 +135,10 @@ Page {
                         text: "Clear icons"
                         onClicked: {
                             console.debug("clear icons")
-                            VodDataManager.clearCache(VodDataManager.CF_Icons)
-                            VodDataManager.fetchIcons()
+                            remorse.execute(text, function() {
+                                VodDataManager.clearCache(VodDataManager.CF_Icons)
+                                VodDataManager.fetchIcons()
+                            })
                         }
                     }
                 }
@@ -143,7 +155,9 @@ Page {
 
             Button {
                 text: "Delete seen VOD files"
-                onClicked: Global.deleteSeenVodFiles()
+                onClicked: remorse.execute(text, function() {
+                    Global.deleteSeenVodFiles()
+                })
             }
 
             Button {

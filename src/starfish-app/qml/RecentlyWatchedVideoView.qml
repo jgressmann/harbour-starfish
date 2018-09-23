@@ -56,13 +56,19 @@ SilicaListView {
                     width: listView.width
                     contentHeight: Global.itemHeight + Theme.fontSizeMedium
 
-
                     menu: Component {
                         ContextMenu {
                             MenuItem {
                                 text: "Remove from list"
                                 onClicked: {
-                                    recentlyUsedVideos.remove({url: url})
+                                    // not sure why I need locals here
+                                    var removeArgs = {url: url}
+                                    var model = recentlyUsedVideos
+                                    listItem.remorseAction(
+                                        "Remove " + labelLabel.text,
+                                        function() {
+                                            model.remove(removeArgs)
+                                        })
                                 }
                             }
                         }
@@ -133,6 +139,7 @@ SilicaListView {
                             }
 
                             Label {
+                                id: labelLabel
                                 anchors.left: imageSpacer.right
                                 anchors.right: parent.right
                                 anchors.top: parent.top
@@ -187,6 +194,7 @@ SilicaListView {
                 id: vodComponent
 
 
+
                 SilicaListView {
                     id: wrapperView
                     width: listView.width
@@ -233,12 +241,21 @@ SilicaListView {
                                 listView.clicked({video_id: rowId}, self.vodUrl, xoffset, self)
                             }
 
+
+
                             menu: Component {
                                 ContextMenu {
                                     MenuItem {
                                         text: "Remove from list"
                                         onClicked: {
-                                            recentlyUsedVideos.remove({ video_id: matchItem.rowId })
+                                            // not sure why I need locals here
+                                            var removeArgs = { video_id: matchItem.rowId }
+                                            var model = recentlyUsedVideos //
+                                            matchItem.remorseAction(
+                                                "Remove " + matchItem.title,
+                                                function() {
+                                                    model.remove(removeArgs)
+                                                })
                                         }
                                     }
                                 }

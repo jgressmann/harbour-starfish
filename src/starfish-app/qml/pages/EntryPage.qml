@@ -197,13 +197,16 @@ BasePage {
         }
 
         ListItem {
+            id: recentlyWatchedVideosItem
             contentHeight: visible ? continueWatching.height : 0
             visible: recentlyWatchedVideoView.height > 0
 
             menu: ContextMenu {
                 MenuItem {
                     text: "Clear"
-                    onClicked: recentlyWatchedVideoView.clear()
+                    onClicked: recentlyWatchedVideosItem.remorseAction(
+                                   "Clearing recently watched videos",
+                                   function () { recentlyWatchedVideoView.clear() })
                 }
             }
 

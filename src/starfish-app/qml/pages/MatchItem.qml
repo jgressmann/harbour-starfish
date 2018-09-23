@@ -80,11 +80,13 @@ ListItem {
     readonly property string _where: " where id=" + rowId
     readonly property bool _hasValidRaces: race1 >= 1 && race2 >= 1
     readonly property int requiredHeight: content.height + watchProgress.height
+    readonly property string title: titleLabel.text
+    readonly property string thumbnailSource: thumbnail.source
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
-    readonly property string title: titleLabel.text
-    readonly property string thumbnailSource: thumbnail.source
+
+
 
     ProgressOverlay {
         id: progressOverlay
@@ -572,6 +574,8 @@ ListItem {
 //        console.debug("destroy match item rowid=" + rowId)
     }
 
+    RemorsePopup { id: remorse }
+
     Component {
         id: contextMenu
         ContextMenu {
@@ -617,7 +621,7 @@ ListItem {
 
             MenuItem {
                 text: "Delete meta data"
-                enabled: rowId >= 0
+                visible: rowId >= 0 && !!_vod
                 onClicked: {
                     _cancelDownload()
                     progressOverlay.progress = 0
@@ -633,19 +637,40 @@ ListItem {
             }
 
             MenuItem {
-                text: "Delete VOD"
-                enabled: rowId >= 0
+                text: "Delete VOD file"
+                visible: rowId >= 0 && !!_vodFilePath
+//                onClicked: {
+//                    remorse.execute("Deleting VOD " + title, function() {
+//                        _cancelDownload()
+//                        progressOverlay.progress = 0
+//                        _clicked = false
+//                        _vodUrl = ""
+//                        _vodFilePath = ""
+//                        _vodFileSize = 0
+//                        _width = 0
+//                        _height = 0
+//                        _formatId = ""
+//                        VodDataManager.deleteVod(rowId)
+//                    })
+//                }
+
                 onClicked: {
-                    _cancelDownload()
-                    progressOverlay.progress = 0
-                    _clicked = false
-                    _vodUrl = ""
-                    _vodFilePath = ""
-                    _vodFileSize = 0
-                    _width = 0
-                    _height = 0
-                    _formatId = ""
-                    VodDataManager.deleteVod(rowId)
+                    // still not sure why local vars are needed
+                    var item = root
+                    var overlay = progressOverlay
+                    var manager = VodDataManager
+                    item.remorseAction("Deleting " + title, function() {
+                        item._cancelDownload()
+                        overlay.progress = 0
+                        item._clicked = false
+                        item._vodUrl = ""
+                        item._vodFilePath = ""
+                        item._vodFileSize = 0
+                        item._width = 0
+                        item._height = 0
+                        item._formatId = ""
+                        manager.deleteVod(item.rowId)
+                    })
                 }
             }
 

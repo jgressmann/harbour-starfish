@@ -35,12 +35,17 @@ ListItem {
     property bool showImage: Global.showIcon(key)
     property bool grid: false
     property string _where
+    readonly property string title: VodDataManager.label(key, value)
     property var updateSeen: function () {}
 
     menu: ContextMenu {
         MenuItem {
             text: "Delete seen VOD files"
-            onClicked: Global.deleteSeenVodFiles(_where)
+            onClicked: {
+                root.remorseAction("Deleting seen VOD files for " + title, function() {
+                    Global.deleteSeenVodFiles(_where)
+                })
+            }
         }
     }
 
@@ -77,7 +82,7 @@ ListItem {
 
 
                 Label {
-                    text:  VodDataManager.label(key, value)
+                    text: title
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: image.right
                     anchors.right: seenButton.left
@@ -130,7 +135,7 @@ ListItem {
                 Label {
                     anchors.horizontalCenter: parent.horizontalCenter
                     //width: parent.width
-                    text:  VodDataManager.label(key, value)
+                    text: title
                     //verticalAlignment: Text.AlignHCenter
                     font.pixelSize: Theme.fontSizeMedium
                     truncationMode: TruncationMode.Fade

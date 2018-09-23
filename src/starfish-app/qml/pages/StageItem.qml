@@ -37,7 +37,11 @@ ListItem {
     menu: ContextMenu {
         MenuItem {
             text: "Delete seen VOD files"
-            onClicked: Global.deleteSeenVodFiles(_where)
+            onClicked: {
+                root.remorseAction("Deleting seen VOD files for " + stageName, function() {
+                    Global.deleteSeenVodFiles(_where)
+                })
+            }
         }
     }
 
