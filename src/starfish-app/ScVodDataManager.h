@@ -206,7 +206,6 @@ public: //
     Q_INVOKABLE void cancelMoveDataDirectory();
     QString dataDirectory() const;
     int sqlPatchLevel() const;
-    Q_INVOKABLE void clearIcons();
 
 signals:
     void readyChanged();

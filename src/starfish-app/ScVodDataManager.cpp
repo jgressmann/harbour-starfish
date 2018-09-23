@@ -1284,19 +1284,6 @@ ScVodDataManager::clear() {
 }
 
 void
-ScVodDataManager::clearIcons() {
-    QMutexLocker g(&m_Lock);
-
-    RETURN_IF_ERROR;
-
-    // delete files
-    QDir(m_IconDir).removeRecursively();
-    // create dir
-    QDir().mkpath(m_IconDir);
-}
-
-
-void
 ScVodDataManager::excludeEvent(const ScEvent& event, bool* exclude) {
     Q_UNUSED(event);
     Q_ASSERT(exclude);

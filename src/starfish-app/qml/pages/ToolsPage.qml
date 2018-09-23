@@ -25,7 +25,6 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Pickers 1.0
 import org.duckdns.jgressmann 1.0
-
 import ".."
 
 
@@ -37,178 +36,191 @@ Page {
     VisualItemModel {
         id: model
 
-        SectionHeader {
-            text: "Fetch"
-        }
-
-        TextField {
+        Column {
             width: parent.width
-            label: "VOD fetch marker"
-            text: VodDataManager.downloadMarker
-            readOnly: true
-        }
+            spacing: Theme.paddingLarge
 
-
-        ButtonLayout {
-            width: parent.width
-
-            Button {
-                text: "Reset VOD fetch marker"
-                anchors.horizontalCenter: parent.horizontalCenter
-                onClicked: remorse.execute(text, function() {
-                    VodDataManager.resetDownloadMarker()
-                })
+            SectionHeader {
+                text: "Fetch"
             }
 
-            Button {
-                visible: debugApp.value
-                text: "Reset last fetch timestamp"
-                onClicked: {
-                    console.debug("reset last fetch timestamp")
-                    settingLastUpdateTimestamp.value = 0
-                }
-            }
-        }
-
-        ExpandingSectionGroup {
-            currentIndex: -1
-            width: parent.width
-
-            ExpandingSection {
-                title: "Cache"
-                id: cacheSection
+            TextField {
                 width: parent.width
-                content.sourceComponent: ButtonLayout {
-                    width: cacheSection.width
+                label: "VOD fetch marker"
+                text: VodDataManager.downloadMarker
+                readOnly: true
+                placeholderText: label
+            }
 
-                    Button {
-                        text: "Clear cache"
-        //                anchors.horizontalCenter: parent.horizontalCenter
-                        onClicked: {
-                            var dialog = pageStack.push(
-                                        Qt.resolvedUrl("ConfirmClearDialog.qml"),
-                                        {
-                                            acceptDestination: Qt.resolvedUrl("StartPage.qml"),
-                                            acceptDestinationAction: PageStackAction.Replace
-                                        })
-                            dialog.accepted.connect(function() {
-                                console.debug("clear")
-                                VodDataManager.clear()
-                                VodDataManager.fetchIcons()
-                            })
-                        }
-                    }
 
-                    Button {
-                        text: "Clear meta data"
-                        onClicked: {
-                            console.debug("clear meta data")
-                            remorse.execute(text, function() {
-                                VodDataManager.clearCache(VodDataManager.CF_MetaData)
-                            })
+            ButtonLayout {
+                width: parent.width
 
-                        }
-                    }
+                Button {
+                    text: "Reset VOD fetch marker"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    onClicked: remorse.execute(text, function() {
+                        VodDataManager.resetDownloadMarker()
+                    })
+                }
 
-                    Button {
-                        text: "Clear thumbnails"
-                        onClicked: {
-                            console.debug("clear thumbnails")
-                            remorse.execute(text, function() {
-                                VodDataManager.clearCache(VodDataManager.CF_Thumbnails)
-                            })
-                        }
-                    }
-
-                    Button {
-                        text: "Clear VOD files"
-                        onClicked: {
-                            console.debug("clear vods")
-                            remorse.execute(text, function() {
-                                VodDataManager.clearCache(VodDataManager.CF_Vods)
-                            })
-
-                        }
-                    }
-
-                    Button {
-                        text: "Clear icons"
-                        onClicked: {
-                            console.debug("clear icons")
-                            remorse.execute(text, function() {
-                                VodDataManager.clearCache(VodDataManager.CF_Icons)
-                                VodDataManager.fetchIcons()
-                            })
-                        }
+                Button {
+                    visible: debugApp.value
+                    text: "Reset last fetch timestamp"
+                    onClicked: {
+                        console.debug("reset last fetch timestamp")
+                        settingLastUpdateTimestamp.value = 0
                     }
                 }
             }
-        }
 
 
-        SectionHeader {
-            text: "Seen"
-        }
-
-        ButtonLayout {
-            width: parent.width
-
-            Button {
-                text: "Delete seen VOD files"
-                onClicked: remorse.execute(text, function() {
-                    Global.deleteSeenVodFiles()
-                })
+            SectionHeader {
+                text: "Data"
             }
 
             Button {
-                text: "Reset recent videos"
+                text: "Clear"
+                anchors.horizontalCenter: parent.horizontalCenter
                 onClicked: {
-                    recentlyUsedVideos.recreateTable()
+                    var dialog = pageStack.push(
+                                Qt.resolvedUrl("ConfirmClearDialog.qml"),
+                                {
+                                    acceptDestination: Qt.resolvedUrl("StartPage.qml"),
+                                    acceptDestinationAction: PageStackAction.Replace
+                                })
+                    dialog.accepted.connect(function() {
+                        console.debug("clear")
+                        VodDataManager.clear()
+                        VodDataManager.fetchIcons()
+                    })
                 }
             }
 
-            Button {
+
+            SectionHeader {
+                text: "Seen"
+            }
+
+            ButtonLayout {
+                width: parent.width
+
+                Button {
+                    text: "Delete seen VOD files"
+                    onClicked: remorse.execute(text, function() {
+                        Global.deleteSeenVodFiles()
+                    })
+                }
+
+                Button {
+                    text: "Reset recent videos"
+                    onClicked: {
+                        recentlyUsedVideos.recreateTable()
+                    }
+                }
+
+                Button {
+                    visible: debugApp.value
+                    text: "Send new VODs notification"
+                    onClicked: {
+                        console.debug("sending new vods notification")
+                        newVodNotification.itemCount = 42
+                        newVodNotification.body = newVodNotification.previewBody = "debug notification"
+                        newVodNotification.publish()
+                    }
+                }
+            }
+
+            SectionHeader {
+                text: "SQL"
                 visible: debugApp.value
-                text: "Send new VODs notification"
-                onClicked: {
-                    console.debug("sending new vods notification")
-                    newVodNotification.itemCount = 42
-                    newVodNotification.body = newVodNotification.previewBody = "debug notification"
-                    newVodNotification.publish()
-                }
             }
-        }
 
-        TextField {
-            visible: debugApp.value
-            width: parent.width
-            label: "SQL patch level"
-            text: VodDataManager.sqlPatchLevel
-            readOnly: true
-        }
-
-        ButtonLayout {
-            width: parent.width
-
-            Button {
+            TextField {
                 visible: debugApp.value
-                text: "Reset SQL patch level"
-                onClicked: {
-                    console.debug("reset sql patch level")
-                    VodDataManager.resetSqlPatchLevel()
+                width: parent.width
+                label: "SQL patch level"
+                text: VodDataManager.sqlPatchLevel
+                readOnly: true
+            }
+
+            ButtonLayout {
+                width: parent.width
+
+                Button {
+                    visible: debugApp.value
+                    text: "Reset SQL patch level"
+                    onClicked: {
+                        console.debug("reset sql patch level")
+                        VodDataManager.resetSqlPatchLevel()
+                    }
                 }
             }
 
-            Button {
-                text: "Delete icons"
-                onClicked: {
-                    VodDataManager.clearIcons()
-                    VodDataManager.fetchIcons()
+            ExpandingSectionGroup {
+                currentIndex: -1
+                width: parent.width
+
+                ExpandingSection {
+                    title: "Cache"
+                    id: cacheSection
+                    width: parent.width
+                    content.sourceComponent: ButtonLayout {
+                        width: cacheSection.width
+
+
+
+                        Button {
+                            text: "Clear meta data"
+                            onClicked: {
+                                console.debug("clear meta data")
+                                remorse.execute(text, function() {
+                                    VodDataManager.clearCache(VodDataManager.CF_MetaData)
+                                })
+
+                            }
+                        }
+
+                        Button {
+                            text: "Clear thumbnails"
+                            onClicked: {
+                                console.debug("clear thumbnails")
+                                remorse.execute(text, function() {
+                                    VodDataManager.clearCache(VodDataManager.CF_Thumbnails)
+                                })
+                            }
+                        }
+
+                        Button {
+                            text: "Clear VOD files"
+                            onClicked: {
+                                console.debug("clear vods")
+                                remorse.execute(text, function() {
+                                    VodDataManager.clearCache(VodDataManager.CF_Vods)
+                                })
+
+                            }
+                        }
+
+                        Button {
+                            text: "Clear icons"
+                            onClicked: {
+                                console.debug("clear icons")
+                                remorse.execute(text, function() {
+                                    VodDataManager.clearCache(VodDataManager.CF_Icons)
+                                    VodDataManager.fetchIcons()
+                                })
+                            }
+                        }
+                    }
                 }
             }
-        }
-
+        } // column
     }
+
+
+
+
 
     SilicaFlickable {
         anchors.fill: parent
