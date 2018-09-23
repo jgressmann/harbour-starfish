@@ -495,7 +495,17 @@ Page {
                                         break
                                     case MediaPlayer.PausedState:
                                     case MediaPlayer.StoppedState:
-                                        page.resume()
+                                        switch (mediaplayer.status) {
+                                        case MediaPlayer.Buffered:
+                                            page.resume()
+                                            break
+                                        case MediaPlayer.EndOfMedia:
+                                            controlPanel.open = false
+                                            _startSeek = true
+                                            _seek(_startOffsetMs)
+                                            mediaplayer.play()
+                                            break
+                                        }
                                         break
                                     }
                                 }
