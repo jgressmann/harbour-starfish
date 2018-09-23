@@ -65,7 +65,7 @@ SilicaListView {
                                     var removeArgs = {url: url}
                                     var model = recentlyUsedVideos
                                     listItem.remorseAction(
-                                        "Remove " + labelLabel.text,
+                                        "Removing " + labelLabel.text,
                                         function() {
                                             model.remove(removeArgs)
                                         })
@@ -252,7 +252,7 @@ SilicaListView {
                                             var removeArgs = { video_id: matchItem.rowId }
                                             var model = recentlyUsedVideos //
                                             matchItem.remorseAction(
-                                                "Remove " + matchItem.title,
+                                                "Removing " + matchItem.title,
                                                 function() {
                                                     model.remove(removeArgs)
                                                 })
