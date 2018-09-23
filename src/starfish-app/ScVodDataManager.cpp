@@ -121,50 +121,6 @@ void DataDirectoryMover::move(const QString& currentDir, const QString& targetDi
     deleteLater();
 }
 
-bool DataDirectoryMover::mountPoint(const QString& dir, QByteArray* mountPoint) {
-    QProcess process;
-    QStringList args;
-    // busybox doesn't have %m
-    args << QStringLiteral("-L") << QStringLiteral("-c") << QStringLiteral("%d") << dir;
-    process.start(QStringLiteral("stat"), args, QIODevice::ReadOnly);
-
-    // Wait for it to start
-    if (!process.waitForStarted()) {
-        emit dataDirectoryChanging(ScVodDataManager::DDCT_Finished, dir, 0, ScVodDataManager::Error_ProcessOutOfResources, QStringLiteral("Failed to start process"));
-        return false;
-    }
-
-    if (!process.waitForFinished()) {
-        process.kill();
-        emit dataDirectoryChanging(ScVodDataManager::DDCT_Finished, dir, 0, ScVodDataManager::Error_ProcessTimeout, QStringLiteral("Timeout after 30 s"));
-        return false;
-    }
-
-    if (process.exitStatus() != QProcess::NormalExit) {
-        emit dataDirectoryChanging(ScVodDataManager::DDCT_Finished, dir, 0, ScVodDataManager::Error_ProcessCrashed, QString());
-        return false;
-    }
-
-    if (process.exitCode() != 0) {
-        process.setReadChannel(QProcess::StandardError);
-        emit dataDirectoryChanging(ScVodDataManager::DDCT_Finished, dir, 0, ScVodDataManager::Error_ProcessFailed, QString::fromLocal8Bit(process.readAll()));
-        return false;
-    }
-
-    *mountPoint = process.readAll();
-    if (mountPoint->isEmpty()) {
-        emit dataDirectoryChanging(
-                    ScVodDataManager::DDCT_Finished,
-                    dir,
-                    0,
-                    ScVodDataManager::Error_ProcessFailed,
-                    QStringLiteral("'stat %1' output: '%2'").arg(args.join(" "), QString::fromLocal8Bit(*mountPoint)));
-        return false;
-    }
-
-    return true;
-}
-
 void DataDirectoryMover::_move(const QString& currentDir, QString targetDir) {
     qDebug() << "move from" << currentDir << "to" << targetDir;
     QDir d(targetDir);
@@ -201,17 +157,6 @@ void DataDirectoryMover::_move(const QString& currentDir, QString targetDir) {
     }
 
     device2 = sb.st_dev;
-
-//    QByteArray currentMountPoint, targetMountPoint;
-
-
-//    if (!mountPoint(currentDir, &currentMountPoint)) {
-//        return;
-//    }
-
-//    if (!mountPoint(targetDir, &targetMountPoint)) {
-//        return;
-//    }
 
     const QString names[] = {
         QStringLiteral("/meta/"),

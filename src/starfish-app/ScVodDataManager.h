@@ -80,7 +80,6 @@ public slots:
 
 private:
     void _move(const QString& currentDir, QString targetDir);
-    bool mountPoint(const QString& currentDir, QByteArray* mountPoint);
 private:
     QAtomicInt m_Canceled;
 };
