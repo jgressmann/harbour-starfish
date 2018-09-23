@@ -68,7 +68,7 @@
 #define CLASSIFIER_FILE "/classifier.json.gz"
 #define ICONS_FILE "/icons.json.gz"
 #define SQL_PATCH_FILE "/sql_patches.json.gz"
-
+#define DATA_DIR_KEY "data-dir"
 namespace  {
 
 const QString s_IconsUrl = QStringLiteral("https://www.dropbox.com/s/p2640l82i3u1zkg/icons.json.gz?dl=1");
@@ -3581,12 +3581,12 @@ ScVodDataManager::ready() const {
 
 QString ScVodDataManager::dataDirectory() const
 {
-    return getPersistedValue(QStringLiteral("data-dir"), QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    return getPersistedValue(QStringLiteral(DATA_DIR_KEY), QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
 }
 
 void ScVodDataManager::setDataDirectory(const QString& value)
 {
-    return setPersistedValue(QStringLiteral("data-dir"), value);
+    return setPersistedValue(QStringLiteral(DATA_DIR_KEY), value);
 }
 
 void ScVodDataManager::setDirectories()
