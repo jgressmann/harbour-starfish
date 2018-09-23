@@ -3640,8 +3640,6 @@ ScVodDataManager::onDataDirectoryChanging(int changeType, QString path, float pr
     QMutexLocker g(&m_Lock);
     if (DDCT_Finished == changeType) {
         m_DataDirectoryMover = nullptr;
-        resumeVodsChangedEvents();
-
         switch (error) {
         case Error_None:
         case Error_Warning:
@@ -3649,6 +3647,8 @@ ScVodDataManager::onDataDirectoryChanging(int changeType, QString path, float pr
             setDirectories();
             break;
         }
+
+        resumeVodsChangedEvents();
     }
 
     emit dataDirectoryChanging(changeType, path, progress, error, errorDescription);
