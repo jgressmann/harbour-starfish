@@ -103,7 +103,9 @@ Page {
                 break
             case MediaPlayer.Loaded:
                 console.debug("loaded")
-                page.title = metaData.title
+                if (metaData && metaData.title) {
+                    page.title = metaData.title
+                }
                 break
             case MediaPlayer.InvalidMedia:
                 console.debug("invalid media")
