@@ -144,7 +144,7 @@ Page {
 
     onVisibleChildrenChanged: {
 //        console.debug("visible children changed")
-//        _moveToTop()
+        _moveToTop()
     }
 
     onStatusChanged: {
@@ -155,18 +155,18 @@ Page {
         }
     }
 
-//    function _moveToTop() {
-//        var maxZ = 0
-//        var vc = visibleChildren
-////        console.debug("#" + vc.length + " children")
-//        for (var i = 0; i < vc.length; ++i) {
-//            var child = vc[i]
-//            if (child !== _progressPanel) {
-//                maxZ = Math.max(maxZ, child.z)
-//            }
-//        }
-////        console.debug("max z " + maxZ)
-//        _progressPanel.z = maxZ + 1
-//    }
+    function _moveToTop() {
+        var maxZ = 0
+        var vc = visibleChildren
+//        console.debug("#" + vc.length + " children")
+        for (var i = 0; i < vc.length; ++i) {
+            var child = vc[i]
+            if (child !== _progressPanel) {
+                maxZ = Math.max(maxZ, child.z)
+            }
+        }
+//        console.debug("max z " + maxZ)
+        _progressPanel.z = maxZ + 1
+    }
 }
 
