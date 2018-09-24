@@ -51,9 +51,24 @@ Page {
     }
 
     property bool wasActive: false
+    property var breadCrumbs: []
+    property Item contentItem
+
+    Item {
+        id: _contentItem
+        anchors.top: page.top
+        anchors.bottom: page.isPortrait ? (_progressPanel.open ? _progressPanel.top : page.bottom) : page.bottom
+        anchors.left: page.left
+        anchors.right: page.isPortrait ? page.right : (_progressPanel.open ? _progressPanel.left : page.right)
+    }
+
+    onContentItemChanged: {
+        if (contentItem) {
+            contentItem.parent = _contentItem
+        }
+    }
 
     DockedPanel {
-
         id: _progressPanel
         width: page.isPortrait ? (parent ? parent.width : 0) : Theme.itemSizeExtraLarge + Theme.paddingLarge
         height: page.isPortrait ? Theme.itemSizeExtraLarge + Theme.paddingLarge : (parent ? parent.height : 0)
@@ -129,7 +144,7 @@ Page {
 
     onVisibleChildrenChanged: {
 //        console.debug("visible children changed")
-        _moveToTop()
+//        _moveToTop()
     }
 
     onStatusChanged: {
@@ -140,18 +155,18 @@ Page {
         }
     }
 
-    function _moveToTop() {
-        var maxZ = 0
-        var vc = visibleChildren
-//        console.debug("#" + vc.length + " children")
-        for (var i = 0; i < vc.length; ++i) {
-            var child = vc[i]
-            if (child !== _progressPanel) {
-                maxZ = Math.max(maxZ, child.z)
-            }
-        }
-//        console.debug("max z " + maxZ)
-        _progressPanel.z = maxZ + 1
-    }
+//    function _moveToTop() {
+//        var maxZ = 0
+//        var vc = visibleChildren
+////        console.debug("#" + vc.length + " children")
+//        for (var i = 0; i < vc.length; ++i) {
+//            var child = vc[i]
+//            if (child !== _progressPanel) {
+//                maxZ = Math.max(maxZ, child.z)
+//            }
+//        }
+////        console.debug("max z " + maxZ)
+//        _progressPanel.z = maxZ + 1
+//    }
 }
 

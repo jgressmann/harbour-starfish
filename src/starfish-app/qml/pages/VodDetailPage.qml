@@ -145,7 +145,7 @@ BasePage {
         }
     }
 
-    SilicaFlickable {
+    contentItem: SilicaFlickable {
         anchors.fill: parent
         contentWidth: parent.width
 

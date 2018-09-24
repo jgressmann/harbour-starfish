@@ -152,8 +152,10 @@ Item { // Components can't declare functions
         }[key] || 1
     }
 
-    function performNext(_table, _where) {
+    function performNext(_table, _where, _breadCrumbs) {
         var rem = remainingKeys(_where)
+
+        var breadCrumbs = _breadCrumbs || []
 
         // we need to figure out if there is only as single value for any of the subkeys
         for (var change = true; change; ) {
@@ -188,6 +190,8 @@ Item { // Components can't declare functions
                         }
 
                         change = true
+
+                        breadCrumbs.push(value)
                     } else if (count > 1) {
                         newRem.push(rem[i])
                     }
@@ -201,7 +205,8 @@ Item { // Components can't declare functions
             // exhausted all filter keys, show tournament
             return [Qt.resolvedUrl("pages/TournamentPage.qml"), {
                 table: _table,
-                where: _where
+                where: _where,
+                breadCrumbs: breadCrumbs
             },
                     rem]
         } else {
@@ -210,6 +215,7 @@ Item { // Components can't declare functions
                                 table: _table,
                                 where: _where,
                                 key: rem[0],
+                                breadCrumbs: breadCrumbs,
                             },rem]
         }
     }

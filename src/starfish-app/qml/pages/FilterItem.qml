@@ -25,17 +25,18 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.duckdns.jgressmann 1.0
 import ".."
+import "."
 
 ListItem {
     id: root
-    property string table
-    property string where
-    property string key
+    property var /*FilterPage*/ page
     property var value: undefined
-    property bool showImage: Global.showIcon(key)
-    property bool grid: false
+    property bool showImage: _showImage
+    property bool _showImage
     property string _where
-    readonly property string title: VodDataManager.label(key, value)
+    readonly property string title: _title
+    property string _title
+    property string _icon
     property var updateSeen: function () {}
 
     menu: ContextMenu {
@@ -69,7 +70,7 @@ ListItem {
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image {
-                        source: VodDataManager.icon(key, value)
+                        source: _icon
                         width: Theme.iconSizeMedium
                         height: Theme.iconSizeMedium
                         sourceSize.width: width
@@ -104,12 +105,12 @@ ListItem {
                             progress = 0
                         }
 
-                        VodDataManager.setSeen(table, _where, newValue)
+                        VodDataManager.setSeen(page.table, _where, newValue)
                     }
 
                     Component.onCompleted: {
                         root.updateSeen = function () {
-                            progress = VodDataManager.seen(table, _where)
+                            progress = VodDataManager.seen(page.table, _where)
                         }
                     }
                 }
@@ -123,7 +124,7 @@ ListItem {
 
                 Image {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    source: VodDataManager.icon(key, value)
+                    source: _icon
                     width: 2*Theme.iconSizeLarge
                     height: 2*Theme.iconSizeLarge
                     sourceSize.width: width
@@ -144,24 +145,45 @@ ListItem {
         }
 
         Loader {
-            sourceComponent: grid ? gridItem : listItem
+            id: loader
             onLoaded: item.parent = container
         }
     }
 
     onClicked: {
         //console.debug("filter item click " + key + "=" + value)
-        var result = Global.performNext(table, _where)
+        var newBreadCrumbs = Global.clone(page.breadCrumbs)
+        newBreadCrumbs.push(title)
+        var result = Global.performNext(page.table, _where, newBreadCrumbs)
         pageStack.push(result[0], result[1])
     }
 
+
     Component.onCompleted: {
-        var myFilter = key + "='" + value + "'"
-        if (where.length > 0) {
-            _where = where + " and " + myFilter
+        if (!page) {
+            console.error("no page set")
+            return
+        }
+
+        if (typeof(page.__type_FilterPage) === "undefined") {
+            console.error("Page must be set to a FilterPage")
+            return
+        }
+
+        _title = VodDataManager.label(page.key, value)
+        _showImage = Global.showIcon(page.key)
+        if (_showImage) {
+            _icon = VodDataManager.icon(page.key, value)
+        }
+
+        var myFilter = page.key + "='" + value + "'"
+        if (page.where.length > 0) {
+            _where = page.where + " and " + myFilter
         } else {
             _where = " where " + myFilter
         }
+
+        loader.sourceComponent = page.grid ? gridItem : listItem
 
         updateSeen()
     }

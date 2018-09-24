@@ -72,7 +72,7 @@ BasePage {
     }
 
 
-    SilicaFlickable {
+    contentItem: SilicaFlickable {
         anchors.fill: parent
 
         // Why is this necessary?

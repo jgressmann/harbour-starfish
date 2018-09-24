@@ -27,7 +27,7 @@ import org.duckdns.jgressmann 1.0
 import ".."
 
 BasePage {
-    id: page
+    id: root
 
     property string title
     property string table
@@ -37,6 +37,7 @@ BasePage {
     property bool grid: false
     property bool _grid: grid && Global.hasIcon(key)
     property var _view
+    readonly property int __type_FilterPage: 1
 
     SqlVodModel {
         id: sqlModel
@@ -50,7 +51,7 @@ BasePage {
         }
     }
 
-    SilicaFlickable {
+    contentItem: SilicaFlickable {
         id: flickable
         anchors.fill: parent
 
@@ -62,6 +63,8 @@ BasePage {
         TopMenu {}
 
 
+
+
         Component {
             id: listComponent
 
@@ -69,29 +72,29 @@ BasePage {
                 id: listView
                 anchors.fill: parent
                 model: sqlModel
-//                visible: !_grid
                 header: ContentPageHeader {
-                    title: page.title
+                    title: root.title
                 }
 
-                delegate: FilterItem {
-                    width: listView.width
-                    //height: Global.itemHeight
-                    contentHeight: Global.itemHeight // FilterItem is a ListItem
-                    table: page.table
-                    key: page.key
-                    value: sqlModel.data(sqlModel.index(index, 0), 0)
-                    where: page.where
-                    grid: page.grid
+                property var _root: root
 
-                    onClicked: {
-                        ListView.view.currentIndex = index
+                delegate:
+                    FilterItem {
+                        width: listView.width
+                        //height: Global.itemHeight
+                        contentHeight: Global.itemHeight // FilterItem is a ListItem
+                        value: sqlModel.data(sqlModel.index(index, 0), 0)
+                        page: _root
+
+                        onClicked: {
+                            ListView.view.currentIndex = index
+                        }
+
+        //                Component.onCompleted: {
+        //                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
+        //                }
                     }
 
-    //                Component.onCompleted: {
-    //                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
-    //                }
-                }
 
                 ViewPlaceholder {
                     enabled: listView.count === 0
@@ -113,9 +116,9 @@ BasePage {
                 id: gridView
                 anchors.fill: parent
                 model: sqlModel
-//                visible: _grid
+
                 header: ContentPageHeader {
-                    title: page.title
+                    title: root.title
                 }
 
     //                    cellWidth: 2*Theme.horizontalPageMargin + 2*Theme.iconSizeExtraLarge
@@ -127,25 +130,22 @@ BasePage {
                     opacity: Global.pathTraceOpacity
                 }
 
-                delegate: FilterItem {
-                    table: page.table
-                    key: page.key
-                    value: sqlModel.data(sqlModel.index(index, 0), 0)
-                    where: page.where
-                    grid: page.grid
-                    contentHeight: gridView.cellHeight // FilterItem is a ListItem
-                    width: gridView.cellWidth
+                delegate:
+                    FilterItem {
+                        value: sqlModel.data(sqlModel.index(index, 0), 0)
+                        contentHeight: gridView.cellHeight // FilterItem is a ListItem
+                        width: gridView.cellWidth
+                        page: root
 
+                        onClicked: {
+                            GridView.view.currentIndex = index
+                        }
 
-
-                    onClicked: {
-                        GridView.view.currentIndex = index
+        //                Component.onCompleted: {
+        //                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
+        //                }
                     }
 
-    //                Component.onCompleted: {
-    //                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
-    //                }
-                }
 
                 ViewPlaceholder {
                     enabled: gridView.count === 0

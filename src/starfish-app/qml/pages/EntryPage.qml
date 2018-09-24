@@ -85,6 +85,7 @@ BasePage {
             contentHeight: visible ? Global.itemHeight : 0
 
             Label {
+                id: unseenVodsTitleLabel
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
 
@@ -103,6 +104,7 @@ BasePage {
                                 where: " where seen=0",
                                 key: "game",
                                 grid: true,
+                                breadCrumbs: ["Unwatched"]
                             })
             }
 
@@ -122,6 +124,7 @@ BasePage {
             contentHeight: Global.itemHeight
 
             Label {
+                id: browseVodsTitleLabel
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
                 text: qsTr("Browse")
@@ -138,6 +141,7 @@ BasePage {
                                 table: Global.defaultTable,
                                 key: "game",
                                 grid: true,
+                                breadCrumbs: [browseVodsTitleLabel.text]
                             })
             }
         }
@@ -147,6 +151,7 @@ BasePage {
             contentHeight: visible ? Global.itemHeight : 0
 
             Label {
+                id: offlineVodsTitleLabel
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
                 text: qsTr("Offline available")
@@ -164,6 +169,7 @@ BasePage {
                                 where: " where progress>0",
                                 key: "game",
                                 grid: true,
+                                breadCrumbs: ["Offline"]
                             })
             }
 
@@ -251,7 +257,7 @@ BasePage {
 
     }
 
-    SilicaFlickable {
+    contentItem: SilicaFlickable {
         anchors.fill: parent
 
         // Why is this necessary?

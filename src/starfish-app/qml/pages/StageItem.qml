@@ -30,8 +30,7 @@ ListItem {
     id: root
 
     property alias stageName: label.text
-    property string table
-    property string where
+    property var page
     property string _where
 
     menu: ContextMenu {
@@ -70,23 +69,36 @@ ListItem {
                 console.debug("seen=" + progress)
                 var newValue = progress >= 1 ? false : true
                 progress = newValue ? 1 : 0
-                VodDataManager.setSeen(table, _where, newValue)
+                VodDataManager.setSeen(page.table, _where, newValue)
             }
         }
     }
 
     onClicked: {
+        var breadCrumbs = Global.clone(page.breadCrumbs)
+        breadCrumbs.push(stageName)
         pageStack.push(Qt.resolvedUrl("StagePage.qml"), {
-            table: table,
+            table: page.table,
             where: _where,
             stage: stageName,
+            breadCrumbs: breadCrumbs
         })
     }
 
     Component.onCompleted: {
+        if (!page) {
+            console.error("no page set")
+            return
+        }
+
+        if (typeof(page.__type_TournamentPage) === "undefined") {
+            console.error("Page must be set to a TournamentPage")
+            return
+        }
+
         var myFilters = "stage_name='" + stageName + "'"
-        if (where.length > 0) {
-            _where = where + " and " + myFilters
+        if (page.where.length > 0) {
+            _where = page.where + " and " + myFilters
         } else {
             _where = " where " + myFilters
         }

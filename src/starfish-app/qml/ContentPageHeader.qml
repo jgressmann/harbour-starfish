@@ -27,6 +27,7 @@ import org.duckdns.jgressmann 1.0
 import "."
 
 PageHeader {
+    id: root
     leftMargin: Theme.horizontalPageMargin + busy.width + Theme.paddingSmall
     rightMargin: Theme.horizontalPageMargin + homeButton.width  + Theme.paddingMedium
 
@@ -44,5 +45,34 @@ PageHeader {
 
     VodDataManagerBusyIndicator {
         id: busy
+    }
+
+    Label {
+        id: breadCrumbLabel
+        anchors.top: homeButton.bottom
+        x: Theme.horizontalPageMargin
+        width: root.width - 2*x
+        font.pixelSize: Theme.fontSizeTiny
+        color: Theme.highlightColor
+        text: "lorem ipsum"
+        elide: Text.ElideLeft
+    }
+
+    onPageChanged: _onBreadCrumbsChanged()
+
+    function _onBreadCrumbsChanged() {
+//        console.debug("bread crumbs changed")
+        var s = ""
+        if (page && page.breadCrumbs) {
+            for (var i = 0; i < page.breadCrumbs.length; ++i) {
+                if (s.length) {
+                    s += " / "
+                }
+
+                s += page.breadCrumbs[i]
+            }
+        }
+
+        breadCrumbLabel.text = s
     }
 }

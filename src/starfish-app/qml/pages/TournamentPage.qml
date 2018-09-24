@@ -27,10 +27,11 @@ import org.duckdns.jgressmann 1.0
 import ".."
 
 BasePage {
-    id: page
+    id: root
 
     property string table
     property string where
+    readonly property int __type_TournamentPage: 1
 
     SqlVodModel {
         id: sqlModel
@@ -39,7 +40,7 @@ BasePage {
         select: "select distinct " + columns.join(",") + " from " + table + where + " order by match_date desc"
     }
 
-    SilicaFlickable {
+    contentItem: SilicaFlickable {
         anchors.fill: parent
 
         // Why is this necessary?
@@ -61,15 +62,7 @@ BasePage {
                 width: listView.width
                 contentHeight: Global.itemHeight // StageItem is a ListItem
                 stageName: stage_name
-                table: page.table
-                where: {
-                    var myFilter = "stage_name='" + stageName + "'"
-                    if (page.where.length > 0) {
-                        return page.where + " and " + myFilter
-                    }
-
-                    return " where " + myFilter
-                }
+                page: root
 
                 onClicked: {
                     ListView.view.currentIndex = index
