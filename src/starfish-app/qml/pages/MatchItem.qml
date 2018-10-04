@@ -506,14 +506,6 @@ ListItem {
         console.debug("_clicked=" + _clicked)
     }
 
-    on_VodChanged: {
-        console.debug("_vod=" + _vod)
-    }
-
-//    on_ValidRangeChanged: {
-//        console.debug("value range " + _validRange)
-//    }
-
     Connections {
         target: pageStack
         onBusyChanged: {
@@ -737,7 +729,7 @@ ListItem {
 
     function metaDataAvailable(rowid, vod) {
         if (rowid === rowId) {
-            console.debug("metaDataAvailable rowid=" + rowid)
+//            console.debug("metaDataAvailable rowid=" + rowid)
             _metaDataState = metaDataStateAvailable
             _vod = vod
             _vodTitle = vod.description.title
@@ -748,9 +740,9 @@ ListItem {
 
             // now that we have meta data, we might
             // be able to get a watch progress
-            console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
+//            console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
             _endOffset = VodDataManager.getVodEndOffset(rowId, baseOffset, length)
-            console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
+//            console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
 
 
             if (App.isOnline) {

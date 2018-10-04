@@ -10,6 +10,8 @@ public:
 
     ScStopwatch(const ScStopwatch&) = delete;
     ScStopwatch& operator=(const ScStopwatch&) = delete;
+    void start();
+    void stop();
 
 private:
     QString m_Name;
