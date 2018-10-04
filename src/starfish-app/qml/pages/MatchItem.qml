@@ -543,7 +543,7 @@ ListItem {
         _vodTitle = VodDataManager.title(rowId)
         seenButton.seen = VodDataManager.seen(table, _where) >= 1
 //        console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
-        _endOffset = VodDataManager.getVodEndOffset(rowId, baseOffset, length)
+        _endOffset = VodDataManager.vodEndOffset(rowId, baseOffset, length)
 //        console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
 
         // also fetch a valid meta data from cache
@@ -741,7 +741,7 @@ ListItem {
             // now that we have meta data, we might
             // be able to get a watch progress
 //            console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
-            _endOffset = VodDataManager.getVodEndOffset(rowId, baseOffset, length)
+            _endOffset = VodDataManager.vodEndOffset(rowId, baseOffset, length)
 //            console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
 
 

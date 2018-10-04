@@ -3468,7 +3468,7 @@ ScVodDataManager::sqlPatchLevel() const
 }
 
 int
-ScVodDataManager::getVodEndOffset(qint64 rowid, int offset, int vodLengthS) const
+ScVodDataManager::vodEndOffset(qint64 rowid, int offset, int vodLengthS) const
 {
     static const QString sql = QStringLiteral(
 "SELECT\n"
