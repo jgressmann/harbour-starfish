@@ -30,7 +30,7 @@ BasePage {
     id: page
     property string table
     property string where
-    property alias stage: header.title
+    property alias stage: pageHeader.title
     property bool _sameDate: false
     property bool _sameSides: false
     property date _matchDate
@@ -71,7 +71,6 @@ BasePage {
         Component.onCompleted: _updateSameSides()
     }
 
-
     contentItem: SilicaFlickable {
         anchors.fill: parent
 
@@ -83,14 +82,14 @@ BasePage {
         TopMenu {}
 
         ContentPageHeader {
-            id: header
+            id: pageHeader
         }
 
         Column {
             id: fixture
             x: Theme.horizontalPageMargin
             width: parent.width - 2*x
-            anchors.top: header.bottom
+            anchors.top: pageHeader.bottom
 
             Label {
                 id: sidesLabel
@@ -119,11 +118,13 @@ BasePage {
 
         HighlightingListView {
             id: listView
+
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            anchors.top: fixture.visible ? fixture.bottom : header.bottom
+            anchors.top: fixture.bottom
             model: sqlModel
+            clip: true
 
             RecentlyWatchedVideoUpdater {
                 id: updater
