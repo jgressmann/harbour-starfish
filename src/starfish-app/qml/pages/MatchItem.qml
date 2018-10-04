@@ -570,7 +570,9 @@ ListItem {
     }
 
     Component.onDestruction: {
-        VodDataManager.cancelFetchMetaData(rowId)
+        if (_metaDataState === metaDataStateFetching) {
+            VodDataManager.cancelFetchMetaData(rowId)
+        }
 //        console.debug("destroy match item rowid=" + rowId)
     }
 
