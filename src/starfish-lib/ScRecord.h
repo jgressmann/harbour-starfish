@@ -93,6 +93,4 @@ Q_DECLARE_METATYPE(ScRecord)
 
 QDebug operator<<(QDebug debug, const ScRecord& value);
 
-//QDataStream &operator<<(QDataStream &stream, const ScRecord &value);
-//QDataStream &operator>>(QDataStream &stream, ScRecord &value);
 
