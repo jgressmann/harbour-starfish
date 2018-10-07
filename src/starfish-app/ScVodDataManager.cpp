@@ -1598,7 +1598,7 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
 
         q.addBindValue(record.eventName);
         q.addBindValue(record.year);
-        q.addBindValue(record.isValid(ScRecord::ValidSeason) ? record.season : 0);
+        q.addBindValue(record.isValid(ScRecord::ValidSeason) ? record.season : 1);
 
         if (!q.exec()) {
             qCritical() << "failed to exec" << q.lastError();
