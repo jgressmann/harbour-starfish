@@ -47,6 +47,7 @@
 #include <QMimeDatabase>
 #include <QMimeData>
 #include <stdio.h>
+#include <cassert>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -885,6 +886,7 @@ ScVodDataManager::setupDatabase() {
         "    offset INTEGER NOT NULL,\n"
         "    seen INTEGER DEFAULT 0,\n"
         "    match_number INTEGER NOT NULL,\n"
+        "    stage_rank INTEGER NOT NULL,\n"
         "    thumbnail_id INTEGER REFERENCES vod_thumbnails(id) ON DELETE SET NULL,\n"
         "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
         "    UNIQUE (event_name, game, match_date, match_name, match_number, season, stage_name, year) ON CONFLICT REPLACE\n"
@@ -940,7 +942,8 @@ ScVodDataManager::setupDatabase() {
         "       length,\n"
         "       seen,\n"
         "       match_number,\n"
-        "       thumbnail_id\n"
+        "       thumbnail_id,\n"
+        "       stage_rank\n"
         "   FROM vods v\n"
         "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
         "   INNER JOIN vod_files f ON f.id=u.vod_file_id\n"
@@ -971,7 +974,8 @@ ScVodDataManager::setupDatabase() {
         "       length,\n"
         "       seen,\n"
         "       match_number,\n"
-        "       thumbnail_id\n"
+        "       thumbnail_id,\n"
+        "       stage_rank\n"
         "   FROM vods v\n"
         "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
         "\n",
@@ -980,7 +984,7 @@ ScVodDataManager::setupDatabase() {
 
 
 
-    const int Version = 4;
+    const int Version = 5;
 
 
     if (!q.exec("PRAGMA foreign_keys = ON")) {
@@ -1016,7 +1020,8 @@ ScVodDataManager::setupDatabase() {
 
     bool hasVersion = false;
     auto version = q.value(0).toInt(&hasVersion);
-    if (hasVersion && version != Version) {
+    assert(hasVersion);
+    if (version != Version) {
 
         switch (version) {
         case 1:
@@ -1025,6 +1030,8 @@ ScVodDataManager::setupDatabase() {
             updateSql2(q);
         case 3:
             updateSql3(q);
+        case 4:
+            updateSql4(q);
         default:
             break;
         }
@@ -1039,6 +1046,8 @@ ScVodDataManager::setupDatabase() {
             return;
         }
     }
+
+    qDebug() << "database schema version" << version;
 
     for (size_t i = 0; i < _countof(CreateSql); ++i) {
 //        qDebug() << CreateSql[i];
@@ -1286,7 +1295,7 @@ ScVodDataManager::exists(
 
     if (!stage.name().isEmpty()) {
         record.stage = stage.name();
-        record.valid |= ScRecord::ValidStage;
+        record.valid |= ScRecord::ValidStageName;
     }
 
     if (!match.name().isEmpty()) {
@@ -1324,7 +1333,7 @@ ScVodDataManager::exists(QSqlQuery& q, const ScRecord& record, qint64* id) const
     Q_ASSERT(id);
     Q_ASSERT(record.isValid(
                  ScRecord::ValidEventName |
-                 ScRecord::ValidStage |
+                 ScRecord::ValidStageName |
                  ScRecord::ValidYear |
 //                 ScRecord::ValidGame |
 //                 ScRecord::ValidSeason |
@@ -1407,7 +1416,7 @@ ScVodDataManager::hasRecord(const ScRecord& record, bool* _exists) {
                        ScRecord::ValidYear |
                        ScRecord::ValidGame |
 //                       ScRecord::ValidSeason |
-                       ScRecord::ValidStage |
+                       ScRecord::ValidStageName |
                        ScRecord::ValidMatchDate |
                        ScRecord::ValidMatchName)) {
         qint64 id = -1;
@@ -1532,8 +1541,9 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
                     "   side2_race,\n"
                     "   vod_url_share_id,\n"
                     "   offset,\n"
-                    "   match_number\n"
-                    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n");
+                    "   match_number,\n"
+                    "   stage_rank\n"
+                    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n");
         if (!q.prepare(sql)) {
             qCritical() << "failed to prepare vod insert" << q.lastError();
             continue;
@@ -1554,6 +1564,7 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
         q.addBindValue(urlShareId);
         q.addBindValue(startOffset);
         q.addBindValue(record.isValid(ScRecord::ValidMatchNumber) ? record.matchNumber : 1);
+        q.addBindValue(record.isValid(ScRecord::ValidStageRank) ? record.stageRank : -1);
 
         if (!q.exec()) {
             qCritical() << "failed to exec vod insert" << q.lastError();
@@ -3454,6 +3465,33 @@ ScVodDataManager::updateSql3(QSqlQuery& q) {
     }
 
     qInfo("Update database v3 to v4 completed successfully\n");
+Exit:
+    return;
+Error:
+    setError(Error_CouldntCreateSqlTables);
+    goto Exit;
+}
+
+
+void
+ScVodDataManager::updateSql4(QSqlQuery& q) {
+    qInfo("Begin update of database v4 to v5\n");
+
+    static char const* const Sql[] = {
+        "ALTER TABLE vods ADD COLUMN stage_rank INTEGER NOT NULL DEFAULT -1",
+        "DROP VIEW offline_vods",
+        "DROP VIEW url_share_vods",
+    };
+
+    for (size_t i = 0; i < _countof(Sql); ++i) {
+        qDebug() << Sql[i];
+        if (!q.exec(Sql[i])) {
+            qCritical() << "Failed to update database from v4 to v5" << q.lastError();
+            goto Error;
+        }
+    }
+
+    qInfo("Update of database v4 to v5 completed successfully\n");
 Exit:
     return;
 Error:

@@ -285,10 +285,10 @@ bool tryGetSides(const QString& str, QString* side1, QString* side2) {
     return false;
 }
 
-bool tryGetMatchNumber(const QString& str, int* matchNumber) {
+bool tryGetMatchNumber(const QString& str, qint8* matchNumber) {
     int index = matchNumberRegex.indexIn(str);
     if (index >= 0) {
-        *matchNumber = matchNumberRegex.cap(1).toInt();
+        *matchNumber = static_cast<qint8>(matchNumberRegex.cap(1).toInt());
         return true;
     }
     return false;
@@ -311,6 +311,7 @@ ScRecord::ScRecord()
     side1Race = RaceUnknown;
     side2Race = RaceUnknown;
     matchNumber = -1;
+    stageRank = -1;
 }
 
 
@@ -370,9 +371,11 @@ ScRecord::autoComplete(const ScClassifier& classifier) {
             }
         }
 
-        if (isValid(ValidStage)) {
+        if (isValid(ValidStageName)) {
+            ScRecord::Game g;
             if (!isValid(ScRecord::ValidGame) &&
-                    classifier.tryGetGameFromStage(stage, (ScRecord::Game*)&game, nullptr)) {
+                    classifier.tryGetGameFromStage(stage, &g, nullptr)) {
+                game = g;
                 valid |= ScRecord::ValidGame;
                 change = true;
             }
@@ -381,16 +384,20 @@ ScRecord::autoComplete(const ScClassifier& classifier) {
         if (isValid(ValidSides)) {
             auto str = side1Name + QStringLiteral(" vs ") + side2Name;
 
+            ScRecord::Game g;
             if (!isValid(ScRecord::ValidGame) &&
-                    classifier.tryGetGameFromMatch(str, (ScRecord::Game*)&game, nullptr)) {
+                    classifier.tryGetGameFromMatch(str, &g, nullptr)) {
+                game = g;
                 valid |= ScRecord::ValidGame;
                 change = true;
             }
         }
 
         if (isValid(ValidMatchName)) {
+            ScRecord::Game g;
             if (!isValid(ScRecord::ValidGame) &&
-                    classifier.tryGetGameFromMatch(matchName, (ScRecord::Game*)&game, nullptr)) {
+                    classifier.tryGetGameFromMatch(matchName, &g, nullptr)) {
+                game = g;
                 valid |= ScRecord::ValidGame;
                 change = true;
             }
@@ -484,7 +491,7 @@ QDomNode ScRecord::toXml(QDomDocument& doc) const {
         element.setAttribute(QStringLiteral("event_full_name"), eventFullName);
     }
 
-    if (isValid(ValidStage)) {
+    if (isValid(ValidStageName)) {
         element.setAttribute(QStringLiteral("stage"), stage);
     }
 
@@ -553,7 +560,7 @@ ScRecord::fromXml(const QDomNode& node) {
         str = attrs.namedItem(QStringLiteral("stage")).nodeValue();
         if (!str.isEmpty()) {
             record.stage = str;
-            record.valid |= ScRecord::ValidStage;
+            record.valid |= ScRecord::ValidStageName;
         }
 
         str = attrs.namedItem(QStringLiteral("match_date")).nodeValue();
@@ -627,7 +634,7 @@ QDebug operator<<(QDebug debug, const ScRecord& record) {
         debug.nospace() << "\tsides=" << record.side1Name << "/" << record.side2Name << "\n";
     }
 
-    if (record.isValid(ScRecord::ValidStage)) {
+    if (record.isValid(ScRecord::ValidStageName)) {
         debug.nospace() << "\tstage=" << record.stage << "\n";
     }
 
@@ -637,6 +644,10 @@ QDebug operator<<(QDebug debug, const ScRecord& record) {
 
     if (record.isValid(ScRecord::ValidYear)) {
         debug.nospace() << "\tyear=" << record.year << "\n";
+    }
+
+    if (record.isValid(ScRecord::ValidStageRank)) {
+        debug.nospace() << "\tstageRank=" << record.stageRank << "\n";
     }
 
     debug.nospace() << ")\n";

@@ -383,11 +383,11 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
 
     QDate qlastMatchDate; // months seem to switch on a per stage basis
 
-    for (int i = 0; i < stageOffsets.size() - 1; ++i) {
+    for (int i = 0, count = stageOffsets.size() - 1; i < count; ++i) {
 
         ScStage& stage = stages[i];
         ScStageData& stageData = stage.data();
-        stageData.stageNumber = stageOffsets.size() - i - 1;
+        stageData.stageNumber = count - 1;
 
         if (stageExclude[i]) {
             qDebug() << "exclude stage" << stageData.name;
@@ -666,7 +666,7 @@ Sc2LinksDotCom::toRecord(const ScEventData& event, const ScStageData& stage, con
 
     if (!stage.name.isEmpty()) {
         record.stage = stage.name;
-        record.valid |= ScRecord::ValidStage;
+        record.valid |= ScRecord::ValidStageName;
     }
 
     if (!match.name.isEmpty()) {
@@ -695,6 +695,9 @@ Sc2LinksDotCom::toRecord(const ScEventData& event, const ScStageData& stage, con
         record.matchNumber = match.matchNumber;
         record.valid |= ScRecord::ValidMatchNumber;
     }
+
+    record.stageRank = stage.stageNumber;
+    record.valid |= ScRecord::ValidStageRank;
 }
 
 void

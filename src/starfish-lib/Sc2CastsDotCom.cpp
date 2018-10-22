@@ -585,7 +585,7 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
         }
 
         if (!stage.isEmpty()) {
-            record.valid |= ScRecord::ValidStage;
+            record.valid |= ScRecord::ValidStageName;
             record.stage = stage;
         }
 
@@ -642,7 +642,7 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
         if (record.isValid(
                     ScRecord::ValidEventName |
                     ScRecord::ValidEventFullName |
-                    ScRecord::ValidStage |
+                    ScRecord::ValidStageName |
                     ScRecord::ValidYear |
                     ScRecord::ValidUrl |
                     ScRecord::ValidMatchDate |

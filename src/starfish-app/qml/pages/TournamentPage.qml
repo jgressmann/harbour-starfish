@@ -37,7 +37,7 @@ BasePage {
         id: sqlModel
         dataManager: VodDataManager
         columns: ["event_full_name", "stage_name" ]
-        select: "select distinct " + columns.join(",") + " from " + table + where + " order by match_date desc"
+        select: "select distinct " + columns.join(",") + " from " + table + where + " order by stage_rank desc, match_date desc"
     }
 
     contentItem: SilicaFlickable {

@@ -33,18 +33,19 @@ class ScRecord
 {
 public:
     enum {
-        ValidGame = 0x001,
-        ValidYear = 0x002,
-        ValidSeason = 0x004,
-        ValidEventName = 0x008,
-        ValidStage = 0x010,
-        ValidMatchDate = 0x020,
-        ValidSides = 0x040,
-        ValidRaces = 0x080,
-        ValidUrl = 0x100,
-        ValidMatchName = 0x200,
-        ValidEventFullName = 0x400,
-        ValidMatchNumber = 0x800,
+        ValidGame = 0x0001,
+        ValidYear = 0x0002,
+        ValidSeason = 0x0004,
+        ValidEventName = 0x0008,
+        ValidStageName = 0x0010,
+        ValidMatchDate = 0x0020,
+        ValidSides = 0x0040,
+        ValidRaces = 0x0080,
+        ValidUrl = 0x0100,
+        ValidMatchName = 0x0200,
+        ValidEventFullName = 0x0400,
+        ValidMatchNumber = 0x0800,
+        ValidStageRank = 0x1000,
     };
 
     enum Game {
@@ -68,13 +69,14 @@ public:
     QString url;
     QString matchName;
     QDate matchDate;
-    int side1Race;
-    int side2Race;
-    int year;
-    int season;
-    int game;
-    int valid;
-    int matchNumber;
+    qint32 valid;
+    qint32 year;
+    qint8 season;
+    qint8 matchNumber;
+    qint8 stageRank;
+    qint8 game : 4;
+    qint8 side1Race : 4;
+    qint8 side2Race : 4;
 
     ~ScRecord() = default;
     ScRecord();
