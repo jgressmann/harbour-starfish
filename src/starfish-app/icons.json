@@ -12,6 +12,11 @@
             "extension": ".png"
         },
         {
+            "regex": "afreeca world invitational",
+            "url": "https://www.dropbox.com/s/mh1pw1xm6vb5bit/awi.jpeg?dl=1",
+            "extension": ".jpeg"
+        },
+        {
             "regex": "asus rog",
             "url": "https://www.dropbox.com/s/txfgdlyfekva2i5/asusrog.jpg?dl=1",
             "extension": ".jpg"
@@ -286,6 +291,16 @@
             "regex": "ssl classic|starleague classic",
             "url": "https://www.dropbox.com/s/0dcs97e97trhaih/sslclassic.jpg?dl=1",
             "extension": ".jpg"
+        },
+        {
+            "regex": "starladder ultimate series",
+            "url": "https://www.dropbox.com/s/ndo9yy8scp1whh0/slsc2.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "^starladder",
+            "url": "https://www.dropbox.com/s/ocig2azkv0psxg7/starladder.png?dl=1",
+            "extension": ".png"
         },
         {
             "regex": "takes?|take tv",
