@@ -1,7 +1,7 @@
 # known to qmake
 VER_MAJ = 1
 VER_MIN = 0
-VER_PAT = 5
+VER_PAT = 7
 
 VERSION = $${VER_MAJ}.$${VER_MIN}.$${VER_PAT}
 
@@ -16,4 +16,10 @@ INCLUDEPATH += $$PWD/src/starfish-lib
 
 DISTFILES += \
     $$PWD/setup-build-engine.sh
+
+
+CONFIG(debug, debug|release) {
+
+    QMAKE_CXXFLAGS += -O0
+}
 
