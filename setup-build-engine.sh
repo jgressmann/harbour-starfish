@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# RUN ME AS mersdk!!!!
+
 
 Usage()
 {
