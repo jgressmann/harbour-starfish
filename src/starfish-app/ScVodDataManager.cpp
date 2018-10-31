@@ -1018,28 +1018,33 @@ ScVodDataManager::setupDatabase() {
         return;
     }
 
-    bool hasVersion = false;
+    auto hasVersion = false;
     auto version = q.value(0).toInt(&hasVersion);
     assert(hasVersion);
-    if (version != Version) {
+    hasVersion = version > 0; // not a newly created db
+    auto createTables = true;
+    if (hasVersion) {
+        if (version != Version) {
+            switch (version) {
+            case 1:
+                updateSql1(q);
+            case 2:
+                updateSql2(q);
+            case 3:
+                updateSql3(q);
+            case 4:
+                updateSql4(q);
+            default:
+                break;
+            }
 
-        switch (version) {
-        case 1:
-            updateSql1(q);
-        case 2:
-            updateSql2(q);
-        case 3:
-            updateSql3(q);
-        case 4:
-            updateSql4(q);
-        default:
-            break;
+            if (m_Error) { // don't update version if there is an error
+                return;
+            }
+        } else {
+            createTables = false;
         }
-
-        if (m_Error) { // don't update version if there is an error
-            return;
-        }
-
+    } else {
         if (!q.exec(QStringLiteral("PRAGMA user_version = %1").arg(QString::number(Version)))) {
             qCritical() << "failed to set user version" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
@@ -1047,14 +1052,16 @@ ScVodDataManager::setupDatabase() {
         }
     }
 
-    qDebug() << "database schema version" << version;
+    qInfo() << "database schema version" << Version;
 
-    for (size_t i = 0; i < _countof(CreateSql); ++i) {
-//        qDebug() << CreateSql[i];
-        if (!q.exec(CreateSql[i])) {
-            qCritical() << "failed to create table" << q.lastError();
-            setError(Error_CouldntCreateSqlTables);
-            return;
+    if (createTables) {
+        for (size_t i = 0; i < _countof(CreateSql); ++i) {
+            qDebug() << CreateSql[i];
+            if (!q.exec(CreateSql[i])) {
+                qCritical() << "failed to create table" << q.lastError();
+                setError(Error_CouldntCreateSqlTables);
+                return;
+            }
         }
     }
 }
@@ -1158,30 +1165,23 @@ ScVodDataManager::raceIcon(int race) const
 
 void
 ScVodDataManager::dropTables() {
+    // https://stackoverflow.com/questions/525512/drop-all-tables-command#525523
+
+    // PRAGMA INTEGRITY_CHECK;
+
     static char const* const DropSql[] = {
-        "DROP INDEX IF EXISTS vods_id",
-        "DROP INDEX IF EXISTS vods_game",
-        "DROP INDEX IF EXISTS vods_year",
-        "DROP INDEX IF EXISTS vods_season",
-        "DROP INDEX IF EXISTS vods_event_name",
-        "DROP INDEX IF EXISTS vods_seen",
-
-        "DROP VIEW IF EXISTS offline_vods",
-        "DROP VIEW IF EXISTS url_share_vods",
-
-
-        "DROP TABLE IF EXISTS vods",
-        "DROP TABLE IF EXISTS vod_files",
-        "DROP TABLE IF EXISTS vod_thumbnails ",
-        "DROP TABLE IF EXISTS vod_url_share",
-        "DROP TABLE IF EXISTS settings",
-        "DROP TABLE IF EXISTS icons",
+        "PRAGMA user_version = 0",
+        "PRAGMA writable_schema = 1",
+        "DELETE FROM sqlite_master WHERE type IN ('table', 'index', 'trigger')",
+        "PRAGMA writable_schema = 0",
+        "VACUUM",
     };
 
     QSqlQuery q(m_Database);
     for (size_t i = 0; i < _countof(DropSql); ++i) {
-        if (!q.prepare(DropSql[i]) || !q.exec()) {
-            qCritical() << "failed to drop table" << q.lastError();
+        qDebug() << DropSql[i];
+        if (!q.exec(DropSql[i])) {
+            qCritical() << "SQL" << DropSql[i] << "failed" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
         }
     }
@@ -1573,17 +1573,14 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
 
         if (q.lastInsertId().isValid()) {
             ++count;
+            if (!record.isValid(ScRecord::ValidGame)) {
+                unknownGameRowids << qvariant_cast<qint64>(q.lastInsertId());
+                unknownGameIndices << i;
+            }
         } else {
             qDebug() << "duplicate record" << record;
         }
-
-        if (!record.isValid(ScRecord::ValidGame)) {
-            unknownGameRowids << qvariant_cast<qint64>(q.lastInsertId());
-            unknownGameIndices << i;
-        }
     }
-
-
 
     // try to fix game column
     for (int i = 0; i < unknownGameIndices.size(); ++i) {
@@ -3301,7 +3298,8 @@ ScVodDataManager::updateSql1(QSqlQuery& q) {
     const auto marker = downloadMarker();
 
     static char const* const Sql[] = {
-        "DROP TABLE settings\n",
+        "BEGIN",
+        "DROP TABLE IF EXISTS settings\n",
         "CREATE TABLE settings (\n"
         "    key TEXT NOT NULL UNIQUE,\n"
         "    value TEXT\n"
@@ -3322,7 +3320,27 @@ ScVodDataManager::updateSql1(QSqlQuery& q) {
 
     setDownloadMarker(marker);
 
+
+    static char const* const Sql2[] = {
+        "PRAGMA user_version = 2",
+        "COMMIT",
+    };
+
+    for (size_t i = 0; i < _countof(Sql2); ++i) {
+        qDebug() << Sql2[i];
+        if (!q.exec(Sql2[i])) {
+            qCritical() << "failed to upgrade database from v1 to v2" << q.lastError();
+            goto Error;
+        }
+    }
+
     qInfo("Update database v1 to v2 completed successfully\n");
+Exit:
+    return;
+Error:
+    q.exec("ROLLBACK");
+    setError(Error_CouldntCreateSqlTables);
+    goto Exit;
 }
 
 void
@@ -3330,6 +3348,7 @@ ScVodDataManager::updateSql2(QSqlQuery& q) {
     qInfo("Begin update database v2 to v3\n");
 
     static char const* const Sql1[] = {
+        "BEGIN",
         "ALTER TABLE vod_url_share ADD COLUMN vod_file_id INTEGER REFERENCES vod_files(id) ON DELETE SET NULL",
     };
 
@@ -3365,8 +3384,11 @@ ScVodDataManager::updateSql2(QSqlQuery& q) {
     }
 
     static char const* const Sql2[] = {
-        "DROP VIEW offline_vods",
-        "DROP TABLE vod_file_ref",
+        "DROP VIEW IF EXISTS offline_vods",
+        "DROP TABLE IF EXISTS vod_file_ref",
+        "PRAGMA user_version = 3",
+        "COMMIT",
+        "VACUUM",
     };
 
     for (size_t i = 0; i < _countof(Sql2); ++i) {
@@ -3381,6 +3403,7 @@ ScVodDataManager::updateSql2(QSqlQuery& q) {
 Exit:
     return;
 Error:
+    q.exec("ROLLBACK");
     setError(Error_CouldntCreateSqlTables);
     goto Exit;
 }
@@ -3394,6 +3417,7 @@ ScVodDataManager::updateSql3(QSqlQuery& q) {
     qInfo("Begin update database v3 to v4\n");
 
     static char const* const Sql1[] = {
+        "BEGIN",
         "ALTER TABLE vod_url_share ADD COLUMN length INTEGER NOT NULL DEFAULT 0",
     };
 
@@ -3453,7 +3477,10 @@ ScVodDataManager::updateSql3(QSqlQuery& q) {
     }
 
     static char const* const Sql2[] = {
-        "DROP VIEW offline_vods",
+        "DROP VIEW IF EXISTS offline_vods",
+        "PRAGMA user_version = 4",
+        "COMMIT",
+        "VACUUM",
     };
 
     for (size_t i = 0; i < _countof(Sql2); ++i) {
@@ -3468,6 +3495,7 @@ ScVodDataManager::updateSql3(QSqlQuery& q) {
 Exit:
     return;
 Error:
+    q.exec("ROLLBACK");
     setError(Error_CouldntCreateSqlTables);
     goto Exit;
 }
@@ -3478,9 +3506,13 @@ ScVodDataManager::updateSql4(QSqlQuery& q) {
     qInfo("Begin update of database v4 to v5\n");
 
     static char const* const Sql[] = {
+        "BEGIN",
         "ALTER TABLE vods ADD COLUMN stage_rank INTEGER NOT NULL DEFAULT -1",
-        "DROP VIEW offline_vods",
-        "DROP VIEW url_share_vods",
+        "DROP VIEW IF EXISTS offline_vods",
+        "DROP VIEW IF EXISTS url_share_vods",
+        "PRAGMA user_version = 5",
+        "COMMIT",
+        "VACUUM",
     };
 
     for (size_t i = 0; i < _countof(Sql); ++i) {
@@ -3495,6 +3527,7 @@ ScVodDataManager::updateSql4(QSqlQuery& q) {
 Exit:
     return;
 Error:
+    q.exec("ROLLBACK");
     setError(Error_CouldntCreateSqlTables);
     goto Exit;
 }
