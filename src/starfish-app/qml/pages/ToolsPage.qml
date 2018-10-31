@@ -87,7 +87,8 @@ Page {
                                 Qt.resolvedUrl("ConfirmClearDialog.qml"),
                                 {
                                     acceptDestination: Qt.resolvedUrl("StartPage.qml"),
-                                    acceptDestinationAction: PageStackAction.Replace
+                                    acceptDestinationAction: PageStackAction.Replace,
+                                    acceptDestinationReplaceTarget: null,
                                 })
                     dialog.accepted.connect(function() {
                         console.debug("clear")
