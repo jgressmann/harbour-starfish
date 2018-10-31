@@ -80,6 +80,12 @@ const QString s_SqlPatchLevelDefault = QStringLiteral("0");
 const QString s_ProtossIconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/protoss.png");
 const QString s_TerranIconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/terran.png");
 const QString s_ZergIconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/zerg.png");
+const QString s_BroodWarIconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/bw.png");
+const QString s_Sc2IconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/sc2.png");
+const QString s_RandomIconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/random.png");
+const QString s_SailfishIconPath = QStringLiteral("image://theme/icon-m-sailfish");
+const QString s_GameKey = QStringLiteral("game");
+const QString s_EventNameKey = QStringLiteral("event_name");
 
 const int BatchSize = 1<<13;
 
@@ -1106,17 +1112,17 @@ ScVodDataManager::label(const QString& key, const QVariant& value) const {
 QString
 ScVodDataManager::icon(const QString& key, const QVariant& value) const {
 //    ScStopwatch sw("icon", 5);
-    if (QStringLiteral("game") == key) {
+    if (s_GameKey == key) {
         auto game = value.toInt();
         switch (game) {
         case ScRecord::GameBroodWar:
-            return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/bw.png");
+            return s_BroodWarIconPath;
         case ScRecord::GameSc2:
-            return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/sc2.png");
+            return s_Sc2IconPath;
         default:
-            return QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "/media/random.png");
+            return s_RandomIconPath;
         }
-    } else if (QStringLiteral("event_name") == key) {
+    } else if (s_EventNameKey == key) {
         auto event = value.toString();
         QString url;
         if (m_Icons.getIconForEvent(event, &url)) {
@@ -1144,7 +1150,7 @@ ScVodDataManager::icon(const QString& key, const QVariant& value) const {
         }
     }
 
-    return QStringLiteral("image://theme/icon-m-sailfish");
+    return s_SailfishIconPath;
 }
 
 QString
