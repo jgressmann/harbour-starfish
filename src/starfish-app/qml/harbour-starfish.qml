@@ -121,7 +121,7 @@ ApplicationWindow {
             defaultValue: 4
 
             onValueChanged: {
-                VodDataManager.vodman.maxConcurrentMetaDataDownloads = value
+                VodDataManager.maxConcurrentMetaDataDownloads = value
             }
         }
 
@@ -373,7 +373,7 @@ ApplicationWindow {
     Component.onCompleted: {
         VodDataManager.vodsAdded.connect(_onVodsAdded)
         VodDataManager.busyChanged.connect(_busyChanged)
-        VodDataManager.vodman.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
+        VodDataManager.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
         _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
 

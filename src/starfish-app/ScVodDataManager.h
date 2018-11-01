@@ -27,12 +27,14 @@
 #include "ScRecord.h"
 #include "ScIcons.h"
 #include "ScClassifier.h"
-#include "ScApp.h"
+//#include "ScApp.h"
 
 #include <QMutex>
 #include <QSqlDatabase>
 #include <QThread>
 #include <QVariant>
+#include <QSharedPointer>
+
 
 class QNetworkAccessManager;
 class QNetworkRequest;
@@ -42,6 +44,8 @@ class ScVodman;
 class ScEvent;
 class ScStage;
 class ScMatch;
+class ScVodDataManagerState;
+class ScVodDataManagerWorker;
 class VMVodFileDownload;
 
 
@@ -86,12 +90,15 @@ private:
 
 
 
+
 class ScVodDataManager : public QObject {
 
     Q_OBJECT
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
-    Q_PROPERTY(ScVodman* vodman READ vodman CONSTANT)
+//    Q_PROPERTY(ScVodman* vodman READ vodman CONSTANT)
+    Q_PROPERTY(int maxConcurrentMetaDataDownloads READ maxConcurrentMetaDataDownloads WRITE setMaxConcurrentMetaDataDownloads NOTIFY maxConcurrentMetaDataDownloadsChanged)
     Q_PROPERTY(QString downloadMarker READ downloadMarkerString NOTIFY downloadMarkerChanged)
+
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
     Q_PROPERTY(QVariant database READ databaseVariant CONSTANT)
@@ -162,16 +169,17 @@ public: //
     Q_INVOKABLE QString icon(const QString& key, const QVariant& value = QVariant()) const;
     bool ready() const;
     Error error() const { return m_Error; }
-    QSqlDatabase database() const { return m_Database; }
-    Q_INVOKABLE void fetchMetaData(qint64 rowid);
-    Q_INVOKABLE void fetchMetaDataFromCache(qint64 rowid);
-    Q_INVOKABLE void fetchThumbnail(qint64 rowid);
-    Q_INVOKABLE void fetchThumbnailFromCache(qint64 rowid);
+    QSqlDatabase database() const;
+    Q_INVOKABLE int fetchMetaData(qint64 rowid);
+    Q_INVOKABLE int fetchMetaDataFromCache(qint64 rowid);
+    Q_INVOKABLE int fetchThumbnail(qint64 rowid);
+    Q_INVOKABLE int fetchThumbnailFromCache(qint64 rowid);
     Q_INVOKABLE QString title(qint64 rowid);
-    Q_INVOKABLE void fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted);
+    Q_INVOKABLE int fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted);
     Q_INVOKABLE void cancelFetchVod(qint64 rowid);
-    Q_INVOKABLE void cancelFetchMetaData(qint64 rowid);
-    Q_INVOKABLE void queryVodFiles(qint64 rowid);
+    Q_INVOKABLE void cancelFetchMetaData(int ticket, qint64 rowid);
+    Q_INVOKABLE void cancelFetchThumbnail(int ticket, qint64 rowid);
+    Q_INVOKABLE int queryVodFiles(qint64 rowid);
     Q_INVOKABLE void deleteVod(qint64 rowid);
     Q_INVOKABLE void deleteMetaData(qint64 rowid);
     Q_INVOKABLE void fetchIcons();
@@ -185,9 +193,9 @@ public: //
     void resumeVodsChangedEvents();
     Q_INVOKABLE qreal seen(const QString& table, const QString& where) const;
     Q_INVOKABLE void setSeen(const QString& table, const QString& where, bool value);
-    inline ScVodman* vodman() const { return m_Vodman; }
-    inline ScClassifier* classifier() const { return const_cast<ScClassifier*>(&m_Classifier); }
-    inline QVariant databaseVariant() const { return QVariant::fromValue(m_Database); }
+//    inline ScVodman* vodman() const { return m_Vodman; }
+    ScClassifier* classifier() const;
+    QVariant databaseVariant() const;
     bool busy() const;
     Q_INVOKABLE QString makeThumbnailFile(const QString& srcPath);
     Q_INVOKABLE int deleteSeenVodFiles(const QString& where);
@@ -203,14 +211,18 @@ public: //
     Q_INVOKABLE void clearCache(ClearFlags flags);
     Q_INVOKABLE void moveDataDirectory(const QString& targetDirectory);
     Q_INVOKABLE void cancelMoveDataDirectory();
+    Q_INVOKABLE bool cancelTicket(int ticket);
     QString dataDirectory() const;
     int sqlPatchLevel() const;
+    inline int maxConcurrentMetaDataDownloads() const { return m_MaxConcurrentMetaDataDownloads; }
+    void setMaxConcurrentMetaDataDownloads(int value);
 
 signals:
     void readyChanged();
     void errorChanged();
     void vodsChanged();
     void fetchingMetaData(qint64 rowid);
+    void fetchingThumbnail(qint64 rowid);
     void metaDataAvailable(qint64 rowid, VMVod vod);
     void metaDataDownloadFailed(qint64 rowid, int error);
     void vodAvailable(
@@ -236,14 +248,14 @@ signals:
     void sqlPatchLevelChanged();
     void dataDirectoryChanged();
     void dataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
-
+    void startWorker();
+    void maxConcurrentMetaDataDownloadsChanged(int value);
 
 public slots:
     void excludeEvent(const ScEvent& event, bool* exclude);
     void excludeStage(const ScStage& stage, bool* exclude);
     void excludeMatch(const ScMatch& match, bool* exclude);
     void hasRecord(const ScRecord& record, bool* exclude);
-    void vacuum();
 
 private:
     enum UrlType {
@@ -256,31 +268,13 @@ private:
         FT_File = 0x2,
     };
 
-    struct VodmanMetaDataRequest {
-        qint64 vod_url_share_id;
-    };
-
-    struct VodmanFileRequest {
-        qint64 token;
-        qint64 vod_url_share_id;
-        int formatIndex;
-        bool implicitlyStarted;
-    };
-
-    struct ThumbnailRequest {
-        qint64 rowid;
-    };
-
     struct IconRequest {
         QString url;
     };
 
 
 private slots:
-    void onMetaDataDownloadCompleted(qint64 token, const VMVod& vod);
-    void onFileDownloadChanged(qint64 token, const VMVodFileDownload& download);
-    void onFileDownloadCompleted(qint64 token, const VMVodFileDownload& download);
-    void onDownloadFailed(qint64 token, int serviceErrorCode);
+
     void requestFinished(QNetworkReply* reply);
     void vodAddWorkerFinished();
     void onDataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
@@ -293,9 +287,8 @@ private:
     void updateStatus();
     void setStatusFromRowCount();
     void clearVods();
-    void fetchThumbnailFromUrl(qint64 rowid, const QString& url);
+
     void fetchMetaData(qint64 urlShareId, const QString& url);
-    void addThumbnail(qint64 rowid, const QByteArray& bytes);
     static void parseUrl(const QString& url,
                          QString* cannonicalUrl,
                          QString* outId, int* outUrlType, int* outStartOffset);
@@ -310,14 +303,14 @@ private:
             bool* exists) const;
 
     bool exists(QSqlQuery& query, const ScRecord& record, qint64* id) const;
-    void updateVodDownloadStatus(qint64 urlShareId, const VMVodFileDownload& download);
-    void fetchMetaData(qint64 rowid, bool download);
+
+    int fetchMetaData(qint64 rowid, bool download);
     void iconRequestFinished(QNetworkReply* reply, IconRequest& r);
-    void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
+
     static void batchAddVods(void* ctx);
     void batchAddVods();
     void dropTables();
-    void fetchThumbnail(qint64 rowid, bool download);
+    int fetchThumbnail(qint64 rowid, bool download);
     int deleteVodsWhere(const QString& where);
     void fetchSqlPatches();
     void applySqlPatches(const QByteArray& bytes);
@@ -335,24 +328,24 @@ private:
     mutable QMutex m_AddQueueLock;
     QList<ScRecord> m_AddQueue;
     QThread m_AddThread;
-    ScVodman* m_Vodman;
+    QThread m_WorkerThread;
     QNetworkAccessManager* m_Manager;
+    ScVodDataManagerWorker* m_WorkerInterface;
     QSqlDatabase m_Database;
     Error m_Error;
-    QHash<QNetworkReply*, ThumbnailRequest> m_ThumbnailRequests;
     QHash<QNetworkReply*, IconRequest> m_IconRequests;
-    QHash<qint64, VodmanMetaDataRequest> m_VodmanMetaDataRequests;
-    QHash<qint64, VodmanFileRequest> m_VodmanFileRequests;
     QNetworkReply* m_ClassfierRequest;
     QNetworkReply* m_SqlPatchesRequest;
     DataDirectoryMover* m_DataDirectoryMover;
-    ScIcons m_Icons;
-    ScClassifier m_Classifier;
-    QString m_ThumbnailDir;
-    QString m_MetaDataDir;
-    QString m_VodDir;
-    QString m_IconDir;
+//    ScIcons m_Icons;
+//    ScClassifier m_Classifier;
+//    QString m_ThumbnailDir;
+//    QString m_MetaDataDir;
+//    QString m_VodDir;
+//    QString m_IconDir;
     int m_SuspendedVodsChangedEventCount;
+    int m_MaxConcurrentMetaDataDownloads;
     QAtomicInt m_State;
+    QSharedPointer<ScVodDataManagerState> m_SharedState;
 };
 

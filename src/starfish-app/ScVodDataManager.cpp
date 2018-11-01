@@ -22,13 +22,16 @@
  */
 
 #include "ScVodDataManager.h"
-#include "ScVodman.h"
+#include "ScVodDataManagerState.h"
+#include "ScVodDataManagerWorker.h"
+
 #include "Vods.h"
 #include "Sc.h"
 #include "ScRecord.h"
 #include "ScStopwatch.h"
+#include "ScApp.h"
 
-#include <vodman/VMVodFileDownload.h>
+
 
 #include <QDebug>
 #include <QRegExp>
@@ -65,6 +68,13 @@
         } \
     } while (0)
 
+#define RETURN_MINUS_ON_ERROR \
+    do { \
+        if (m_State != State_Ready) { \
+            qCritical("Not ready, return"); \
+            return -1; \
+        } \
+    } while (0)
 
 #define CLASSIFIER_FILE "/classifier.json.gz"
 #define ICONS_FILE "/icons.json.gz"
@@ -89,22 +99,6 @@ const QString s_EventNameKey = QStringLiteral("event_name");
 
 const int BatchSize = 1<<13;
 
-bool selectIdFromVodsWhereUrlShareIdEquals(QSqlQuery& q, qint64 urlShareId) {
-    static const QString s_SelectIdFromVodsWhereVodUrlShareId = QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=?");
-    if (!q.prepare(s_SelectIdFromVodsWhereVodUrlShareId)) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return false;
-    }
-
-    q.addBindValue(urlShareId);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return false;
-    }
-
-    return true;
-}
 
 
 
@@ -330,6 +324,8 @@ void DataDirectoryMover::onProcessReadyRead() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+
 
 ScVodDataManager::~ScVodDataManager() {
     qDebug() << "dtor entry";
@@ -339,11 +335,15 @@ ScVodDataManager::~ScVodDataManager() {
 
     cancelMoveDataDirectory();
 
-    if (m_Vodman) {
-        delete m_Vodman;
-        m_Vodman = nullptr;
-        qDebug() << "deleted vodman";
-    }
+//    if (m_Vodman) {
+//        delete m_Vodman;
+//        m_Vodman = nullptr;
+//        qDebug() << "deleted vodman";
+//    }
+
+    m_WorkerThread.quit();
+    m_WorkerThread.wait();
+    delete m_WorkerInterface;
 
     {
         QMutexLocker guard(&m_Lock);
@@ -358,11 +358,6 @@ ScVodDataManager::~ScVodDataManager() {
             m_SqlPatchesRequest->abort();
             qDebug() << "aborted sql patches request";
         }
-
-        foreach (auto& key, m_ThumbnailRequests.keys()) {
-            key->abort();
-        }
-        qDebug() << "aborted thumbnail requests";
 
         foreach (auto& key, m_IconRequests.keys()) {
             key->abort();
@@ -379,7 +374,6 @@ ScVodDataManager::~ScVodDataManager() {
 
             if (!m_ClassfierRequest &&
                 !m_SqlPatchesRequest &&
-                 m_ThumbnailRequests.isEmpty() &&
                  m_IconRequests.isEmpty())
             {
                 break;
@@ -390,7 +384,6 @@ ScVodDataManager::~ScVodDataManager() {
         qDebug() << "wait for requests";
         qDebug() << "classifier req gone" << (m_ClassfierRequest == nullptr);
         qDebug() << "sql patch req gone" << (m_SqlPatchesRequest == nullptr);
-        qDebug() << "thumbnail reqs gone" << (m_ThumbnailRequests.isEmpty());
         qDebug() << "icon reqs gone" << (m_IconRequests.isEmpty());
     }
 
@@ -403,6 +396,10 @@ ScVodDataManager::~ScVodDataManager() {
         qDebug() << "deleted network manager";
     }
 
+
+    m_Database = QSqlDatabase(); // to remove ref count
+    QSqlDatabase::removeDatabase(QStringLiteral("ScVodDataManager"));
+
     qDebug() << "dtor exit";
 }
 
@@ -410,43 +407,37 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     : QObject(parent)
     , m_Lock(QMutex::Recursive)
     , m_AddQueueLock(QMutex::NonRecursive)
-    , m_Vodman(nullptr)
     , m_Manager(nullptr)
+    , m_WorkerInterface(nullptr)
     , m_ClassfierRequest(nullptr)
     , m_SqlPatchesRequest(nullptr)
     , m_DataDirectoryMover(nullptr)
     , m_State(State_Initializing)
+    , m_SharedState(new ScVodDataManagerState)
 {
     m_Manager = new QNetworkAccessManager(this);
     connect(m_Manager, &QNetworkAccessManager::finished, this,
             &ScVodDataManager::requestFinished);
 
-    m_Vodman = new ScVodman(this);
-    connect(m_Vodman, &ScVodman::metaDataDownloadCompleted,
-            this, &ScVodDataManager::onMetaDataDownloadCompleted);
-    connect(m_Vodman, &ScVodman::fileDownloadChanged,
-            this, &ScVodDataManager::onFileDownloadChanged);
-    connect(m_Vodman, &ScVodman::fileDownloadCompleted,
-            this, &ScVodDataManager::onFileDownloadCompleted);
-    connect(m_Vodman, &ScVodman::downloadFailed,
-            this, &ScVodDataManager::onDownloadFailed);
+
 
     m_Error = Error_None;
     m_SuspendedVodsChangedEventCount = 0;
+    m_MaxConcurrentMetaDataDownloads = 4;
 
     const auto databaseDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
 
     QDir d;
     d.mkpath(databaseDir);
 
-    auto databaseFilePath = databaseDir + "/vods.sqlite";
-    m_Database = QSqlDatabase::addDatabase("QSQLITE", databaseFilePath);
-    m_Database.setDatabaseName(databaseFilePath);
+    m_SharedState->DatabaseFilePath = databaseDir + QStringLiteral("/vods.sqlite");
+    m_Database = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), QStringLiteral("ScVodDataManager"));
+    m_Database.setDatabaseName(m_SharedState->DatabaseFilePath);
     if (m_Database.open()) {
-        qInfo("Opened database %s\n", qPrintable(databaseFilePath));
+        qInfo("Opened database %s\n", qPrintable(m_SharedState->DatabaseFilePath));
         setupDatabase();
     } else {
-        qCritical("Could not open database '%s'. Error: %s\n", qPrintable(databaseFilePath), qPrintable(m_Database.lastError().text()));
+        qCritical("Could not open database '%s'. Error: %s\n", qPrintable(m_SharedState->DatabaseFilePath), qPrintable(m_Database.lastError().text()));
         setError(Error_Unknown);
         return;
     }
@@ -454,10 +445,10 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     setDirectories();
 
 
-    d.mkpath(m_MetaDataDir);
-    d.mkpath(m_ThumbnailDir);
-    d.mkpath(m_VodDir);
-    d.mkpath(m_IconDir);
+    d.mkpath(m_SharedState->m_MetaDataDir);
+    d.mkpath(m_SharedState->m_ThumbnailDir);
+    d.mkpath(m_SharedState->m_VodDir);
+    d.mkpath(m_SharedState->m_IconDir);
 
 
     // icons
@@ -471,7 +462,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         }
     }
 
-    auto result = m_Icons.load(iconsFileDestinationPath);
+    auto result = m_SharedState->m_Icons.load(iconsFileDestinationPath);
     if (!result) {
         qCritical() << "failed to load icons data from" << iconsFileDestinationPath;
         setError(Error_Unknown);
@@ -489,7 +480,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         }
     }
 
-    result = m_Classifier.load(classifierFileDestinationPath);
+    result = m_SharedState->m_Classifier.load(classifierFileDestinationPath);
     if (!result) {
         qCritical() << "failed to load classifier data from" << classifierFileDestinationPath;
         setError(Error_Unknown);
@@ -509,6 +500,26 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(&m_AddThread, &QThread::finished, adder, &QObject::deleteLater);
     m_AddThread.start(QThread::LowestPriority);
 
+
+    m_WorkerInterface = new ScVodDataManagerWorker(m_SharedState);
+    m_WorkerInterface->moveToThread(&m_WorkerThread);
+
+    // worker->manager
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::fetchingMetaData, this, &ScVodDataManager::fetchingMetaData);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::fetchingThumbnail, this, &ScVodDataManager::fetchingThumbnail);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::metaDataAvailable, this, &ScVodDataManager::metaDataAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::metaDataDownloadFailed, this, &ScVodDataManager::metaDataDownloadFailed);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodAvailable, this, &ScVodDataManager::vodAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailAvailable, this, &ScVodDataManager::thumbnailAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailDownloadFailed, this, &ScVodDataManager::thumbnailDownloadFailed);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadFailed, this, &ScVodDataManager::vodDownloadFailed);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadCanceled, this, &ScVodDataManager::vodDownloadCanceled);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadsChanged, this, &ScVodDataManager::vodDownloadsChanged);
+    // manager->worker
+    connect(this, &ScVodDataManager::startWorker, m_WorkerInterface, &ScVodDataManagerWorker::process);
+    connect(this, &ScVodDataManager::maxConcurrentMetaDataDownloadsChanged, m_WorkerInterface, &ScVodDataManagerWorker::maxConcurrentMetaDataDownloadsChanged);
+
+    m_WorkerThread.start();
 }
 
 void
@@ -526,26 +537,70 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
     QMutexLocker guard(&m_Lock);
     reply->deleteLater();
 
-    auto it = m_ThumbnailRequests.find(reply);
-    if (it != m_ThumbnailRequests.end()) {
-        auto r = it.value();
-        m_ThumbnailRequests.erase(it);
+    auto it2 = m_IconRequests.find(reply);
+    if (it2 != m_IconRequests.end()) {
+        auto r = it2.value();
+        m_IconRequests.erase(it2);
 
         RETURN_ON_REQUEST;
 
-        thumbnailRequestFinished(reply, r);
+        iconRequestFinished(reply, r);
     } else {
-        auto it2 = m_IconRequests.find(reply);
-        if (it2 != m_IconRequests.end()) {
-            auto r = it2.value();
-            m_IconRequests.erase(it2);
+        if (m_ClassfierRequest == reply) {
+            m_ClassfierRequest = nullptr;
 
             RETURN_ON_REQUEST;
 
-            iconRequestFinished(reply, r);
+            switch (reply->error()) {
+            case QNetworkReply::OperationCanceledError:
+                break;
+            case QNetworkReply::NoError: {
+                // Get the http status code
+                int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+                if (v >= 200 && v < 300) {// Success
+                    // Here we got the final reply
+                    auto bytes = reply->readAll();
+                    QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QStringLiteral(CLASSIFIER_FILE));
+                    if (file.open(QIODevice::Truncate | QIODevice::WriteOnly)) {
+                        auto w = file.write(bytes);
+                        file.close();
+                        if (-1 == w) {
+                            qWarning() << "failed to write" << file.fileName() << "error" << file.errorString();
+                        } else if (w < bytes.size()) {
+                            qWarning() << "failed to write to file (no space)" << file.fileName() << "error" << file.errorString() << "file will be removed";
+                            file.remove();
+                        } else {
+                            ScClassifier classifier;
+                            if (classifier.load(file.fileName())) {
+                                m_SharedState->m_Classifier = classifier;
+                            } else {
+                                qCritical() << "Failed to load icons from downloaded icons file" << reply->url();
+                            }
+                        }
+                    } else {
+                        qWarning() << "failed to open" << file.fileName() << "for writing";
+                    }
+                }
+                else if (v >= 300 && v < 400) {// Redirection
+
+                    // Get the redirection url
+                    QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+                    // Because the redirection url can be relative,
+                    // we have to use the previous one to resolve it
+                    newUrl = reply->url().resolved(newUrl);
+
+                    m_ClassfierRequest = m_Manager->get(Sc::makeRequest(newUrl));
+                } else  {
+                    qDebug() << "Http status code:" << v;
+                }
+            } break;
+            default: {
+                qDebug() << "Network request failed: " << reply->errorString() << reply->url();
+            } break;
+            }
         } else {
-            if (m_ClassfierRequest == reply) {
-                m_ClassfierRequest = nullptr;
+            if (m_SqlPatchesRequest == reply) {
+                m_SqlPatchesRequest = nullptr;
 
                 RETURN_ON_REQUEST;
 
@@ -558,26 +613,8 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
                     if (v >= 200 && v < 300) {// Success
                         // Here we got the final reply
                         auto bytes = reply->readAll();
-                        QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QStringLiteral(CLASSIFIER_FILE));
-                        if (file.open(QIODevice::Truncate | QIODevice::WriteOnly)) {
-                            auto w = file.write(bytes);
-                            file.close();
-                            if (-1 == w) {
-                                qWarning() << "failed to write" << file.fileName() << "error" << file.errorString();
-                            } else if (w < bytes.size()) {
-                                qWarning() << "failed to write to file (no space)" << file.fileName() << "error" << file.errorString() << "file will be removed";
-                                file.remove();
-                            } else {
-                                ScClassifier classifier;
-                                if (classifier.load(file.fileName())) {
-                                    m_Classifier = classifier;
-                                } else {
-                                    qCritical() << "Failed to load icons from downloaded icons file" << reply->url();
-                                }
-                            }
-                        } else {
-                            qWarning() << "failed to open" << file.fileName() << "for writing";
-                        }
+                        bytes = Sc::gzipDecompress(bytes);
+                        applySqlPatches(bytes);
                     }
                     else if (v >= 300 && v < 400) {// Redirection
 
@@ -587,7 +624,7 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
                         // we have to use the previous one to resolve it
                         newUrl = reply->url().resolved(newUrl);
 
-                        m_ClassfierRequest = m_Manager->get(Sc::makeRequest(newUrl));
+                        m_SqlPatchesRequest = m_Manager->get(Sc::makeRequest(newUrl));
                     } else  {
                         qDebug() << "Http status code:" << v;
                     }
@@ -596,42 +633,6 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
                     qDebug() << "Network request failed: " << reply->errorString() << reply->url();
                 } break;
                 }
-            } else {
-                if (m_SqlPatchesRequest == reply) {
-                    m_SqlPatchesRequest = nullptr;
-
-                    RETURN_ON_REQUEST;
-
-                    switch (reply->error()) {
-                    case QNetworkReply::OperationCanceledError:
-                        break;
-                    case QNetworkReply::NoError: {
-                        // Get the http status code
-                        int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-                        if (v >= 200 && v < 300) {// Success
-                            // Here we got the final reply
-                            auto bytes = reply->readAll();
-                            bytes = Sc::gzipDecompress(bytes);
-                            applySqlPatches(bytes);
-                        }
-                        else if (v >= 300 && v < 400) {// Redirection
-
-                            // Get the redirection url
-                            QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
-                            // Because the redirection url can be relative,
-                            // we have to use the previous one to resolve it
-                            newUrl = reply->url().resolved(newUrl);
-
-                            m_SqlPatchesRequest = m_Manager->get(Sc::makeRequest(newUrl));
-                        } else  {
-                            qDebug() << "Http status code:" << v;
-                        }
-                    } break;
-                    default: {
-                        qDebug() << "Network request failed: " << reply->errorString() << reply->url();
-                    } break;
-                    }
-                }
             }
         }
     }
@@ -639,58 +640,6 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
 #undef RETURN_ON_REQUEST
 }
 
-void
-ScVodDataManager::thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r) {
-    switch (reply->error()) {
-    case QNetworkReply::OperationCanceledError:
-        break;
-    case QNetworkReply::NoError: {
-        // Get the http status code
-        int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        if (v >= 200 && v < 300) {// Success
-
-            // Here we got the final reply
-            auto bytes = reply->readAll();
-            addThumbnail(r.rowid, bytes);
-
-        }
-        else if (v >= 300 && v < 400) {// Redirection
-
-            // Get the redirection url
-            QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
-            // Because the redirection url can be relative,
-            // we have to use the previous one to resolve it
-            newUrl = reply->url().resolved(newUrl);
-
-            m_ThumbnailRequests.insert(m_Manager->get(Sc::makeRequest(newUrl)), r);
-        } else  {
-            qDebug() << "Http status code:" << v;
-        }
-    } break;
-    default: {
-        qDebug() << "Network request failed: " << reply->errorString() << reply->url();
-
-        QSqlQuery q(m_Database);
-        if (!q.prepare(QStringLiteral("SELECT id FROM vods WHERE thumbnail_id=?"))) {
-            qCritical() << "failed to prepare query" << q.lastError();
-            return;
-        }
-
-        q.addBindValue(r.rowid);
-
-        if (!q.exec()) {
-            qCritical() << "failed to exec query" << q.lastError();
-            return;
-        }
-
-        auto url = reply->url().toString();
-        while (q.next()) {
-            auto vodRowId = qvariant_cast<qint64>(q.value(0));
-            emit thumbnailDownloadFailed(vodRowId, reply->error(), url);
-        }
-    } break;
-    }
-}
 
 void
 ScVodDataManager::iconRequestFinished(QNetworkReply* reply, IconRequest& r) {
@@ -716,12 +665,13 @@ ScVodDataManager::iconRequestFinished(QNetworkReply* reply, IconRequest& r) {
                     } else {
                         ScIcons icons;
                         if (icons.load(file.fileName())) {
-                            m_Icons = icons;
+                            m_SharedState->m_Icons = icons;
 
                             // create entries and fetch files
                             QSqlQuery q(m_Database);
-                            for (auto i = 0; i < m_Icons.size(); ++i) {
-                                auto url = m_Icons.url(i);
+                            const auto& icons = m_SharedState->m_Icons;
+                            for (auto i = 0; i < icons.size(); ++i) {
+                                auto url = icons.url(i);
 
                                 // insert row for thumbnail
                                 if (!q.prepare(
@@ -738,14 +688,14 @@ ScVodDataManager::iconRequestFinished(QNetworkReply* reply, IconRequest& r) {
                                 }
 
                                 if (q.next()) {
-                                    auto filePath = m_IconDir + q.value(0).toString();
+                                    auto filePath = m_SharedState->m_IconDir + q.value(0).toString();
                                     QFileInfo fi(filePath);
                                     if (fi.exists() && fi.size() > 0) {
                                         continue;
                                     }
                                 } else {
-                                    auto extension = m_Icons.extension(i);
-                                    QTemporaryFile tempFile(m_IconDir + QStringLiteral("XXXXXX") + extension);
+                                    auto extension = icons.extension(i);
+                                    QTemporaryFile tempFile(m_SharedState->m_IconDir + QStringLiteral("XXXXXX") + extension);
                                     tempFile.setAutoRemove(false);
                                     if (tempFile.open()) {
                                         auto iconFilePath = tempFile.fileName();
@@ -803,7 +753,7 @@ ScVodDataManager::iconRequestFinished(QNetworkReply* reply, IconRequest& r) {
                     return; // cleared?
                 }
 
-                auto iconFilePath = m_IconDir + q.value(0).toString();
+                auto iconFilePath = m_SharedState->m_IconDir + q.value(0).toString();
 
                 QFile file(iconFilePath);
                 if (file.open(QIODevice::Truncate | QIODevice::WriteOnly)) {
@@ -1125,7 +1075,7 @@ ScVodDataManager::icon(const QString& key, const QVariant& value) const {
     } else if (s_EventNameKey == key) {
         auto event = value.toString();
         QString url;
-        if (m_Icons.getIconForEvent(event, &url)) {
+        if (m_SharedState->m_Icons.getIconForEvent(event, &url)) {
             QSqlQuery q(m_Database);
             static const QString sql = QStringLiteral(
                         "SELECT file_name FROM icons WHERE url=?");
@@ -1142,7 +1092,7 @@ ScVodDataManager::icon(const QString& key, const QVariant& value) const {
             }
 
             if (q.next()) {
-                auto filePath = m_IconDir + q.value(0).toString();
+                auto filePath = m_SharedState->m_IconDir + q.value(0).toString();
                 if (QFile::exists(filePath)) {
                     return filePath;
                 }
@@ -1201,18 +1151,18 @@ ScVodDataManager::clearCache(ClearFlags flags) {
 
     // delete files
     if (flags & CF_MetaData) {
-        QDir(m_MetaDataDir).removeRecursively();
-        QDir().mkpath(m_MetaDataDir);
+        QDir(m_SharedState->m_MetaDataDir).removeRecursively();
+        QDir().mkpath(m_SharedState->m_MetaDataDir);
     }
 
     if (flags & CF_Thumbnails) {
-        QDir(m_ThumbnailDir).removeRecursively();
-        QDir().mkpath(m_ThumbnailDir);
+        QDir(m_SharedState->m_ThumbnailDir).removeRecursively();
+        QDir().mkpath(m_SharedState->m_ThumbnailDir);
     }
 
     if (flags & CF_Vods) {
-        QDir(m_VodDir).removeRecursively();
-        QDir().mkpath(m_VodDir);
+        QDir(m_SharedState->m_VodDir).removeRecursively();
+        QDir().mkpath(m_SharedState->m_VodDir);
 
         tryRaiseVodsChanged();
 
@@ -1220,8 +1170,8 @@ ScVodDataManager::clearCache(ClearFlags flags) {
     }
 
     if (flags & CF_Icons) {
-        QDir(m_IconDir).removeRecursively();
-        QDir().mkpath(m_IconDir);
+        QDir(m_SharedState->m_IconDir).removeRecursively();
+        QDir().mkpath(m_SharedState->m_IconDir);
     }
 }
 
@@ -1650,958 +1600,136 @@ ScVodDataManager::_addVods(const QList<ScRecord>& records) {
     return count > 0;
 }
 
-void ScVodDataManager::onMetaDataDownloadCompleted(qint64 token, const VMVod& vod) {
-    QMutexLocker g(&m_Lock);
-    auto it = m_VodmanMetaDataRequests.find(token);
-    if (it != m_VodmanMetaDataRequests.end()) {
-        VodmanMetaDataRequest r = it.value();
-        m_VodmanMetaDataRequests.erase(it);
-
-        if (vod.isValid()) {
-            // save vod meta data
-            auto metaDataFilePath = m_MetaDataDir + QString::number(r.vod_url_share_id);
-            QFile file(metaDataFilePath);
-            if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-                {
-                    QDataStream s(&file);
-                    s << vod;
-                }
-
-                file.close(); // to flush data
-
-                // send event so that the match page can try to get the thumbnails again
-                {
-                    QSqlQuery q(m_Database);
-
-                    // update title, length from vod
-                    {
-                        static const QString sql = QStringLiteral(
-                                    "UPDATE vod_url_share SET title=?, length=? WHERE id=?");
-                        if (!q.prepare(sql)) {
-                            qCritical() << "failed to prepare query" << q.lastError();
-                            return;
-                        }
-
-                        q.addBindValue(vod.description().title());
-                        q.addBindValue(vod.description().duration());
-                        q.addBindValue(r.vod_url_share_id);
-
-                        if (!q.exec()) {
-                            qCritical() << "failed to exec query" << q.lastError();
-                            return;
-                        }
-                    }
-
-                    // emit metaDataAvailable
-                    {
-                        if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, r.vod_url_share_id))) {
-                            return;
-                        }
-
-                        while (q.next()) {
-                            auto rowid = qvariant_cast<qint64>(q.value(0));
-                            qDebug() << "metaDataAvailable" << rowid;
-                            emit metaDataAvailable(rowid, vod);
-                        }
-                    }
-                }
-            } else {
-                // error
-                qDebug() << "failed to open meta data file" << metaDataFilePath << "for writing";
-            }
-        } else {
-            qDebug() << "token" << token << "invalid vod" << vod;
-        }
-    }
-}
-
-void ScVodDataManager::onFileDownloadCompleted(qint64 token, const VMVodFileDownload& download) {
-    QMutexLocker g(&m_Lock);
-    auto it = m_VodmanFileRequests.find(token);
-    if (it != m_VodmanFileRequests.end()) {
-        const VodmanFileRequest r = it.value();
-        m_VodmanFileRequests.erase(it);
-        emit vodDownloadsChanged();
-
-        QSqlQuery q(m_Database);
-        if (download.progress() >= 1 && download.error() == VMVodEnums::VM_ErrorNone) {
-            updateVodDownloadStatus(r.vod_url_share_id, download);
-        } else {
-
-        }
-    }
-}
-
-void ScVodDataManager::onFileDownloadChanged(qint64 token, const VMVodFileDownload& download) {
-    QMutexLocker g(&m_Lock);
-    auto it = m_VodmanFileRequests.find(token);
-    if (it != m_VodmanFileRequests.end()) {
-        const VodmanFileRequest& r = it.value();
-
-        updateVodDownloadStatus(r.vod_url_share_id, download);
-    }
-}
-
-void ScVodDataManager::updateVodDownloadStatus(
-        qint64 urlShareId,
-        const VMVodFileDownload& download) {
-    QSqlQuery q(m_Database);
-
-    static const QString UpdateSql = QStringLiteral(
-                "UPDATE vod_files\n"
-                "SET progress=?\n"
-                "WHERE id IN\n"
-                "   (SELECT vod_file_id from vod_url_share WHERE id=?)");
-
-    if (!q.prepare(UpdateSql)) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
-
-    q.addBindValue(download.progress());
-    q.addBindValue(urlShareId);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, urlShareId))) {
-        return;
-    }
-
-    while (q.next()) {
-        auto vodId = qvariant_cast<qint64>(q.value(0));
-        emit vodAvailable(
-                    vodId,
-                    download.filePath(),
-                    download.progress(),
-                    download.fileSize(),
-                    download.format().width(),
-                    download.format().height(),
-                    download.format().id());
-    }
-}
-
-void
-ScVodDataManager::onDownloadFailed(qint64 token, int serviceErrorCode) {
-    QMutexLocker g(&m_Lock);
-
-    qint64 urlShareId = -1;
-    auto metaData = false;
-
-    auto it = m_VodmanFileRequests.find(token);
-    if (it != m_VodmanFileRequests.end()) {
-        VodmanFileRequest r = it.value();
-        m_VodmanFileRequests.erase(it);
-        emit vodDownloadsChanged();
-
-        urlShareId = r.vod_url_share_id;
-        metaData = false;
-    } else {
-        auto it2 = m_VodmanMetaDataRequests.find(token);
-        if (it2 != m_VodmanMetaDataRequests.end()) {
-            VodmanMetaDataRequest r = it2.value();
-            m_VodmanMetaDataRequests.erase(it2);
-
-            urlShareId = r.vod_url_share_id;
-            metaData = true;
-        }
-    }
-
-    if (urlShareId >= 0) {
-        QSqlQuery q(m_Database);
-        if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, urlShareId))) {
-            return;
-        }
-
-        while (q.next()) {
-            auto rowid = qvariant_cast<qint64>(q.value(0));
-            if (metaData) {
-                emit metaDataDownloadFailed(rowid, serviceErrorCode);
-            } else {
-                emit vodDownloadFailed(rowid, serviceErrorCode);
-            }
-        }
-    }
-}
 
 
-void
+int
 ScVodDataManager::fetchMetaData(qint64 rowid) {
     return fetchMetaData(rowid, true);
 }
 
-void
+int
 ScVodDataManager::fetchMetaDataFromCache(qint64 rowid) {
     return fetchMetaData(rowid, false);
 }
 
-void
+int
 ScVodDataManager::fetchMetaData(qint64 rowid, bool download) {
-    RETURN_IF_ERROR;
+    RETURN_MINUS_ON_ERROR;
 
-    ScStopwatch sw("fetchMetaData", 10);
-    QMutexLocker g(&m_Lock);
-
-    QSqlQuery q(m_Database);
-
-    static const QString sql = QStringLiteral(
-                "SELECT u.url, u.id FROM vods AS v INNER JOIN vod_url_share "
-                "AS u ON v.vod_url_share_id=u.id WHERE v.id=?");
-    if (!q.prepare(sql)) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->fetchMetaData(rowid, download);
+    };
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
     }
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    if (!q.next()) {
-        qDebug() << "rowid" << rowid << "gone";
-        return;
-    }
-
-    const auto vodUrl = q.value(0).toString();
-    const auto urlShareId = qvariant_cast<qint64>(q.value(1));
-
-    const auto metaDataFilePath = m_MetaDataDir + QString::number(urlShareId);
-    QFileInfo fi(metaDataFilePath);
-    if (fi.exists()) {
-        QFile file(metaDataFilePath);
-        if (fi.created().addSecs(3600) >= QDateTime::currentDateTime()) {
-            if (file.open(QIODevice::ReadOnly)) {
-                VMVod vod;
-                {
-                    QDataStream s(&file);
-                    s >> vod;
-                }
-
-                if (vod.isValid()) {
-                    sw.stop();
-                    emit metaDataAvailable(rowid, vod);
-                } else {
-                    // read invalid vod, try again
-                    file.close();
-                    file.remove();
-                    if (download) {
-                        emit fetchingMetaData(rowid);
-                        fetchMetaData(urlShareId, vodUrl);
-                    }
-                }
-            } else {
-                file.remove();
-                if (download) {
-                    emit fetchingMetaData(rowid);
-                    fetchMetaData(urlShareId, vodUrl);
-                }
-            }
-        } else {
-            // vod links probably expired
-            file.remove();
-            if (download) {
-                emit fetchingMetaData(rowid);
-                fetchMetaData(urlShareId, vodUrl);
-            }
-        }
-    } else {
-        if (download) {
-            emit fetchingMetaData(rowid);
-            fetchMetaData(urlShareId, vodUrl);
-        }
-    }
+    return result;
 }
 
-void
+int
 ScVodDataManager::fetchThumbnail(qint64 rowid) {
-    fetchThumbnail(rowid, true);
+    return fetchThumbnail(rowid, true);
 }
 
-void
+int
 ScVodDataManager::fetchThumbnailFromCache(qint64 rowid) {
-    fetchThumbnail(rowid, false);
+    return fetchThumbnail(rowid, false);
 }
 
-void ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
-    RETURN_IF_ERROR;
+int
+ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
+    RETURN_MINUS_ON_ERROR;
 
-    ScStopwatch sw("fetchThumbnail", 50);
-    QMutexLocker g(&m_Lock);
-
-    QSqlQuery q(m_Database);
-
-    static const QString sql = QStringLiteral(
-                "SELECT v.thumbnail_id, u.url, u.id FROM vods AS v INNER JOIN vod_url_share "
-                "AS u ON v.vod_url_share_id=u.id WHERE v.id=?");
-    if (!q.prepare(sql)) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->fetchThumbnail(rowid, download);
+    };
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
     }
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    if (!q.next()) {
-        qDebug() << "rowid" << rowid << "gone";
-        return;
-    }
-
-    auto thumbnailId = q.value(0).isNull() ? 0 : qvariant_cast<qint64>(q.value(0));
-    const auto vodUrl = q.value(1).toString();
-    const auto vodUrlShareId = qvariant_cast<qint64>(q.value(2));
-    if (thumbnailId) {
-        // entry in table
-        static const QString sql = QStringLiteral("SELECT file_name, url FROM vod_thumbnails WHERE id=?");
-        if (!q.prepare(sql)) {
-            qCritical() << "failed to prepare query" << q.lastError();
-            return;
-        }
-
-        q.addBindValue(thumbnailId);
-
-        if (!q.exec()) {
-            qCritical() << "failed to exec query" << q.lastError();
-            return;
-        }
-
-        if (!q.next()) {
-            qDebug() << "ouch not data for thumbnail id" << thumbnailId;
-            return;
-        }
-
-        auto fileName = q.value(0).toString();
-        auto thumbNailFilePath = m_ThumbnailDir + fileName;
-        if (QFileInfo::exists(thumbNailFilePath)) {
-            sw.stop();
-            emit thumbnailAvailable(rowid, thumbNailFilePath);
-        } else {
-            if (download) {
-                auto thumbnailUrl = q.value(1).toString();
-                fetchThumbnailFromUrl(thumbnailId, thumbnailUrl);
-            }
-        }
-    } else { // thumb nail id not set
-        if (download) {
-            auto metaDataFilePath = m_MetaDataDir + QString::number(vodUrlShareId);
-            if (QFileInfo::exists(metaDataFilePath)) {
-                QFile file(metaDataFilePath);
-                if (file.open(QIODevice::ReadOnly)) {
-                    VMVod vod;
-                    {
-                        QDataStream s(&file);
-                        s >> vod;
-                    }
-
-                    if (vod.isValid()) {
-                        auto thumnailUrl = vod.description().thumbnailUrl();
-                        if (thumnailUrl.isEmpty()) {
-                            return;
-                        }
-
-                        static const QString sql = QStringLiteral("SELECT id FROM vod_thumbnails WHERE url=?");
-                        if (!q.prepare(sql)) {
-                            qCritical() << "failed to prepare query" << q.lastError();
-                            return;
-                        }
-
-                        q.addBindValue(thumnailUrl);
-
-                        if (!q.exec()) {
-                            qCritical() << "failed to exec query" << q.lastError();
-                            return;
-                        }
-
-                        if (q.next()) { // url has been retrieved, set thumbnail id in vods
-                            thumbnailId = qvariant_cast<qint64>(q.value(0));
-
-                            static const QString sql = QStringLiteral("UPDATE vods SET thumbnail_id=? WHERE id=?");
-                            if (!q.prepare(sql)) {
-                                qCritical() << "failed to prepare query" << q.lastError();
-                                return;
-                            }
-
-                            q.addBindValue(thumbnailId);
-                            q.addBindValue(rowid);
-
-                            if (!q.exec()) {
-                                qCritical() << "failed to exec query" << q.lastError();
-                                return;
-                            }
-                        } else {
-                            auto lastDot = thumnailUrl.lastIndexOf(QChar('.'));
-                            auto extension = thumnailUrl.mid(lastDot);
-                            QTemporaryFile tempFile(m_ThumbnailDir + QStringLiteral("XXXXXX") + extension);
-                            tempFile.setAutoRemove(false);
-                            if (tempFile.open()) {
-                                auto thumbNailFilePath = tempFile.fileName();
-                                auto tempFileName = QFileInfo(thumbNailFilePath).fileName();
-
-                                // insert row for thumbnail
-                                static const QString sql = QStringLiteral("INSERT INTO vod_thumbnails (url, file_name) VALUES (?, ?)");
-                                if (!q.prepare(sql)) {
-                                    qCritical() << "failed to prepare query" << q.lastError();
-                                    return;
-                                }
-
-                                q.addBindValue(thumnailUrl);
-                                q.addBindValue(tempFileName);
-
-                                if (!q.exec()) {
-                                    qCritical() << "failed to exec query" << q.lastError();
-                                    return;
-                                }
-
-                                thumbnailId = qvariant_cast<qint64>(q.lastInsertId());
-
-                                // update vod row
-                                static const QString sql2 = QStringLiteral("UPDATE vods SET thumbnail_id=? WHERE id=?");
-                                if (!q.prepare(sql2)) {
-                                    qCritical() << "failed to prepare query" << q.lastError();
-                                    return;
-                                }
-
-                                q.addBindValue(thumbnailId);
-                                q.addBindValue(rowid);
-
-                                if (!q.exec()) {
-                                    qCritical() << "failed to exec query" << q.lastError();
-                                    return;
-                                }
-
-                                fetchThumbnailFromUrl(thumbnailId, thumnailUrl);
-                            } else {
-                                qWarning() << "failed to allocate temporary file for thumbnail";
-                            }
-                        }
-                    } else {
-                        // read invalid vod, try again
-                        file.close();
-                        file.remove();
-                        emit fetchingMetaData(rowid);
-                        fetchMetaData(vodUrlShareId, vodUrl);
-                    }
-                } else {
-                    file.remove();
-                    emit fetchingMetaData(rowid);
-                    fetchMetaData(vodUrlShareId, vodUrl);
-                }
-            } else {
-                emit fetchingMetaData(rowid);
-                fetchMetaData(vodUrlShareId, vodUrl);
-            }
-        }
-    }
+    return result;
 }
 
-void ScVodDataManager::fetchMetaData(qint64 urlShareId, const QString& url) {
-    for (auto& value : m_VodmanMetaDataRequests) {
-        if (value.vod_url_share_id == urlShareId) {
-            return; // already underway
-        }
-    }
 
-    VodmanMetaDataRequest r;
-    r.vod_url_share_id = urlShareId;
-    auto token = m_Vodman->newToken();
-    m_VodmanMetaDataRequests.insert(token, r);
-    m_Vodman->startFetchMetaData(token, url);
-}
 
-void ScVodDataManager::fetchThumbnailFromUrl(qint64 rowid, const QString& url) {
-    foreach (const auto& value, m_ThumbnailRequests.values()) {
-        if (value.rowid == rowid) {
-            return; // already underway
-        }
-    }
-
-    ThumbnailRequest r;
-    r.rowid = rowid;
-    m_ThumbnailRequests.insert(m_Manager->get(Sc::makeRequest(url)), r);
-}
-
-void ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted) {
-    RETURN_IF_ERROR;
+int ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted) {
+    RETURN_MINUS_ON_ERROR;
 
     if (formatIndex < 0) {
         qWarning() << "invalid format index, not fetching vod" << formatIndex;
-        return;
+        return -1;
     }
 
-
-    QMutexLocker g(&m_Lock);
-
-    QSqlQuery q(m_Database);
-
-    static const QString sql = QStringLiteral(
-                "SELECT\n"
-                "    file_name,\n"
-                "    progress,\n"
-                "    format,"
-                "    url,\n"
-                "    vod_url_share_id\n"
-                "FROM offline_vods\n"
-                "WHERE id=?\n"
-                );
-    if (!q.prepare(sql)) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->fetchVod(rowid, formatIndex, implicitlyStarted);
+    };
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
     }
-
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    QString vodFilePath;
-    QString vodUrl;
-    qint64 urlShareId = -1;
-    QString formatId;
-
-    float progress = 0;
-    if (q.next()) {
-        vodFilePath = m_VodDir + q.value(0).toString();
-        progress = q.value(1).toFloat();
-        formatId = q.value(2).toString();
-        vodUrl = q.value(3).toString();
-        urlShareId = qvariant_cast<qint64>(q.value(4));
-    } else {
-        static const QString sql = QStringLiteral(
-                    "SELECT\n"
-                    "   url,\n"
-                    "   vod_url_share_id\n"
-                    "FROM vods v\n"
-                    "INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
-                    "WHERE v.id=?\n"
-                    );
-        if (!q.prepare(sql)) {
-            qCritical() << "failed to prepare query" << q.lastError();
-            return;
-        }
-
-        q.addBindValue(rowid);
-
-        if (!q.exec()) {
-            qCritical() << "failed to exec query" << q.lastError();
-            return;
-        }
-
-        if (!q.next()) {
-            // row gone
-            return;
-        }
-
-        vodUrl = q.value(0).toString();
-        urlShareId = qvariant_cast<qint64>(q.value(1));
-    }
-
-    for (auto& value : m_VodmanFileRequests) {
-        if (value.vod_url_share_id == urlShareId) {
-            if (value.implicitlyStarted && !implicitlyStarted) {
-                value.implicitlyStarted = false;
-            }
-            return; // already underway
-        }
-    }
-
-    auto metaDataFilePath = m_MetaDataDir + QString::number(urlShareId);
-    if (QFileInfo::exists(metaDataFilePath)) {
-        QFile file(metaDataFilePath);
-        if (file.open(QIODevice::ReadOnly)) {
-            VMVod vod;
-            {
-                QDataStream s(&file);
-                s >> vod;
-            }
-
-            if (vod.isValid()) {
-                if (!formatId.isEmpty()) {
-                    auto formats = vod._formats();
-                    for (auto i = 0; i < formats.size(); ++i) {
-                        const auto& format = formats[i];
-                        if (format.id() == formatId) {
-                            qDebug() << "using previous selected format at index" << i << "id" << formatId;
-                            formatIndex = i;
-                            break;
-                        }
-                    }
-                }
-
-                if (formatIndex >= vod._formats().size()) {
-                    qWarning() << "invalid format index (>=), not fetching vod" << formatIndex;
-                    return;
-                }
-
-                auto format = vod._formats()[formatIndex];
-
-                if (vodFilePath.isEmpty()) {
-                    QTemporaryFile tempFile(m_VodDir + QStringLiteral("XXXXXX.") + format.fileExtension());
-                    if (tempFile.open()) {
-                        vodFilePath = tempFile.fileName();
-                        auto tempFileName = QFileInfo(vodFilePath).fileName();
-                        static const QString sql = QStringLiteral(
-                                    "INSERT INTO vod_files (file_name, format, width, height, progress) "
-                                    "VALUES (?, ?, ?, ?, ?)");
-                        if (!q.prepare(sql)) {
-                            qCritical() << "failed to prepare query" << q.lastError();
-                            return;
-                        }
-
-                        q.addBindValue(tempFileName);
-                        q.addBindValue(format.id());
-                        q.addBindValue(format.width());
-                        q.addBindValue(format.height());
-                        q.addBindValue(0);
-
-                        if (!q.exec()) {
-                            qCritical() << "failed to exec query" << q.lastError();
-                            return;
-                        }
-
-                        auto vodFileId = qvariant_cast<qint64>(q.lastInsertId());
-
-                        static const QString sql2 = QStringLiteral("UPDATE vod_url_share SET vod_file_id=? WHERE id=?");
-                        if (!q.prepare(sql2)) {
-                            qCritical() << "failed to prepare query" << q.lastError();
-                            return;
-                        }
-
-                        q.addBindValue(vodFileId);
-                        q.addBindValue(urlShareId);
-
-                        if (!q.exec()) {
-                            qCritical() << "failed to exec query" << q.lastError();
-                            return;
-                        }
-
-                        // all good, keep file
-                        tempFile.setAutoRemove(false);
-                    } else {
-                        qWarning() << "failed to create temporary file for vod" << rowid;
-                        return;
-                    }
-                } else {
-                    QFileInfo fi(vodFilePath);
-                    if (fi.exists()) {
-                        if (progress >= 1) {
-                            emit vodAvailable(
-                                        rowid,
-                                        vodFilePath,
-                                        progress,
-                                        fi.size(),
-                                        format.width(),
-                                        format.height(),
-                                        formatId);
-                            return;
-                        }
-                    }
-                }
-
-                VodmanFileRequest r;
-                r.token = m_Vodman->newToken();
-                r.vod_url_share_id = urlShareId;
-                r.implicitlyStarted = implicitlyStarted;
-                m_VodmanFileRequests.insert(r.token, r);
-                m_Vodman->startFetchFile(r.token, vod, formatIndex, vodFilePath);
-                emit vodDownloadsChanged();
-
-            } else {
-                // read invalid vod, try again
-                file.close();
-                file.remove();
-                fetchMetaData(urlShareId, vodUrl);
-            }
-        } else {
-            file.remove();
-            fetchMetaData(urlShareId, vodUrl);
-        }
-    } else {
-        fetchMetaData(urlShareId, vodUrl);
-    }
+    return result;
 }
 
+bool
+ScVodDataManager::cancelTicket(int ticket)
+{
+    if (m_WorkerInterface->cancel(ticket)) {
+        qDebug() << "canceled ticket" << ticket;
+        return true;
+    }
 
+    return false;
+}
 
 void
 ScVodDataManager::cancelFetchVod(qint64 rowid) {
     RETURN_IF_ERROR;
 
-
-    QMutexLocker g(&m_Lock);
-
-    QSqlQuery q(m_Database);
-
-    static const QString selectUrlShareId = QStringLiteral("SELECT vod_url_share_id FROM vods WHERE id=?");
-    if (!q.prepare(selectUrlShareId)) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
-
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    while (q.next()) {
-        auto vodUrlShareId = qvariant_cast<qint64>(q.value(0));
-        auto beg = m_VodmanFileRequests.begin();
-        auto end = m_VodmanFileRequests.end();
-        for (auto it = beg; it != end; ) {
-            if (it.value().vod_url_share_id == vodUrlShareId) {
-                m_Vodman->cancel(it.key());
-                m_VodmanFileRequests.erase(it++);
-                qDebug() << "cancel vod file request for url share id" << vodUrlShareId;
-            } else {
-                ++it;
-            }
-        }
-    }
-
-    emit vodDownloadsChanged();
-
-    if (!q.prepare(QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id in (%1)").arg(selectUrlShareId))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
-
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    while (q.next()) {
-        auto vodId = qvariant_cast<qint64>(q.value(0));
-        emit vodDownloadCanceled(vodId);
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->cancelFetchVod(rowid);
+    };
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
     }
 }
 
 
 void
-ScVodDataManager::cancelFetchMetaData(qint64 rowid) {
+ScVodDataManager::cancelFetchMetaData(int ticket, qint64 rowid) {
     RETURN_IF_ERROR;
 
-    QMutexLocker g(&m_Lock);
-
-    qDebug() << "cancel meta data fetch for" << rowid;
-
-    QSqlQuery q(m_Database);
-
-    static const QString sql = QStringLiteral(
-                "SELECT vod_url_share_id FROM vods WHERE id=?");
-
-    if (!q.prepare(sql)) {
-        qCritical() << "failed to prepare query" << q.lastError();
+    if (ticket >= 0 && m_WorkerInterface->cancel(ticket)) {
+        qDebug() << "canceled ticket" << ticket;
         return;
     }
 
-    q.addBindValue(rowid);
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->cancelFetchMetaData(rowid);
+    };
 
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    if (!q.next()) {
-        qDebug() << "rowid" << rowid << "gone";
-        return;
-    }
-
-    const auto urlShareId = qvariant_cast<qint64>(q.value(0));
-
-    auto beg = m_VodmanMetaDataRequests.cbegin();
-    auto end = m_VodmanMetaDataRequests.cend();
-    for (auto it = beg; it != end; ++it) {
-        if (it.value().vod_url_share_id == urlShareId) {
-            auto token = it.key();
-            m_VodmanMetaDataRequests.remove(token);
-            m_Vodman->cancel(token);
-            return;
-        }
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
     }
 }
 
-
 void
-ScVodDataManager::vacuum() {
+ScVodDataManager::cancelFetchThumbnail(int ticket, qint64 rowid) {
     RETURN_IF_ERROR;
 
-    QMutexLocker g(&m_Lock);
-
-    QList<qint64> thumbnailRowsToDelete;
-    QList<qint64> vodFileRowsToDelete;
-
-    QSqlQuery q(m_Database);
-
-    if (!q.exec("SELECT id, file_name FROM vod_thumbnails")) {
-        qCritical() << "failed to prepare query to fetch vod thumbnails" << q.lastError();
+    if (ticket >= 0 && m_WorkerInterface->cancel(ticket)) {
+        qDebug() << "canceled ticket" << ticket;
         return;
     }
 
-    while (q.next()) {
-        auto path = m_ThumbnailDir + q.value(1).toString();
-        if (!QFileInfo::exists(path)) {
-             thumbnailRowsToDelete << qvariant_cast<qint64>(q.value(0));
-        }
-    }
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->cancelFetchThumbnail(rowid);
+    };
 
-    if (!q.exec("SELECT id, file_name FROM vod_files")) {
-        qCritical() << "failed to prepare query to fetch vod file names" << q.lastError();
-        return;
-    }
-
-    while (q.next()) {
-        auto path = m_VodDir + q.value(1).toString();
-        if (!QFileInfo::exists(path)) {
-             vodFileRowsToDelete << qvariant_cast<qint64>(q.value(0));
-        }
-    }
-
-    if (!q.exec("BEGIN TRANSACTION")) {
-        qCritical() << "failed to start transaction" << q.lastError();
-        return;
-    }
-
-    for (const auto& id : thumbnailRowsToDelete) {
-        if (!q.prepare("DELETE FROM vod_thumbnails WHERE id=?")) {
-            qCritical() << "failed to prepare query to delete row" << q.lastError();
-            goto Rollback;
-        }
-
-        q.addBindValue(id);
-
-        if (!q.exec()) {
-            qCritical() << "failed to delete row" << q.lastError();
-            goto Rollback;
-        }
-    }
-
-    for (const auto& id : vodFileRowsToDelete) {
-        if (!q.prepare("DELETE FROM vod_files WHERE id=?")) {
-            qCritical() << "failed to prepare query to delete row" << q.lastError();
-            goto Rollback;
-        }
-
-        q.addBindValue(id);
-
-        if (!q.exec()) {
-            qCritical() << "failed to delete row" << q.lastError();
-            goto Rollback;
-        }
-    }
-
-    if (!q.exec("COMMIT TRANSACTION")) {
-        qCritical() << "failed to commit transaction" << q.lastError();
-        return;
-    }
-
-Exit:
-    return;
-
-Rollback:
-    q.exec("ROLLBACK");
-    goto Exit;
-}
-
-void
-ScVodDataManager::addThumbnail(qint64 rowid, const QByteArray& bytes) {
-
-    QSqlQuery q(m_Database);
-
-    if (!q.prepare(QStringLiteral("SELECT file_name FROM vod_thumbnails WHERE id=?"))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    if (!q.next()) {
-        qDebug() << "thumbnail rowid" << rowid << "gone";
-        return;
-    }
-
-    auto thumbnailFileName = q.value(0).toString();
-
-    // this nonsense is necessary b/c QImage doesn't use the
-    // mime type but the extension
-    auto lastDot = thumbnailFileName.lastIndexOf(QChar('.'));
-    auto extension = thumbnailFileName.mid(lastDot + 1);
-    auto mimeData = QMimeDatabase().mimeTypeForData(bytes);
-    if (mimeData.isValid() && !mimeData.suffixes().contains(extension)) {
-        auto newFileName = thumbnailFileName.left(lastDot) + QStringLiteral(".") + mimeData.preferredSuffix();
-        qDebug() << "changing" << thumbnailFileName << "to" << newFileName;
-        if (!q.prepare(QStringLiteral("UPDATE vod_thumbnails SET file_name=? WHERE id=?"))) {
-            qCritical() << "failed to prepare query" << q.lastError();
-            return;
-        }
-
-        q.addBindValue(newFileName);
-        q.addBindValue(rowid);
-
-        if (!q.exec()) {
-            qCritical() << "failed to exec query" << q.lastError();
-            return;
-        }
-
-        // remove old thumbnail file if it exists
-        QFile::remove(m_ThumbnailDir + thumbnailFileName);
-
-        thumbnailFileName = newFileName;
-    }
-
-    auto thumbnailFilePath = m_ThumbnailDir + thumbnailFileName;
-    QFile file(thumbnailFilePath);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        if (bytes.size() == file.write(bytes)) {
-            file.close();
-            // all is well
-
-
-            // notify thumbnail is available
-            if (!q.prepare(QStringLiteral("SELECT id FROM vods WHERE thumbnail_id=?"))) {
-                qCritical() << "failed to prepare query" << q.lastError();
-                return;
-            }
-
-            q.addBindValue(rowid);
-
-            if (!q.exec()) {
-                qCritical() << "failed to exec query" << q.lastError();
-                return;
-            }
-
-            while (q.next()) {
-                auto vodRowId = qvariant_cast<qint64>(q.value(0));
-                qDebug() << "thumbnailAvailable" << vodRowId << thumbnailFilePath;
-                emit thumbnailAvailable(vodRowId, thumbnailFilePath);
-            }
-        } else {
-            // fix me, no space left
-            qDebug() << "no space left on device";
-        }
-    } else {
-        // fix me
-        qDebug() << "failed to open" << thumbnailFilePath << "for writing";
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
     }
 }
 
@@ -2707,7 +1835,7 @@ ScVodDataManager::deleteMetaData(qint64 rowid) {
 
     while (q.next()) {
         auto fileName = q.value(0).toString();
-        auto path = m_ThumbnailDir + fileName;
+        auto path = m_SharedState->m_ThumbnailDir + fileName;
         if (QFile::remove(path)) {
             qDebug() << "removed" << path;
         }
@@ -2734,7 +1862,7 @@ ScVodDataManager::deleteMetaData(qint64 rowid) {
     }
 
     const auto urlShareId = qvariant_cast<qint64>(q.value(0));
-    auto metaDataFilePath = m_MetaDataDir + QString::number(urlShareId);
+    auto metaDataFilePath = m_SharedState->m_MetaDataDir + QString::number(urlShareId);
     if (QFile::remove(metaDataFilePath)) {
         qDebug() << "removed" << metaDataFilePath;
     }
@@ -2819,50 +1947,19 @@ ScVodDataManager::title(qint64 rowid) {
     return QString();
 }
 
-void
+int
 ScVodDataManager::queryVodFiles(qint64 rowid) {
-    RETURN_IF_ERROR;
+    RETURN_MINUS_ON_ERROR;
 
-    QMutexLocker g(&m_Lock);
-
-    QSqlQuery q(m_Database);
-
-    if (!q.prepare(QStringLiteral(
-                      "SELECT\n"
-                      "    file_name,\n"
-                      "    progress,\n"
-                      "    width,\n"
-                      "    height,\n"
-                      "    format\n"
-                      "FROM offline_vods\n"
-                      "WHERE id=?\n"
-                      ))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->queryVodFiles(rowid);
+    };
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
     }
+    return result;
 
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    QFileInfo fi;
-    while (q.next()) {
-        auto filePath = m_VodDir + q.value(0).toString();
-
-        fi.setFile(filePath);
-        if (fi.exists()) {
-            auto progress = q.value(1).toFloat();
-            auto width = q.value(2).toInt();
-            auto height = q.value(3).toInt();
-            auto format = q.value(4).toString();
-
-            emit vodAvailable(rowid, filePath, progress, fi.size(), width, height, format);
-        }
-    }
 }
 
 qreal
@@ -3029,7 +2126,7 @@ ScVodDataManager::makeThumbnailFile(const QString& srcPath) {
         auto extension = srcPath.mid(lastDot);
 
 
-        QTemporaryFile tempFile(m_ThumbnailDir + QStringLiteral("XXXXXX") + extension);
+        QTemporaryFile tempFile(m_SharedState->m_ThumbnailDir + QStringLiteral("XXXXXX") + extension);
         tempFile.setAutoRemove(false);
         if (tempFile.open()) {
             auto thumbNailFilePath = tempFile.fileName();
@@ -3089,8 +2186,8 @@ ScVodDataManager::deleteVodsWhere(const QString& where) {
 
     while (q.next()) {
         auto fileName = q.value(0).toString();
-        if (QFile::remove(m_VodDir + fileName)) {
-            qDebug() << "removed" << m_VodDir + fileName;
+        if (QFile::remove(m_SharedState->m_VodDir + fileName)) {
+            qDebug() << "removed" << m_SharedState->m_VodDir + fileName;
             ++count;
         }
     }
@@ -3136,15 +2233,15 @@ ScVodDataManager::implicitlyStartedVodFetch(qint64 rowid) const {
     }
 
     const auto urlShareId = qvariant_cast<qint64>(q.value(0));
-
-    auto beg = m_VodmanFileRequests.cbegin();
-    auto end = m_VodmanFileRequests.cend();
-    for (auto it = beg; it != end; ++it) {
-        const VodmanFileRequest& r = it.value();
-        if (r.vod_url_share_id == urlShareId) {
-            return r.implicitlyStarted;
-        }
-    }
+    // FIX ME
+//    auto beg = m_VodmanFileRequests.cbegin();
+//    auto end = m_VodmanFileRequests.cend();
+//    for (auto it = beg; it != end; ++it) {
+//        const VodmanFileRequest& r = it.value();
+//        if (r.vod_url_share_id == urlShareId) {
+//            return r.implicitlyStarted;
+//        }
+//    }
 
     return false;
 }
@@ -3152,7 +2249,9 @@ ScVodDataManager::implicitlyStartedVodFetch(qint64 rowid) const {
 int
 ScVodDataManager::vodDownloads() const {
     QMutexLocker g(&m_Lock);
-    return m_VodmanFileRequests.size();
+    // FIX ME
+    //return m_VodmanFileRequests.size();
+    return 0;
 }
 
 QVariantList
@@ -3162,20 +2261,21 @@ ScVodDataManager::vodsBeingDownloaded() const {
     QSqlQuery q(m_Database);
     QVariantList result;
 
-    auto beg = m_VodmanFileRequests.cbegin();
-    auto end = m_VodmanFileRequests.cend();
-    for (auto it = beg; it != end; ++it) {
-        const VodmanFileRequest& r = it.value();
+    // FIX ME
+//    auto beg = m_VodmanFileRequests.cbegin();
+//    auto end = m_VodmanFileRequests.cend();
+//    for (auto it = beg; it != end; ++it) {
+//        const VodmanFileRequest& r = it.value();
 
-        if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, r.vod_url_share_id))) {
-            return result;
-        }
+//        if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, r.vod_url_share_id))) {
+//            return result;
+//        }
 
-        while (q.next()) {
-            auto vodId = qvariant_cast<qint64>(q.value(0));
-            result << vodId;
-        }
-    }
+//        while (q.next()) {
+//            auto vodId = qvariant_cast<qint64>(q.value(0));
+//            result << vodId;
+//        }
+//    }
 
     return result;
 }
@@ -3444,7 +2544,7 @@ ScVodDataManager::updateSql3(QSqlQuery& q) {
     qDebug() << "Updating length column from vod meta data";
     while (q.next()) {
         auto urlShareId = qvariant_cast<qint64>(q.value(0));
-        auto metaDataFilePath = m_MetaDataDir + QString::number(urlShareId);
+        auto metaDataFilePath = m_SharedState->m_MetaDataDir + QString::number(urlShareId);
         if (QFileInfo::exists(metaDataFilePath)) {
             QFile file(metaDataFilePath);
             if (file.open(QIODevice::ReadOnly)) {
@@ -3603,10 +2703,10 @@ void ScVodDataManager::setDataDirectory(const QString& value)
 void ScVodDataManager::setDirectories()
 {
     const auto dataDir = dataDirectory();
-    m_MetaDataDir = dataDir + QStringLiteral("/meta/");
-    m_ThumbnailDir = dataDir + QStringLiteral("/thumbnails/");
-    m_VodDir = dataDir + QStringLiteral("/vods/");
-    m_IconDir = dataDir + QStringLiteral("/icons/");
+    m_SharedState->m_MetaDataDir = dataDir + QStringLiteral("/meta/");
+    m_SharedState->m_ThumbnailDir = dataDir + QStringLiteral("/thumbnails/");
+    m_SharedState->m_VodDir = dataDir + QStringLiteral("/vods/");
+    m_SharedState->m_IconDir = dataDir + QStringLiteral("/icons/");
 }
 
 void ScVodDataManager::moveDataDirectory(const QString& _targetDirectory)
@@ -3676,4 +2776,35 @@ ScVodDataManager::onDataDirectoryChanging(int changeType, QString path, float pr
     }
 
     emit dataDirectoryChanging(changeType, path, progress, error, errorDescription);
+}
+
+QSqlDatabase
+ScVodDataManager::database() const
+{
+    return m_Database;
+}
+
+QVariant
+ScVodDataManager::databaseVariant() const
+{
+    return QVariant::fromValue(m_Database);
+}
+
+ScClassifier*
+ScVodDataManager::classifier() const
+{
+    return &const_cast<ScVodDataManager*>(this)->m_SharedState->m_Classifier;
+}
+
+void ScVodDataManager::setMaxConcurrentMetaDataDownloads(int value)
+{
+    if (value <= 0) {
+        qWarning() << "invalid value for max concurrent metadata downloads" << value;
+        return;
+    }
+
+    if (value != m_MaxConcurrentMetaDataDownloads) {
+        m_MaxConcurrentMetaDataDownloads = value;
+        emit maxConcurrentMetaDataDownloadsChanged(value);
+    }
 }

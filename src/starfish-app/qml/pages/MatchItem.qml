@@ -83,6 +83,9 @@ ListItem {
     readonly property int requiredHeight: content.height + watchProgress.height
     readonly property string title: titleLabel.text
     readonly property string thumbnailSource: thumbnail.source
+    property int _metaDataTicket: -1
+    property int _thumbnailTicket: -1
+    property int _vodFileTicket: -1
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -534,6 +537,7 @@ ListItem {
 
     Component.onCompleted: {
         VodDataManager.vodAvailable.connect(vodAvailable)
+        VodDataManager.fetchingThumbnail.connect(fetchingThumbnail)
         VodDataManager.thumbnailAvailable.connect(thumbnailAvailable)
         VodDataManager.thumbnailDownloadFailed.connect(thumbnailDownloadFailed)
         VodDataManager.fetchingMetaData.connect(fetchingMetaData)
@@ -548,12 +552,20 @@ ListItem {
 //        console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
 
         // also fetch a valid meta data from cache
-        VodDataManager.fetchMetaDataFromCache(rowId)
-        VodDataManager.fetchThumbnailFromCache(rowId)
-        VodDataManager.queryVodFiles(rowId)
+        _metaDataTicket = VodDataManager.fetchMetaDataFromCache(rowId)
+        if (-1 !== _metaDataTicket) {
+            _metaDataState = metaDataStateFetching
+        }
+
         if (App.isOnline) {
             _fetchThumbnail()
+        } else {
+            _thumbnailTicket = VodDataManager.fetchThumbnailFromCache(rowId)
+            if (-1 !== _thumbnailTicket) {
+                _thumbnailState = thumbnailStateFetching
+            }
         }
+        _vodFileTicket = VodDataManager.queryVodFiles(rowId)
 
 //        console.debug("create match item rowid=" + rowId)
 
@@ -563,9 +575,21 @@ ListItem {
     }
 
     Component.onDestruction: {
-        if (_metaDataState === metaDataStateFetching) {
-            VodDataManager.cancelFetchMetaData(rowId)
+
+        var tickets = [_vodFileTicket]
+        for (var i = 0; i < tickets.length; ++i) {
+            if (-1 !== tickets[i])
+            VodDataManager.cancelTicket(tickets[i])
         }
+
+        if (_metaDataState === metaDataStateFetching) {
+            VodDataManager.cancelFetchMetaData(_metaDataTicket, rowId)
+        }
+
+        if (_thumbnailState === thumbnailStateFetching) {
+            VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
+        }
+
 //        console.debug("destroy match item rowid=" + rowId)
     }
 
@@ -699,12 +723,20 @@ ListItem {
         }
     }
 
+    function fetchingThumbnail(rowid) {
+        if (rowid === rowId) {
+            _thumbnailState = thumbnailStateFetching
+            _thumbnailTicket = -1
+        }
+    }
+
     function thumbnailAvailable(rowid, filePath) {
         if (rowid === rowId) {
 //            console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
             _thumbnailFilePath = "" // force reload
             _thumbnailFilePath = filePath
             _thumbnailState = thumbnailStateAvailable
+            _thumbnailTicket = -1
         }
     }
 
@@ -712,6 +744,7 @@ ListItem {
         if (rowid === rowId) {
             console.debug("thumbnail download failed rowid=" + rowid + " error=" + error + " url=" + url)
             _thumbnailState = thumbnailStateDownloadFailed
+            _thumbnailTicket = -1
         }
     }
 
@@ -720,6 +753,7 @@ ListItem {
     function fetchingMetaData(rowid) {
         if (rowid === rowId) {
             _metaDataState = metaDataStateFetching
+            _metaDataTicket = -1
         }
     }
 
@@ -728,6 +762,7 @@ ListItem {
             console.debug("meta data download failed rowid=" + rowid + " error=" + error)
             _metaDataState = metaDataStateDownloadFailed
             _clicked = false
+            _metaDataTicket = -1
             if (_thumbnailState === thumbnailStateFetching) {
                 _thumbnailState = thumbnailStateDownloadFailed
             }
@@ -741,6 +776,7 @@ ListItem {
             _vod = vod
             _vodTitle = vod.description.title
             _clicked = false
+            _metaDataTicket = -1
 
             // also set length which might be zero if we just downloaded the meta data
             length = vod.description.duration
@@ -806,6 +842,7 @@ ListItem {
             _width = width
             _height = height
             _formatId = formatId
+            _vodFileTicket = -1
         }
     }
 
@@ -966,8 +1003,13 @@ ListItem {
     }
 
     function _downloadFormat(formatIndex, autoStarted) {
+        if (-1 !== _vodFileTicket) {
+            VodDataManager.cancelTicket(_vodFileTicket)
+            _vodFileTicket = -1
+        }
+
         _vodDownloadFailed = false
-        VodDataManager.fetchVod(rowId, formatIndex, autoStarted)
+        _vodFileTicket = VodDataManager.fetchVod(rowId, formatIndex, autoStarted)
         _downloading = true
     }
 
@@ -984,6 +1026,11 @@ ListItem {
     }
 
     function _cancelDownload() {
+        if (-1 !== _vodFileTicket) {
+            VodDataManager.cancelTicket(_vodFileTicket)
+            _vodFileTicket = -1
+        }
+
         VodDataManager.cancelFetchVod(rowId)
         _progress = -1
         _downloading = false
@@ -991,13 +1038,17 @@ ListItem {
     }
 
     function _fetchMetaData() {
-        _metaDataState = metaDataStateFetching
-        VodDataManager.fetchMetaData(rowId)
+        _metaDataTicket = VodDataManager.fetchMetaData(rowId)
+        if (-1 !== _metaDataTicket) {
+            _metaDataState = metaDataStateFetching
+        }
     }
 
     function _fetchThumbnail() {
-        _thumbnailState = thumbnailStateFetching
-        VodDataManager.fetchThumbnail(rowId)
+        _thumbnailTicket = VodDataManager.fetchThumbnail(rowId)
+        if (-1 !== _thumbnailTicket) {
+            _thumbnailState = thumbnailStateFetching
+        }
     }
 
     function cancelImplicitVodFileFetch() {

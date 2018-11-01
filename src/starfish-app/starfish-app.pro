@@ -19,6 +19,7 @@ SOURCES += harbour-starfish.cpp \
     ScVodman.cpp \
     ScApp.cpp \
     ScVodDataManager.cpp \
+    ScVodDataManagerWorker.cpp \
     ScVodDatabaseDownloader.cpp \
     ScIcons.cpp \
     ScSqlVodModel.cpp \
@@ -31,6 +32,8 @@ HEADERS += \
     ScVodman.h \
     ScApp.h \
     ScVodDataManager.h \
+    ScVodDataManagerWorker.h \
+    ScVodDataManagerState.h \
     ScVodDatabaseDownloader.h \
     ScIcons.h \
     ScSqlVodModel.h \
