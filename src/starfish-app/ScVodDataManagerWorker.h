@@ -55,6 +55,9 @@ public:
     void cancelFetchVod(qint64 rowid);
     void cancelFetchMetaData(qint64 rowid);
     void cancelFetchThumbnail(qint64 rowid);
+    void fetchTitle(qint64 rowid);
+    void fetchSeen(qint64 rowid, const QString& table, const QString& where);
+    void fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS);
 
 signals:
     void fetchingMetaData(qint64 rowid);
@@ -74,6 +77,9 @@ signals:
     void vodDownloadFailed(qint64 rowid, int error);
     void vodDownloadCanceled(qint64 rowid);
     void vodDownloadsChanged();
+    void titleAvailable(qint64 rowid, QString title);
+    void seenAvailable(qint64 rowid, qreal seen);
+    void vodEndAvailable(qint64 rowid, int endOffsetS);
 
 public slots:
     void process();

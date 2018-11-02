@@ -324,7 +324,7 @@ void DataDirectoryMover::onProcessReadyRead() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
+
 
 
 ScVodDataManager::~ScVodDataManager() {
@@ -487,6 +487,9 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadFailed, this, &ScVodDataManager::vodDownloadFailed);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadCanceled, this, &ScVodDataManager::vodDownloadCanceled);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadsChanged, this, &ScVodDataManager::vodDownloadsChanged);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::titleAvailable, this, &ScVodDataManager::titleAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::seenAvailable, this, &ScVodDataManager::seenAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodEndAvailable, this, &ScVodDataManager::vodEndAvailable);
     // manager->worker
     connect(this, &ScVodDataManager::startWorker, m_WorkerInterface, &ScVodDataManagerWorker::process);
     connect(this, &ScVodDataManager::stopWorker, m_WorkerInterface, &QObject::deleteLater);
@@ -1891,35 +1894,6 @@ ScVodDataManager::tryRaiseVodsChanged() {
     }
 }
 
-QString
-ScVodDataManager::title(qint64 rowid) {
-    RETURN_IF_ERROR;
-
-    QMutexLocker g(&m_Lock);
-
-    QSqlQuery q(m_Database);
-
-    if (!q.prepare(QStringLiteral(
-"SELECT u.title FROM vods AS v INNER JOIN vod_url_share "
-"AS u ON v.vod_url_share_id=u.id WHERE v.id=?"))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return QString();
-    }
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return QString();
-    }
-
-    if (q.next()) {
-        return q.value(0).toString();
-    }
-
-    return QString();
-}
-
 int
 ScVodDataManager::queryVodFiles(qint64 rowid) {
     RETURN_MINUS_ON_ERROR;
@@ -2780,4 +2754,49 @@ void ScVodDataManager::setMaxConcurrentMetaDataDownloads(int value)
         m_MaxConcurrentMetaDataDownloads = value;
         emit maxConcurrentMetaDataDownloadsChanged(value);
     }
+}
+
+int
+ScVodDataManager::fetchTitle(qint64 rowid)
+{
+    RETURN_MINUS_ON_ERROR;
+
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->fetchTitle(rowid);
+    };
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
+    }
+    return result;
+}
+
+int
+ScVodDataManager::fetchSeen(qint64 rowId, const QString& table, const QString& where)
+{
+    RETURN_MINUS_ON_ERROR;
+
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->fetchSeen(rowId, table, where);
+    };
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
+    }
+    return result;
+}
+
+int
+ScVodDataManager::fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS)
+{
+    RETURN_MINUS_ON_ERROR;
+
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->fetchVodEnd(rowid, startOffsetS, vodLengthS);
+    };
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
+    }
+    return result;
 }

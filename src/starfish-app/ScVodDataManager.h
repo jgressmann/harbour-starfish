@@ -174,7 +174,7 @@ public: //
     Q_INVOKABLE int fetchMetaDataFromCache(qint64 rowid);
     Q_INVOKABLE int fetchThumbnail(qint64 rowid);
     Q_INVOKABLE int fetchThumbnailFromCache(qint64 rowid);
-    Q_INVOKABLE QString title(qint64 rowid);
+    Q_INVOKABLE int fetchTitle(qint64 rowid);
     Q_INVOKABLE int fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted);
     Q_INVOKABLE void cancelFetchVod(qint64 rowid);
     Q_INVOKABLE void cancelFetchMetaData(int ticket, qint64 rowid);
@@ -216,6 +216,8 @@ public: //
     int sqlPatchLevel() const;
     inline int maxConcurrentMetaDataDownloads() const { return m_MaxConcurrentMetaDataDownloads; }
     void setMaxConcurrentMetaDataDownloads(int value);
+    Q_INVOKABLE int fetchSeen(qint64 rowid, const QString& table, const QString& where);
+    Q_INVOKABLE int fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS);
 
 signals:
     void readyChanged();
@@ -251,6 +253,9 @@ signals:
     void startWorker();
     void stopWorker();
     void maxConcurrentMetaDataDownloadsChanged(int value);
+    void titleAvailable(qint64 rowid, QString title);
+    void seenAvailable(qint64 rowid, qreal seen);
+    void vodEndAvailable(qint64 rowid, int endOffsetS);
 
 public slots:
     void excludeEvent(const ScEvent& event, bool* exclude);

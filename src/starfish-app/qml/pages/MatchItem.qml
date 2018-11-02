@@ -62,7 +62,7 @@ ListItem {
     property int _height: 0
     property int baseOffset: 0
     property int length: 0
-    property int _endOffset: 0
+    property int _endOffset: -1
     property bool _validRange: baseOffset >= 0 && baseOffset < _endOffset
     property bool _tryingToPlay: false
     property int _metaDataState: metaDataStateInitial
@@ -545,10 +545,15 @@ ListItem {
         VodDataManager.metaDataDownloadFailed.connect(metaDataDownloadFailed)
         VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
         VodDataManager.vodDownloadCanceled.connect(vodDownloadCanceled)
-        _vodTitle = VodDataManager.title(rowId)
-        seenButton.seen = VodDataManager.seen(table, _where) >= 1
+        VodDataManager.titleAvailable.connect(titleAvailable)
+        VodDataManager.seenAvailable.connect(seenAvailable)
+        VodDataManager.vodEndAvailable.connect(vodEndAvailable)
+        VodDataManager.fetchTitle(rowId)
+        VodDataManager.fetchSeen(rowId, table, _where)
+        VodDataManager.fetchVodEnd(rowId, baseOffset, length)
+        //seenButton.seen = VodDataManager.seen(table, _where) >= 1
 //        console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
-        _endOffset = VodDataManager.vodEndOffset(rowId, baseOffset, length)
+        //_endOffset = VodDataManager.vodEndOffset(rowId, baseOffset, length)
 //        console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
 
         // also fetch a valid meta data from cache
@@ -748,7 +753,23 @@ ListItem {
         }
     }
 
+    function titleAvailable(rowid, title) {
+        if (rowid === rowId) {
+            _vodTitle = title
+        }
+    }
 
+    function seenAvailable(rowid, seen) {
+        if (rowid === rowId) {
+            seenButton.seen = seen >= 1
+        }
+    }
+
+    function vodEndAvailable(rowid, offset) {
+        if (rowid === rowId) {
+            _endOffset = offset
+        }
+    }
 
     function fetchingMetaData(rowid) {
         if (rowid === rowId) {
@@ -784,7 +805,8 @@ ListItem {
             // now that we have meta data, we might
             // be able to get a watch progress
 //            console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
-            _endOffset = VodDataManager.vodEndOffset(rowId, baseOffset, length)
+            //_endOffset = VodDataManager.vodEndOffset(rowId, baseOffset, length)
+            VodDataManager.fetchVodEnd(rowId, baseOffset, length)
 //            console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
 
 
@@ -1078,5 +1100,7 @@ ListItem {
             return 1080
         }
     }
+
+
 }
 

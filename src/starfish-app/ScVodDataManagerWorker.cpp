@@ -1106,3 +1106,99 @@ void ScVodDataManagerWorker::maxConcurrentMetaDataDownloadsChanged(int value)
 {
     m_Vodman->setMaxConcurrentMetaDataDownloads(value);
 }
+
+
+void
+ScVodDataManagerWorker::fetchTitle(qint64 rowid) {
+    QSqlQuery q(m_Database);
+
+    static const QString s_Sql = QStringLiteral(
+                "SELECT u.title FROM vods AS v INNER JOIN vod_url_share "
+                "AS u ON v.vod_url_share_id=u.id WHERE v.id=?");
+
+    if (!q.prepare(s_Sql)) {
+        qCritical() << "failed to prepare query" << q.lastError();
+        return;
+    }
+
+    q.addBindValue(rowid);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return;
+    }
+
+    if (q.next()) {
+        emit titleAvailable(rowid, q.value(0).toString());
+    }
+}
+
+void
+ScVodDataManagerWorker::fetchSeen(qint64 rowid, const QString& table, const QString& where)
+{
+    if (table.isEmpty()) {
+        qWarning() << "no table";
+        return;
+    }
+
+    if (where.isEmpty()) {
+        qWarning() << "no filters";
+        return;
+    }
+
+    QSqlQuery q(m_Database);
+
+
+    static const QString sql = QStringLiteral(
+                "SELECT\n"
+                "    SUM(seen)/(1.0 * COUNT(seen))\n"
+                "FROM\n"
+                "    %1\n"
+                "%2\n");
+
+    if (!q.exec(sql.arg(table, where))) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return;
+    }
+
+    q.next();
+
+    emit seenAvailable(rowid, q.value(0).toReal());
+}
+
+void
+ScVodDataManagerWorker::fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS)
+{
+    static const QString sql = QStringLiteral(
+"SELECT\n"
+"   MIN(offset)\n"
+"FROM\n"
+"   offline_vods\n"
+"WHERE\n"
+"   offset>?\n"
+"   AND vod_url_share_id IN (SELECT vod_url_share_id FROM offline_vods WHERE id=?)\n");
+
+    QSqlQuery q(m_Database);
+    if (!q.prepare(sql)) {
+        qCritical() << "failed to prepare query" << q.lastError();
+        return;
+    }
+
+    q.addBindValue(startOffsetS);
+    q.addBindValue(rowid);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return;
+    }
+
+    if (q.next()) {
+        auto v = q.value(0);
+        if (!v.isNull()) {
+            emit vodEndAvailable(rowid, v.toInt());
+            return;
+        }
+    }
+
+    emit vodEndAvailable(rowid, vodLengthS);
+}
