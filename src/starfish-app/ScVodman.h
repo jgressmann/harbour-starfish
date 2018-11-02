@@ -25,8 +25,6 @@
 
 #include "service_interface.h" // http://inz.fi/2011/02/18/qmake-and-d-bus/
 #include <vodman/VMVod.h>
-#include <QMutex>
-#include <QAtomicInt>
 
 class QByteArray;
 class QDBusPendingCallWatcher;
@@ -87,10 +85,8 @@ private:
     void scheduleNextFileRequest();
     void scheduleNextMetaDataRequest();
     void issueRequest(qint64 token, const Request& request);
-    void abort();
 
 private:
-    QMutex m_Lock;
     org::duckdns::jgressmann::vodman::service* m_Service;
     QList<QPair<qint64, Request>> m_PendingFileRequests;
     QList<QPair<qint64, Request>> m_PendingMetaDataRequests;
@@ -98,6 +94,6 @@ private:
     QHash<QDBusPendingCallWatcher*, qint64> m_PendingDBusResponses;
     QHash<qint64, qint64> m_MetaDataTokenMap;
     QHash<qint64, qint64> m_FileTokenMap;
-    QAtomicInteger<qint64> m_TokenGenerator;
+    qint64 m_TokenGenerator;
     int m_MaxFile, m_CurrentFile, m_MaxMeta, m_CurrentMeta;
 };

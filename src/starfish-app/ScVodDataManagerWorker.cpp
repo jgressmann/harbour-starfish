@@ -58,29 +58,20 @@ ScVodDataManagerWorker::~ScVodDataManagerWorker()
 {
     qDebug() << "dtor entry";
 
-    if (m_Vodman) {
-        delete m_Vodman;
-        m_Vodman = nullptr;
-        qDebug() << "deleted vodman";
-    }
+    qDebug() << "disconnect";
+    disconnect();
 
-    foreach (auto& key, m_ThumbnailRequests.keys()) {
+    delete m_Vodman;
+    qDebug() << "deleted vodman";
+
+    foreach (auto key, m_ThumbnailRequests.keys()) {
         key->abort();
+        delete key;
     }
     qDebug() << "aborted thumbnail requests";
 
-    while (true) {
-        {
-            if (m_ThumbnailRequests.isEmpty())
-            {
-                break;
-            }
-        }
-
-        QThread::msleep(100);
-        qDebug() << "wait for requests";
-        qDebug() << "thumbnail reqs gone" << (m_ThumbnailRequests.isEmpty());
-    }
+    delete m_Manager;
+    qDebug() << "deleted network access manager";
 
     m_Database = QSqlDatabase(); // to remove ref count
     QSqlDatabase::removeDatabase(QStringLiteral("ScVodDataManagerWorker"));

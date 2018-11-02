@@ -335,66 +335,38 @@ ScVodDataManager::~ScVodDataManager() {
 
     cancelMoveDataDirectory();
 
-//    if (m_Vodman) {
-//        delete m_Vodman;
-//        m_Vodman = nullptr;
-//        qDebug() << "deleted vodman";
-//    }
-
+    emit stopWorker();
     m_WorkerThread.quit();
     m_WorkerThread.wait();
-    delete m_WorkerInterface;
+    qDebug() << "stopped worker thread";
+//    delete m_WorkerInterface;
+//    qDebug() << "deleted worker";
 
-    {
-        QMutexLocker guard(&m_Lock);
-
-        if (m_ClassfierRequest) {
-            m_ClassfierRequest->abort();
-            qDebug() << "aborted classifier request";
-        }
-
-
-        if (m_SqlPatchesRequest) {
-            m_SqlPatchesRequest->abort();
-            qDebug() << "aborted sql patches request";
-        }
-
-        foreach (auto& key, m_IconRequests.keys()) {
-            key->abort();
-        }
-        qDebug() << "aborted icons requests";
+    if (m_ClassfierRequest) {
+        m_ClassfierRequest->abort();
+        delete m_ClassfierRequest;
+        qDebug() << "aborted classifier request";
     }
+
+
+    if (m_SqlPatchesRequest) {
+        m_SqlPatchesRequest->abort();
+        delete m_SqlPatchesRequest;
+        qDebug() << "aborted sql patches request";
+    }
+
+    foreach (auto key, m_IconRequests.keys()) {
+        key->abort();
+        delete key;
+    }
+    qDebug() << "aborted icons requests";
 
     m_AddThread.quit();
     m_AddThread.wait();
 
-    while (true) {
-        {
-            QMutexLocker guard(&m_Lock);
-
-            if (!m_ClassfierRequest &&
-                !m_SqlPatchesRequest &&
-                 m_IconRequests.isEmpty())
-            {
-                break;
-            }
-        }
-
-        QThread::msleep(100);
-        qDebug() << "wait for requests";
-        qDebug() << "classifier req gone" << (m_ClassfierRequest == nullptr);
-        qDebug() << "sql patch req gone" << (m_SqlPatchesRequest == nullptr);
-        qDebug() << "icon reqs gone" << (m_IconRequests.isEmpty());
-    }
-
-    {
-        QMutexLocker guard(&m_Lock);
-        if (m_Manager) {
-            delete m_Manager;
-            m_Manager = nullptr;
-        }
-        qDebug() << "deleted network manager";
-    }
+    delete m_Manager;
+    m_Manager = nullptr;
+    qDebug() << "deleted network manager";
 
 
     m_Database = QSqlDatabase(); // to remove ref count
@@ -517,6 +489,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadsChanged, this, &ScVodDataManager::vodDownloadsChanged);
     // manager->worker
     connect(this, &ScVodDataManager::startWorker, m_WorkerInterface, &ScVodDataManagerWorker::process);
+    connect(this, &ScVodDataManager::stopWorker, m_WorkerInterface, &QObject::deleteLater);
     connect(this, &ScVodDataManager::maxConcurrentMetaDataDownloadsChanged, m_WorkerInterface, &ScVodDataManagerWorker::maxConcurrentMetaDataDownloadsChanged);
 
     m_WorkerThread.start();

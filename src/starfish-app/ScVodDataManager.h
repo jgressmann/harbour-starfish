@@ -249,6 +249,7 @@ signals:
     void dataDirectoryChanged();
     void dataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
     void startWorker();
+    void stopWorker();
     void maxConcurrentMetaDataDownloadsChanged(int value);
 
 public slots:

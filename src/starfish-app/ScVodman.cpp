@@ -25,19 +25,37 @@
 #include <vodman/VMVodMetaDataDownload.h>
 #include <vodman/VMVodFileDownload.h>
 #include <QDBusConnection>
-#include <QMutexLocker>
 #include <QDataStream>
 #include <QThread>
 #include <QCoreApplication>
 
 ScVodman::~ScVodman()
 {
-    abort();
+    qDebug() << "dtor entry";
+
+    qDebug() << "disconnect";
+    disconnect();
+
+    // abort file fetches
+    foreach (auto serviceToken, m_FileTokenMap.keys()) {
+        m_Service->cancelFetchVodFile(serviceToken, false);
+    }
+    qDebug() << "canceled running vod file fetches";
+
+    foreach (auto watcher, m_PendingDBusResponses.keys()) {
+        delete watcher;
+    }
+    qDebug() << "deleted pending D-BUS response watchers";
+
+    delete m_Service;
+    m_Service = nullptr;
+    qDebug() << "deleted D-BUS service";
+
+    qDebug() << "dtor exit";
 }
 
 ScVodman::ScVodman(QObject *parent)
     : QObject(parent)
-    , m_Lock(QMutex::Recursive)
 {
     m_MaxFile = 1;
     m_MaxMeta = 4;
@@ -81,7 +99,6 @@ ScVodman::startFetchMetaData(qint64 token, const QString& url) {
         return;
     }
 
-    QMutexLocker g(&m_Lock);
     Request r;
     r.type = RT_MetaData;
     r.url = url;
@@ -133,7 +150,6 @@ ScVodman::startFetchFile(qint64 token, const VMVod& vod, int formatIndex, const 
         return;
     }
 
-    QMutexLocker g(&m_Lock);
     Request r;
     r.type = RT_File;
     r.vod = vod;
@@ -153,7 +169,6 @@ void
 ScVodman::onVodFileMetaDataDownloadCompleted(qint64 token, const QByteArray& result) {
 
     qDebug() << "enter" << token;
-    QMutexLocker g(&m_Lock);
     auto requestId = m_MetaDataTokenMap.value(token, -1);
     if (requestId >= 0) {
 
@@ -193,7 +208,6 @@ ScVodman::onVodFileMetaDataDownloadCompleted(qint64 token, const QByteArray& res
 
 void
 ScVodman::onNewTokenReply(QDBusPendingCallWatcher *self) {
-    QMutexLocker g(&m_Lock);
     self->deleteLater();
     QDBusPendingReply<qint64> reply = *self;
     auto requestId = m_PendingDBusResponses.value(self, -1);
@@ -269,7 +283,6 @@ ScVodman::onNewTokenReply(QDBusPendingCallWatcher *self) {
 
 void
 ScVodman::onMetaDataDownloadReply(QDBusPendingCallWatcher *self) {
-    QMutexLocker g(&m_Lock);
     self->deleteLater();
     QDBusPendingReply<> reply = *self;
     auto requestId = m_PendingDBusResponses.value(self, -1);
@@ -298,7 +311,6 @@ ScVodman::onMetaDataDownloadReply(QDBusPendingCallWatcher *self) {
 
 void
 ScVodman::onFileDownloadReply(QDBusPendingCallWatcher *self) {
-    QMutexLocker g(&m_Lock);
     self->deleteLater();
     QDBusPendingReply<> reply = *self;
     auto requestId = m_PendingDBusResponses.value(self, -1);
@@ -335,7 +347,6 @@ ScVodman::onVodFileDownloadRemoved(qint64 handle, const QByteArray& result)
 {
     qDebug() << "enter" << handle;
 
-    QMutexLocker g(&m_Lock);
     auto requestId = m_FileTokenMap.value(handle, -1);
     if (requestId >= 0) {
 
@@ -365,7 +376,6 @@ ScVodman::onVodFileDownloadChanged(qint64 handle, const QByteArray& result)
 {
     qDebug() << "enter" << handle;
 
-    QMutexLocker g(&m_Lock);
     auto requestId = m_FileTokenMap.value(handle, -1);
     if (requestId >= 0) {
         VMVodFileDownload download;
@@ -382,7 +392,6 @@ ScVodman::onVodFileDownloadChanged(qint64 handle, const QByteArray& result)
 
 void
 ScVodman::cancel(qint64 token) {
-    QMutexLocker g(&m_Lock);
 
     for (int i = 0; i < m_PendingFileRequests.size(); ++i) {
         const auto& pair = m_PendingFileRequests[i];
@@ -439,45 +448,9 @@ ScVodman::setMaxConcurrentMetaDataDownloads(int value) {
         return;
     }
 
-    QMutexLocker g(&m_Lock);
-
     if (m_MaxMeta != value) {
         m_MaxMeta = value;
         emit maxConcurrentMetaDataDownloadsChanged();
     }
 }
 
-void
-ScVodman::abort() {
-    {
-        QMutexLocker g(&m_Lock);
-
-        // empty pending queues
-        m_PendingMetaDataRequests.clear();
-        m_PendingFileRequests.clear();
-
-        // abort file fetches
-        foreach (auto serviceToken, m_FileTokenMap.keys()) {
-            m_Service->cancelFetchVodFile(serviceToken, false);
-        }
-    }
-
-    // wait for in progress requests to complete
-    while (true) {
-        {
-            QMutexLocker g(&m_Lock);
-            if (m_ActiveRequests.isEmpty()) {
-                break;
-            }
-
-            qDebug() << "# active req" << m_ActiveRequests.size();
-            qApp->processEvents();
-        }
-
-        QThread::msleep(100);
-    }
-
-    delete m_Service;
-    m_Service = nullptr;
-
-}
