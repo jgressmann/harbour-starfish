@@ -72,7 +72,7 @@ BasePage {
                 id: updater
             }
 
-            MatchItemConnections {
+            MatchItemMemory {
                 id: matchItemConnections
             }
 
@@ -94,7 +94,7 @@ BasePage {
                     table: page.table
                     length: vod_length
                     url: vod_url
-                    connectionHandler: matchItemConnections
+                    memory: matchItemConnections
 
                     onClicked: {
                         ListView.view.currentIndex = index

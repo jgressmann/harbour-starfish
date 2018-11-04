@@ -86,7 +86,8 @@ ScVodDataManagerWorker::ScVodDataManagerWorker(const QSharedPointer<ScVodDataMan
 {
     // needed else: QObject::connect: Cannot queue arguments of type
     // at runtime
-    qRegisterMetaType<VMVod>();
+    qRegisterMetaType<VMVod>("VMVod");
+    qRegisterMetaType<ScVodIdList>("ScVodIdList");
 
     m_Manager = new QNetworkAccessManager(this);
     connect(m_Manager, &QNetworkAccessManager::finished, this,
@@ -391,7 +392,7 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 rowid, bool download)
 }
 
 void
-ScVodDataManagerWorker::fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted)
+ScVodDataManagerWorker::fetchVod(qint64 rowid, int formatIndex)
 {
     QSqlQuery q(m_Database);
 
@@ -462,9 +463,7 @@ ScVodDataManagerWorker::fetchVod(qint64 rowid, int formatIndex, bool implicitlyS
 
     for (auto& value : m_VodmanFileRequests) {
         if (value.vod_url_share_id == urlShareId) {
-            if (value.implicitlyStarted && !implicitlyStarted) {
-                value.implicitlyStarted = false;
-            }
+            ++value.refCount;
             return; // already underway
         }
     }
@@ -565,10 +564,10 @@ ScVodDataManagerWorker::fetchVod(qint64 rowid, int formatIndex, bool implicitlyS
                 VodmanFileRequest r;
                 r.token = m_Vodman->newToken();
                 r.vod_url_share_id = urlShareId;
-                r.implicitlyStarted = implicitlyStarted;
+                r.refCount = 1;
                 m_VodmanFileRequests.insert(r.token, r);
                 m_Vodman->startFetchFile(r.token, vod, formatIndex, vodFilePath);
-                emit vodDownloadsChanged();
+                notifyVodDownloadsChanged(q);
 
             } else {
                 // read invalid vod, try again
@@ -715,9 +714,10 @@ void ScVodDataManagerWorker::onFileDownloadCompleted(qint64 token, const VMVodFi
     if (it != m_VodmanFileRequests.end()) {
         const VodmanFileRequest r = it.value();
         m_VodmanFileRequests.erase(it);
-        emit vodDownloadsChanged();
 
         QSqlQuery q(m_Database);
+        notifyVodDownloadsChanged(q);
+
         if (download.progress() >= 1 && download.error() == VMVodEnums::VM_ErrorNone) {
             updateVodDownloadStatus(r.vod_url_share_id, download);
         } else {
@@ -779,6 +779,7 @@ void ScVodDataManagerWorker::updateVodDownloadStatus(
 void
 ScVodDataManagerWorker::onDownloadFailed(qint64 token, int serviceErrorCode) {
 
+    QSqlQuery q(m_Database);
     qint64 urlShareId = -1;
     auto metaData = false;
 
@@ -786,10 +787,10 @@ ScVodDataManagerWorker::onDownloadFailed(qint64 token, int serviceErrorCode) {
     if (it != m_VodmanFileRequests.end()) {
         VodmanFileRequest r = it.value();
         m_VodmanFileRequests.erase(it);
-        emit vodDownloadsChanged();
 
         urlShareId = r.vod_url_share_id;
         metaData = false;
+        notifyVodDownloadsChanged(q);
     } else {
         auto it2 = m_VodmanMetaDataRequests.find(token);
         if (it2 != m_VodmanMetaDataRequests.end()) {
@@ -802,7 +803,6 @@ ScVodDataManagerWorker::onDownloadFailed(qint64 token, int serviceErrorCode) {
     }
 
     if (urlShareId >= 0) {
-        QSqlQuery q(m_Database);
         if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, urlShareId))) {
             return;
         }
@@ -837,39 +837,47 @@ ScVodDataManagerWorker::cancelFetchVod(qint64 rowid) {
         return;
     }
 
-    while (q.next()) {
+    auto canceled = false;
+
+    while (!canceled && q.next()) {
         auto vodUrlShareId = qvariant_cast<qint64>(q.value(0));
         auto beg = m_VodmanFileRequests.begin();
         auto end = m_VodmanFileRequests.end();
         for (auto it = beg; it != end; ) {
             if (it.value().vod_url_share_id == vodUrlShareId) {
-                m_Vodman->cancel(it.key());
-                m_VodmanFileRequests.erase(it++);
-                qDebug() << "cancel vod file request for url share id" << vodUrlShareId;
+                if (--it.value().refCount == 0) {
+                    m_Vodman->cancel(it.key());
+                    m_VodmanFileRequests.erase(it++);
+                    qDebug() << "cancel vod file request for url share id" << vodUrlShareId;
+                    canceled = true;
+                    break;
+                }
             } else {
                 ++it;
             }
         }
     }
 
-    emit vodDownloadsChanged();
+    if (canceled) {
+        notifyVodDownloadsChanged(q);
 
-    if (!q.prepare(QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id in (%1)").arg(selectUrlShareId))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
+        if (!q.prepare(QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id in (%1)").arg(selectUrlShareId))) {
+            qCritical() << "failed to prepare query" << q.lastError();
+            return;
+        }
 
 
-    q.addBindValue(rowid);
+        q.addBindValue(rowid);
 
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
+        if (!q.exec()) {
+            qCritical() << "failed to exec query" << q.lastError();
+            return;
+        }
 
-    while (q.next()) {
-        auto vodId = qvariant_cast<qint64>(q.value(0));
-        emit vodDownloadCanceled(vodId);
+        while (q.next()) {
+            auto vodId = qvariant_cast<qint64>(q.value(0));
+            emit vodDownloadCanceled(vodId);
+        }
     }
 }
 
@@ -916,9 +924,8 @@ ScVodDataManagerWorker::cancelFetchMetaData(qint64 rowid) {
 
 
 void
-ScVodDataManagerWorker::cancelFetchThumbnail(qint64 rowid) {
-
-
+ScVodDataManagerWorker::cancelFetchThumbnail(qint64 rowid)
+{
     auto beg = m_ThumbnailRequests.begin();
     auto end = m_ThumbnailRequests.end();
     for (auto it = beg; it != end; ++it) {
@@ -1201,4 +1208,27 @@ ScVodDataManagerWorker::fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengt
     }
 
     emit vodEndAvailable(rowid, vodLengthS);
+}
+
+void
+ScVodDataManagerWorker::notifyVodDownloadsChanged(QSqlQuery& q)
+{
+    ScVodIdList downloads;
+
+    auto beg = m_VodmanFileRequests.cbegin();
+    auto end = m_VodmanFileRequests.cend();
+    for (auto it = beg; it != end; ++it) {
+        const VodmanFileRequest& r = it.value();
+
+        if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, r.vod_url_share_id))) {
+            return;
+        }
+
+        while (q.next()) {
+            auto vodId = qvariant_cast<qint64>(q.value(0));
+            downloads << vodId;
+        }
+    }
+
+    emit vodDownloadsChanged(downloads);
 }

@@ -26,6 +26,7 @@ import org.duckdns.jgressmann 1.0
 
 Item {
     property var _items: []
+    property var _startedDownloadExplicitly: []
 
     Component.onCompleted: {
         VodDataManager.vodAvailable.connect(vodAvailable)
@@ -42,12 +43,138 @@ Item {
         VodDataManager.vodEndAvailable.connect(vodEndAvailable)
     }
 
+    Component.onDestruction: {
+        console.debug("destroy match item memory")
+        VodDataManager.vodAvailable.disconnect(vodAvailable)
+        VodDataManager.fetchingThumbnail.disconnect(fetchingThumbnail)
+        VodDataManager.thumbnailAvailable.disconnect(thumbnailAvailable)
+        VodDataManager.thumbnailDownloadFailed.disconnect(thumbnailDownloadFailed)
+        VodDataManager.fetchingMetaData.disconnect(fetchingMetaData)
+        VodDataManager.metaDataAvailable.disconnect(metaDataAvailable)
+        VodDataManager.metaDataDownloadFailed.disconnect(metaDataDownloadFailed)
+        VodDataManager.vodDownloadFailed.disconnect(vodDownloadFailed)
+        VodDataManager.vodDownloadCanceled.disconnect(vodDownloadCanceled)
+        VodDataManager.titleAvailable.disconnect(titleAvailable)
+        VodDataManager.seenAvailable.disconnect(seenAvailable)
+        VodDataManager.vodEndAvailable.disconnect(vodEndAvailable)
+    }
+/* CONNECTIONS DO NOT WORK!!! */
+
+//    Component.onCompleted: {
+//        connections.target = VodDataManager
+//    }
+
+//    Component.onDestruction: {
+//        connections.target = null
+//    }
+
+
+//    Connections {
+//        id: connections
+//        ignoreUnknownSignals: true
+//        onVodAvailable: function (rowid, filePath, progress, fileSize, width, height, formatId) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.vodAvailable(filePath, progress, fileSize, width, height, formatId)
+//            }
+//        }
+
+//        onFetchingThumbnail: function (rowid) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.fetchingThumbnail()
+//            }
+//        }
+
+//        onThumbnailAvailable: function (rowid, filePath) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.thumbnailAvailable(filePath)
+//            }
+//        }
+
+//        onThumbnailDownloadFailed: function(rowid, error, url) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.thumbnailDownloadFailed(error, url)
+//            }
+//        }
+
+//        onTitleAvailable: function (rowid, title) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.titleAvailable(title)
+//            }
+//        }
+
+//        onSeenAvailable: function (rowid, seen) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.seenAvailable(seen)
+//            }
+//        }
+
+//        onVodEndAvailable: function (rowid, offset) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.vodEndAvailable(offset)
+//            }
+//        }
+
+//        onFetchingMetaData: function (rowid) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.fetchingMetaData()
+//            }
+//        }
+
+//        onMetaDataDownloadFailed: function (rowid, error) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.metaDataDownloadFailed(error)
+//            }
+//        }
+
+//        onMetaDataAvailable: function (rowid, vod) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.metaDataAvailable(vod)
+//            }
+//        }
+
+//        onVodDownloadFailed: function (rowid, error) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.vodDownloadFailed(error)
+//            }
+//        }
+
+//        onVodDownloadCanceled: function (rowid) {
+//            var item = _items[rowid]
+//            if (item) {
+//                item.vodDownloadCanceled()
+//            }
+//        }
+//    }
+
     function addMatchItem(item) {
         _items[item.rowId] = item
     }
 
     function removeMatchItem(item) {
         delete _items[item.rowId]
+    }
+
+    function setStartedDownloadExplicitly(item, value) {
+        if (value) {
+            _startedDownloadExplicitly[item.rowId] = true
+        } else {
+            delete _startedDownloadExplicitly[item.rowId]
+        }
+    }
+
+    function hasStartedDownloadExplicitly(item) {
+        return !!_startedDownloadExplicitly(item.rowId)
     }
 
 

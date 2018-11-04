@@ -339,8 +339,6 @@ ScVodDataManager::~ScVodDataManager() {
     m_WorkerThread.quit();
     m_WorkerThread.wait();
     qDebug() << "stopped worker thread";
-//    delete m_WorkerInterface;
-//    qDebug() << "deleted worker";
 
     if (m_ClassfierRequest) {
         m_ClassfierRequest->abort();
@@ -391,8 +389,6 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(m_Manager, &QNetworkAccessManager::finished, this,
             &ScVodDataManager::requestFinished);
 
-
-
     m_Error = Error_None;
     m_SuspendedVodsChangedEventCount = 0;
     m_MaxConcurrentMetaDataDownloads = 4;
@@ -434,7 +430,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         }
     }
 
-    auto result = m_SharedState->m_Icons.load(iconsFileDestinationPath);
+    auto result = m_Icons.load(iconsFileDestinationPath);
     if (!result) {
         qCritical() << "failed to load icons data from" << iconsFileDestinationPath;
         setError(Error_Unknown);
@@ -452,7 +448,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
         }
     }
 
-    result = m_SharedState->m_Classifier.load(classifierFileDestinationPath);
+    result = m_Classifier.load(classifierFileDestinationPath);
     if (!result) {
         qCritical() << "failed to load classifier data from" << classifierFileDestinationPath;
         setError(Error_Unknown);
@@ -486,7 +482,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailDownloadFailed, this, &ScVodDataManager::thumbnailDownloadFailed);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadFailed, this, &ScVodDataManager::vodDownloadFailed);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadCanceled, this, &ScVodDataManager::vodDownloadCanceled);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadsChanged, this, &ScVodDataManager::vodDownloadsChanged);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadsChanged, this, &ScVodDataManager::onVodDownloadsChanged);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::titleAvailable, this, &ScVodDataManager::titleAvailable);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::seenAvailable, this, &ScVodDataManager::seenAvailable);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodEndAvailable, this, &ScVodDataManager::vodEndAvailable);
@@ -548,7 +544,7 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
                         } else {
                             ScClassifier classifier;
                             if (classifier.load(file.fileName())) {
-                                m_SharedState->m_Classifier = classifier;
+                                m_Classifier = classifier;
                             } else {
                                 qCritical() << "Failed to load icons from downloaded icons file" << reply->url();
                             }
@@ -641,11 +637,11 @@ ScVodDataManager::iconRequestFinished(QNetworkReply* reply, IconRequest& r) {
                     } else {
                         ScIcons icons;
                         if (icons.load(file.fileName())) {
-                            m_SharedState->m_Icons = icons;
+                            m_Icons = icons;
 
                             // create entries and fetch files
                             QSqlQuery q(m_Database);
-                            const auto& icons = m_SharedState->m_Icons;
+                            const auto& icons = m_Icons;
                             for (auto i = 0; i < icons.size(); ++i) {
                                 auto url = icons.url(i);
 
@@ -711,7 +707,7 @@ ScVodDataManager::iconRequestFinished(QNetworkReply* reply, IconRequest& r) {
                     qWarning() << "failed to open" << file.fileName() << "for writing";
                 }
             } else {
-                    QSqlQuery q(m_Database);
+                QSqlQuery q(m_Database);
                 if (!q.prepare(
                             QStringLiteral("SELECT file_name FROM icons WHERE url=?"))) {
                     qCritical() << "failed to prepare query" << q.lastError();
@@ -1011,7 +1007,7 @@ ScVodDataManager::setError(Error error) {
 QString
 ScVodDataManager::label(const QString& key, const QVariant& value) const {
     if (value.isValid()) {
-        if (key == QStringLiteral("game")) {
+        if (key == s_GameKey) {
             int game = value.toInt();
             switch (game) {
             case ScRecord::GameBroodWar:
@@ -1028,7 +1024,7 @@ ScVodDataManager::label(const QString& key, const QVariant& value) const {
         return value.toString();
     }
 
-    if (QStringLiteral("event_name") == key) {
+    if (s_EventNameKey == key) {
         return tr("event");
     }
 
@@ -1051,7 +1047,7 @@ ScVodDataManager::icon(const QString& key, const QVariant& value) const {
     } else if (s_EventNameKey == key) {
         auto event = value.toString();
         QString url;
-        if (m_SharedState->m_Icons.getIconForEvent(event, &url)) {
+        if (m_Icons.getIconForEvent(event, &url)) {
             QSqlQuery q(m_Database);
             static const QString sql = QStringLiteral(
                         "SELECT file_name FROM icons WHERE url=?");
@@ -1628,7 +1624,7 @@ ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
 
 
 
-int ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted) {
+int ScVodDataManager::fetchVod(qint64 rowid, int formatIndex) {
     RETURN_MINUS_ON_ERROR;
 
     if (formatIndex < 0) {
@@ -1637,7 +1633,7 @@ int ScVodDataManager::fetchVod(qint64 rowid, int formatIndex, bool implicitlySta
     }
 
     ScVodDataManagerWorker::Task t = [=]() {
-        m_WorkerInterface->fetchVod(rowid, formatIndex, implicitlyStarted);
+        m_WorkerInterface->fetchVod(rowid, formatIndex);
     };
     auto result = m_WorkerInterface->enqueue(std::move(t));
     if (result != -1) {
@@ -2154,77 +2150,15 @@ ScVodDataManager::deleteVodsWhere(const QString& where) {
     return count;
 }
 
-bool
-ScVodDataManager::implicitlyStartedVodFetch(qint64 rowid) const {
-    RETURN_IF_ERROR;
-
-    QMutexLocker g(&m_Lock);
-
-    QSqlQuery q(m_Database);
-
-    if (!q.prepare(QStringLiteral("SELECT vod_url_share_id FROM vods WHERE id=?"))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return false;
-    }
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return false;
-    }
-
-    if (!q.next()) {
-        qDebug() << "rowid" << rowid << "gone";
-        return false;
-    }
-
-    const auto urlShareId = qvariant_cast<qint64>(q.value(0));
-    // FIX ME
-//    auto beg = m_VodmanFileRequests.cbegin();
-//    auto end = m_VodmanFileRequests.cend();
-//    for (auto it = beg; it != end; ++it) {
-//        const VodmanFileRequest& r = it.value();
-//        if (r.vod_url_share_id == urlShareId) {
-//            return r.implicitlyStarted;
-//        }
-//    }
-
-    return false;
-}
 
 int
 ScVodDataManager::vodDownloads() const {
-    QMutexLocker g(&m_Lock);
-    // FIX ME
-    //return m_VodmanFileRequests.size();
-    return 0;
+    return m_VodDownloads.size();
 }
 
 QVariantList
 ScVodDataManager::vodsBeingDownloaded() const {
-    QMutexLocker g(&m_Lock);
-
-    QSqlQuery q(m_Database);
-    QVariantList result;
-
-    // FIX ME
-//    auto beg = m_VodmanFileRequests.cbegin();
-//    auto end = m_VodmanFileRequests.cend();
-//    for (auto it = beg; it != end; ++it) {
-//        const VodmanFileRequest& r = it.value();
-
-//        if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, r.vod_url_share_id))) {
-//            return result;
-//        }
-
-//        while (q.next()) {
-//            auto vodId = qvariant_cast<qint64>(q.value(0));
-//            result << vodId;
-//        }
-//    }
-
-    return result;
+    return m_VodDownloads;
 }
 
 QString
@@ -2740,7 +2674,7 @@ ScVodDataManager::databaseVariant() const
 ScClassifier*
 ScVodDataManager::classifier() const
 {
-    return &const_cast<ScVodDataManager*>(this)->m_SharedState->m_Classifier;
+    return &const_cast<ScVodDataManager*>(this)->m_Classifier;
 }
 
 void ScVodDataManager::setMaxConcurrentMetaDataDownloads(int value)
@@ -2799,4 +2733,17 @@ ScVodDataManager::fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS)
         emit startWorker();
     }
     return result;
+}
+
+void
+ScVodDataManager::onVodDownloadsChanged(ScVodIdList ids)
+{
+    m_VodDownloads.clear();
+    m_VodDownloads.reserve(ids.length());
+
+    foreach (auto id, ids) {
+        m_VodDownloads << id;
+    }
+
+    emit vodDownloadsChanged();
 }

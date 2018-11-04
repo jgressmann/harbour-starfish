@@ -24,23 +24,26 @@
 #pragma once
 
 #include <vodman/VMVod.h>
-#include <QMutex>
 #include <QSqlDatabase>
 #include <QSharedPointer>
 #include "ScVodman.h"
 #include "conq.h"
 #include <functional>
 
+class QSqlQuery;
 class QNetworkReply;
 class QNetworkAccessManager;
 class VMVodFileDownload;
 class ScVodDataManagerState;
+
+using ScVodIdList = QList<qint64>;
 
 class ScVodDataManagerWorker : public QObject
 {
     Q_OBJECT
 public:
     using Task = std::function<void()>;
+
 
 public:
     ~ScVodDataManagerWorker();
@@ -50,7 +53,7 @@ public:
     bool cancel(int ticket);
     void fetchMetaData(qint64 rowid, bool download);
     void fetchThumbnail(qint64 rowid, bool download);
-    void fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted);
+    void fetchVod(qint64 rowid, int formatIndex);
     void queryVodFiles(qint64 rowid);
     void cancelFetchVod(qint64 rowid);
     void cancelFetchMetaData(qint64 rowid);
@@ -76,10 +79,10 @@ signals:
     void thumbnailDownloadFailed(qint64 rowid, int error, QString url);
     void vodDownloadFailed(qint64 rowid, int error);
     void vodDownloadCanceled(qint64 rowid);
-    void vodDownloadsChanged();
     void titleAvailable(qint64 rowid, QString title);
     void seenAvailable(qint64 rowid, qreal seen);
     void vodEndAvailable(qint64 rowid, int endOffsetS);
+    void vodDownloadsChanged(ScVodIdList ids);
 
 public slots:
     void process();
@@ -96,14 +99,11 @@ private:
         qint64 vod_url_share_id;
         int formatIndex;
         int refCount;
-        bool implicitlyStarted;
     };
 
     struct ThumbnailRequest {
         qint64 rowid;
     };
-
-
 
 private slots:
     void onMetaDataDownloadCompleted(qint64 token, const VMVod& vod);
@@ -118,7 +118,7 @@ private:
     void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
     void fetchThumbnailFromUrl(qint64 rowid, const QString& url);
     void addThumbnail(qint64 rowid, const QByteArray& bytes);
-
+    void notifyVodDownloadsChanged(QSqlQuery& q);
 
 private:
     QSharedPointer<ScVodDataManagerState> m_SharedState;

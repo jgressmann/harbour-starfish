@@ -137,7 +137,7 @@ BasePage {
                 }
             }
 
-            MatchItemConnections {
+            MatchItemMemory {
                 id: matchItemConnections
             }
 
@@ -156,7 +156,7 @@ BasePage {
                 length: vod_length
                 baseOffset: offset
                 url: vod_url
-                connectionHandler: matchItemConnections
+                memory: matchItemConnections
 
                 onPlayRequest: function (self) {
                     itemPlaying = self

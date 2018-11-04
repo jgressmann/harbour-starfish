@@ -27,7 +27,8 @@
 #include "ScRecord.h"
 #include "ScIcons.h"
 #include "ScClassifier.h"
-//#include "ScApp.h"
+#include "ScVodDataManagerWorker.h" // for typedef ScVodIdList
+
 
 #include <QMutex>
 #include <QSqlDatabase>
@@ -95,10 +96,8 @@ class ScVodDataManager : public QObject {
 
     Q_OBJECT
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
-//    Q_PROPERTY(ScVodman* vodman READ vodman CONSTANT)
     Q_PROPERTY(int maxConcurrentMetaDataDownloads READ maxConcurrentMetaDataDownloads WRITE setMaxConcurrentMetaDataDownloads NOTIFY maxConcurrentMetaDataDownloadsChanged)
     Q_PROPERTY(QString downloadMarker READ downloadMarkerString NOTIFY downloadMarkerChanged)
-
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
     Q_PROPERTY(QVariant database READ databaseVariant CONSTANT)
@@ -158,8 +157,6 @@ public:
     };
     Q_ENUMS(DataDirectoryChangeType)
 
-
-
 public:
     ~ScVodDataManager();
     explicit ScVodDataManager(QObject *parent = Q_NULLPTR);
@@ -175,7 +172,7 @@ public: //
     Q_INVOKABLE int fetchThumbnail(qint64 rowid);
     Q_INVOKABLE int fetchThumbnailFromCache(qint64 rowid);
     Q_INVOKABLE int fetchTitle(qint64 rowid);
-    Q_INVOKABLE int fetchVod(qint64 rowid, int formatIndex, bool implicitlyStarted);
+    Q_INVOKABLE int fetchVod(qint64 rowid, int formatIndex);
     Q_INVOKABLE void cancelFetchVod(qint64 rowid);
     Q_INVOKABLE void cancelFetchMetaData(int ticket, qint64 rowid);
     Q_INVOKABLE void cancelFetchThumbnail(int ticket, qint64 rowid);
@@ -199,7 +196,6 @@ public: //
     bool busy() const;
     Q_INVOKABLE QString makeThumbnailFile(const QString& srcPath);
     Q_INVOKABLE int deleteSeenVodFiles(const QString& where);
-    Q_INVOKABLE bool implicitlyStartedVodFetch(qint64 rowid) const;
     int vodDownloads() const;
     Q_INVOKABLE QVariantList vodsBeingDownloaded() const;
     Q_INVOKABLE QString getPersistedValue(const QString& key, const QString& defaultValue = QString()) const;
@@ -280,10 +276,10 @@ private:
 
 
 private slots:
-
     void requestFinished(QNetworkReply* reply);
     void vodAddWorkerFinished();
     void onDataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
+    void onVodDownloadsChanged(ScVodIdList ids);
 
 private:
     static bool tryGetEvent(QString& inoutSrc, QString* location);
@@ -343,15 +339,12 @@ private:
     QNetworkReply* m_ClassfierRequest;
     QNetworkReply* m_SqlPatchesRequest;
     DataDirectoryMover* m_DataDirectoryMover;
-//    ScIcons m_Icons;
-//    ScClassifier m_Classifier;
-//    QString m_ThumbnailDir;
-//    QString m_MetaDataDir;
-//    QString m_VodDir;
-//    QString m_IconDir;
+    ScIcons m_Icons;
+    ScClassifier m_Classifier;
     int m_SuspendedVodsChangedEventCount;
     int m_MaxConcurrentMetaDataDownloads;
     QAtomicInt m_State;
     QSharedPointer<ScVodDataManagerState> m_SharedState;
+    QVariantList m_VodDownloads;
 };
 

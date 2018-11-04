@@ -86,11 +86,12 @@ ListItem {
     property int _metaDataTicket: -1
     property int _thumbnailTicket: -1
     property int _vodFileTicket: -1
+    property int _vodDownloadExplicitlyStarted: -1
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
 
-    property MatchItemConnections connectionHandler
+    property MatchItemMemory memory
 
     ProgressOverlay {
         id: progressOverlay
@@ -536,7 +537,7 @@ ListItem {
     }
 
     Component.onCompleted: {
-        connectionHandler.addMatchItem(root)
+        memory.addMatchItem(root)
 
         VodDataManager.fetchTitle(rowId)
         VodDataManager.fetchSeen(rowId, table, _where)
@@ -570,7 +571,10 @@ ListItem {
     }
 
     Component.onDestruction: {
-        connectionHandler.removeMatchItem(root)
+        console.debug("destroy match item rowid=" + rowId)
+        if (memory) { // QML binding may have been removed due to the parent view being destroyed
+            memory.removeMatchItem(root)
+        }
 
         var tickets = [_vodFileTicket]
         for (var i = 0; i < tickets.length; ++i) {
@@ -586,7 +590,7 @@ ListItem {
             VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
         }
 
-//        console.debug("destroy match item rowid=" + rowId)
+
     }
 
     RemorsePopup { id: remorse }
@@ -799,6 +803,7 @@ ListItem {
         _downloading = false
         progressOverlay.show = false
         _progress = -1
+        _vodDownloadExplicitlyStarted = -1
     }
 
     function vodDownloadCanceled() {
@@ -823,6 +828,10 @@ ListItem {
         } else if (_progress < progress) {
             _downloading = progress < 1
             _progress = progress
+        }
+
+        if (-1 === _vodDownloadExplicitlyStarted) {
+            _vodDownloadExplicitlyStarted = 1
         }
 
         progressOverlay.show = _downloading && progress > 0 && progress < 1
@@ -973,7 +982,7 @@ ListItem {
         }
     }
 
-    function _playStream(format) {
+    function _playStream() {
         var format = _getVideoFormatFromBearerMode()
         _playStreamWithFormat(format)
     }
@@ -999,8 +1008,20 @@ ListItem {
         }
 
         _vodDownloadFailed = false
-        _vodFileTicket = VodDataManager.fetchVod(rowId, formatIndex, autoStarted)
+        _vodFileTicket = VodDataManager.fetchVod(rowId, formatIndex)
         _downloading = true
+        switch (_vodDownloadExplicitlyStarted) {
+        case -1:
+            _vodDownloadExplicitlyStarted = autoStarted ? 0 : 1
+            break
+        case 0:
+            if (_vodDownloadExplicitlyStarted == 0) {
+                _vodDownloadExplicitlyStarted = autoStarted ? 0 : 1
+            }
+            break
+        }
+
+        //memory.setStartedDownloadExplicitly(root, !autoStarted)
     }
 
     function _download(autoStarted, format) {
@@ -1024,6 +1045,7 @@ ListItem {
         VodDataManager.cancelFetchVod(rowId)
         _progress = -1
         _downloading = false
+        _vodDownloadExplicitlyStarted = -1
         progressOverlay.show = false
     }
 
@@ -1050,15 +1072,16 @@ ListItem {
     }
 
     function cancelImplicitVodFileFetch() {
-        if (VodDataManager.implicitlyStartedVodFetch(rowId)) {
+        if (0 === _vodDownloadExplicitlyStarted) {
             console.debug("canceling download for rowid=" + rowId)
             _cancelDownload()
+            return true
         }
+        return false
     }
 
     function ownerGone() {
-        cancelImplicitVodFileFetch()
-        if (!settingNetworkContinueDownload.value) {
+        if (!cancelImplicitVodFileFetch() && !settingNetworkContinueDownload.value) {
             console.debug("canceling download for rowid=" + rowId)
             _cancelDownload()
         }
