@@ -137,6 +137,10 @@ BasePage {
                 }
             }
 
+            MatchItemConnections {
+                id: matchItemConnections
+            }
+
             delegate: MatchItem {
                 width: listView.width
                 side1: side1_name
@@ -152,6 +156,7 @@ BasePage {
                 length: vod_length
                 baseOffset: offset
                 url: vod_url
+                connectionHandler: matchItemConnections
 
                 onPlayRequest: function (self) {
                     itemPlaying = self

@@ -37,6 +37,9 @@ SilicaListView {
     signal clicked(var obj, string playbackUrl, int offset, var matchItem)
 
 //    property var matchItems: []
+    MatchItemConnections {
+        id: matchItemConnections
+    }
 
     delegate: Component {
         Loader {
@@ -228,6 +231,7 @@ SilicaListView {
                             baseOffset: vod_offset
                             length: vod_length
                             table: _table
+                            connectionHandler: matchItemConnections
 
                             onPlayRequest: function (self) {
                                 console.debug("xvideo_id=" + xvideo_id)

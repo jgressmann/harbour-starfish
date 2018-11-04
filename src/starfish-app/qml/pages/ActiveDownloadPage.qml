@@ -66,6 +66,10 @@ BasePage {
                 id: updater
             }
 
+            MatchItemConnections {
+                id: matchItemConnections
+            }
+
             delegate: Component {
                 MatchItem {
                     width: listView.width
@@ -84,6 +88,7 @@ BasePage {
                     table: _table
                     length: vod_length
                     url: vod_url
+                    connectionHandler: matchItemConnections
 
                     onClicked: {
                         ListView.view.currentIndex = index

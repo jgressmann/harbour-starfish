@@ -90,6 +90,7 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/RecentlyWatchedVideoView.qml \
     qml/RecentlyWatchedVideoUpdater.qml \
     qml/ContentPageHeader.qml \
+    qml/MatchItemConnections.qml \
     qml/pages/VodDetailPage.qml \
     qml/pages/MoveDataDirectoryPage.qml \
 
