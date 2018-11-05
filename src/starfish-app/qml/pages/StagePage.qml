@@ -205,7 +205,7 @@ BasePage {
         case PageStatus.Activating:
             if (itemPlaying) {
                 itemPlaying.cancelImplicitVodFileFetch()
-//                itemPlaying = null
+                itemPlaying = null
             }
             break
         }

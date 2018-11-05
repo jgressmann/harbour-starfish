@@ -131,6 +131,7 @@ BasePage {
     Component.onDestruction: {
         VodDataManager.vodDownloadsChanged.disconnect(_vodDownloadsChanged)
         VodDataManager.vodsChanged.disconnect(_vodDownloadsChanged)
+        Global.performOwnerGone(listView.contentItem)
     }
 
     onStatusChanged: {
@@ -143,8 +144,6 @@ BasePage {
             break
         }
     }
-
-    Component.onDestruction: Global.performOwnerGone(listView.contentItem)
 
     function _vodDownloadsChanged() {
         sqlModel.select =

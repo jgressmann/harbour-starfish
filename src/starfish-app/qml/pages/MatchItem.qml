@@ -28,8 +28,8 @@ import ".."
 
 ListItem {
     id: root
-    objectName: "MatchItem" // poor type check to call ownerGone()
     contentHeight: requiredHeight
+    readonly property int is_match_item: 1 // poor type check to call ownerGone()
     property string table
     property string eventFullName
     property string stageName
@@ -87,11 +87,10 @@ ListItem {
     property int _thumbnailTicket: -1
     property int _vodFileTicket: -1
     property int _vodDownloadExplicitlyStarted: -1
+    property MatchItemMemory memory
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
-
-    property MatchItemMemory memory
 
     ProgressOverlay {
         id: progressOverlay
@@ -571,7 +570,7 @@ ListItem {
     }
 
     Component.onDestruction: {
-        console.debug("destroy match item rowid=" + rowId)
+//        console.debug("destroy match item rowid=" + rowId)
         if (memory) { // QML binding may have been removed due to the parent view being destroyed
             memory.removeMatchItem(root)
         }
@@ -781,11 +780,7 @@ ListItem {
         length = vod.description.duration
 
         // now that we have meta data, we might
-        // be able to get a watch progress
-        //            console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
-        //_endOffset = VodDataManager.vodEndOffset(rowId, baseOffset, length)
         VodDataManager.fetchVodEnd(rowId, baseOffset, length)
-        //            console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
 
 
         if (App.isOnline) {
@@ -819,7 +814,6 @@ ListItem {
     }
 
     function vodAvailable(filePath, progress, fileSize, width, height, formatId) {
-
         console.debug(
                     "vodAvailable rowid=" + rowId + " path=" + filePath + " progress=" + progress +
                     " size=" + fileSize + " width=" + width + " height=" + height + " formatId=" + formatId)
@@ -830,10 +824,6 @@ ListItem {
         } else if (_progress < progress) {
             _downloading = progress < 1
             _progress = progress
-        }
-
-        if (-1 === _vodDownloadExplicitlyStarted) {
-            _vodDownloadExplicitlyStarted = 1
         }
 
         progressOverlay.show = _downloading && progress > 0 && progress < 1
@@ -1014,16 +1004,10 @@ ListItem {
         _downloading = true
         switch (_vodDownloadExplicitlyStarted) {
         case -1:
+        case 0:
             _vodDownloadExplicitlyStarted = autoStarted ? 0 : 1
             break
-        case 0:
-            if (_vodDownloadExplicitlyStarted == 0) {
-                _vodDownloadExplicitlyStarted = autoStarted ? 0 : 1
-            }
-            break
         }
-
-        //memory.setStartedDownloadExplicitly(root, !autoStarted)
     }
 
     function _download(autoStarted, format) {
@@ -1074,6 +1058,7 @@ ListItem {
     }
 
     function cancelImplicitVodFileFetch() {
+        // only cancel download if started on this item
         if (0 === _vodDownloadExplicitlyStarted) {
             console.debug("canceling download for rowid=" + rowId)
             _cancelDownload()

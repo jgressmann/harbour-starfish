@@ -258,9 +258,9 @@ Item { // Components can't declare functions
     }
 
     function performOwnerGone(contentItem) {
-        for(var i = 0; i < contentItem.length; ++i) {
+        for (var i = 0; i < contentItem.children.length; ++i) {
             var item = contentItem.children[i]
-            if (item.objectName === "MatchItem") {
+            if (item.is_match_item) {
                 item.ownerGone()
             }
         }

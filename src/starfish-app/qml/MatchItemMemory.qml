@@ -26,7 +26,6 @@ import org.duckdns.jgressmann 1.0
 
 Item {
     property var _items: []
-    property var _startedDownloadExplicitly: []
 
     Component.onCompleted: {
         VodDataManager.vodAvailable.connect(vodAvailable)
@@ -70,19 +69,6 @@ Item {
     function removeMatchItem(item) {
         delete _items[item.rowId]
     }
-
-    function setStartedDownloadExplicitly(item, value) {
-        if (value) {
-            _startedDownloadExplicitly[item.rowId] = true
-        } else {
-            delete _startedDownloadExplicitly[item.rowId]
-        }
-    }
-
-    function hasStartedDownloadExplicitly(item) {
-        return !!_startedDownloadExplicitly(item.rowId)
-    }
-
 
     function vodAvailable(rowid, filePath, progress, fileSize, width, height, formatId) {
         var item = _items[rowid]

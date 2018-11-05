@@ -23,7 +23,6 @@
 
 #include "ScVodDataManagerWorker.h"
 #include "ScVodDataManagerState.h"
-#include "ScStopwatch.h"
 #include "Sc.h"
 
 #include <vodman/VMVodFileDownload.h>
@@ -142,7 +141,6 @@ void ScVodDataManagerWorker::process()
 
 void
 ScVodDataManagerWorker::fetchMetaData(qint64 rowid, bool download) {
-    ScStopwatch sw("fetchMetaData", 10);
     QSqlQuery q(m_Database);
 
     static const QString sql = QStringLiteral(
@@ -181,7 +179,6 @@ ScVodDataManagerWorker::fetchMetaData(qint64 rowid, bool download) {
                 }
 
                 if (vod.isValid()) {
-                    sw.stop();
                     notifyMetaDataAvailable(q, urlShareId, vod);
                 } else {
                     // read invalid vod, try again
@@ -214,8 +211,6 @@ ScVodDataManagerWorker::fetchMetaData(qint64 rowid, bool download) {
 void
 ScVodDataManagerWorker::fetchThumbnail(qint64 rowid, bool download)
 {
-    ScStopwatch sw("fetchThumbnail", 50);
-
     QSqlQuery q(m_Database);
 
     static const QString sql = QStringLiteral(
@@ -264,7 +259,6 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 rowid, bool download)
         auto fileName = q.value(0).toString();
         auto thumbNailFilePath = m_SharedState->m_ThumbnailDir + fileName;
         if (QFileInfo::exists(thumbNailFilePath)) {
-            sw.stop();
             emit thumbnailAvailable(rowid, thumbNailFilePath);
         } else {
             if (download) {
@@ -942,8 +936,8 @@ ScVodDataManagerWorker::cancelFetchThumbnail(qint64 rowid)
 
 
 void
-ScVodDataManagerWorker::requestFinished(QNetworkReply* reply) {
-    ScStopwatch sw("requestFinished");
+ScVodDataManagerWorker::requestFinished(QNetworkReply* reply)
+{
     reply->deleteLater();
 
     auto it = m_ThumbnailRequests.find(reply);
