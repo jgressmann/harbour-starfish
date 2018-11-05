@@ -143,8 +143,7 @@ ListItem {
                         sourceSize.width: width
                         sourceSize.height: height
                         fillMode: Image.PreserveAspectFit
-                        // prevents the image from loading on device
-                        //asynchronous: true
+                        asynchronous: true
                         visible: status === Image.Ready && _thumbnailState !== thumbnailStateFetching
                         source: _thumbnailState === thumbnailStateAvailable ? _thumbnailFilePath : "image://theme/icon-m-reload"
 
