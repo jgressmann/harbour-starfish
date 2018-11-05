@@ -166,7 +166,7 @@ public: //
     Q_INVOKABLE QString icon(const QString& key, const QVariant& value = QVariant()) const;
     bool ready() const;
     Error error() const { return m_Error; }
-    QSqlDatabase database() const;
+    inline QSqlDatabase database() const { return m_Database; }
     Q_INVOKABLE int fetchMetaData(qint64 rowid);
     Q_INVOKABLE int fetchMetaDataFromCache(qint64 rowid);
     Q_INVOKABLE int fetchThumbnail(qint64 rowid);
@@ -177,7 +177,7 @@ public: //
     Q_INVOKABLE void cancelFetchMetaData(int ticket, qint64 rowid);
     Q_INVOKABLE void cancelFetchThumbnail(int ticket, qint64 rowid);
     Q_INVOKABLE int queryVodFiles(qint64 rowid);
-    Q_INVOKABLE void deleteVod(qint64 rowid);
+    Q_INVOKABLE void deleteVodFiles(qint64 rowid);
     Q_INVOKABLE void deleteMetaData(qint64 rowid);
     Q_INVOKABLE void fetchIcons();
     Q_INVOKABLE void fetchClassifier();
@@ -190,7 +190,6 @@ public: //
     void resumeVodsChangedEvents();
     Q_INVOKABLE qreal seen(const QString& table, const QString& where) const;
     Q_INVOKABLE void setSeen(const QString& table, const QString& where, bool value);
-//    inline ScVodman* vodman() const { return m_Vodman; }
     ScClassifier* classifier() const;
     QVariant databaseVariant() const;
     bool busy() const;
@@ -214,6 +213,8 @@ public: //
     void setMaxConcurrentMetaDataDownloads(int value);
     Q_INVOKABLE int fetchSeen(qint64 rowid, const QString& table, const QString& where);
     Q_INVOKABLE int fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS);
+    Q_INVOKABLE void deleteVod(qint64 rowid);
+    Q_INVOKABLE void deleteThumbnail(qint64 rowid);
 
 signals:
     void readyChanged();
@@ -313,7 +314,7 @@ private:
     void batchAddVods();
     void dropTables();
     int fetchThumbnail(qint64 rowid, bool download);
-    int deleteVodsWhere(const QString& where);
+    int deleteVodFilesWhere(const QString& where);
     void fetchSqlPatches();
     void applySqlPatches(const QByteArray& bytes);
     void setPersistedValue(QSqlQuery& query, const QString& key, const QString& value);

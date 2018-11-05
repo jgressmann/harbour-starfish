@@ -1771,8 +1771,8 @@ ScVodDataManager::parseTwitchOffset(const QString& str) {
 }
 
 void
-ScVodDataManager::deleteVod(qint64 rowid) {
-    deleteVodsWhere(QStringLiteral("WHERE id=%1").arg(rowid));
+ScVodDataManager::deleteVodFiles(qint64 rowid) {
+    deleteVodFilesWhere(QStringLiteral("WHERE id=%1").arg(rowid));
 }
 
 void
@@ -2109,11 +2109,11 @@ ScVodDataManager::deleteSeenVodFiles(const QString& where) {
 "       SELECT DISTINCT vod_url_share_id FROM offline_vods WHERE %1 AND seen=0)\n"
 "   )\n").arg(w);
 
-    return deleteVodsWhere(w2);
+    return deleteVodFilesWhere(w2);
 }
 
 int
-ScVodDataManager::deleteVodsWhere(const QString& where) {
+ScVodDataManager::deleteVodFilesWhere(const QString& where) {
     RETURN_IF_ERROR;
 
     QMutexLocker g(&m_Lock);
@@ -2659,18 +2659,6 @@ ScVodDataManager::onDataDirectoryChanging(int changeType, QString path, float pr
     emit dataDirectoryChanging(changeType, path, progress, error, errorDescription);
 }
 
-QSqlDatabase
-ScVodDataManager::database() const
-{
-    return m_Database;
-}
-
-QVariant
-ScVodDataManager::databaseVariant() const
-{
-    return QVariant::fromValue(m_Database);
-}
-
 ScClassifier*
 ScVodDataManager::classifier() const
 {
@@ -2746,4 +2734,66 @@ ScVodDataManager::onVodDownloadsChanged(ScVodIdList ids)
     }
 
     emit vodDownloadsChanged();
+}
+
+void
+ScVodDataManager::deleteVod(qint64 rowid)
+{
+    RETURN_IF_ERROR;
+
+    QSqlQuery q(m_Database);
+    if (!q.prepare(QStringLiteral("DELETE FROM vods WHERE id=?"))) {
+        qCritical() << "failed to prepare query" << q.lastError();
+        return;
+    }
+
+    q.addBindValue(rowid);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return;
+    }
+}
+
+void
+ScVodDataManager::deleteThumbnail(qint64 rowid)
+{
+    RETURN_IF_ERROR;
+
+    QSqlQuery q(m_Database);
+    if (!q.prepare(QStringLiteral("SELECT thumbnail_id, file_name FROM vod_thumbnails t INNER JOIN vods v ON t.id=v.thumbnail_id WHERE v.id=?"))) {
+        qCritical() << "failed to prepare query" << q.lastError();
+        return;
+    }
+
+    q.addBindValue(rowid);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return;
+    }
+
+    if (q.next()) {
+        auto thumbnailId = q.value(0);
+        auto filePath = m_SharedState->m_ThumbnailDir + q.value(1).toString();
+        QFile::remove(filePath);
+
+        if (!q.prepare(QStringLiteral("DELETE from vod_thumbnails WHERE id=?"))) {
+            qCritical() << "failed to prepare query" << q.lastError();
+            return;
+        }
+
+        q.addBindValue(thumbnailId);
+
+        if (!q.exec()) {
+            qCritical() << "failed to exec query" << q.lastError();
+            return;
+        }
+    }
+}
+
+QVariant
+ScVodDataManager::databaseVariant() const
+{
+    return QVariant::fromValue(m_Database);
 }

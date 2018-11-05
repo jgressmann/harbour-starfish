@@ -140,16 +140,24 @@ ListItem {
                         anchors.centerIn: parent
                         height: _thumbnailState === thumbnailStateAvailable ? parent.height : thumbnailBusyIndicator.height
                         width: _thumbnailState === thumbnailStateAvailable ? parent.width : thumbnailBusyIndicator.width
-                        sourceSize.width: width
-                        sourceSize.height: height
+                        sourceSize.width: parent.width
+                        sourceSize.height: parent.height
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
-                        visible: status === Image.Ready && _thumbnailState !== thumbnailStateFetching
+                        visible: (status === Image.Ready || status === Image.Error) && _thumbnailState !== thumbnailStateFetching
                         source: _thumbnailState === thumbnailStateAvailable ? _thumbnailFilePath : "image://theme/icon-m-reload"
+
+                        onStatusChanged: {
+                            if (Image.Error === status) {
+                                height = thumbnailBusyIndicator.height
+                                width = thumbnailBusyIndicator.width
+                                source = "/usr/share/harbour-starfish/icons/flash.png"
+                            }
+                        }
 
                         MouseArea {
                             anchors.fill: parent
-                            enabled: parent.visible && _thumbnailState !== thumbnailStateAvailable
+                            enabled: parent.visible && _thumbnailState !== thumbnailStateAvailable && Image.Error !== status
                             onClicked: _fetchThumbnail()
                         }
                     }
@@ -277,6 +285,10 @@ ListItem {
                                     result += _width + "x" + _height
                                 }
 
+                                if (debugApp.value) {
+                                    result += ", " + rowId
+                                }
+
 //                                if (startOffset > 0) {
 //                                    if (result) {
 //                                        result += ", "
@@ -382,32 +394,6 @@ ListItem {
                             }
                         }
                     } // date / format / status group
-
-
-//                    Label {
-//                        visible: !eventFullName && !stageName
-//                        width: parent.width
-//                        horizontalAlignment: Text.AlignLeft
-//                        font.pixelSize: Theme.fontSizeTiny
-//                        truncationMode: TruncationMode.Fade
-//                        text: {
-//                            var result = ""
-//                            if (showDate) {
-//                                result = Qt.formatDate(matchDate)
-//                            }
-
-//                            if (result.length > 0) {
-//                                result += ", "
-//                            }
-
-//                            result += (progressOverlay.progress * 100).toFixed(0) + "% downloaded"
-//                            if (_width > 0) {
-//                                result += ", " + _width + "x" + _height
-//                            }
-
-//                            return result
-//                        }
-//                    }
                 }
 
                 IconButton {
@@ -540,10 +526,6 @@ ListItem {
         VodDataManager.fetchTitle(rowId)
         VodDataManager.fetchSeen(rowId, table, _where)
         VodDataManager.fetchVodEnd(rowId, baseOffset, length)
-        //seenButton.seen = VodDataManager.seen(table, _where) >= 1
-//        console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
-        //_endOffset = VodDataManager.vodEndOffset(rowId, baseOffset, length)
-//        console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
 
         // also fetch a valid meta data from cache
         _metaDataTicket = VodDataManager.fetchMetaDataFromCache(rowId)
@@ -587,8 +569,6 @@ ListItem {
         if (_thumbnailState === thumbnailStateFetching) {
             VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
         }
-
-
     }
 
     RemorsePopup { id: remorse }
@@ -662,23 +642,10 @@ ListItem {
             MenuItem {
                 text: "Delete VOD file"
                 visible: rowId >= 0 && !!_vodFilePath
-//                onClicked: {
-//                    remorse.execute("Deleting VOD " + title, function() {
-//                        _cancelDownload()
-//                        progressOverlay.progress = 0
-//                        _clicked = false
-//                        _vodUrl = ""
-//                        _vodFilePath = ""
-//                        _vodFileSize = 0
-//                        _width = 0
-//                        _height = 0
-//                        _formatId = ""
-//                        VodDataManager.deleteVod(rowId)
-//                    })
-//                }
+
 
                 onClicked: {
-                    // still not sure why local vars are needed
+                    // still not sure why local vars are needed but they are!!!!
                     var item = root
                     var overlay = progressOverlay
                     var manager = VodDataManager
@@ -692,7 +659,7 @@ ListItem {
                         item._width = 0
                         item._height = 0
                         item._formatId = ""
-                        manager.deleteVod(item.rowId)
+                        manager.deleteVodFile(item.rowId)
                     })
                 }
             }
@@ -717,6 +684,18 @@ ListItem {
                 text: "Copy VOD file path to clipboard"
                 visible: rowId >= 0 && _vodFileSize > 0 && !!_vodFilePath
                 onClicked: Clipboard.text = _vodFilePath
+            }
+
+            MenuItem {
+                text: "Delete thumbnail"
+                visible: rowId >= 0
+                onClicked: VodDataManager.deleteThumbnail(rowId)
+            }
+
+            MenuItem {
+                text: "Delete VOD from database"
+                visible: rowId >= 0
+                onClicked: VodDataManager.deleteVod(rowId)
             }
         }
     }
