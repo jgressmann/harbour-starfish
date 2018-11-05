@@ -57,10 +57,12 @@ ScVodman::~ScVodman()
 ScVodman::ScVodman(QObject *parent)
     : QObject(parent)
 {
+    m_TokenGenerator = 0;
     m_MaxFile = 1;
     m_MaxMeta = 4;
     m_CurrentFile = 0;
     m_CurrentMeta = 0;
+
 
     QDBusConnection connection = QDBusConnection::sessionBus();
     m_Service = new org::duckdns::jgressmann::vodman::service("org.duckdns.jgressmann.vodman.service", "/instance", connection);
