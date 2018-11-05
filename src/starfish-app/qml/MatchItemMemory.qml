@@ -41,6 +41,7 @@ Item {
         VodDataManager.titleAvailable.connect(titleAvailable)
         VodDataManager.seenAvailable.connect(seenAvailable)
         VodDataManager.vodEndAvailable.connect(vodEndAvailable)
+        VodDataManager.vodDownloadsChanged.connect(vodDownloadsChanged)
     }
 
     Component.onDestruction: {
@@ -57,6 +58,7 @@ Item {
         VodDataManager.titleAvailable.disconnect(titleAvailable)
         VodDataManager.seenAvailable.disconnect(seenAvailable)
         VodDataManager.vodEndAvailable.disconnect(vodEndAvailable)
+        VodDataManager.vodDownloadsChanged.disconnect(vodDownloadsChanged)
     }
 /* CONNECTIONS DO NOT WORK!!! */
 
@@ -259,6 +261,17 @@ Item {
         var item = _items[rowid]
         if (item) {
             item.vodDownloadCanceled()
+        }
+    }
+
+    function vodDownloadsChanged() {
+        var downloads = VodDataManager.vodsBeingDownloaded()
+        for (var i = 0; i < downloads.length; ++i) {
+            var rowid = downloads[i]
+            var item = _items[rowid]
+            if (item) {
+                item.vodDownloading()
+            }
         }
     }
 

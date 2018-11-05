@@ -128,6 +128,11 @@ BasePage {
         _vodDownloadsChanged()
     }
 
+    Component.onDestruction: {
+        VodDataManager.vodDownloadsChanged.disconnect(_vodDownloadsChanged)
+        VodDataManager.vodsChanged.disconnect(_vodDownloadsChanged)
+    }
+
     onStatusChanged: {
         switch (status) {
         case PageStatus.Activating:

@@ -814,7 +814,9 @@ ListItem {
         _progress = -1
     }
 
-
+    function vodDownloading() {
+        _downloading = 1
+    }
 
     function vodAvailable(filePath, progress, fileSize, width, height, formatId) {
 
