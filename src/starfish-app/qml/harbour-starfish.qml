@@ -43,10 +43,12 @@ ApplicationWindow {
 
     Sc2LinksDotComScraper {
         id: sc2LinksDotComScraper
+        stateFilePath: App.dataDir + "/sc2links.com.state"
     }
 
     Sc2CastsDotComScraper {
         id: sc2CastsDotComScraper
+        stateFilePath: App.dataDir + "/sc2casts.com.state"
     }
 
     VodDatabaseDownloader {

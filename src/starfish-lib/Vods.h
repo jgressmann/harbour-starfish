@@ -165,6 +165,7 @@ struct ScEventData : public ScBaseData
 {
     QList<ScStage> stages;
     QString fullName;
+    QDate lastModified;
     int season;
     int game;
     int year;

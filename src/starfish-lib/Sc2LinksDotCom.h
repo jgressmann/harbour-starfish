@@ -24,12 +24,13 @@
 #pragma once
 
 #include "ScVodScraper.h"
-
+#include <QScopedPointer>
 
 class QDateTime;
 class QNetworkRequest;
 class QNetworkReply;
 class QUrl;
+class Sc2LinksDotComState;
 
 class Sc2LinksDotCom : public ScVodScraper {
 
@@ -69,10 +70,14 @@ private:
     QList<ScRecord> m_Vods;
     QList<ScEvent> m_Events;
     QList<ScEvent> m_EventRequestQueue;
+
     QHash<QNetworkReply*, int> m_PendingRequests;
     QHash<QNetworkReply*, ScEvent> m_RequestStage;
     QHash<QNetworkReply*, ScStage> m_RequestMatch;
     QHash<QNetworkReply*, ScMatch> m_RequestVod;
+    QScopedPointer<Sc2LinksDotComState> m_State;
+    QString m_CurrentEventName;
+    QDate m_CurrentEventLastModified;
     qreal m_VodFetchingProgress;
     int m_TotalUrlsToFetched;
     int m_CurrentUrlsToFetched;

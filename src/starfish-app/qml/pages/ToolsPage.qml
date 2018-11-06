@@ -72,6 +72,22 @@ Page {
                         settingLastUpdateTimestamp.value = 0
                     }
                 }
+
+                Button {
+                    text: "Delete sc2links.com state"
+                    onClicked: {
+                        console.debug(text)
+                        App.unlink(sc2LinksDotComScraper.stateFilePath)
+                    }
+                }
+
+                Button {
+                    text: "Delete sc2casts.com state"
+                    onClicked: {
+                        console.debug(text)
+                        App.unlink(sc2LinksDotComScraper.stateFilePath)
+                    }
+                }
             }
 
 

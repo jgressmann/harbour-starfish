@@ -28,6 +28,8 @@
 #include <QDomNode>
 #include <QDebug>
 
+bool scTryGetDate(QString& inoutSrc, QDate* date);
+
 class ScClassifier;
 class ScRecord
 {

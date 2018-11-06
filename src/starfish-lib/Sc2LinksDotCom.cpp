@@ -27,6 +27,8 @@
 #include <QMutexLocker>
 #include <QUrl>
 #include <QDateTime>
+#include <QDataStream>
+#include <QFile>
 
 #include "Sc2LinksDotCom.h"
 #include "ScRecord.h"
@@ -57,7 +59,6 @@ const QRegExp dateRegex(QStringLiteral("\\d{4}-\\d{2}-\\d{2}"));
 const QRegExp fuzzyYearRegex(QStringLiteral(".*(\\d{4}).*"));
 const QRegExp yearRegex(QStringLiteral("\\d{4}"));
 const QRegExp tags(QStringLiteral("<[^>]+>"));
-const QRegExp englishMonthRegex(QStringLiteral("january|febuary|march|april|may|june|july|august|september|november|december"), Qt::CaseInsensitive);
 const QString s_Protoss = QStringLiteral("protoss");
 const QString s_Terran = QStringLiteral("terran");
 const QString s_Zerg = QStringLiteral("zerg");
@@ -115,7 +116,65 @@ ScRecord::Race getRace(const QString& str) {
     return ScRecord::RaceUnknown;
 }
 
+
+
 } // anon
+
+
+class Sc2LinksDotComState
+{
+public:
+    static constexpr int CodeVersion = 1;
+
+public:
+    Sc2LinksDotComState()
+    {
+        Version = CodeVersion;
+    }
+
+    QHash<QString, QDate> LastModified;
+    int Version;
+
+    bool isValid() const { return Version >= 1 && Version <= CodeVersion; }
+};
+
+QDataStream &operator<<(QDataStream &stream, const Sc2LinksDotComState &value)
+{
+    stream << value.Version;
+
+    int count = value.LastModified.size();
+    stream << count;
+
+    auto beg = value.LastModified.cbegin();
+    auto end = value.LastModified.cend();
+    for (auto it = beg; it != end; ++it) {
+        stream << it.key();
+        stream << it.value();
+    }
+
+    return stream;
+}
+
+QDataStream &operator>>(QDataStream &stream, Sc2LinksDotComState &value)
+{
+    stream >> value.Version;
+    if (value.Version <= 0 || value.Version > Sc2LinksDotComState::CodeVersion) {
+        return stream;
+    }
+
+    QString name;
+    QDate lastModified;
+    int count = 0;
+    stream >> count;
+    value.LastModified.clear();
+
+    for (auto i = 0; i < count; ++i) {
+        stream >> name >> lastModified;
+        value.LastModified.insert(name, lastModified);
+    }
+
+    return stream;
+}
 
 Sc2LinksDotCom::~Sc2LinksDotCom() {
     abort();
@@ -141,6 +200,19 @@ Sc2LinksDotCom::_fetch() {
     m_TotalUrlsToFetched = 1;
     m_CurrentUrlsToFetched = 0;
     m_Skip = false;
+
+    m_State.reset(new Sc2LinksDotComState);
+    QFile f(stateFilePath());
+    if (f.open(QIODevice::ReadOnly))
+    {
+        QDataStream s(&f);
+        s >> *m_State;
+
+        if (!m_State->isValid()) {
+            m_State.reset(new Sc2LinksDotComState);
+        }
+    }
+
     setProgressDescription(tr("Fetching list of events"));
     updateVodFetchingProgress();
     qDebug("fetch started");
@@ -212,21 +284,21 @@ Sc2LinksDotCom::requestFinished(QNetworkReply* reply) {
 
 
         if (m_PendingRequests.isEmpty()) {
-            if (m_EventRequestQueue.empty()) {
+            if (!m_Skip && m_CurrentEventLastModified.isValid()) {
+                m_State->LastModified[m_CurrentEventName] = m_CurrentEventLastModified;
+            }
 
+            if (m_EventRequestQueue.empty()) {
                 finish();
                 setStatus(Status_VodFetchingComplete);
-
                 setProgressDescription(QString());
                 qDebug("fetch finished");
             } else {
                 m_Skip = false;
                 ScEvent event = m_EventRequestQueue.first();
                 m_EventRequestQueue.pop_front();
-
-//                if (event.name().startsWith("Bombastic")) {
-//                    qDebug("asdfs");
-//                }
+                m_CurrentEventName = event.fullName();
+                m_CurrentEventLastModified = event.data().lastModified;
 
                 QNetworkReply* reply = makeRequest(event.url());
                 m_RequestStage.insert(reply, event);
@@ -265,9 +337,18 @@ Sc2LinksDotCom::finish() {
     Q_ASSERT(m_RequestMatch.empty());
     Q_ASSERT(m_RequestVod.empty());
 
-//    pruneInvalidSeries();
-//    saveRecords();
     m_Events.clear();
+    m_CurrentEventName.clear();
+    m_CurrentEventLastModified = QDate();
+
+    QFile f(stateFilePath());
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        QDataStream s(&f);
+        s << *m_State;
+    }
+
+    m_State.reset();
 }
 
 void
@@ -293,6 +374,16 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
 
         if (yearRegex.indexIn(date) >= 0) {
             year = yearRegex.cap(0).toInt();
+        }
+
+        QDate lastModified;
+        if (scTryGetDate(date, &lastModified)) {
+            auto it = m_State->LastModified.find(name);
+            if (it != m_State->LastModified.end()) {
+                if (it.value() >= lastModified) {
+                    continue;
+                }
+            }
         }
 
         record.eventFullName = name;
@@ -331,6 +422,7 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
         data.season = season;
         data.year = year;
         data.url = link;
+        data.lastModified = lastModified;
         bool exclude = false;
         emit excludeEvent(ev, &exclude);
 
@@ -338,8 +430,7 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
             qDebug() << "exclude event" << name << year << season;
         } else {
             m_Events << ev;
-
-            m_EventRequestQueue.append(ev);
+            m_EventRequestQueue << ev;
 
             qDebug() << "fetch event" << name << year << season;
         }

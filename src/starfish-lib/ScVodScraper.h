@@ -41,6 +41,7 @@ class ScVodScraper : public QObject
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
     Q_PROPERTY(QString id READ id CONSTANT)
+    Q_PROPERTY(QString stateFilePath READ stateFilePath WRITE setStateFilePath NOTIFY stateFilePathChanged)
 public:
     enum Status {
         Status_Ready,
@@ -76,6 +77,9 @@ public:
     inline ScClassifier* classifier() const { return m_Classifier; }
     inline void setClassifier(ScClassifier* value) { m_Classifier = value; }
     inline QString id() const { return _id(); }
+    inline QString stateFilePath() const { return m_StateFilePath; }
+    void setStateFilePath(const QString& value);
+
 signals:
     void statusChanged();
     void errorChanged();
@@ -88,6 +92,7 @@ signals:
     void excludeMatch(const ScMatch& match, bool* exclude);
     void excludeRecord(const ScRecord& record, bool* exclude);
     void hasRecord(const ScRecord& record, bool* exists);
+    void stateFilePathChanged();
 
 
 public slots:
@@ -112,6 +117,7 @@ private:
     mutable QMutex m_Lock;
     mutable QNetworkAccessManager m_Manager;
     QString m_ProgressDescription;
+    QString m_StateFilePath;
     qreal m_Progress;
     Status m_Status;
     Error m_Error;

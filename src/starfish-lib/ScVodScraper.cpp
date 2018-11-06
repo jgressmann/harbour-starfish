@@ -199,3 +199,13 @@ ScVodScraper::abort() {
 
     qDebug() << id() << "abort exit";
 }
+
+void
+ScVodScraper::setStateFilePath(const QString& value)
+{
+    QMutexLocker g(lock());
+    if (value != m_StateFilePath) {
+        m_StateFilePath = value;
+        emit stateFilePathChanged();
+    }
+}

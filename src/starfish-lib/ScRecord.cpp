@@ -197,8 +197,59 @@ tryGetSeason(QString& inoutSrc, int* season) {
     return false;
 }
 
+
+
 bool
-tryGetDate(QString& inoutSrc, QDate* date) {
+tryGetYear(QString& inoutSrc, int* year) {
+    int index = yearRangeRegex.indexIn(inoutSrc);
+    if (index >= 0) {
+        *year = yearRangeRegex.cap(1).toInt();
+        inoutSrc.remove(yearRangeRegex.cap(0));
+        return true;
+    }
+
+    index = yearRegex.indexIn(inoutSrc);
+    if (index >= 0) {
+        *year = yearRegex.cap(0).toInt();
+        inoutSrc.remove(yearRegex.cap(0));
+        return true;
+    }
+
+    return false;
+}
+
+bool tryGetSides(const QString& str, QString* side1, QString* side2) {
+    int index = sidesRegex.indexIn(str);
+    if (index >= 0) {
+        *side1 = sidesRegex.cap(1);
+        *side2 = sidesRegex.cap(2);
+        return true;
+    }
+    return false;
+}
+
+bool tryGetMatchNumber(const QString& str, qint8* matchNumber) {
+    int index = matchNumberRegex.indexIn(str);
+    if (index >= 0) {
+        *matchNumber = static_cast<qint8>(matchNumberRegex.cap(1).toInt());
+        return true;
+    }
+    return false;
+}
+
+void removeCrud(QString& inoutSrc) {
+    inoutSrc.remove(yearRegex);
+    inoutSrc.remove(eventNameCrudRegex);
+    inoutSrc = inoutSrc.split(' ', QString::SkipEmptyParts).join(' ');
+}
+
+} // anon
+
+bool
+scTryGetDate(QString& inoutSrc, QDate* date)
+{
+    (void)s_StaticsInitialized;
+
     int i = dateRegex.indexIn(inoutSrc);
     if (i >= 0) {
         QStringRef subString(&inoutSrc, i, 10);
@@ -256,52 +307,6 @@ tryGetDate(QString& inoutSrc, QDate* date) {
     return false;
 }
 
-bool
-tryGetYear(QString& inoutSrc, int* year) {
-    int index = yearRangeRegex.indexIn(inoutSrc);
-    if (index >= 0) {
-        *year = yearRangeRegex.cap(1).toInt();
-        inoutSrc.remove(yearRangeRegex.cap(0));
-        return true;
-    }
-
-    index = yearRegex.indexIn(inoutSrc);
-    if (index >= 0) {
-        *year = yearRegex.cap(0).toInt();
-        inoutSrc.remove(yearRegex.cap(0));
-        return true;
-    }
-
-    return false;
-}
-
-bool tryGetSides(const QString& str, QString* side1, QString* side2) {
-    int index = sidesRegex.indexIn(str);
-    if (index >= 0) {
-        *side1 = sidesRegex.cap(1);
-        *side2 = sidesRegex.cap(2);
-        return true;
-    }
-    return false;
-}
-
-bool tryGetMatchNumber(const QString& str, qint8* matchNumber) {
-    int index = matchNumberRegex.indexIn(str);
-    if (index >= 0) {
-        *matchNumber = static_cast<qint8>(matchNumberRegex.cap(1).toInt());
-        return true;
-    }
-    return false;
-}
-
-void removeCrud(QString& inoutSrc) {
-    inoutSrc.remove(yearRegex);
-    inoutSrc.remove(eventNameCrudRegex);
-    inoutSrc = inoutSrc.split(' ', QString::SkipEmptyParts).join(' ');
-}
-
-} // anon
-
 ScRecord::ScRecord()
 {
     valid = 0;
@@ -328,7 +333,7 @@ ScRecord::autoComplete(const ScClassifier& classifier) {
 
             // to remove parts of str
             QDate date;
-            auto result = tryGetDate(str, &date);
+            auto result = scTryGetDate(str, &date);
             if (!isValid(ScRecord::ValidYear) && result) {
                 year = date.year();
                 valid |= ScRecord::ValidYear;
