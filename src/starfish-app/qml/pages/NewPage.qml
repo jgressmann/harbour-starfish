@@ -38,11 +38,12 @@ BasePage {
     SqlVodModel {
         id: sqlModel
         dataManager: VodDataManager
-        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset", "offset", "length"]
+        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset", "offset", "length", "url"]
         columnAliases: {
             var x = {}
             x["id"] = "vod_id"
             x["length"] = "vod_length"
+            x["url"] = "vod_url"
             return x
         }
         select: "select " + columns.join(",") + " from " + table + " where "
@@ -88,6 +89,7 @@ BasePage {
                     baseOffset: offset
                     table: page.table
                     length: vod_length
+                    url: vod_url
 
                     onClicked: {
                         ListView.view.currentIndex = index

@@ -44,6 +44,7 @@ ListItem {
     property bool showTitle: !side2
     property bool menuEnabled: true
     property int rowId: -1
+    property string url
     property string _vodFilePath
     property int _vodFileSize
     property bool _fetchingVod: false
@@ -573,6 +574,12 @@ ListItem {
     Component {
         id: contextMenu
         ContextMenu {
+            MenuItem {
+                text: "Copy URL to clipboard"
+                visible: rowId >= 0
+                onClicked: Clipboard.text = url
+            }
+
             MenuItem {
                 text: "Download meta data"
                 visible: rowId >= 0 && !_vod && App.isOnline

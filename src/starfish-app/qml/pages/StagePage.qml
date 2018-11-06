@@ -41,11 +41,12 @@ BasePage {
     SqlVodModel {
         id: sqlModel
         dataManager: VodDataManager
-        columns: ["side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset", "length"]
+        columns: ["side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset", "length", "url"]
         columnAliases: {
             var x = {}
             x["id"] = "vod_id"
             x["length"] = "vod_length"
+            x["url"] = "vod_url"
             return x
         }
         select: "select " + columns.join(",") + " from " + table + where + " order by match_date desc, match_number asc, match_name desc"
@@ -150,6 +151,7 @@ BasePage {
                 table: page.table
                 length: vod_length
                 baseOffset: offset
+                url: vod_url
 
                 onPlayRequest: function (self) {
                     itemPlaying = self
