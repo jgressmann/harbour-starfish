@@ -98,7 +98,7 @@ BasePage {
 
                 ViewPlaceholder {
                     enabled: listView.count === 0
-                    text: "There seems to be nothing here."
+                    text: Global.noContent
                 }
 
 
@@ -149,7 +149,7 @@ BasePage {
 
                 ViewPlaceholder {
                     enabled: gridView.count === 0
-                    text: "There seems to be nothing here."
+                    text: Global.noContent
                 }
 
                 Component.onCompleted: {

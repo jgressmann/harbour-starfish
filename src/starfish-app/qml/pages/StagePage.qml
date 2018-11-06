@@ -174,7 +174,7 @@ BasePage {
 
             ViewPlaceholder {
                 enabled: listView.count === 0
-                text: "nothing here"
+                text: Global.noContent
             }
         }
     }
