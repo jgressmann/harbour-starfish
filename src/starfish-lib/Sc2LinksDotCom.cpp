@@ -44,9 +44,15 @@ const QRegExp tournamentPageStageNameRegex(QStringLiteral("<h3>([^>]+)</h3>\\s*<
 const QRegExp tournamentPageStageContent(QStringLiteral("<h3>([^>]+)</h3>\\s*(<h5>.*)<h"));
 // episode: <h3>August</h3><h5><a  href="https://www.sc2links.com/match/?match=46103"><div class="match">Episode 15</div></a><div class = "vodlink roundAugust" id = "vodlink1"><a  href="https://www.sc2links.com/match/?match=46103"><span class="hostname"><strong>Host:  Artosis and Incontrol</strong></span></a></div><div class="date">08/02</div></h5><h5><a  href="https://www.sc2links.com/match/?match=46104"><div class="match">Episode 15</div></a><div class = "vodlink roundAugust" id = "vodlink1"><a  href="https://www.sc2links.com/match/?match=46104"><span class="hostname"><strong>Host:  Artosis and Incontrol</strong></span></a></div><div class="date">08/02</div></h5>
 // tournament: <h3>Quarterfinals</h3><h5><div class="T P"><a  href="https://www.sc2links.com/match/?match=46116"><div class="match">Match 1</div></a><div onclick="this.style.display = 'none';reveallink('vodlink19');" class = "vodtext textroundQuarterfinals" id = "vodtext19">Reveal Match</div><div style="display: none;" class = "vodlink roundQuarterfinals" id = "vodlink19"><a  href="https://www.sc2links.com/match/?match=46116"><span class="name"><strong>Maru</strong></span><span class="race"><img src="https://www.sc2links.com/wp-content/uploads/2018/04/RaceIcon_Terraner.png" alt="Terran" style="width:25px;height:25px;"></span><span>  vs </span><span class="race"><img src="https://www.sc2links.com/wp-content/uploads/2018/04/RaceIcon_Protoss.png" alt="Protoss" style="width:25px;height:25px;"></span><span class="name"><strong>ShoWTimE</strong></span></a></div><div class="date">08/04</div></div></h5><h5><div class="P T"><a  href="https://www.sc2links.com/match/?match=46119"><div class="match">Match 2</div></a><div onclick="this.style.display = 'none';reveallink('vodlink20');" class = "vodtext textroundQuarterfinals" id = "vodtext20">Reveal Match</div><div style="display: none;" class = "vodlink roundQuarterfinals" id = "vodlink20"><a  href="https://www.sc2links.com/match/?match=46119"><span class="name"><strong>Stats</strong></span><span class="race"><img src="https://www.sc2links.com/wp-content/uploads/2018/04/RaceIcon_Protoss.png" alt="Protoss" style="width:25px;height:25px;"></span><span>  vs </span><span class="race"><img src="https://www.sc2links.com/wp-content/uploads/2018/04/RaceIcon_Terraner.png" alt="Terran" style="width:25px;height:25px;"></span><span class="name"><strong>SpeCial</strong></span></a></div><div class="date">08/04</div></div></h5><h5><div class="Z T"><a  href="https://www.sc2links.com/match/?match=46117"><div class="match">Match 3</div></a><div onclick="this.style.display = 'none';reveallink('vodlink21');" class = "vodtext textroundQuarterfinals" id = "vodtext21">Reveal Match</div><div style="display: none;" class = "vodlink roundQuarterfinals" id = "vodlink21"><a  href="https://www.sc2links.com/match/?match=46117"><span class="name"><strong>Serral</strong></span><span class="race"><img src="https://www.sc2links.com/wp-content/uploads/2018/04/RaceIcon_Zerg.png" alt="Zerg" style="width:25px;height:25px;"></span><span>  vs </span><span class="race"><img src="https://www.sc2links.com/wp-content/uploads/2018/04/RaceIcon_Terraner.png" alt="Terran" style="width:25px;height:25px;"></span><span class="name"><strong>Innovation</strong></span></a></div><div class="date">08/04</div></div></h5><h5><div class="Z P"><a  href="https://www.sc2links.com/match/?match=46118"><div class="match">Match 4</div></a><div onclick="this.style.display = 'none';reveallink('vodlink22');" class = "vodtext textroundQuarterfinals" id = "vodtext22">Reveal Match</div><div style="display: none;" class = "vodlink roundQuarterfinals" id = "vodlink22"><a  href="https://www.sc2links.com/match/?match=46118"><span class="name"><strong>Dark</strong></span><span class="race"><img src="https://www.sc2links.com/wp-content/uploads/2018/04/RaceIcon_Zerg.png" alt="Zerg" style="width:25px;height:25px;"></span><span>  vs </span><span class="race"><img src="https://www.sc2links.com/wp-content/uploads/2018/04/RaceIcon_Protoss.png" alt="Protoss" style="width:25px;height:25px;"></span><span class="name"><strong>Classic</strong></span></a></div><div class="date">08/04</div></div></h5>
-const QRegExp tournamentPageMatchRegex(QStringLiteral("<h5>\\s*(?:<div\\s+class=\"([^\"]*)\"\\s*>.*)?<a\\s+href\\s*=\\s*['\"](https://www.sc2links.com/match/\\?match=\\d+)['\"][^>]*>.*<div\\s+class\\s*=\\s*['\"]match['\"]\\s*>(\\w+)\\s+(\\d+)</div>\\s*</a>(.*)<div\\s+class\\s*=\\s*['\"]date['\"]\\s*>([^>]+)</div>.*</h5>"));
-const QRegExp iFrameRegex(QStringLiteral("<iframe\\s+(?:[^>]+\\s+)*src=['\"]([^'\"]+)['\"][^>]*>"));
 
+//             <h3>RO16 Group D</h3> <h5><div class=" "><a  href="https://www.sc2links.com/match/?match=47020"><div class="match">Match 12345</div></a><div onclick="this.style.display = 'none';reveallink('vodlink12');" class = "vodtext textroundRO16GroupD" id = "vodtext12">Reveal Match</div><div style="display: none;" class = "vodlink roundRO16GroupD" id = "vodlink12"><a  href="https://www.sc2links.com/match/?match=47020"><span class="name"><strong> </strong></span><span class="race"></span><span>  vs </span><span class="race"></span><span class="name"><strong> </strong></span></a></div><div class="date">10/04</div></div></h5>
+const QRegExp tournamentPageMatchRegex(QStringLiteral("<h5>\\s*(?:<div\\s+class=\"([^\"]*)\"\\s*>.*)?<a\\s+href\\s*=\\s*['\"](https://www.sc2links.com/match/\\?match=\\d+)['\"][^>]*>.*<div\\s+class\\s*=\\s*['\"]match['\"]\\s*>(\\w+)\\s+(\\d+)</div>\\s*</a>(.*)<div\\s+class\\s*=\\s*['\"]date['\"]\\s*>([^>]+)</div>.*</h5>"));
+// normal embedded vod link
+const QRegExp iFrameRegex(QStringLiteral("<iframe\\s+(?:[^>]+\\s+)*src=['\"]([^'\"]+)['\"][^>]*>"));
+// unembeddable vod link
+// <h2>Unable to embed this link</h2><br><h1><a href="http://vod.afreecatv.com/PLAYER/STATION/37472710">http://vod.afreecatv.com/PLAYER/STATION/37472710</h1>
+//                                                                                                               >no mistake<
+const QRegExp unembeddableVodLinkRegex(QStringLiteral("<h1>\\s*<a\\s+href\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>([^>]*)</h1>\\s*</a>"));
 const QRegExp dateRegex(QStringLiteral("\\d{4}-\\d{2}-\\d{2}"));
 const QRegExp fuzzyYearRegex(QStringLiteral(".*(\\d{4}).*"));
 const QRegExp yearRegex(QStringLiteral("\\d{4}"));
@@ -64,6 +70,7 @@ int InitializeStatics() {
     Q_ASSERT(tournamentPageStageNameRegex.isValid());
     Q_ASSERT(tournamentPageMatchRegex.isValid());
     Q_ASSERT(iFrameRegex.isValid());
+    Q_ASSERT(unembeddableVodLinkRegex.isValid());
 
     const_cast<QRegExp&>(tags).setMinimal(true);
     const_cast<QRegExp&>(yearRegex).setMinimal(true);
@@ -423,9 +430,12 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
             QStringList sides = junk.split(QStringLiteral("vs"));
             QString side1 = sides[0].trimmed();
             QString side2 = sides.size() > 1 ? sides[1].trimmed() : QString();
-            if (side1.isEmpty()) {
-                side1 = QStringLiteral("unknown");
-            }
+//            if (side1.isEmpty()) {
+//                side1 = QStringLiteral("unknown");
+//                if (matchOrEpisode.compare(QStringLiteral("match"), Qt::CaseInsensitive) == 0) {
+//                    side2 = side1;
+//                }
+//            }
 
             QString race1, race2;
             auto raceParts = races.split(QChar(' '), QString::SkipEmptyParts);
@@ -511,11 +521,24 @@ Sc2LinksDotCom::parseLevel2(QNetworkReply* reply) {
 
     QString soup = QString::fromUtf8(reply->readAll());
     //qDebug() << soup;
+    QString url;
 
-    ScMatch match = m_RequestVod.value(reply);
-    int index = iFrameRegex.indexIn(soup);
+    auto index = iFrameRegex.indexIn(soup);
     if (index >= 0) {
-        QString url = iFrameRegex.cap(1);
+        url = iFrameRegex.cap(1);
+    } else {
+        index = unembeddableVodLinkRegex.indexIn(soup);
+        if (index >= 0) {
+            auto ahrefValue = unembeddableVodLinkRegex.cap(1);
+            auto textValue = unembeddableVodLinkRegex.cap(2);
+            if (ahrefValue == textValue) {
+                url = ahrefValue;
+            }
+        }
+    }
+
+    if (!url.isEmpty()) {
+        ScMatch match = m_RequestVod.value(reply);
         match.data().url = url;
         const ScStageData& stage = *match.data().owner.data();
         const ScEventData& event = *stage.owner.data();
@@ -530,9 +553,8 @@ Sc2LinksDotCom::parseLevel2(QNetworkReply* reply) {
         } else {
             m_Vods << record;
         }
-
     } else {
-        qWarning() << "no vod url found in" << reply->request().url();
+        qWarning() << "no vod url found in" << reply->request().url().toString() << soup;
     }
 }
 void
