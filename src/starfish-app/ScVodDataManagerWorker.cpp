@@ -754,7 +754,7 @@ void ScVodDataManagerWorker::updateVodDownloadStatus(
                 "UPDATE vod_files\n"
                 "SET progress=?\n"
                 "WHERE id IN\n"
-                "   (SELECT vod_file_id from vod_url_share WHERE id=?)");
+                "   (SELECT vod_file_id FROM vod_url_share WHERE id=?)");
 
     if (!q.prepare(UpdateSql)) {
         qCritical() << "failed to prepare query" << q.lastError();
