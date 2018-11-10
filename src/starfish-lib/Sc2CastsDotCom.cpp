@@ -26,6 +26,7 @@
 #include <QRegExp>
 #include <QMutexLocker>
 #include <QUrl>
+#include <QUrlQuery>
 #include <QDateTime>
 
 #include "Sc2CastsDotCom.h"
@@ -607,8 +608,35 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
 //        }
 
         if (!url.isEmpty()) {
-            record.valid |= ScRecord::ValidUrl;
-            record.url = url;
+            QUrl u(url);
+            if (u.isValid()) {
+                if (u.isRelative()) {
+                    if (u.host() == QStringLiteral("sc2casts.com") &&
+                        u.path() == QStringLiteral("/twitch/embed2")) {
+                        QUrlQuery q(u);
+                        int id;
+                        QString start;
+                        if (q.hasQueryItem(QStringLiteral("id"))) {
+                            id = q.queryItemValue(QStringLiteral("id")).toInt();
+                        }
+                        if (q.hasQueryItem(QStringLiteral("t"))) {
+                            start = q.queryItemValue(QStringLiteral("t"));
+                        }
+
+                        if (id) {
+                            record.valid |= ScRecord::ValidUrl;
+                            record.url = QStringLiteral("https://player.twitch.tv/?video=v%1").arg(id);
+
+                            if (!start.isEmpty()) {
+                                record.url += QStringLiteral("&time=") + start;
+                            }
+                        }
+                    }
+                } else {
+                    record.valid |= ScRecord::ValidUrl;
+                    record.url = url;
+                }
+            }
         }
 
         // first bw game in 2012
