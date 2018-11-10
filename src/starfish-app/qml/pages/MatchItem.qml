@@ -144,6 +144,7 @@ ListItem {
                         sourceSize.height: parent.height
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
+                        cache: false
                         visible: (status === Image.Ready || status === Image.Error) && _thumbnailState !== thumbnailStateFetching
                         source: _thumbnailState === thumbnailStateAvailable ? _thumbnailFilePath : "image://theme/icon-m-reload"
 
