@@ -689,7 +689,12 @@ ListItem {
             MenuItem {
                 text: "Delete thumbnail"
                 visible: rowId >= 0
-                onClicked: VodDataManager.deleteThumbnail(rowId)
+                onClicked: {
+                    VodDataManager.deleteThumbnail(rowId)
+                    if (App.isOnline) {
+                        _fetchThumbnail()
+                    }
+                }
             }
 
             MenuItem {
