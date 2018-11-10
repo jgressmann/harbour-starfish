@@ -793,7 +793,8 @@ ScVodDataManager::setupDatabase() {
         "    url TEXT NOT NULL,\n"
         "    video_id TEXT,\n"
         "    title TEXT,\n"
-        "    vod_file_id INTEGER REFERENCES vod_files(id) ON DELETE SET NULL\n"
+        "    vod_file_id INTEGER REFERENCES vod_files(id) ON DELETE SET NULL,\n"
+        "    vod_thumbnail_id INTEGER REFERENCES vod_thumbnails(id) ON DELETE SET NULL\n"
         ")\n",
 
         "CREATE TABLE IF NOT EXISTS vods (\n"
@@ -815,7 +816,6 @@ ScVodDataManager::setupDatabase() {
         "    seen INTEGER DEFAULT 0,\n"
         "    match_number INTEGER NOT NULL,\n"
         "    stage_rank INTEGER NOT NULL,\n"
-        "    thumbnail_id INTEGER REFERENCES vod_thumbnails(id) ON DELETE SET NULL,\n"
         "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
         "    UNIQUE (event_name, game, match_date, match_name, match_number, season, stage_name, year) ON CONFLICT REPLACE\n"
         ")\n",
@@ -870,7 +870,7 @@ ScVodDataManager::setupDatabase() {
         "       length,\n"
         "       seen,\n"
         "       match_number,\n"
-        "       thumbnail_id,\n"
+        "       vod_thumbnail_id,\n"
         "       stage_rank\n"
         "   FROM vods v\n"
         "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
@@ -902,7 +902,7 @@ ScVodDataManager::setupDatabase() {
         "       length,\n"
         "       seen,\n"
         "       match_number,\n"
-        "       thumbnail_id,\n"
+        "       vod_thumbnail_id,\n"
         "       stage_rank\n"
         "   FROM vods v\n"
         "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
@@ -912,29 +912,29 @@ ScVodDataManager::setupDatabase() {
 
 
 
-    const int Version = 5;
+    const int Version = 6;
 
 
-    if (!q.exec("PRAGMA foreign_keys = ON")) {
+    if (!q.exec("PRAGMA foreign_keys=ON")) {
         qCritical() << "failed to enable foreign keys" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
         return;
     }
 
     // https://codificar.com.br/blog/sqlite-optimization-faq/
-    if (!q.exec("PRAGMA count_changes = OFF")) {
+    if (!q.exec("PRAGMA count_changes=OFF")) {
         qCritical() << "failed to disable change counting" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
         return;
     }
 
-    if (!q.exec("PRAGMA temp_store = MEMORY")) {
+    if (!q.exec("PRAGMA temp_store=MEMORY")) {
         qCritical() << "failed to set temp store to memory" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
         return;
     }
 
-    if (!q.exec("PRAGMA journal_mode = WAL")) {
+    if (!q.exec("PRAGMA journal_mode=WAL")) {
         qCritical() << "failed to set journal mode to WAL" << q.lastError();
         setError(Error_CouldntCreateSqlTables);
         return;
@@ -962,18 +962,20 @@ ScVodDataManager::setupDatabase() {
                 updateSql3(q);
             case 4:
                 updateSql4(q);
+            case 5:
+                updateSql5(q, CreateSql, _countof(CreateSql));
             default:
                 break;
             }
 
-            if (m_Error) { // don't update version if there is an error
+            if (m_Error) {
                 return;
             }
         } else {
             createTables = false;
         }
     } else {
-        if (!q.exec(QStringLiteral("PRAGMA user_version = %1").arg(QString::number(Version)))) {
+        if (!q.exec(QStringLiteral("PRAGMA user_version=%1").arg(QString::number(Version)))) {
             qCritical() << "failed to set user version" << q.lastError();
             setError(Error_CouldntCreateSqlTables);
             return;
@@ -1783,35 +1785,9 @@ ScVodDataManager::deleteMetaData(qint64 rowid) {
 
     QMutexLocker g(&m_Lock);
 
+    deleteThumbnail(rowid);
+
     QSqlQuery q(m_Database);
-
-    // thumbnails
-    if (!q.prepare(QStringLiteral(
-                      "SELECT\n"
-                      "    t.file_name\n"
-                      "FROM vods v\n"
-                      "INNER JOIN vod_thumbnails t ON v.thumbnail_id=t.id\n"
-                      "WHERE v.id=?\n"
-                      ))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
-
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    while (q.next()) {
-        auto fileName = q.value(0).toString();
-        auto path = m_SharedState->m_ThumbnailDir + fileName;
-        if (QFile::remove(path)) {
-            qDebug() << "removed" << path;
-        }
-    }
 
     // meta data file
     if (!q.prepare(QStringLiteral(
@@ -2519,6 +2495,205 @@ Error:
     goto Exit;
 }
 
+
+void
+ScVodDataManager::updateSql5(QSqlQuery& q, const char* const* createSql, size_t createSqlCount) {
+    qInfo("Begin update of database v5 to v6\n");
+
+    // have thumbnail dir
+    setDirectories();
+
+
+    // add thumbnail id column to vod_url_share, fill values,
+    // delete extraneous thumbnail files and entries
+    {
+        static char const* const Sql1[] = {
+            "PRAGMA foreign_keys=OFF",
+            "SAVEPOINT master",
+            "PRAGMA user_version=6",
+            "DROP VIEW offline_vods",
+            "DROP VIEW url_share_vods",
+            "DROP INDEX vods_game",
+            "DROP INDEX vods_year",
+            "DROP INDEX vods_season",
+            "DROP INDEX vods_event_name",
+
+            "SAVEPOINT thumbnails",
+            "ALTER TABLE vod_url_share ADD COLUMN vod_thumbnail_id INTEGER REFERENCES vod_thumbnails(id) ON DELETE SET NULL",
+            "INSERT OR REPLACE INTO vod_url_share (\n"
+            "   id,\n"
+            "   type,\n"
+            "   length,\n"
+            "   url,\n"
+            "   video_id,\n"
+            "   title,\n"
+            "   vod_file_id,\n"
+            "   vod_thumbnail_id\n"
+            ")\n"
+            "SELECT\n"
+            "   u.id,\n"
+            "   u.type,\n"
+            "   u.length,\n"
+            "   u.url,\n"
+            "   u.video_id,\n"
+            "   u.title,\n"
+            "   u.vod_file_id,\n"
+            "   v.thumbnail_id\n"
+            "FROM\n"
+            "   vod_url_share u INNER JOIN vods v ON u.id=v.vod_url_share_id\n"
+            "WHERE\n"
+            "   u.id IN (\n"
+            "       SELECT DISTINCT vod_url_share_id FROM vods WHERE thumbnail_id IS NOT NULL\n"
+            "   )\n",
+        };
+
+        for (size_t i = 0; i < _countof(Sql1); ++i) {
+            qDebug() << Sql1[i];
+            if (!q.exec(Sql1[i])) {
+                goto Error;
+            }
+        }
+
+        if (!q.exec("SELECT t.file_name\n"
+                    "FROM vod_thumbnails t LEFT JOIN vod_url_share u ON t.id=u.vod_thumbnail_id\n"
+                    "WHERE u.id IS NULL")) {
+            goto Error;
+        }
+
+        while (q.next()) {
+            auto filePath = m_SharedState->m_ThumbnailDir + q.value(0).toString();
+            if (QFile::remove(filePath)) {
+                qDebug("Removed thumbnail file %s\n", qPrintable(filePath));
+            }
+        }
+
+        // delete extra thumbnail entries
+        static char const* const Sql2[] = {
+            "DELETE FROM vod_thumbnails WHERE id NOT IN (\n"
+            "   SELECT vod_thumbnail_id\n"
+            "   FROM vod_url_share\n"
+            "   WHERE vod_thumbnail_id IS NOT NULL\n"
+            ")",
+            "RELEASE thumbnails",
+        };
+
+        for (size_t i = 0; i < _countof(Sql2); ++i) {
+            qDebug() << Sql2[i];
+            if (!q.exec(Sql2[i])) {
+                goto Error;
+            }
+        }
+    }
+
+    // https://www.sqlite.org/lang_altertable.html
+    static char const* const Sql3[] = {
+        "SAVEPOINT vods",
+
+        "CREATE TABLE vods2 (\n"
+        "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+        "    side1_name TEXT COLLATE NOCASE,\n"
+        "    side2_name TEXT COLLATE NOCASE,\n"
+        "    side1_race INTEGER,\n"
+        "    side2_race INTEGER,\n"
+        "    vod_url_share_id INTEGER,\n"
+        "    event_name TEXT NOT NULL COLLATE NOCASE,\n"
+        "    event_full_name TEXT NOT NULL,\n"
+        "    season INTEGER NOT NULL,\n"
+        "    stage_name TEXT NOT NULL COLLATE NOCASE,\n"
+        "    match_name TEXT NOT NULL,\n"
+        "    match_date INTEGER NOT NULL,\n"
+        "    game INTEGER NOT NULL,\n"
+        "    year INTEGER NOT NULL,\n"
+        "    offset INTEGER NOT NULL,\n"
+        "    seen INTEGER DEFAULT 0,\n"
+        "    match_number INTEGER NOT NULL,\n"
+        "    stage_rank INTEGER NOT NULL,\n"
+        "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
+        "    UNIQUE (event_name, game, match_date, match_name, match_number, season, stage_name, year) ON CONFLICT REPLACE\n"
+        ")\n",
+        "INSERT INTO vods2 (\n"
+        "    id,\n"
+        "    side1_name,\n"
+        "    side2_name,\n"
+        "    side1_race,\n"
+        "    side2_race,\n"
+        "    vod_url_share_id,\n"
+        "    event_name,\n"
+        "    event_full_name,\n"
+        "    season,\n"
+        "    stage_name,\n"
+        "    match_name,\n"
+        "    match_date,\n"
+        "    game,\n"
+        "    year,\n"
+        "    offset,\n"
+        "    seen,\n"
+        "    match_number,\n"
+        "    stage_rank\n"
+        ") SELECT \n"
+        "    id,\n"
+        "    side1_name,\n"
+        "    side2_name,\n"
+        "    side1_race,\n"
+        "    side2_race,\n"
+        "    vod_url_share_id,\n"
+        "    event_name,\n"
+        "    event_full_name,\n"
+        "    season,\n"
+        "    stage_name,\n"
+        "    match_name,\n"
+        "    match_date,\n"
+        "    game,\n"
+        "    year,\n"
+        "    offset,\n"
+        "    seen,\n"
+        "    match_number,\n"
+        "    stage_rank\n"
+        "FROM vods\n",
+        "DROP TABLE vods",
+        "ALTER TABLE vods2 RENAME TO vods",
+        "PRAGMA foreign_key_check",
+        "RELEASE vods",
+    };
+
+    for (size_t i = 0; i < _countof(Sql3); ++i) {
+        qDebug() << Sql3[i];
+        if (!q.exec(Sql3[i])) {
+            goto Error;
+        }
+    }
+
+    for (size_t i = 0; i < createSqlCount; ++i) {
+        qDebug() << createSql[i];
+        if (!q.exec(createSql[i])) {
+            goto Error;
+        }
+    }
+
+    static char const* const Sql4[] = {
+        "RELEASE master",
+        "VACUUM",
+    };
+
+    for (size_t i = 0; i < _countof(Sql4); ++i) {
+        qDebug() << Sql4[i];
+        if (!q.exec(Sql4[i])) {
+            goto Error;
+        }
+    }
+
+    qInfo("Update of database v5 to v6 completed successfully\n");
+
+Exit:
+    q.exec("PRAGMA foreign_keys=ON");
+    return;
+Error:
+    qCritical() << "Failed to update database from v5 to v6" << q.lastError();
+    q.exec("ROLLBACK master");
+    setError(Error_CouldntCreateSqlTables);
+    goto Exit;
+}
+
 int
 ScVodDataManager::sqlPatchLevel() const
 {
@@ -2761,7 +2936,11 @@ ScVodDataManager::deleteThumbnail(qint64 rowid)
     RETURN_IF_ERROR;
 
     QSqlQuery q(m_Database);
-    if (!q.prepare(QStringLiteral("SELECT thumbnail_id, file_name FROM vod_thumbnails t INNER JOIN vods v ON t.id=v.thumbnail_id WHERE v.id=?"))) {
+    if (!q.prepare(QStringLiteral(
+        "SELECT t.id, t.file_name\n"
+        "FROM vods v\n"
+        "INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
+        "INNER JOIN vod_thumbnails t ON t.id=u.vod_thumbnail_id WHERE v.id=?"))) {
         qCritical() << "failed to prepare query" << q.lastError();
         return;
     }
@@ -2776,7 +2955,9 @@ ScVodDataManager::deleteThumbnail(qint64 rowid)
     if (q.next()) {
         auto thumbnailId = q.value(0);
         auto filePath = m_SharedState->m_ThumbnailDir + q.value(1).toString();
-        QFile::remove(filePath);
+        if (QFile::remove(filePath)) {
+            qDebug() << "removed" << filePath;
+        }
 
         if (!q.prepare(QStringLiteral("DELETE from vod_thumbnails WHERE id=?"))) {
             qCritical() << "failed to prepare query" << q.lastError();

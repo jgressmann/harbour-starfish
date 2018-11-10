@@ -102,7 +102,9 @@ private:
     };
 
     struct ThumbnailRequest {
-        qint64 rowid;
+        qint64 url_share_id;
+        qint64 thumbnail_id;
+        int refCount;
     };
 
 private slots:
@@ -116,8 +118,8 @@ private:
     void fetchMetaData(QSqlQuery& q, qint64 urlShareId, const QString& url);
     void updateVodDownloadStatus(qint64 urlShareId, const VMVodFileDownload& download);
     void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
-    void fetchThumbnailFromUrl(qint64 rowid, const QString& url);
-    void addThumbnail(qint64 rowid, const QByteArray& bytes);
+    void fetchThumbnailFromUrl(qint64 urlShareId, qint64 thumbnailId, const QString& url);
+    void addThumbnail(ThumbnailRequest& r, const QByteArray& bytes);
     void notifyVodDownloadsChanged(QSqlQuery& q);
     void notifyFetchingMetaData(QSqlQuery& q, qint64 urlShareId);
     void notifyFetchingThumbnail(QSqlQuery& q, qint64 urlShareId);

@@ -325,6 +325,7 @@ private:
     void updateSql2(QSqlQuery& q);
     void updateSql3(QSqlQuery& q);
     void updateSql4(QSqlQuery& q);
+    void updateSql5(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
 
 private:
     mutable QMutex m_Lock;
