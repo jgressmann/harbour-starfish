@@ -137,12 +137,12 @@ ListItem {
 
                     Image {
                         id: thumbnail
-                        property bool _hadError: false
+                        property bool _hadImageLoadError: false
                         anchors.centerIn: parent
-                        height: _hadError
+                        height: _hadImageLoadError
                                 ? thumbnailBusyIndicator.height
                                 : (_thumbnailState === thumbnailStateAvailable ? parent.height : thumbnailBusyIndicator.height)
-                        width: _hadError
+                        width: _hadImageLoadError
                                 ? thumbnailBusyIndicator.width
                                 : (_thumbnailState === thumbnailStateAvailable ? parent.width : thumbnailBusyIndicator.width)
                         sourceSize.width: parent.width
@@ -150,28 +150,35 @@ ListItem {
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
                         cache: false
-//                        visible: (status === Image.Ready || status === Image.Error) && _thumbnailState !== thumbnailStateFetching
-                        source: _hadError
+                        //visible: (status === Image.Ready || status === Image.Error) && _thumbnailState !== thumbnailStateFetching
+                        visible: _thumbnailState !== thumbnailStateFetching
+                        source: _hadImageLoadError
                                 ? "image://theme/icon-m-reload"
                                 : (_thumbnailState === thumbnailStateAvailable
                                     ? _thumbnailFilePath : "image://theme/icon-m-reload")
 
                         onStatusChanged: {
                             if (Image.Error === status) {
-                                _hadError = true
-//                                source = "/usr/share/harbour-starfish/icons/flash.png"
+                                _hadImageLoadError = true
+                                console.debug("rowid=" + rowId + " error loading image " + _thumbnailFilePath)
                             }
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        z: thumbnail.z + 1
+                        //enabled: parent.visible && _thumbnailState !== thumbnailStateAvailable && Image.Error !== status
+                        //enabled: parent._hadImageLoadError || _thumbnailState === thumbnailStateDownloadFailed
+                        enabled: thumbnail.visible && (thumbnail._hadImageLoadError || _thumbnailState !== thumbnailStateAvailable)
+                        onClicked: {
+                            thumbnail._hadImageLoadError = false
+                            _fetchThumbnail()
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            //enabled: parent.visible && _thumbnailState !== thumbnailStateAvailable && Image.Error !== status
-                            enabled: parent._hadError || _thumbnailState === thumbnailStateDownloadFailed
-                            onClicked: {
-                                parent._hadError = false
-                                _fetchThumbnail()
-                            }
-                        }
+//                        onEnabledChanged: {
+//                            console.debug("rowid=" + rowId  + " reload enabled=" + enabled)
+//                        }
                     }
 
                     BusyIndicator {
@@ -704,6 +711,7 @@ ListItem {
                 text: "Delete thumbnail"
                 visible: rowId >= 0
                 onClicked: {
+                    _thumbnailState = thumbnailStateInitial // reset
                     VodDataManager.deleteThumbnail(rowId)
                     if (App.isOnline) {
                         _fetchThumbnail()
@@ -726,7 +734,10 @@ ListItem {
 
     function thumbnailAvailable(filePath) {
 //            console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
-        _thumbnailFilePath = "" // force reload
+        if (_thumbnailFilePath === filePath) {
+            _thumbnailFilePath = "" // force reload
+        }
+
         _thumbnailFilePath = filePath
         _thumbnailState = thumbnailStateAvailable
         _thumbnailTicket = -1
