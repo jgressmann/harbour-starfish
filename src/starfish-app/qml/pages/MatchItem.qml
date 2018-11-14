@@ -305,7 +305,11 @@ ListItem {
                                 }
 
                                 if (debugApp.value) {
-                                    result += ", " + rowId
+                                    if (result) {
+                                        result += ", "
+                                    }
+
+                                    result += rowId
                                 }
 
 //                                if (startOffset > 0) {
