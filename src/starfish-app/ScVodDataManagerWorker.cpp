@@ -274,16 +274,24 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 rowid, bool download)
 
         auto fileName = q.value(0).toString();
         auto thumbNailFilePath = m_SharedState->m_ThumbnailDir + fileName;
-        if (QFileInfo::exists(thumbNailFilePath)) {
-            emit thumbnailAvailable(rowid, thumbNailFilePath);
-        } else {
-            if (download) {
-                notifyFetchingThumbnail(q, vodUrlShareId);
-                auto thumbnailUrl = q.value(1).toString();
-                fetchThumbnailFromUrl(vodUrlShareId, thumbnailId, thumbnailUrl);
+        auto fetch = true;
+        QFileInfo fi(thumbNailFilePath);
+        if (fi.exists()) {
+            if (fi.size() > 0) {
+                fetch = false;
+                emit thumbnailAvailable(rowid, thumbNailFilePath);
+            } else {
+                // keep empty file so that temp file allocation for
+                // other thumbnails doesn't allocate same name multiple times
             }
         }
-    } else { // thumb nail id not set
+
+        if (fetch && download) {
+            auto thumbnailUrl = q.value(1).toString();
+            notifyFetchingThumbnail(q, vodUrlShareId);
+            fetchThumbnailFromUrl(vodUrlShareId, thumbnailId, thumbnailUrl);
+        }
+    } else { // thumbnail id not set
         if (download) {
             auto metaDataFilePath = m_SharedState->m_MetaDataDir + QString::number(vodUrlShareId);
             if (QFileInfo::exists(metaDataFilePath)) {
@@ -963,7 +971,14 @@ ScVodDataManagerWorker::thumbnailRequestFinished(QNetworkReply* reply, Thumbnail
         if (v >= 200 && v < 300) { // Success
             // Here we got the final reply
             auto bytes = reply->readAll();
-            addThumbnail(r, bytes);
+            if (bytes.isEmpty()) {
+                // this really shouldn't happen anymore
+                // the code remains here to safeguard against errors
+                // in the program logic
+                notifyThumbnailRequestFailed(r.url_share_id, QNetworkReply::ContentNotFoundError, reply->url().toString());
+            } else {
+                addThumbnail(r, bytes);
+            }
         } else if (v >= 300 && v < 400) { // Redirection
             // Get the redirection url
             QUrl newUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
@@ -978,18 +993,21 @@ ScVodDataManagerWorker::thumbnailRequestFinished(QNetworkReply* reply, Thumbnail
     } break;
     default: {
         qDebug() << "Network request failed: " << reply->errorString() << reply->url();
-
-        QSqlQuery q(m_Database);
-        if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, r.url_share_id))) {
-            return;
-        }
-
-        auto url = reply->url().toString();
-        while (q.next()) {
-            auto vodRowId = qvariant_cast<qint64>(q.value(0));
-            emit thumbnailDownloadFailed(vodRowId, reply->error(), url);
-        }
+        notifyThumbnailRequestFailed(r.url_share_id, reply->error(), reply->url().toString());
     } break;
+    }
+}
+
+void
+ScVodDataManagerWorker::notifyThumbnailRequestFailed(qint64 urlShareId, int error, const QString& url) {
+    QSqlQuery q(m_Database);
+    if (Q_UNLIKELY(!selectIdFromVodsWhereUrlShareIdEquals(q, urlShareId))) {
+        return;
+    }
+
+    while (q.next()) {
+        auto vodRowId = qvariant_cast<qint64>(q.value(0));
+        emit thumbnailDownloadFailed(vodRowId, error, url);
     }
 }
 

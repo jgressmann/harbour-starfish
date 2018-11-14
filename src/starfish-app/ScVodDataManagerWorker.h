@@ -124,6 +124,7 @@ private:
     void notifyFetchingMetaData(QSqlQuery& q, qint64 urlShareId);
     void notifyFetchingThumbnail(QSqlQuery& q, qint64 urlShareId);
     void notifyMetaDataAvailable(QSqlQuery& q, qint64 urlShareId, const VMVod& vod);
+    void notifyThumbnailRequestFailed(qint64 urlShareId, int error, const QString& url);
 
 private:
     QSharedPointer<ScVodDataManagerState> m_SharedState;
