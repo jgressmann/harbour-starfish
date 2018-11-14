@@ -137,29 +137,40 @@ ListItem {
 
                     Image {
                         id: thumbnail
+                        property bool _hadError: false
                         anchors.centerIn: parent
-                        height: _thumbnailState === thumbnailStateAvailable ? parent.height : thumbnailBusyIndicator.height
-                        width: _thumbnailState === thumbnailStateAvailable ? parent.width : thumbnailBusyIndicator.width
+                        height: _hadError
+                                ? thumbnailBusyIndicator.height
+                                : (_thumbnailState === thumbnailStateAvailable ? parent.height : thumbnailBusyIndicator.height)
+                        width: _hadError
+                                ? thumbnailBusyIndicator.width
+                                : (_thumbnailState === thumbnailStateAvailable ? parent.width : thumbnailBusyIndicator.width)
                         sourceSize.width: parent.width
                         sourceSize.height: parent.height
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
                         cache: false
-                        visible: (status === Image.Ready || status === Image.Error) && _thumbnailState !== thumbnailStateFetching
-                        source: _thumbnailState === thumbnailStateAvailable ? _thumbnailFilePath : "image://theme/icon-m-reload"
+//                        visible: (status === Image.Ready || status === Image.Error) && _thumbnailState !== thumbnailStateFetching
+                        source: _hadError
+                                ? "image://theme/icon-m-reload"
+                                : (_thumbnailState === thumbnailStateAvailable
+                                    ? _thumbnailFilePath : "image://theme/icon-m-reload")
 
                         onStatusChanged: {
                             if (Image.Error === status) {
-                                height = thumbnailBusyIndicator.height
-                                width = thumbnailBusyIndicator.width
-                                source = "/usr/share/harbour-starfish/icons/flash.png"
+                                _hadError = true
+//                                source = "/usr/share/harbour-starfish/icons/flash.png"
                             }
                         }
 
                         MouseArea {
                             anchors.fill: parent
-                            enabled: parent.visible && _thumbnailState !== thumbnailStateAvailable && Image.Error !== status
-                            onClicked: _fetchThumbnail()
+                            //enabled: parent.visible && _thumbnailState !== thumbnailStateAvailable && Image.Error !== status
+                            enabled: parent._hadError || _thumbnailState === thumbnailStateDownloadFailed
+                            onClicked: {
+                                parent._hadError = false
+                                _fetchThumbnail()
+                            }
                         }
                     }
 
