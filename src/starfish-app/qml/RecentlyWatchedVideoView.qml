@@ -36,7 +36,6 @@ SilicaListView {
 
     signal clicked(var obj, string playbackUrl, int offset, var matchItem)
 
-//    property var matchItems: []
     MatchItemMemory {
         id: matchItemConnections
     }
@@ -207,9 +206,9 @@ SilicaListView {
 //                                clip: true
                     model: sqlModel
 
-                    readonly property int xindex: index
-                    readonly property int xoffset: offset
-                    readonly property int xvideo_id: video_id
+//                    readonly property int xindex: index
+//                    readonly property int xoffset: offset
+//                    readonly property int xvideo_id: video_id
 
                     delegate: Component {
                         MatchItem {
@@ -227,22 +226,21 @@ SilicaListView {
                             matchName: match_name
                             matchDate: match_date
                             rowId: video_id
-                            startOffset: offset
                             baseOffset: vod_offset
                             length: vod_length
                             table: _table
                             memory: matchItemConnections
 
                             onPlayRequest: function (self) {
-                                console.debug("xvideo_id=" + xvideo_id)
-                                console.debug("video_id=" + video_id)
-                                console.debug("rowid=" + rowId)
-                                if (video_id === -1) {
-                                    console.debug("rowid=" + rowId)
-                                    console.debug("ARRRRRRRRRRRRRRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGG")
-                                }
+//                                console.debug("xvideo_id=" + xvideo_id)
+//                                console.debug("video_id=" + video_id)
+//                                console.debug("rowid=" + rowId)
+//                                if (video_id === -1) {
+//                                    console.debug("rowid=" + rowId)
+//                                    console.debug("ARRRRRRRRRRRRRRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGG")
+//                                }
 
-                                listView.clicked({video_id: rowId}, self.vodUrl, xoffset, self)
+                                listView.clicked({video_id: rowId}, self.vodUrl, self.startOffset, self)
                             }
 
 
@@ -264,26 +262,6 @@ SilicaListView {
                                     }
                                 }
                             }
-
-//                            Component.onCompleted: {
-//                                console.debug("pre completed item index " + xindex + " matchItems: " + matchItems)
-//                                matchItems.push(matchItem)
-//                                console.debug("post completed item index " + xindex + " matchItems: " + matchItems)
-//                            }
-
-//                            Component.onDestruction: {
-
-//                                if (listView.matchItems) { // aparently happens on destruction
-//                                    console.debug("pre destruction index " + xindex + " matchItems: " + listView.matchItems)
-//                                    var i = listView.matchItems.indexOf(matchItem)
-//                                    if (i >= 0) {
-//                                        listView.matchItems[i] = listView.matchItems[listView.matchItems.length-1]
-//                                        listView.matchItems.pop()
-//                                    }
-//                                    console.debug("post destruction index " + xindex + " matchItems: " + listView.matchItems)
-//                                }
-
-//                            }
                         }
                     }
 
@@ -313,22 +291,7 @@ SilicaListView {
         hintText: "This list will fill with the videos you have watched."
     }
 
-    function getMatchItemById(_id) {
-//        if (matchItems) {
-//            for (var i = 0; i < matchItems.length; ++i) {
-//                var item = matchItems[i]
-//                if (item.rowId === _id) {
-//                    return item
-//                }
-//            }
-//        }
-    }
-
     function clear() {
         recentlyUsedVideos.clear()
     }
-
-//    Component.onDestruction: {
-//        console.debug("RecentlyWatchedVideoView destruction, matchItems: " + matchItems)
-//    }
 }

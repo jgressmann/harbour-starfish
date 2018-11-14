@@ -280,13 +280,13 @@ BasePage {
     onStatusChanged: {
         switch (status) {
         case PageStatus.Activating:
-            if (-1 !== _videoId) {
-                var matchItem = recentlyWatchedVideoView.getMatchItemById(_videoId)
-                if (matchItem) {
-                    matchItem.cancelImplicitVodFileFetch()
-                }
-                _videoId = -1
-            }
+//            if (-1 !== _videoId) {
+//                var matchItem = recentlyWatchedVideoView.getMatchItemById(_videoId)
+//                if (matchItem) {
+//                    matchItem.cancelImplicitVodFileFetch()
+//                }
+//                _videoId = -1
+//            }
 
             offlineVodsItem.update()
             newVodsItem.update()

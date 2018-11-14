@@ -29,7 +29,8 @@ import ".."
 BasePage {
     id: page
 
-    property var itemPlaying: null
+    //property var itemPlaying: null
+    property int _videoId: -1
     readonly property string _table: Global.defaultTable
 
     SqlVodModel {
@@ -43,6 +44,18 @@ BasePage {
             x["url"] = "vod_url"
             return x
         }
+    }
+
+
+    RecentlyWatchedVideoUpdater {
+        id: updater
+        onDataSaved: function (key, offset, thumbnailFilePath) {
+            matchItemConnections.updateStartOffset(_videoId)
+        }
+    }
+
+    MatchItemMemory {
+        id: matchItemConnections
     }
 
     SilicaFlickable {
@@ -62,13 +75,6 @@ BasePage {
                 title: qsTr("Active downloads")
             }
 
-            RecentlyWatchedVideoUpdater {
-                id: updater
-            }
-
-            MatchItemMemory {
-                id: matchItemConnections
-            }
 
             delegate: Component {
                 MatchItem {
@@ -83,7 +89,6 @@ BasePage {
                     matchName: match_name
                     matchDate: match_date
                     rowId: vod_id
-                    startOffset: offset
                     baseOffset: offset
                     table: _table
                     length: vod_length
@@ -95,22 +100,23 @@ BasePage {
                     }
 
                     onPlayRequest: function (self, callback) {
-                        itemPlaying = self
+//                        itemPlaying = self
+                        _videoId = vod_id
                         Global.playVideoHandler(updater, {video_id: vod_id}, self.vodUrl, self.startOffset)
                     }
 
-                    function updateStartOffset() {
-                        var rows = recentlyUsedVideos.select(["offset"], {video_id: vod_id});
-                        if (rows.length === 1) {
-                            startOffset = rows[0].offset
-                        } else {
-                            startOffset = offset // base offset into multi match video
-                        }
+//                    function updateStartOffset() {
+//                        var rows = recentlyUsedVideos.select(["offset"], {video_id: vod_id});
+//                        if (rows.length === 1) {
+//                            startOffset = rows[0].offset
+//                        } else {
+//                            startOffset = offset // base offset into multi match video
+//                        }
 
-    //                    console.debug("rowid=" + vod_id + " start=" + Global.secondsToTimeString(startOffset))
-                    }
+//    //                    console.debug("rowid=" + vod_id + " start=" + Global.secondsToTimeString(startOffset))
+//                    }
 
-                    Component.onCompleted: updateStartOffset()
+//                    Component.onCompleted: updateStartOffset()
                 }
             }
 
@@ -137,10 +143,7 @@ BasePage {
     onStatusChanged: {
         switch (status) {
         case PageStatus.Activating:
-            if (itemPlaying) {
-                itemPlaying.cancelImplicitVodFileFetch()
-                itemPlaying = null
-            }
+            matchItemConnections.cancelImplicitVodFileFetch(_videoId)
             break
         }
     }

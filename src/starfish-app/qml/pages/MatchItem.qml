@@ -535,6 +535,8 @@ ListItem {
     Component.onCompleted: {
         memory.addMatchItem(root)
 
+        updateStartOffset()
+
         VodDataManager.fetchTitle(rowId)
         VodDataManager.fetchSeen(rowId, table, _where)
         VodDataManager.fetchVodEnd(rowId, baseOffset, length)
@@ -1083,5 +1085,15 @@ ListItem {
     }
 
 
+    function updateStartOffset() {
+        var rows = recentlyUsedVideos.select(["offset"], {video_id: rowId});
+        if (rows.length === 1) {
+            startOffset = rows[0].offset
+        } else {
+            startOffset = baseOffset // base offset into multi match video
+        }
+
+//                    console.debug("rowid=" + vod_id + " start=" + Global.secondsToTimeString(startOffset))
+    }
 }
 

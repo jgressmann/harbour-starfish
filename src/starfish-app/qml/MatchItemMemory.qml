@@ -44,7 +44,7 @@ Item {
     }
 
     Component.onDestruction: {
-        console.debug("destroy match item memory")
+//        console.debug("destroy match item memory")
         VodDataManager.vodAvailable.disconnect(vodAvailable)
         VodDataManager.fetchingThumbnail.disconnect(fetchingThumbnail)
         VodDataManager.thumbnailAvailable.disconnect(thumbnailAvailable)
@@ -165,4 +165,17 @@ Item {
         }
     }
 
+    function updateStartOffset(rowid) {
+        var item = _items[rowid]
+        if (item) {
+            item.updateStartOffset()
+        }
+    }
+
+    function cancelImplicitVodFileFetch(rowid) {
+        var item = _items[rowid]
+        if (item) {
+            item.cancelImplicitVodFileFetch()
+        }
+    }
 }

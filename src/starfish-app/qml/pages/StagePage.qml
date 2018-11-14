@@ -37,6 +37,7 @@ BasePage {
     property string _side1
     property string _side2
     property var itemPlaying: null
+    property int _videoId: -1
 
     SqlVodModel {
         id: sqlModel
@@ -70,6 +71,18 @@ BasePage {
 
         onModelReset: _updateSameSides()
         Component.onCompleted: _updateSameSides()
+    }
+
+    RecentlyWatchedVideoUpdater {
+        id: updater
+
+        onDataSaved: function (key, offset, thumbnailFilePath) {
+            matchItemConnections.updateStartOffset(_videoId)
+        }
+    }
+
+    MatchItemMemory {
+        id: matchItemConnections
     }
 
     contentItem: SilicaFlickable {
@@ -127,19 +140,7 @@ BasePage {
             model: sqlModel
             clip: true
 
-            RecentlyWatchedVideoUpdater {
-                id: updater
 
-                onDataSaved: function (key, offset, thumbnailFilePath) {
-                    if (itemPlaying && (key["video_id"] || -1) === itemPlaying.rowId) {
-                        itemPlaying.updateStartOffset()
-                    }
-                }
-            }
-
-            MatchItemMemory {
-                id: matchItemConnections
-            }
 
             delegate: MatchItem {
                 width: listView.width
@@ -159,22 +160,23 @@ BasePage {
                 memory: matchItemConnections
 
                 onPlayRequest: function (self) {
-                    itemPlaying = self
+                    _videoId = vod_id
                     Global.playVideoHandler(updater, {video_id: vod_id}, self.vodUrl, self.startOffset)
                 }
 
-                function updateStartOffset() {
-                    var rows = recentlyUsedVideos.select(["offset"], {video_id: vod_id});
-                    if (rows.length === 1) {
-                        startOffset = rows[0].offset
-                    } else {
-                        startOffset = offset // base offset into multi match video
-                    }
+//                FIX ME MOVE TO MatchItem
+//                function updateStartOffset() {
+//                    var rows = recentlyUsedVideos.select(["offset"], {video_id: vod_id});
+//                    if (rows.length === 1) {
+//                        startOffset = rows[0].offset
+//                    } else {
+//                        startOffset = offset // base offset into multi match video
+//                    }
 
-//                    console.debug("rowid=" + vod_id + " start=" + Global.secondsToTimeString(startOffset))
-                }
+////                    console.debug("rowid=" + vod_id + " start=" + Global.secondsToTimeString(startOffset))
+//                }
 
-                Component.onCompleted: updateStartOffset()
+//                Component.onCompleted: updateStartOffset()
             }
 
             ViewPlaceholder {
@@ -203,10 +205,11 @@ BasePage {
     onStatusChanged: {
         switch (status) {
         case PageStatus.Activating:
-            if (itemPlaying) {
-                itemPlaying.cancelImplicitVodFileFetch()
-                itemPlaying = null
-            }
+            matchItemConnections.cancelImplicitVodFileFetch(_videoId)
+//            if (itemPlaying) {
+//                itemPlaying.cancelImplicitVodFileFetch()
+//                itemPlaying = null
+//            }
             break
         }
     }
