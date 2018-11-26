@@ -2119,6 +2119,8 @@ ScVodDataManager::deleteVodFilesWhere(const QString& where) {
         return 0;
     }
 
+    count += q.numRowsAffected() > 0;
+
     if (count) {
         emit vodsChanged();
     }

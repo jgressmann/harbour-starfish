@@ -684,7 +684,7 @@ ListItem {
                         item._width = 0
                         item._height = 0
                         item._formatId = ""
-                        manager.deleteVodFile(item.rowId)
+                        manager.deleteVodFiles(item.rowId)
                     })
                 }
             }
