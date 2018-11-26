@@ -726,7 +726,15 @@ ListItem {
             MenuItem {
                 text: "Delete VOD from database"
                 visible: rowId >= 0
-                onClicked: VodDataManager.deleteVod(rowId)
+                onClicked: {
+                    // still not sure why local vars are needed but they are!!!!
+                    var item = root
+                    var manager = VodDataManager
+                    item.remorseAction("Deleting " + title, function() {
+                        item._cancelDownload()
+                        manager.deleteVod(item.rowId)
+                    })
+                }
             }
         }
     }
