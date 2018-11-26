@@ -2930,6 +2930,10 @@ ScVodDataManager::deleteVod(qint64 rowid)
         qCritical() << "failed to exec query" << q.lastError();
         return;
     }
+
+    if (q.numRowsAffected() > 0) {
+        emit vodsChanged();
+    }
 }
 
 void
