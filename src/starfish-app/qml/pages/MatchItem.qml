@@ -729,10 +729,10 @@ ListItem {
                 onClicked: {
                     // still not sure why local vars are needed but they are!!!!
                     var item = root
-                    var manager = VodDataManager
+                    var g = Global
                     item.remorseAction("Deleting " + title, function() {
                         item._cancelDownload()
-                        manager.deleteVod(item.rowId)
+                        g.deleteVods("where id=" + item.rowId)
                     })
                 }
             }

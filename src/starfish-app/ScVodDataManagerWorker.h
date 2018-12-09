@@ -43,6 +43,7 @@ class ScVodDataManagerWorker : public QObject
     Q_OBJECT
 public:
     using Task = std::function<void()>;
+    using DatabaseCallback = std::function<void(qint64 insertId, bool error)>;
 
 
 public:
@@ -83,6 +84,7 @@ signals:
     void seenAvailable(qint64 rowid, qreal seen);
     void vodEndAvailable(qint64 rowid, int endOffsetS);
     void vodDownloadsChanged(ScVodIdList ids);
+    void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
 
 public slots:
     void process();
@@ -113,6 +115,7 @@ private slots:
     void onFileDownloadCompleted(qint64 token, const VMVodFileDownload& download);
     void onDownloadFailed(qint64 token, int serviceErrorCode);
     void requestFinished(QNetworkReply* reply);
+    void databaseStoreCompleted(int ticket, qint64 insertId, int error, QString errorDescription);
 
 private:
     void fetchMetaData(QSqlQuery& q, qint64 urlShareId, const QString& url);
@@ -134,5 +137,6 @@ private:
     QHash<qint64, VodmanMetaDataRequest> m_VodmanMetaDataRequests;
     QHash<qint64, VodmanFileRequest> m_VodmanFileRequests;
     QHash<QNetworkReply*, ThumbnailRequest> m_ThumbnailRequests;
+    QHash<int, DatabaseCallback> m_PendingDatabaseStores;
     QSqlDatabase m_Database;
 };

@@ -304,6 +304,20 @@ Item { // Components can't declare functions
         }
     }
 
+    function deleteVods(_where) {
+        if (!_where) {
+            _where = ""
+        }
+
+        console.debug("delete vods where: " + _where)
+        var count = VodDataManager.deleteVods(_where)
+        if (count) {
+            deleteVodNotification.itemCount = count
+            deleteVodNotification.body = deleteVodNotification.previewBody = count + " VOD" + (count > 1 ? "s" : "") + " deleted"
+            deleteVodNotification.publish()
+        }
+    }
+
     function openNewVodPage(pageStack) {
         pageStack.push(
                     Qt.resolvedUrl("pages/NewPage.qml"),

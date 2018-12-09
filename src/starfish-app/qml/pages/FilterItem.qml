@@ -48,6 +48,15 @@ ListItem {
                 })
             }
         }
+
+        MenuItem {
+            text: "Delete VODs"
+            onClicked: {
+                root.remorseAction("Deleting VODs for " + title, function() {
+                    Global.deleteVods(_where)
+                })
+            }
+        }
     }
 
     Item {

@@ -41,6 +41,7 @@ class QNetworkAccessManager;
 class QNetworkRequest;
 class QNetworkReply;
 class QUrl;
+class ScDatabaseStoreQueue;
 class ScVodman;
 class ScEvent;
 class ScStage;
@@ -214,6 +215,7 @@ public: //
     Q_INVOKABLE int fetchSeen(qint64 rowid, const QString& table, const QString& where);
     Q_INVOKABLE int fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS);
     Q_INVOKABLE void deleteVod(qint64 rowid);
+    Q_INVOKABLE int deleteVods(const QString& where);
     Q_INVOKABLE void deleteThumbnail(qint64 rowid);
 
 signals:
@@ -253,6 +255,7 @@ signals:
     void titleAvailable(qint64 rowid, QString title);
     void seenAvailable(qint64 rowid, qreal seen);
     void vodEndAvailable(qint64 rowid, int endOffsetS);
+    void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
 
 public slots:
     void excludeEvent(const ScEvent& event, bool* exclude);
@@ -275,12 +278,14 @@ private:
         QString url;
     };
 
+    using DatabaseCallback = std::function<void(qint64 insertIdOrNumRows, bool error)>;
 
 private slots:
     void requestFinished(QNetworkReply* reply);
     void vodAddWorkerFinished();
     void onDataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
     void onVodDownloadsChanged(ScVodIdList ids);
+    void databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);
 
 private:
     static bool tryGetEvent(QString& inoutSrc, QString* location);
@@ -314,7 +319,8 @@ private:
     void batchAddVods();
     void dropTables();
     int fetchThumbnail(qint64 rowid, bool download);
-    int deleteVodFilesWhere(const QString& where);
+    int deleteVodFilesWhere(int transactionId, const QString& where, bool raiseChanged);
+    int deleteThumbnailsWhere(int transactionId, const QString& where);
     void fetchSqlPatches();
     void applySqlPatches(const QByteArray& bytes);
     void setPersistedValue(QSqlQuery& query, const QString& key, const QString& value);
@@ -333,6 +339,7 @@ private:
     QList<ScRecord> m_AddQueue;
     QThread m_AddThread;
     QThread m_WorkerThread;
+    QThread m_DatabaseStoreQueueThread;
     QNetworkAccessManager* m_Manager;
     ScVodDataManagerWorker* m_WorkerInterface;
     QSqlDatabase m_Database;
@@ -348,5 +355,6 @@ private:
     QAtomicInt m_State;
     QSharedPointer<ScVodDataManagerState> m_SharedState;
     QVariantList m_VodDownloads;
+    QHash<int, DatabaseCallback> m_PendingDatabaseStores;
 };
 

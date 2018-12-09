@@ -42,6 +42,15 @@ ListItem {
                 })
             }
         }
+
+        MenuItem {
+            text: "Delete VODs"
+            onClicked: {
+                root.remorseAction("Deleting VODs for " + stageName, function() {
+                    Global.deleteVods(_where)
+                })
+            }
+        }
     }
 
     Item {

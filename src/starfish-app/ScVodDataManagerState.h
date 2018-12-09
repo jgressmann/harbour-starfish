@@ -1,7 +1,8 @@
 #pragma once
 
 #include <QString>
-
+#include <QScopedPointer>
+class ScDatabaseStoreQueue;
 class ScVodDataManagerState
 {
 public:
@@ -10,4 +11,5 @@ public:
     QString m_VodDir;
     QString m_IconDir;
     QString DatabaseFilePath;
+    QScopedPointer<ScDatabaseStoreQueue> DatabaseStoreQueue;
 };

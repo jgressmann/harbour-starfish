@@ -25,12 +25,14 @@
 #include "ScVodDataManagerState.h"
 #include "ScVodDataManagerWorker.h"
 
+
 #include "Vods.h"
 #include "Sc.h"
 #include "ScRecord.h"
 #include "ScStopwatch.h"
 #include "ScApp.h"
-
+#include "ScDatabaseStoreQueue.h"
+#include "ScDatabase.h"
 
 
 #include <QDebug>
@@ -457,6 +459,18 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
 
     setState(State_Ready);
 
+    auto x = new ScDatabaseStoreQueue(m_SharedState->DatabaseFilePath);
+    x->moveToThread(&m_DatabaseStoreQueueThread);
+
+    // database store queue->manager
+    connect(x, &ScDatabaseStoreQueue::completed, this, &ScVodDataManager::databaseStoreCompleted);
+    // manager->database store queue
+    connect(this, &ScVodDataManager::startProcessDatabaseStoreQueue, x, &ScDatabaseStoreQueue::process);
+
+    m_DatabaseStoreQueueThread.start();
+
+    m_SharedState->DatabaseStoreQueue.reset(x);
+
     fetchIcons();
     fetchClassifier();
     fetchSqlPatches();
@@ -467,6 +481,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(adder, &ScWorker::finished, this, &ScVodDataManager::vodAddWorkerFinished);
     connect(&m_AddThread, &QThread::finished, adder, &QObject::deleteLater);
     m_AddThread.start(QThread::LowestPriority);
+
 
 
     m_WorkerInterface = new ScVodDataManagerWorker(m_SharedState);
@@ -914,22 +929,7 @@ ScVodDataManager::setupDatabase() {
 
     const int Version = 6;
 
-
-    if (!q.exec("PRAGMA foreign_keys=ON")) {
-        qCritical() << "failed to enable foreign keys" << q.lastError();
-        setError(Error_CouldntCreateSqlTables);
-        return;
-    }
-
-    // https://codificar.com.br/blog/sqlite-optimization-faq/
-    if (!q.exec("PRAGMA count_changes=OFF")) {
-        qCritical() << "failed to disable change counting" << q.lastError();
-        setError(Error_CouldntCreateSqlTables);
-        return;
-    }
-
-    if (!q.exec("PRAGMA temp_store=MEMORY")) {
-        qCritical() << "failed to set temp store to memory" << q.lastError();
+    if (!scSetupWriteableConnection(m_Database)) {
         setError(Error_CouldntCreateSqlTables);
         return;
     }
@@ -1774,7 +1774,9 @@ ScVodDataManager::parseTwitchOffset(const QString& str) {
 
 void
 ScVodDataManager::deleteVodFiles(qint64 rowid) {
-    deleteVodFilesWhere(QStringLiteral("WHERE id=%1").arg(rowid));
+    auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
+    deleteVodFilesWhere(tid, QStringLiteral("WHERE id=%1").arg(rowid), true);
+    emit startProcessDatabaseStoreQueue(tid, {}, {});
 }
 
 void
@@ -2068,6 +2070,8 @@ ScVodDataManager::makeThumbnailFile(const QString& srcPath) {
 
 int
 ScVodDataManager::deleteSeenVodFiles(const QString& where) {
+    RETURN_IF_ERROR;
+
     auto w = where.trimmed();
     if (w.startsWith("where ", Qt::CaseInsensitive)) {
         w = w.mid(6).trimmed();
@@ -2085,14 +2089,15 @@ ScVodDataManager::deleteSeenVodFiles(const QString& where) {
 "       SELECT DISTINCT vod_url_share_id FROM offline_vods WHERE %1 AND seen=0)\n"
 "   )\n").arg(w);
 
-    return deleteVodFilesWhere(w2);
+    auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
+    auto result = deleteVodFilesWhere(tid, w2, true);
+    emit startProcessDatabaseStoreQueue(tid, {}, {});
+    return result;
 }
 
 int
-ScVodDataManager::deleteVodFilesWhere(const QString& where) {
-    RETURN_IF_ERROR;
+ScVodDataManager::deleteVodFilesWhere(int transactionId, const QString& where, bool raiseChanged) {
 
-    QMutexLocker g(&m_Lock);
 
     QSqlQuery q(m_Database);
 
@@ -2111,17 +2116,27 @@ ScVodDataManager::deleteVodFilesWhere(const QString& where) {
         }
     }
 
-    if (!q.exec(QStringLiteral(
-        "DELETE FROM vod_files\n"
-        "WHERE\n"
-        "   id IN (SELECT vod_file_id FROM offline_vods %1)\n").arg(where))) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return 0;
+
+
+    if (!count && raiseChanged) {
+        m_PendingDatabaseStores.insert(transactionId, [=] (qint64 rows, bool error)
+        {
+            if (!error && rows) {
+                emit vodsChanged();
+            }
+        });
     }
 
-    count += q.numRowsAffected() > 0;
+    // send of for processing
+    emit startProcessDatabaseStoreQueue(
+        transactionId,
+        QStringLiteral(
+"DELETE FROM vod_files\n"
+"WHERE\n"
+"   id IN (SELECT vod_file_id FROM offline_vods %1)\n").arg(where),
+        QVariantList());
 
-    if (count) {
+    if (raiseChanged && count) {
         emit vodsChanged();
     }
 
@@ -2916,71 +2931,216 @@ ScVodDataManager::onVodDownloadsChanged(ScVodIdList ids)
 void
 ScVodDataManager::deleteVod(qint64 rowid)
 {
+    deleteVods(QStringLiteral("WHERE id=%1").arg(rowid));
+}
+
+int
+ScVodDataManager::deleteVods(const QString& where)
+{
     RETURN_IF_ERROR;
 
+    // To delete vod entries without leaks we need to
+    // * delete the entries from the vods table
+    // * if all vods are included from a given url share id
+    //  - delete the thumbnail
+    //  - delete the vod file
+    //  - delete the meta data file
+    //  - delete the vod_url_share table entry
+
+    int rowsAffected = 0;
+
+    QList<qint64> urlShareIdsToDelete;
     QSqlQuery q(m_Database);
-    if (!q.prepare(QStringLiteral("DELETE FROM vods WHERE id=?"))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
 
-    q.addBindValue(rowid);
 
-    if (!q.exec()) {
+    if (!q.exec(QStringLiteral("SELECT id, vod_url_share_id FROM vods %1 GROUP BY vod_url_share_id").arg(where))) {
         qCritical() << "failed to exec query" << q.lastError();
-        return;
+        return 0;
     }
 
-    if (q.numRowsAffected() > 0) {
-        emit vodsChanged();
+
+    {
+        QSqlQuery q2(m_Database);
+        if (!q2.prepare(QStringLiteral("SELECT count(*) FROM vods WHERE vod_url_share_id=?"))) {
+            qCritical() << "failed to prepare query" << q.lastError();
+            return 0;
+        }
+
+#define tryCollectUrlShareId \
+    if (count) { \
+        q2.addBindValue(lastUrlShareId); \
+        if (!q2.exec() || !q2.next()) { \
+            qCritical() << "failed to exec query" << q2.lastError(); \
+            return 0; \
+        } \
+        auto noVodsSharingUrl = q2.value(0).toInt(); \
+        if (noVodsSharingUrl == count) { /* we are deleting all of them */ \
+            rowsAffected += count; \
+            urlShareIdsToDelete << lastUrlShareId; \
+        } \
     }
+
+        qint64 lastUrlShareId = -1;
+        int count = 0;
+        while (q.next()) {
+            auto vodId = qvariant_cast<qint64>(q.value(0));
+            // cancel any ongoing fetches (best effort)
+            cancelFetchMetaData(-1, vodId);
+            cancelFetchThumbnail(-1, vodId);
+            cancelFetchVod(vodId);
+
+            auto urlShareId = qvariant_cast<qint64>(q.value(1));
+            if (lastUrlShareId != urlShareId) {
+                tryCollectUrlShareId
+
+                lastUrlShareId = urlShareId;
+                count = 1;
+            } else {
+                ++count;
+            }
+        }
+
+        tryCollectUrlShareId
+#undef tryCollectUrlShareId
+    }
+
+    auto transactionId = m_SharedState->DatabaseStoreQueue->newTransactionId();
+
+    static const QString DeleteSql = QStringLiteral("DELETE from vod_url_share WHERE id=?");
+    static const QString SqlTemplate = QStringLiteral("WHERE vod_url_share_id=%1");
+    foreach (quint64 urlShareId, urlShareIdsToDelete) {
+        qDebug() << "delete for vod_url_share_id" << urlShareId;
+        auto whereClause = SqlTemplate.arg(urlShareId);
+        auto vodFilesDeleted = deleteVodFilesWhere(transactionId, whereClause, false);
+        qDebug() << "deleted" << vodFilesDeleted << "vod files";
+        auto thumbnailsDeleted = deleteThumbnailsWhere(transactionId, whereClause);
+        qDebug() << "deleted" << thumbnailsDeleted << "thumbnail entries";
+
+        QVariantList args = { urlShareId };
+        emit startProcessDatabaseStoreQueue(transactionId, DeleteSql, args);
+//        if (!q.prepare(deleteSql)) {
+//            qCritical() << "failed to prepare query" << q.lastError();
+//            goto Error;
+//        }
+
+//        q.addBindValue(urlShareId);
+
+//        if (!q.exec()) {
+//            qCritical() << "failed to exec query" << q.lastError();
+//            goto Error;
+//        }
+
+//        qDebug() << "deleted vod_url_share entry";
+
+        // delete meta data file
+        auto metaDataFilePath = m_SharedState->m_MetaDataDir + QString::number(urlShareId);
+        if (QFile::remove(metaDataFilePath)) {
+            qDebug() << "removed" << metaDataFilePath;
+        }
+    }
+
+    // in case the url_share_id persists still remove affected vods
+    emit startProcessDatabaseStoreQueue(transactionId, QStringLiteral("DELETE FROM vods %1").arg(where), QVariantList());
+
+
+    m_PendingDatabaseStores.insert(transactionId, [=] (qint64, bool error) {
+        if (error) {
+            qCritical() << "BEEEP ERROR";
+        } else {
+            emit vodsChanged();
+        }
+    });
+
+    // commit it all
+    emit startProcessDatabaseStoreQueue(transactionId, {}, {});
+
+    return rowsAffected;
 }
+
 
 void
 ScVodDataManager::deleteThumbnail(qint64 rowid)
 {
+    auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
+    deleteThumbnailsWhere(tid, QStringLiteral("WHERE v.id=%1").arg(rowid));
+    emit startProcessDatabaseStoreQueue(tid, {}, {});
+}
+
+int
+ScVodDataManager::deleteThumbnailsWhere(int transactionId, const QString& where)
+{
     RETURN_IF_ERROR;
 
     QSqlQuery q(m_Database);
-    if (!q.prepare(QStringLiteral(
-        "SELECT t.id, t.file_name\n"
+    if (!q.exec(QStringLiteral(
+        "SELECT t.file_name\n"
         "FROM vods v\n"
         "INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
-        "INNER JOIN vod_thumbnails t ON t.id=u.vod_thumbnail_id WHERE v.id=?"))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
+        "INNER JOIN vod_thumbnails t ON t.id=u.vod_thumbnail_id %1").arg(where))) {
         qCritical() << "failed to exec query" << q.lastError();
-        return;
+        return 0;
     }
 
-    if (q.next()) {
-        auto thumbnailId = q.value(0);
-        auto filePath = m_SharedState->m_ThumbnailDir + q.value(1).toString();
+    int filesDeleted = 0;
+    while (q.next()) {
+        auto filePath = m_SharedState->m_ThumbnailDir + q.value(0).toString();
         if (QFile::remove(filePath)) {
+            ++filesDeleted;
             qDebug() << "removed" << filePath;
         }
-
-        if (!q.prepare(QStringLiteral("DELETE from vod_thumbnails WHERE id=?"))) {
-            qCritical() << "failed to prepare query" << q.lastError();
-            return;
-        }
-
-        q.addBindValue(thumbnailId);
-
-        if (!q.exec()) {
-            qCritical() << "failed to exec query" << q.lastError();
-            return;
-        }
     }
+
+    emit startProcessDatabaseStoreQueue(
+                transactionId,
+                QStringLiteral(
+                                                   "DELETE FROM vod_thumbnails\n"
+                                                   "WHERE id IN (\n"
+                                                   "   SELECT t.id\n"
+                                                   "   FROM vods v\n"
+                                                   "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
+                                                   "   INNER JOIN vod_thumbnails t ON t.id=u.vod_thumbnail_id %1\n"
+                                                   ")").arg(where),
+                QVariantList());
+
+
+//    if (!q.exec(QStringLiteral(
+//        "DELETE FROM vod_thumbnails\n"
+//        "WHERE id IN (\n"
+//        "   SELECT t.id\n"
+//        "   FROM vods v\n"
+//        "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
+//        "   INNER JOIN vod_thumbnails t ON t.id=u.vod_thumbnail_id %1\n"
+//        ")").arg(where))) {
+//        qCritical() << "failed to exec query" << q.lastError();
+//        return 0;
+//    }
+
+//    return q.numRowsAffected();
+
+    return filesDeleted;
 }
 
 QVariant
 ScVodDataManager::databaseVariant() const
 {
     return QVariant::fromValue(m_Database);
+}
+
+void
+ScVodDataManager::databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription)
+{
+    auto it = m_PendingDatabaseStores.find(token);
+    if (it == m_PendingDatabaseStores.end()) {
+        return;
+    }
+
+    auto callback = it.value();
+    m_PendingDatabaseStores.erase(it);
+
+    if (error) {
+        qWarning() << "database insert/update/delete failed code" << error << "desc" << errorDescription;
+        callback(insertIdOrNumRowsAffected, true);
+    } else {
+        callback(insertIdOrNumRowsAffected, false);
+    }
 }
