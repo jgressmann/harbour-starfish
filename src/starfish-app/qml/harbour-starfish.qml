@@ -421,7 +421,7 @@ ApplicationWindow {
         case VodDatabaseDownloader.Status_Canceled:
         case VodDatabaseDownloader.Status_Finished:
             if (!VodDataManager.busy && _vodsAdded) {
-                newVodNotification.itemCount = _vodsAdded
+                newVodNotification.itemCount = 1
                 newVodNotification.body = newVodNotification.previewBody = _vodsAdded + " VOD" + (_vodsAdded > 1 ? "s" : "") + " added"
                 newVodNotification.publish()
                 _vodsAdded = 0
