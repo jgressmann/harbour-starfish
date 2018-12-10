@@ -8,6 +8,7 @@ namespace {
 static const QString s_Begin = QStringLiteral("BEGIN");
 static const QString s_Commit = QStringLiteral("COMMIT");
 static const QString s_Rollback = QStringLiteral("ROLLBACK");
+static constexpr int MaxAvailable = 1024;
 } // anon
 
 
@@ -20,7 +21,7 @@ ScDatabaseStoreQueue::~ScDatabaseStoreQueue()
 
 ScDatabaseStoreQueue::ScDatabaseStoreQueue(const QString& databasePath, QObject* parent)
     : QObject(parent)
-    , m_Semaphore(1024)
+    , m_Semaphore(MaxAvailable)
     , m_Database(QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), QStringLiteral("ScDatabaseStoreQueue")))
 {
     m_LastTransactionId = InvalidToken;
@@ -71,8 +72,11 @@ int ScDatabaseStoreQueue::newTransactionId()
 
 void ScDatabaseStoreQueue::process(int transactionId, const QString& sql, const QVariantList& args)
 {
-    processStatement(transactionId, sql, args);
+    if (m_Semaphore.available() < MaxAvailable) {
+        m_Semaphore.release();
+    }
 
+    processStatement(transactionId, sql, args);
 
     if (InvalidToken == m_LastTransactionId) { // no active transaction?
 
@@ -188,4 +192,8 @@ void ScDatabaseStoreQueue::abort()
 {
     m_Query.exec(s_Rollback);
     m_LastTransactionId = InvalidToken;
+}
+
+void ScDatabaseStoreQueue::requestSlot() {
+    m_Semaphore.acquire();
 }

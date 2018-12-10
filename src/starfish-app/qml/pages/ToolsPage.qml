@@ -108,6 +108,7 @@ Page {
                                 })
                     dialog.accepted.connect(function() {
                         console.debug("clear")
+                        recentlyUsedVideos.recreateTable()
                         VodDataManager.clear()
                         VodDataManager.fetchIcons()
                     })

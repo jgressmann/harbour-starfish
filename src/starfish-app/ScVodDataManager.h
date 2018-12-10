@@ -51,26 +51,6 @@ class ScVodDataManagerWorker;
 class VMVodFileDownload;
 
 
-
-
-typedef void (*ScThreadFunction)(void* arg);
-class ScWorker : public QObject {
-    Q_OBJECT
-public:
-    ScWorker(ScThreadFunction f, void* arg = nullptr);
-
-signals:
-    void finished();
-
-public slots:
-    void process();
-
-private:
-    ScThreadFunction m_Function;
-    void* m_Arg;
-};
-
-
 class DataDirectoryMover : public QObject
 {
     Q_OBJECT
@@ -183,11 +163,10 @@ public: //
     Q_INVOKABLE void fetchIcons();
     Q_INVOKABLE void fetchClassifier();
     Q_INVOKABLE void resetDownloadMarker();
-    void queueVodsToAdd(const QList<ScRecord>& records);
     QDate downloadMarker() const;
     QString downloadMarkerString() const;
     void setDownloadMarker(QDate value);
-    void suspendVodsChangedEvents();
+    void suspendVodsChangedEvents(int count = 1);
     void resumeVodsChangedEvents();
     Q_INVOKABLE qreal seen(const QString& table, const QString& where) const;
     Q_INVOKABLE void setSeen(const QString& table, const QString& where, bool value);
@@ -256,12 +235,15 @@ signals:
     void seenAvailable(qint64 rowid, qreal seen);
     void vodEndAvailable(qint64 rowid, int endOffsetS);
     void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
+    void processVodsToAdd();
+
 
 public slots:
     void excludeEvent(const ScEvent& event, bool* exclude);
     void excludeStage(const ScStage& stage, bool* exclude);
     void excludeMatch(const ScMatch& match, bool* exclude);
     void hasRecord(const ScRecord& record, bool* exclude);
+    void addVods(QList<ScRecord> vods);
 
 private:
     enum UrlType {
@@ -282,10 +264,10 @@ private:
 
 private slots:
     void requestFinished(QNetworkReply* reply);
-    void vodAddWorkerFinished();
     void onDataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
     void onVodDownloadsChanged(ScVodIdList ids);
     void databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);
+    void addVodFromQueue();
 
 private:
     static bool tryGetEvent(QString& inoutSrc, QString* location);
@@ -301,7 +283,6 @@ private:
                          QString* cannonicalUrl,
                          QString* outId, int* outUrlType, int* outStartOffset);
     static int parseTwitchOffset(const QString& str);
-    bool _addVods(const QList<ScRecord>& records);
     void tryRaiseVodsChanged();
     void getSeries(const QString& str, QString& series, QString& event);
     bool exists(
@@ -314,9 +295,7 @@ private:
 
     int fetchMetaData(qint64 rowid, bool download);
     void iconRequestFinished(QNetworkReply* reply, IconRequest& r);
-
-    static void batchAddVods(void* ctx);
-    void batchAddVods();
+    void insertVod(const ScRecord& record, qint64 urlShareId, int startOffset);
     void dropTables();
     int fetchThumbnail(qint64 rowid, bool download);
     int deleteVodFilesWhere(int transactionId, const QString& where, bool raiseChanged);
@@ -335,9 +314,7 @@ private:
 
 private:
     mutable QMutex m_Lock;
-    mutable QMutex m_AddQueueLock;
     QList<ScRecord> m_AddQueue;
-    QThread m_AddThread;
     QThread m_WorkerThread;
     QThread m_DatabaseStoreQueueThread;
     QNetworkAccessManager* m_Manager;
@@ -352,6 +329,7 @@ private:
     ScClassifier m_Classifier;
     int m_SuspendedVodsChangedEventCount;
     int m_MaxConcurrentMetaDataDownloads;
+    int m_AddCounter;
     QAtomicInt m_State;
     QSharedPointer<ScVodDataManagerState> m_SharedState;
     QVariantList m_VodDownloads;

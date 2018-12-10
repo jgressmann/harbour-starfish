@@ -96,6 +96,7 @@ signals:
     void progressDescriptionChanged();
     void progressIndeterminateChanged();
     void canDownloadNewChanged();
+    void vodsAvailable(QList<ScRecord> vods);
 
 private slots:
     void onRequestFinished(QNetworkReply* reply);

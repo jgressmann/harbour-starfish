@@ -409,6 +409,7 @@ ApplicationWindow {
     function _onVodsAdded(count) {
         console.debug("vods added " + count)
         _vodsAdded += count
+        _notifyOfAddedVods();
     }
 
     function _busyChanged() {
@@ -423,6 +424,7 @@ ApplicationWindow {
                 newVodNotification.itemCount = _vodsAdded
                 newVodNotification.body = newVodNotification.previewBody = _vodsAdded + " VOD" + (_vodsAdded > 1 ? "s" : "") + " added"
                 newVodNotification.publish()
+                _vodsAdded = 0
             }
             break
         }

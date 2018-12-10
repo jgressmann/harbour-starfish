@@ -221,12 +221,13 @@ ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
                 bool ok = false;
                 auto xml = Sc::gzipDecompress(bytes, &ok);
                 if (ok) {
-                    QList<ScRecord> events;
-                    if (loadFromXml(xml, &events)) {
+                    QList<ScRecord> vods;
+                    if (loadFromXml(xml, &vods)) {
                         m_DataManager->setDownloadMarker(m_TargetMarker);
                         ++m_PendingActions;
 //                        m_PendingVodAdds += events.size();
-                        m_DataManager->queueVodsToAdd(events);
+                        //m_DataManager->queueVodsToAdd(events);
+                        emit vodsAvailable(vods);
                         actionFinished();
                     } else {
                         setError(Error_DataInvalid);
@@ -435,7 +436,8 @@ ScVodDatabaseDownloader::onScraperStatusChanged() {
     case ScVodScraper::Status_VodFetchingComplete:
     case ScVodScraper::Status_VodFetchingCanceled:
     case ScVodScraper::Status_Error: {
-        m_DataManager->queueVodsToAdd(m_Scraper->vods());
+        emit vodsAvailable(m_Scraper->vods());
+//        m_DataManager->queueVodsToAdd();
         actionFinished();
     }   break;
     default:
@@ -554,6 +556,10 @@ ScVodDatabaseDownloader::setDataManager(ScVodDataManager* value) {
     }
 
     if (m_DataManager != value) {
+        if (m_DataManager) {
+            disconnect(this, &ScVodDatabaseDownloader::vodsAvailable, m_DataManager, &ScVodDataManager::addVods);
+        }
+
         if (m_Scraper) {
             m_Scraper->setClassifier(nullptr);
         }
@@ -565,6 +571,8 @@ ScVodDatabaseDownloader::setDataManager(ScVodDataManager* value) {
             if (m_Scraper) {
                 m_Scraper->setClassifier(m_DataManager->classifier());
             }
+
+            connect(this, &ScVodDatabaseDownloader::vodsAvailable, m_DataManager, &ScVodDataManager::addVods);
         }
     }
 }
