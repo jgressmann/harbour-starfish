@@ -146,12 +146,12 @@ void ScDatabaseStoreQueue::processStatement(int transactionId, const QString& sq
                     m_Query.addBindValue(*it);
                 }
                 if (m_Query.exec()) {
-    #ifndef QT_NO_DEBUG
+#ifndef QT_NO_DEBUG
                     qDebug("%s\n", qPrintable(m_Query.executedQuery()));
                     for (auto i = 0; i < args.size(); ++i) {
                         qDebug("%d. %s\n", i, qPrintable(args[i].toString()));
                     }
-    #endif
+#endif
                     //emit completed(t.token, getInsertIdOrAffectedRows(), 0, QString());
                 } else {
                     emit completed(transactionId, getInsertIdOrAffectedRows(), m_Query.lastError().number(), m_Query.lastError().databaseText());
