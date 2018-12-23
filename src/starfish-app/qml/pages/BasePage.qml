@@ -42,6 +42,8 @@ Page {
         return false
     }
 
+    property bool showProgressPanel: true
+
     property bool _isDownloadingDatabase: {
         switch (vodDatabaseDownloader.status) {
         case VodDatabaseDownloader.Status_Downloading:
@@ -73,7 +75,7 @@ Page {
         width: page.isPortrait ? (parent ? parent.width : 0) : Theme.itemSizeExtraLarge + Theme.paddingLarge
         height: page.isPortrait ? Theme.itemSizeExtraLarge + Theme.paddingLarge : (parent ? parent.height : 0)
         dock: page.isPortrait ? Dock.Bottom : Dock.Right
-        open: _isScraping || _isDownloadingDatabase
+        open: showProgressPanel && (_isScraping || _isDownloadingDatabase)
 //        open: false
 
 //        onOpenChanged: {

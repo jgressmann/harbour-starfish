@@ -28,8 +28,10 @@ import org.duckdns.jgressmann 1.0
 import ".."
 
 
-Page {
+BasePage {
     id: root
+
+    readonly property bool _toolEnabled: !VodDataManager.busy
 
     RemorsePopup { id: remorse }
 
@@ -59,6 +61,7 @@ Page {
                 Button {
                     text: "Reset VOD fetch marker"
                     anchors.horizontalCenter: parent.horizontalCenter
+                    enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         VodDataManager.resetDownloadMarker()
                     })
@@ -67,6 +70,7 @@ Page {
                 Button {
                     visible: debugApp.value
                     text: "Reset last fetch timestamp"
+                    enabled: _toolEnabled
                     onClicked: {
                         console.debug("reset last fetch timestamp")
                         settingLastUpdateTimestamp.value = 0
@@ -75,6 +79,7 @@ Page {
 
                 Button {
                     text: "Delete sc2links.com state"
+                    enabled: _toolEnabled
                     onClicked: {
                         console.debug(text)
                         App.unlink(sc2LinksDotComScraper.stateFilePath)
@@ -83,6 +88,7 @@ Page {
 
                 Button {
                     text: "Delete sc2casts.com state"
+                    enabled: _toolEnabled
                     onClicked: {
                         console.debug(text)
                         App.unlink(sc2LinksDotComScraper.stateFilePath)
@@ -98,6 +104,7 @@ Page {
             Button {
                 text: "Clear"
                 anchors.horizontalCenter: parent.horizontalCenter
+                enabled: _toolEnabled
                 onClicked: {
                     var dialog = pageStack.push(
                                 Qt.resolvedUrl("ConfirmClearDialog.qml"),
@@ -125,6 +132,7 @@ Page {
 
                 Button {
                     text: "Delete seen VOD files"
+                    enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         Global.deleteSeenVodFiles()
                     })
@@ -132,6 +140,7 @@ Page {
 
                 Button {
                     text: "Reset recent videos"
+                    enabled: _toolEnabled
                     onClicked: {
                         recentlyUsedVideos.recreateTable()
                     }
@@ -190,6 +199,7 @@ Page {
 
                         Button {
                             text: "Clear meta data"
+                            enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear meta data")
                                 remorse.execute(text, function() {
@@ -201,6 +211,7 @@ Page {
 
                         Button {
                             text: "Clear thumbnails"
+                            enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear thumbnails")
                                 remorse.execute(text, function() {
@@ -211,6 +222,7 @@ Page {
 
                         Button {
                             text: "Clear VOD files"
+                            enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear vods")
                                 remorse.execute(text, function() {
@@ -222,6 +234,7 @@ Page {
 
                         Button {
                             text: "Clear icons"
+                            enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear icons")
                                 remorse.execute(text, function() {
@@ -240,7 +253,7 @@ Page {
 
 
 
-    SilicaFlickable {
+    contentItem: SilicaFlickable {
         anchors.fill: parent
         contentWidth: parent.width
 
@@ -252,6 +265,7 @@ Page {
             model: model
             header: PageHeader {
                 title: "Tools"
+                VodDataManagerBusyIndicator {}
             }
         }
     }
