@@ -39,23 +39,13 @@
 
 ScVodDatabaseDownloader::~ScVodDatabaseDownloader() {
     cancel();
-    while (true) {
-        auto done = false;
-        m_Lock.lock();
-        done = m_PendingActions == 0;
-        m_Lock.unlock();
-
-        if (done) {
-            break;
-        }
-
-        QThread::msleep(100);
+    if (m_Reply) {
+        m_Reply->deleteLater();
     }
 }
 
 ScVodDatabaseDownloader::ScVodDatabaseDownloader(QObject *parent)
     : QObject(parent)
-    , m_Lock(QMutex::Recursive)
 {
     m_Status = Status_Finished;
     m_Error = Error_None;
@@ -144,7 +134,7 @@ void ScVodDatabaseDownloader::_downloadNew()
 
 void
 ScVodDatabaseDownloader::skip() {
-    QMutexLocker g(&m_Lock);
+
     if (!m_Scraper) {
         qCritical() << "scraper not set";
         return;
@@ -155,7 +145,7 @@ ScVodDatabaseDownloader::skip() {
 
 void
 ScVodDatabaseDownloader::downloadNew() {
-    QMutexLocker g(&m_Lock);
+
     switch (m_Status) {
     case Status_Finished:
     case Status_Error:
@@ -193,7 +183,6 @@ ScVodDatabaseDownloader::downloadNew() {
 
 void
 ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
-    QMutexLocker guard(&m_Lock);
     reply->deleteLater();
     m_Reply = nullptr;
 
@@ -323,7 +312,7 @@ ScVodDatabaseDownloader::loadFromXml(const QByteArray& xml, QList<ScRecord>* rec
 
 void
 ScVodDatabaseDownloader::setScraper(ScVodScraper* scraper) {
-    QMutexLocker g(&m_Lock);
+
     if (m_Status == Status_Downloading) {
         qCritical() << "refusing to change scraper during download";
         return;
@@ -347,6 +336,8 @@ ScVodDatabaseDownloader::setScraper(ScVodScraper* scraper) {
         emit scraperChanged();
 
         if (m_Scraper) {
+            Q_ASSERT(thread() == scraper->thread());
+
             if (m_DataManager) {
                 m_Scraper->setClassifier(m_DataManager->classifier());
             }
@@ -365,7 +356,7 @@ ScVodDatabaseDownloader::setScraper(ScVodScraper* scraper) {
 
 void
 ScVodDatabaseDownloader::excludeEvent(const ScEvent& event, bool* exclude) {
-    QMutexLocker g(&m_Lock);
+
 
     Q_ASSERT(exclude);
 
@@ -378,7 +369,7 @@ ScVodDatabaseDownloader::excludeEvent(const ScEvent& event, bool* exclude) {
 
 void
 ScVodDatabaseDownloader::excludeStage(const ScStage& stage, bool* exclude) {
-    QMutexLocker g(&m_Lock);
+
     Q_ASSERT(exclude);
 
     m_DataManager->excludeStage(stage, exclude);
@@ -386,7 +377,7 @@ ScVodDatabaseDownloader::excludeStage(const ScStage& stage, bool* exclude) {
 
 void
 ScVodDatabaseDownloader::excludeMatch(const ScMatch& match, bool* exclude) {
-    QMutexLocker g(&m_Lock);
+
     Q_ASSERT(exclude);
 
     if (match.date() < m_LimitMarker) {
@@ -398,7 +389,7 @@ ScVodDatabaseDownloader::excludeMatch(const ScMatch& match, bool* exclude) {
 
 void
 ScVodDatabaseDownloader::excludeRecord(const ScRecord& record, bool* exclude) {
-    QMutexLocker g(&m_Lock);
+
     Q_ASSERT(exclude);
 //    if (record.valid & ScRecord::ValidYear) {
 //        if (record.year < m_LimitMarker.year()) {
@@ -423,14 +414,14 @@ ScVodDatabaseDownloader::excludeRecord(const ScRecord& record, bool* exclude) {
 
 void
 ScVodDatabaseDownloader::hasRecord(const ScRecord& /*record*/, bool* exists) {
-    QMutexLocker g(&m_Lock);
+
     Q_ASSERT(exists);
     *exists = false; // if user cancelled we'll never get older VODs for the current year
 }
 
 void
 ScVodDatabaseDownloader::onScraperStatusChanged() {
-    QMutexLocker g(&m_Lock);
+
     qDebug("scrape status %d\n", m_Scraper->status());
     switch (m_Scraper->status()) {
     case ScVodScraper::Status_VodFetchingComplete:
@@ -449,20 +440,17 @@ ScVodDatabaseDownloader::onScraperStatusChanged() {
 
 void
 ScVodDatabaseDownloader::onScraperProgressChanged() {
-    QMutexLocker g(&m_Lock);
     updateProgressDescription();
 }
 
 void
 ScVodDatabaseDownloader::onScraperProgressDescriptionChanged() {
-    QMutexLocker g(&m_Lock);
-
     updateProgressDescription();
 }
 
 void
 ScVodDatabaseDownloader::cancel() {
-    QMutexLocker g(&m_Lock);
+
 
     qDebug() << "cancel";
 
@@ -537,7 +525,7 @@ ScVodDatabaseDownloader::tryParseDatabaseUrls(const QByteArray& bytes) {
 
 void
 ScVodDatabaseDownloader::actionFinished() {
-    QMutexLocker g(&m_Lock);
+
     if (--m_PendingActions == 0) {
         if (m_Status == Status_Downloading) {
             setStatus(m_DownloadState == DS_Canceling ? Status_Canceled : Status_Finished);
@@ -549,7 +537,7 @@ ScVodDatabaseDownloader::actionFinished() {
 
 void
 ScVodDatabaseDownloader::setDataManager(ScVodDataManager* value) {
-    QMutexLocker g(&m_Lock);
+
     if (m_Status == Status_Downloading) {
         qCritical() << "refusing to change data manager during download";
         return;
@@ -568,6 +556,7 @@ ScVodDatabaseDownloader::setDataManager(ScVodDataManager* value) {
         emit dataManagerChanged();
 
         if (m_DataManager) {
+            Q_ASSERT(thread() == m_DataManager->thread());
             if (m_Scraper) {
                 m_Scraper->setClassifier(m_DataManager->classifier());
             }
@@ -579,7 +568,7 @@ ScVodDatabaseDownloader::setDataManager(ScVodDataManager* value) {
 
 bool
 ScVodDatabaseDownloader::canDownloadNew() const {
-    QMutexLocker g(&m_Lock);
+
     if (m_Status == Status_Downloading) {
         return false;
     }

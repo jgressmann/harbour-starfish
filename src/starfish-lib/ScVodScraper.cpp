@@ -25,7 +25,6 @@
 
 #include <QDebug>
 #include <QNetworkAccessManager>
-#include <QThread>
 
 ScVodScraper::~ScVodScraper()
 {
@@ -34,7 +33,6 @@ ScVodScraper::~ScVodScraper()
 
 ScVodScraper::ScVodScraper(QObject* parent)
     : QObject(parent)
-    , m_Lock(QMutex::Recursive)
 {
     m_Status = Status_Ready;
     m_Error = Error_None;
@@ -80,7 +78,7 @@ ScVodScraper::setProgressDescription(const QString& newValue) {
 
 void
 ScVodScraper::startFetch() {
-    QMutexLocker g(lock());
+
     switch (m_Status) {
     case Status_Error:
     case Status_Ready:
@@ -105,7 +103,7 @@ ScVodScraper::startFetch() {
 
 void
 ScVodScraper::cancelFetch() {
-    QMutexLocker g(lock());
+
     switch (m_Status) {
     case Status_VodFetchingInProgress:
         setStatus(Status_VodFetchingBeingCanceled);
@@ -123,13 +121,13 @@ ScVodScraper::_cancel() {
 
 bool
 ScVodScraper::canCancelFetch() const {
-    QMutexLocker g(lock());
+
     return m_Status == Status_VodFetchingInProgress;
 }
 
 bool
 ScVodScraper::canStartFetch() const {
-    QMutexLocker g(lock());
+
     switch (m_Status) {
     case Status_Error:
     case Status_Ready:
@@ -140,11 +138,6 @@ ScVodScraper::canStartFetch() const {
     default:
         return false;
     }
-}
-
-QMutex*
-ScVodScraper::lock() const {
-    return &m_Lock;
 }
 
 bool
@@ -159,7 +152,7 @@ ScVodScraper::canSkip() const {
 
 void
 ScVodScraper::skip() {
-    QMutexLocker g(lock());
+
     if (_canSkip()) {
         _skip();
     } else {
@@ -176,34 +169,12 @@ void
 ScVodScraper::abort() {
     qDebug() << id() << "abort enter";
     cancelFetch();
-
-    for (bool done = false; !done; ) {
-        {
-            QMutexLocker g(lock());
-
-            switch (status()) {
-            case Status_VodFetchingBeingCanceled:
-            case Status_VodFetchingInProgress:
-                done = false;
-                break;
-            default:
-                done = true;
-                break;
-            }
-        }
-
-        if (!done) {
-            QThread::msleep(100);
-        }
-    }
-
     qDebug() << id() << "abort exit";
 }
 
 void
 ScVodScraper::setStateFilePath(const QString& value)
 {
-    QMutexLocker g(lock());
     if (value != m_StateFilePath) {
         m_StateFilePath = value;
         emit stateFilePathChanged();

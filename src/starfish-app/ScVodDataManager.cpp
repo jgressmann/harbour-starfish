@@ -321,27 +321,29 @@ ScVodDataManager::~ScVodDataManager() {
 
     cancelMoveDataDirectory();
 
-    emit stopWorker();
+    emit stopThread();
     m_WorkerThread.quit();
     m_WorkerThread.wait();
     qDebug() << "stopped worker thread";
+    m_DatabaseStoreQueueThread.quit();
+    m_DatabaseStoreQueueThread.wait();
+    qDebug() << "stopped database store queue thread";
 
     if (m_ClassfierRequest) {
+        // aparently this causes replies to go to finished within this call, even
+        // if called from dtor
         m_ClassfierRequest->abort();
-        delete m_ClassfierRequest;
         qDebug() << "aborted classifier request";
     }
 
 
     if (m_SqlPatchesRequest) {
         m_SqlPatchesRequest->abort();
-        delete m_SqlPatchesRequest;
         qDebug() << "aborted sql patches request";
     }
 
     foreach (auto key, m_IconRequests.keys()) {
         key->abort();
-        delete key;
     }
     qDebug() << "aborted icons requests";
 
@@ -358,7 +360,6 @@ ScVodDataManager::~ScVodDataManager() {
 
 ScVodDataManager::ScVodDataManager(QObject *parent)
     : QObject(parent)
-    , m_Lock(QMutex::Recursive)
     , m_Manager(nullptr)
     , m_WorkerInterface(nullptr)
     , m_ClassfierRequest(nullptr)
@@ -447,6 +448,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(x, &ScDatabaseStoreQueue::completed, this, &ScVodDataManager::databaseStoreCompleted);
     // manager->database store queue
     connect(this, &ScVodDataManager::startProcessDatabaseStoreQueue, x, &ScDatabaseStoreQueue::process);
+    connect(this, &ScVodDataManager::stopThread, x, &QObject::deleteLater);
 
     m_DatabaseStoreQueueThread.start();
 
@@ -471,7 +473,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodEndAvailable, this, &ScVodDataManager::vodEndAvailable);
     // manager->worker
     connect(this, &ScVodDataManager::startWorker, m_WorkerInterface, &ScVodDataManagerWorker::process);
-    connect(this, &ScVodDataManager::stopWorker, m_WorkerInterface, &QObject::deleteLater);
+    connect(this, &ScVodDataManager::stopThread, m_WorkerInterface, &QObject::deleteLater);
     connect(this, &ScVodDataManager::maxConcurrentMetaDataDownloadsChanged, m_WorkerInterface, &ScVodDataManagerWorker::maxConcurrentMetaDataDownloadsChanged);
 
     m_WorkerThread.start();
@@ -495,7 +497,6 @@ ScVodDataManager::requestFinished(QNetworkReply* reply) {
     } while (0)
 
     ScStopwatch sw("requestFinished");
-    QMutexLocker guard(&m_Lock);
     reply->deleteLater();
 
     auto it2 = m_IconRequests.find(reply);
@@ -1098,7 +1099,7 @@ ScVodDataManager::dropTables() {
 
 void
 ScVodDataManager::clearCache(ClearFlags flags) {
-    QMutexLocker g(&m_Lock);
+
 
     RETURN_IF_ERROR;
 
@@ -1131,7 +1132,7 @@ ScVodDataManager::clearCache(ClearFlags flags) {
 void
 ScVodDataManager::clear() {
     // FIX ME
-    QMutexLocker g(&m_Lock);
+
 
     RETURN_IF_ERROR;
 
@@ -1694,7 +1695,7 @@ ScVodDataManager::deleteMetaData(qint64 rowid) {
     RETURN_IF_ERROR;
 
 
-    QMutexLocker g(&m_Lock);
+
 
     deleteThumbnail(rowid);
 
@@ -1755,14 +1756,14 @@ ScVodDataManager::setDownloadMarker(QDate value) {
 
 void
 ScVodDataManager::suspendVodsChangedEvents(int count) {
-    QMutexLocker g(&m_Lock);
+
     m_SuspendedVodsChangedEventCount += count;
 }
 
 void
 ScVodDataManager::resumeVodsChangedEvents()
 {
-    QMutexLocker g(&m_Lock);
+
     if (--m_SuspendedVodsChangedEventCount == 0) {
         emit vodsChanged();
         emit busyChanged();
@@ -1843,7 +1844,7 @@ ScVodDataManager::setSeen(const QString& table, const QString& where, bool value
 
     qDebug() << where;
 
-    QMutexLocker g(&m_Lock);
+
 
     QSqlQuery q(m_Database);
 
@@ -1882,7 +1883,7 @@ ScVodDataManager::setSeen(const QString& table, const QString& where, bool value
 void ScVodDataManager::fetchIcons() {
     RETURN_IF_ERROR;
 
-    QMutexLocker g(&m_Lock);
+
 
     // also download update if available
     IconRequest r;
@@ -1894,7 +1895,7 @@ void ScVodDataManager::fetchIcons() {
 void ScVodDataManager::fetchClassifier() {
     RETURN_IF_ERROR;
 
-    QMutexLocker g(&m_Lock);
+
 
     if (!m_ClassfierRequest) {
         m_ClassfierRequest = m_Manager->get(Sc::makeRequest(s_ClassifierUrl));
@@ -1905,7 +1906,7 @@ void
 ScVodDataManager::fetchSqlPatches() {
     RETURN_IF_ERROR;
 
-    QMutexLocker g(&m_Lock);
+
 
     if (!m_SqlPatchesRequest) {
         m_SqlPatchesRequest = m_Manager->get(Sc::makeRequest(s_SqlPatchesUrl));
@@ -2665,7 +2666,7 @@ void ScVodDataManager::setDirectories()
 
 void ScVodDataManager::moveDataDirectory(const QString& _targetDirectory)
 {
-    QMutexLocker g(&m_Lock);
+
     RETURN_IF_ERROR;
 
     if (busy()) {
@@ -2703,7 +2704,7 @@ void ScVodDataManager::moveDataDirectory(const QString& _targetDirectory)
 
 void
 ScVodDataManager::cancelMoveDataDirectory() {
-    QMutexLocker g(&m_Lock);
+
 
     if (m_DataDirectoryMover) {
         qDebug() << "canceling in progress data directory move";
@@ -2715,7 +2716,7 @@ ScVodDataManager::cancelMoveDataDirectory() {
 
 void
 ScVodDataManager::onDataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription) {
-    QMutexLocker g(&m_Lock);
+
     if (DDCT_Finished == changeType) {
         m_DataDirectoryMover = nullptr;
         switch (error) {

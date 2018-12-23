@@ -27,7 +27,6 @@
 #include <QSqlQuery>
 #include <QVariantList>
 #include <QAtomicInt>
-#include <QSemaphore>
 
 class ScDatabaseStoreQueue : public QObject
 {
@@ -38,7 +37,6 @@ public:
     ScDatabaseStoreQueue(const QString& databasePath, QObject* parent = nullptr);
 
     int newTransactionId();
-    void requestSlot();
 
 signals:
     void completed(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);
@@ -61,7 +59,6 @@ private:
 
 private:
     QSqlDatabase m_Database;
-    QSemaphore m_Semaphore;
     QSqlQuery m_Query;
     QAtomicInt m_TokenGenerator;
     QHash<int, QList<SqlData> > m_IncompleteTransactions;

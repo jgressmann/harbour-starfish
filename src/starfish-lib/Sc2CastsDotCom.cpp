@@ -193,7 +193,7 @@ Sc2CastsDotCom::makeRequest(const QUrl& url) const {
 
 void
 Sc2CastsDotCom::requestFinished(QNetworkReply* reply) {
-    QMutexLocker g(lock());
+
     reply->deleteLater();
     const int level = m_PendingRequests.value(reply, -1);
     m_PendingRequests.remove(reply);
@@ -692,9 +692,15 @@ void
 Sc2CastsDotCom::_cancel() {
     qDebug() << "canceling level 0 fetches";
     m_CurrentPage = -1;
-    if (m_PendingRequests.isEmpty()) {
-        setStatus(Status_VodFetchingCanceled);
+
+    // aparently this causes replies to go to finished within this call, even
+    // if called from dtor
+    foreach (const auto& key, m_PendingRequests.keys()) {
+        key->abort();
     }
+
+    m_PendingRequests.clear();
+    m_ReplyToRecordTable.clear();
 }
 
 QString

@@ -30,7 +30,6 @@
 #include "ScVodDataManagerWorker.h" // for typedef ScVodIdList
 
 
-#include <QMutex>
 #include <QSqlDatabase>
 #include <QThread>
 #include <QVariant>
@@ -229,7 +228,7 @@ signals:
     void dataDirectoryChanged();
     void dataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
     void startWorker();
-    void stopWorker();
+    void stopThread();
     void maxConcurrentMetaDataDownloadsChanged(int value);
     void titleAvailable(qint64 rowid, QString title);
     void seenAvailable(qint64 rowid, qreal seen);
@@ -313,7 +312,6 @@ private:
     void updateSql5(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
 
 private:
-    mutable QMutex m_Lock;
     QList<ScRecord> m_AddQueue;
     QThread m_WorkerThread;
     QThread m_DatabaseStoreQueueThread;

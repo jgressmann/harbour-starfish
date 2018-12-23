@@ -131,7 +131,6 @@ private:
     };
 
 private:
-    mutable QMutex m_Lock;
     QNetworkAccessManager m_NetworkAccessManager;
     QList<QString> m_YearUrls;
     ScVodScraper* m_Scraper;

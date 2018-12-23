@@ -111,10 +111,8 @@ protected:
     void setProgress(qreal value);
     void setProgressDescription(const QString& value);
     void abort(); // called from derived dtor
-    QMutex* lock() const;
 
 private:
-    mutable QMutex m_Lock;
     mutable QNetworkAccessManager m_Manager;
     QString m_ProgressDescription;
     QString m_StateFilePath;

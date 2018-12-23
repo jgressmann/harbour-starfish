@@ -225,7 +225,7 @@ Sc2LinksDotCom::makeRequest(const QUrl& url) const {
 
 void
 Sc2LinksDotCom::requestFinished(QNetworkReply* reply) {
-    QMutexLocker g(lock());
+
     reply->deleteLater();
     const int level = m_PendingRequests.value(reply, -1);
     m_PendingRequests.remove(reply);
@@ -664,6 +664,8 @@ Sc2LinksDotCom::_cancel() {
     qDebug() << "clearing event request queue";
     m_EventRequestQueue.clear();
     qDebug() << "canceling requests";
+    // aparently this causes replies to go to finished within this call, even
+    // if called from dtor
     foreach (const auto& key, m_PendingRequests.keys()) {
         key->abort();
     }
