@@ -40,7 +40,6 @@ Item { // Components can't declare functions
     readonly property string videoCoverPath: App.dataDir + "/cover.png"
     readonly property real pathTraceOpacity: 0.25
     readonly property string defaultTable: "url_share_vods"
-    readonly property string noContent: "There seems to be nothing here."
     property var playVideoHandler
     property var videoPlayerPage
     property Notification deleteVodNotification

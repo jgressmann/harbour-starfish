@@ -68,7 +68,7 @@ Page {
 
         ViewPlaceholder {
             enabled: VodDataManager.ready && vodCount === 0
-            text: Global.noContent
+            text: Strings.noContent
             hintText: "Pull down to fetch new VODs."
         }
 

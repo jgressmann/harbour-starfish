@@ -96,7 +96,8 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/ContentPageHeader.qml \
     qml/pages/VodDetailPage.qml \
     qml/pages/MoveDataDirectoryPage.qml \
-    qml/MatchItemMemory.qml
+    qml/MatchItemMemory.qml \
+    qml/Strings.qml
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 !CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT

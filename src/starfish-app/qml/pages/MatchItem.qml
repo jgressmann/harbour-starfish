@@ -88,6 +88,7 @@ ListItem {
     property int _vodFileTicket: -1
     property int _vodDownloadExplicitlyStarted: -1
     property MatchItemMemory memory
+    readonly property bool _toolEnabled: !VodDataManager.busy
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -666,6 +667,7 @@ ListItem {
 
             MenuItem {
                 text: "Delete VOD file"
+                enabled: _toolEnabled
                 visible: rowId >= 0 && !!_vodFilePath
 
 
@@ -725,6 +727,7 @@ ListItem {
 
             MenuItem {
                 text: "Delete VOD from database"
+                enabled: _toolEnabled
                 visible: rowId >= 0
                 onClicked: {
                     // still not sure why local vars are needed but they are!!!!

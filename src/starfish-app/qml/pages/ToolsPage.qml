@@ -131,7 +131,7 @@ BasePage {
                 width: parent.width
 
                 Button {
-                    text: "Delete seen VOD files"
+                    text: Strings.deleteSeenVodFiles
                     enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         Global.deleteSeenVodFiles()
