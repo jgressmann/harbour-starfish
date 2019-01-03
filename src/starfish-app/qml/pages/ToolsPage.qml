@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,28 +71,28 @@ BasePage {
                     visible: debugApp.value
                     text: "Reset last fetch timestamp"
                     enabled: _toolEnabled
-                    onClicked: {
-                        console.debug("reset last fetch timestamp")
+                    onClicked: remorse.execute(text, function() {
+                        console.debug(text)
                         settingLastUpdateTimestamp.value = 0
-                    }
+                    })
                 }
 
                 Button {
                     text: "Delete sc2links.com state"
                     enabled: _toolEnabled
-                    onClicked: {
+                    onClicked: remorse.execute(text, function() {
                         console.debug(text)
                         App.unlink(sc2LinksDotComScraper.stateFilePath)
-                    }
+                    })
                 }
 
                 Button {
                     text: "Delete sc2casts.com state"
                     enabled: _toolEnabled
-                    onClicked: {
+                    onClicked: remorse.execute(text, function() {
                         console.debug(text)
-                        App.unlink(sc2LinksDotComScraper.stateFilePath)
-                    }
+                        App.unlink(sc2CastsDotComScraper.stateFilePath)
+                    })
                 }
             }
 
