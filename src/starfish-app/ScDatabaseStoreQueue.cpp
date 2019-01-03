@@ -8,7 +8,6 @@ namespace {
 static const QString s_Begin = QStringLiteral("BEGIN");
 static const QString s_Commit = QStringLiteral("COMMIT");
 static const QString s_Rollback = QStringLiteral("ROLLBACK");
-static constexpr int MaxAvailable = 1024;
 } // anon
 
 
