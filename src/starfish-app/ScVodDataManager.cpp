@@ -448,7 +448,6 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(x, &ScDatabaseStoreQueue::completed, this, &ScVodDataManager::databaseStoreCompleted);
     // manager->database store queue
     connect(this, &ScVodDataManager::startProcessDatabaseStoreQueue, x, &ScDatabaseStoreQueue::process);
-    connect(this, &ScVodDataManager::stopThread, x, &QObject::deleteLater);
 
     m_DatabaseStoreQueueThread.start();
 
