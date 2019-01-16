@@ -41,15 +41,23 @@ try:
     parser.add_argument('--vod-dir', help='directory containg the VOD files', required=True)
     parser.add_argument('--symlink-dir', help='directory to create the symlinks in', required=True)
     parser.add_argument('--xml-dir', help='directory containing harbour-starfish XMLs', required=True, action='append')
+    parser.add_argument('--relative', help='make symlinks relative if possible', default=False, action='store_true')
     args = parser.parse_args()
 
-    symlink_dir = args.symlink_dir
+    symlink_dir = os.path.abspath(args.symlink_dir)
+    vod_dir = os.path.abspath(args.vod_dir)
+
+    # if args.relative:
+    #     ancestor = os.path.commonprefix([symlink_dir, vod_dir])
+    #     if ancestor != '/':
+    #         vod_dir = os.path.relpath(vod_dir, symlink_dir)
+
+    if vod_dir[-1] != '/':
+        vod_dir += '/'
+
     if symlink_dir[-1] != '/':
         symlink_dir += '/'
 
-    vod_dir = args.vod_dir
-    if vod_dir[-1] != '/':
-        vod_dir += '/'
 
     def get_video_id(str):
         for r in video_id_regexes:
@@ -105,6 +113,8 @@ try:
                 if file_path.endswith(ext):
                     return file_path
 
+
+
     def process_xml(file_name, xml):
         try:
             et = ET.fromstring(xml)
@@ -121,12 +131,24 @@ try:
                     warn('No video file for id {}'.format(id))
                     continue
 
-                dir_path = '{symlink_dir}{game}/{year}/{event}/{season}/{event_full_name}/{stage}'.format(
-                    symlink_dir=symlink_dir, game=get_game(record),
-                    year=record.attrib['year'], event=record.attrib['event_name'],
-                    season=get_season(record), event_full_name=record.attrib['event_full_name'],
-                    stage=record.attrib['stage']
-                )
+
+                event_full_name = record.attrib['event_full_name']
+                event = record.attrib['event_name']
+
+                if event_full_name != event:
+                    dir_path = '{symlink_dir}{game}/{year}/{event}/{season}/{stage}'.format(
+                        symlink_dir=symlink_dir, game=get_game(record),
+                        year=record.attrib['year'], event=event,
+                        season=get_season(record), event_full_name=event_full_name,
+                        stage=record.attrib['stage']
+                    )
+                else:
+                    dir_path = '{symlink_dir}{game}/{year}/{event}/{stage}'.format(
+                        symlink_dir=symlink_dir, game=get_game(record),
+                        year=record.attrib['year'], event=event,
+                        stage=record.attrib['stage']
+                    )
+
                 file_name = '{match_date} {name}{ext}'.format(
                     match_date=record.attrib['match_date'], name=make_name(record), ext=os.path.splitext(vod_file_path)[1]
                 )
@@ -140,14 +162,40 @@ try:
                         raise e
 
                 path = dir_path + '/' + file_name
-                if os.path.isfile(path):
-                    info('File {} exists'.format(path))
-                else:
-                    try:
-                        os.symlink(vod_file_path, path)
-                        info('Symlink {} to {}'.format(vod_file_path, path))
-                    except Exception as e:
-                        pass
+                try:
+                    if args.relative:
+                            (vod_file_dir, vod_file_name) = os.path.split(vod_file_path)
+                            vod_file_path = os.path.relpath(vod_file_dir, dir_path)
+                            if vod_file_path[-1] != '/':
+                                vod_file_path += '/'
+
+                            vod_file_path += vod_file_name
+
+                    os.symlink(vod_file_path, path)
+                    info('Symlink {} to {}'.format(vod_file_path, path))
+                except OSError as e:
+                    if e.errno == 17: # file exists
+                        info('File {} exists'.format(path))
+                    else:
+                        raise e
+                except Exception as e:
+                    pass
+                # if os.path.isfile(path):
+                #     info('File {} exists'.format(path))
+                # else:
+                #     try:
+                #         if args.relative:
+                #             (vod_file_dir, vod_file_name) = os.path.split(vod_file_path)
+                #             vod_file_path = os.path.relpath(vod_file_dir, dir_path)
+                #             if vod_file_path[-1] != '/':
+                #                 vod_file_path += '/'
+
+                #             vod_file_path += vod_file_name
+
+                #         os.symlink(vod_file_path, path)
+                #         info('Symlink {} to {}'.format(vod_file_path, path))
+                #     except Exception as e:
+                #         pass
 
         except Exception as e:
             error('processing file name {}: {}'.format(file_name, str(e)))
