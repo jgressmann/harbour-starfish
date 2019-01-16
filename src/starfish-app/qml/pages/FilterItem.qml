@@ -38,13 +38,25 @@ ListItem {
     property string _title
     property string _icon
     property var updateSeen: function () {}
+    readonly property bool _toolEnabled: !VodDataManager.busy
 
     menu: ContextMenu {
         MenuItem {
-            text: "Delete seen VOD files"
+            text: Strings.deleteSeenVodFiles
+            enabled: _toolEnabled
             onClicked: {
-                root.remorseAction("Deleting seen VOD files for " + title, function() {
+                root.remorseAction(Strings.deleteSeenVodFileRemorse(title), function() {
                     Global.deleteSeenVodFiles(_where)
+                })
+            }
+        }
+
+        MenuItem {
+            text: Strings.deleteVods
+            enabled: _toolEnabled
+            onClicked: {
+                root.remorseAction(Strings.deleteVodsRemorse(title), function() {
+                    Global.deleteVods(_where)
                 })
             }
         }

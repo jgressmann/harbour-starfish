@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,6 +59,12 @@ public:
     };
     Q_ENUMS(Error)
 
+//    enum Cancelation {
+//        Cancelation_Immediately,
+//        Cancelation_WhenReady,
+//    };
+//    Q_ENUMS(Cancelation)
+
 public:
     virtual ~ScVodScraper();
     ScVodScraper(QObject* parent = Q_NULLPTR);
@@ -79,6 +85,7 @@ public:
     inline QString id() const { return _id(); }
     inline QString stateFilePath() const { return m_StateFilePath; }
     void setStateFilePath(const QString& value);
+    inline void setYearToFetch(int year) { m_Year = year; }
 
 signals:
     void statusChanged();
@@ -97,12 +104,14 @@ signals:
 
 public slots:
     void startFetch();
+//    void cancelFetch(Cancelation cancelation);
     void cancelFetch();
     void skip();
 
 protected:
     virtual bool _canSkip() const;
     virtual void _fetch() = 0;
+//    virtual void _cancel(Cancelation cancelation);
     virtual void _cancel();
     virtual void _skip();
     virtual QString _id() const = 0;
@@ -111,16 +120,16 @@ protected:
     void setProgress(qreal value);
     void setProgressDescription(const QString& value);
     void abort(); // called from derived dtor
-    QMutex* lock() const;
+    inline int yearToFetch() const { return m_Year; }
 
 private:
-    mutable QMutex m_Lock;
     mutable QNetworkAccessManager m_Manager;
+    ScClassifier* m_Classifier;
     QString m_ProgressDescription;
     QString m_StateFilePath;
     qreal m_Progress;
     Status m_Status;
     Error m_Error;
-    ScClassifier* m_Classifier;
+    int m_Year;
 };
 

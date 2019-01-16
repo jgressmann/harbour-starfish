@@ -19,11 +19,14 @@ SOURCES += harbour-starfish.cpp \
     ScVodman.cpp \
     ScApp.cpp \
     ScVodDataManager.cpp \
+    ScVodDataManagerWorker.cpp \
     ScVodDatabaseDownloader.cpp \
     ScIcons.cpp \
     ScSqlVodModel.cpp \
     ScRecentlyUsedModel.cpp \
-    ScStopwatch.cpp
+    ScStopwatch.cpp \
+    ScDatabaseStoreQueue.cpp \
+    ScDatabase.cpp
 
 
 
@@ -31,11 +34,15 @@ HEADERS += \
     ScVodman.h \
     ScApp.h \
     ScVodDataManager.h \
+    ScVodDataManagerWorker.h \
+    ScVodDataManagerState.h \
     ScVodDatabaseDownloader.h \
     ScIcons.h \
     ScSqlVodModel.h \
     ScRecentlyUsedModel.h \
-    ScStopwatch.h
+    ScStopwatch.h \
+    ScDatabaseStoreQueue.h \
+    ScDatabase.h
 
 #../../rpm/harbour-starfish.changes.run.in \
 #../../rpm/harbour-starfish.yaml \
@@ -89,13 +96,15 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/ContentPageHeader.qml \
     qml/pages/VodDetailPage.qml \
     qml/pages/MoveDataDirectoryPage.qml \
+    qml/MatchItemMemory.qml \
+    qml/Strings.qml
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 !CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
 
 media.path = /usr/share/$${TARGET}/media
-media.files += media/sc2.png media/bw.png media/random.png
-media.files += media/protoss.png media/terran.png media/zerg.png
+media.files += media/sc2.png media/bw.png
+media.files += media/protoss.png media/terran.png media/zerg.png media/random.png
 INSTALLS += media
 
 icons.path = /usr/share/$${TARGET}/icons

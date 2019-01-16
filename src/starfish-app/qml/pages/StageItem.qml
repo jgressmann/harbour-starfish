@@ -32,13 +32,25 @@ ListItem {
     property alias stageName: label.text
     property var page
     property string _where
+    readonly property bool _toolEnabled: !VodDataManager.busy
 
     menu: ContextMenu {
         MenuItem {
-            text: "Delete seen VOD files"
+            text: Strings.deleteSeenVodFiles
+            enabled: _toolEnabled
             onClicked: {
-                root.remorseAction("Deleting seen VOD files for " + stageName, function() {
+                root.remorseAction(Strings.deleteSeenVodFileRemorse(stageName), function() {
                     Global.deleteSeenVodFiles(_where)
+                })
+            }
+        }
+
+        MenuItem {
+            text: Strings.deleteVods
+            enabled: _toolEnabled
+            onClicked: {
+                root.remorseAction(Strings.deleteVodsRemorse(stageName), function() {
+                    Global.deleteVods(_where)
                 })
             }
         }

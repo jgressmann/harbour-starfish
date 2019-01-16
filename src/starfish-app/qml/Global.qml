@@ -40,7 +40,6 @@ Item { // Components can't declare functions
     readonly property string videoCoverPath: App.dataDir + "/cover.png"
     readonly property real pathTraceOpacity: 0.25
     readonly property string defaultTable: "url_share_vods"
-    readonly property string noContent: "There seems to be nothing here."
     property var playVideoHandler
     property var videoPlayerPage
     property Notification deleteVodNotification
@@ -258,9 +257,9 @@ Item { // Components can't declare functions
     }
 
     function performOwnerGone(contentItem) {
-        for(var i = 0; i < contentItem.length; ++i) {
+        for (var i = 0; i < contentItem.children.length; ++i) {
             var item = contentItem.children[i]
-            if (item.objectName === "MatchItem") {
+            if (item.is_match_item) {
                 item.ownerGone()
             }
         }
@@ -300,6 +299,20 @@ Item { // Components can't declare functions
         if (count) {
             deleteVodNotification.itemCount = count
             deleteVodNotification.body = deleteVodNotification.previewBody = count + " seen VOD file" + (count > 1 ? "s" : "") + " deleted"
+            deleteVodNotification.publish()
+        }
+    }
+
+    function deleteVods(_where) {
+        if (!_where) {
+            _where = ""
+        }
+
+        console.debug("delete vods where: " + _where)
+        var count = VodDataManager.deleteVods(_where)
+        if (count) {
+            deleteVodNotification.itemCount = count
+            deleteVodNotification.body = deleteVodNotification.previewBody = count + " VOD" + (count > 1 ? "s" : "") + " deleted"
             deleteVodNotification.publish()
         }
     }

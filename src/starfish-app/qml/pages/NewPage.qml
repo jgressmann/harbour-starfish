@@ -31,7 +31,7 @@ BasePage {
 
     objectName: "NewPage"
 
-    property var itemPlaying: null
+    property int _videoId: -1
     property string table
     property string constraints: ""
 
@@ -51,6 +51,18 @@ BasePage {
                 + " order by match_date desc, event_full_name asc, match_name asc"
     }
 
+    RecentlyWatchedVideoUpdater {
+        id: updater
+
+        onDataSaved: function (key, offset, thumbnailFilePath) {
+            matchItemConnections.updateStartOffset(_videoId)
+        }
+    }
+
+    MatchItemMemory {
+        id: matchItemConnections
+    }
+
     SilicaFlickable {
         anchors.fill: parent
 
@@ -60,6 +72,8 @@ BasePage {
         VerticalScrollDecorator {}
         TopMenu {}
 
+
+
         HighlightingListView {
             id: listView
             anchors.fill: parent
@@ -68,9 +82,7 @@ BasePage {
                 title: qsTr("New")
             }
 
-            RecentlyWatchedVideoUpdater {
-                id: updater
-            }
+
 
             delegate: Component {
                 MatchItem {
@@ -90,28 +102,16 @@ BasePage {
                     table: page.table
                     length: vod_length
                     url: vod_url
+                    memory: matchItemConnections
 
                     onClicked: {
                         ListView.view.currentIndex = index
                     }
 
                     onPlayRequest: function (self, callback) {
-                        itemPlaying = self
+                        _videoId = vod_id
                         Global.playVideoHandler(updater, {video_id: vod_id}, self.vodUrl, self.startOffset)
                     }
-
-                    function updateStartOffset() {
-                        var rows = recentlyUsedVideos.select(["offset"], {video_id: vod_id});
-                        if (rows.length === 1) {
-                            startOffset = rows[0].offset
-                        } else {
-                            startOffset = offset // base offset into multi match video
-                        }
-
-    //                    console.debug("rowid=" + vod_id + " start=" + Global.secondsToTimeString(startOffset))
-                    }
-
-                    Component.onCompleted: updateStartOffset()
                 }
             }
 
@@ -130,10 +130,7 @@ BasePage {
     onStatusChanged: {
         switch (status) {
         case PageStatus.Activating:
-            if (itemPlaying) {
-                itemPlaying.cancelImplicitVodFileFetch()
-                itemPlaying = null
-            }
+            matchItemConnections.cancelImplicitVodFileFetch(_videoId)
             break
         }
     }

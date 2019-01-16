@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@
 
 #include <QDebug>
 #include <QNetworkAccessManager>
-#include <QThread>
 
 ScVodScraper::~ScVodScraper()
 {
@@ -34,12 +33,12 @@ ScVodScraper::~ScVodScraper()
 
 ScVodScraper::ScVodScraper(QObject* parent)
     : QObject(parent)
-    , m_Lock(QMutex::Recursive)
 {
     m_Status = Status_Ready;
     m_Error = Error_None;
     m_Progress = 0;
     m_Classifier = nullptr;
+    m_Year = -1;
 }
 
 
@@ -80,7 +79,7 @@ ScVodScraper::setProgressDescription(const QString& newValue) {
 
 void
 ScVodScraper::startFetch() {
-    QMutexLocker g(lock());
+
     switch (m_Status) {
     case Status_Error:
     case Status_Ready:
@@ -103,9 +102,27 @@ ScVodScraper::startFetch() {
     _fetch();
 }
 
+//void
+//ScVodScraper::cancelFetch(Cancelation cancelation) {
+
+//    switch (m_Status) {
+//    case Status_VodFetchingInProgress:
+//        setStatus(Status_VodFetchingBeingCanceled);
+//        _cancel(cancelation);
+//        break;
+//    default:
+//        break;
+//    }
+//}
+
+//void
+//ScVodScraper::_cancel(Cancelation) {
+//    setStatus(Status_VodFetchingCanceled);
+//}
+
 void
 ScVodScraper::cancelFetch() {
-    QMutexLocker g(lock());
+
     switch (m_Status) {
     case Status_VodFetchingInProgress:
         setStatus(Status_VodFetchingBeingCanceled);
@@ -116,6 +133,7 @@ ScVodScraper::cancelFetch() {
     }
 }
 
+
 void
 ScVodScraper::_cancel() {
     setStatus(Status_VodFetchingCanceled);
@@ -123,13 +141,13 @@ ScVodScraper::_cancel() {
 
 bool
 ScVodScraper::canCancelFetch() const {
-    QMutexLocker g(lock());
+
     return m_Status == Status_VodFetchingInProgress;
 }
 
 bool
 ScVodScraper::canStartFetch() const {
-    QMutexLocker g(lock());
+
     switch (m_Status) {
     case Status_Error:
     case Status_Ready:
@@ -140,11 +158,6 @@ ScVodScraper::canStartFetch() const {
     default:
         return false;
     }
-}
-
-QMutex*
-ScVodScraper::lock() const {
-    return &m_Lock;
 }
 
 bool
@@ -159,7 +172,7 @@ ScVodScraper::canSkip() const {
 
 void
 ScVodScraper::skip() {
-    QMutexLocker g(lock());
+
     if (_canSkip()) {
         _skip();
     } else {
@@ -172,38 +185,23 @@ ScVodScraper::_skip() {
 
 }
 
+//void
+//ScVodScraper::abort() {
+//    qDebug() << id() << "abort enter";
+//    cancelFetch(Cancelation_Immediately);
+//    qDebug() << id() << "abort exit";
+//}
+
 void
 ScVodScraper::abort() {
     qDebug() << id() << "abort enter";
     cancelFetch();
-
-    for (bool done = false; !done; ) {
-        {
-            QMutexLocker g(lock());
-
-            switch (status()) {
-            case Status_VodFetchingBeingCanceled:
-            case Status_VodFetchingInProgress:
-                done = false;
-                break;
-            default:
-                done = true;
-                break;
-            }
-        }
-
-        if (!done) {
-            QThread::msleep(100);
-        }
-    }
-
     qDebug() << id() << "abort exit";
 }
 
 void
 ScVodScraper::setStateFilePath(const QString& value)
 {
-    QMutexLocker g(lock());
     if (value != m_StateFilePath) {
         m_StateFilePath = value;
         emit stateFilePathChanged();

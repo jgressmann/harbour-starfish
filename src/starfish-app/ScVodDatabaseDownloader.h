@@ -96,6 +96,7 @@ signals:
     void progressDescriptionChanged();
     void progressIndeterminateChanged();
     void canDownloadNewChanged();
+    void vodsAvailable(QList<ScRecord> vods);
 
 private slots:
     void onRequestFinished(QNetworkReply* reply);
@@ -130,7 +131,6 @@ private:
     };
 
 private:
-    mutable QMutex m_Lock;
     QNetworkAccessManager m_NetworkAccessManager;
     QList<QString> m_YearUrls;
     ScVodScraper* m_Scraper;

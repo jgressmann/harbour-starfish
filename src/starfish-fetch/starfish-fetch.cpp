@@ -34,8 +34,6 @@
 #include "ScClassifier.h"
 
 static ScVodScraper* scraperPtr;
-//static void excludeEvent(const ScEvent& event, bool* exclude);
-static void excludeRecord(const ScRecord& record, bool* exclude);
 static void showProgress();
 static void statusChanged();
 static ScVodScraper* makeScraper(const QString& name);
@@ -131,13 +129,13 @@ int main(int argc, char** argv) {
     }
 
     scraper->setClassifier(&classifier);
+    scraper->setYearToFetch(year);
 
 //    ScVodScraper::connect(scraper.data(), &ScVodScraper::excludeEvent, excludeEvent);
-    ScVodScraper::connect(scraper.data(), &ScVodScraper::excludeRecord, excludeRecord);
     ScVodScraper::connect(scraper.data(), &ScVodScraper::statusChanged, statusChanged);
     ScVodScraper::connect(scraper.data(), &ScVodScraper::progressChanged, showProgress);
     ScVodScraper::connect(scraper.data(), &ScVodScraper::progressDescriptionChanged, showProgress);
-    void excludeRecord(const ScRecord& record, bool* exclude);
+
     scraperPtr = scraper.data();
 
 
@@ -147,26 +145,6 @@ int main(int argc, char** argv) {
     return app.exec();
 }
 
-//static void excludeEvent(const ScEvent& event, bool* exclude) {
-//    Q_ASSERT(exclude);
-//    *exclude = event.year() != year;
-//}
-
-static void excludeRecord(const ScRecord& record, bool* exclude) {
-    Q_ASSERT(exclude);
-    if (record.valid & ScRecord::ValidMatchDate) {
-        *exclude = record.matchDate.year() != year;
-        if (record.matchDate.year() < year) {
-            scraperPtr->cancelFetch();
-        }
-    }
-//    if (record.valid & ScRecord::ValidYear) {
-//        *exclude = record.year != year;
-//        if (record.year < year) {
-//            scraperPtr->cancelFetch();
-//        }
-//    }
-}
 
 static void writeXml() {
     QDomDocument doc;

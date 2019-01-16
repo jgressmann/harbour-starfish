@@ -68,8 +68,8 @@ Page {
 
         ViewPlaceholder {
             enabled: VodDataManager.ready && vodCount === 0
-            text: Global.noContent
-            hintText: "Pull down to fetch new VODs."
+            text: Strings.noContent
+            hintText: App.isOnline ? "Pull down to fetch new VODs." : "Connect to the internet to fetch new VODs"
         }
 
         ViewPlaceholder {

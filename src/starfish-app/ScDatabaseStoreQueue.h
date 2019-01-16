@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,49 +23,45 @@
 
 #pragma once
 
-#include "ScVodScraper.h"
-#include "ScRecord.h"
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QVariantList>
+#include <QAtomicInt>
 
-
-class QDateTime;
-class QNetworkRequest;
-class QNetworkReply;
-class QUrl;
-
-class Sc2CastsDotCom : public ScVodScraper {
-
+class ScDatabaseStoreQueue : public QObject
+{
     Q_OBJECT
 public:
-    ~Sc2CastsDotCom();
-    explicit Sc2CastsDotCom(QObject *parent = Q_NULLPTR);
+    static constexpr int InvalidToken = -1;
+    ~ScDatabaseStoreQueue();
+    ScDatabaseStoreQueue(const QString& databasePath, QObject* parent = nullptr);
 
-public: //
-    virtual QList<ScRecord> vods() const { return m_Vods; }
+    int newTransactionId();
 
-protected:
-    virtual void _fetch() Q_DECL_OVERRIDE;
-//    virtual void _cancel(Cancelation cancelation)  Q_DECL_OVERRIDE;
-    virtual void _cancel()  Q_DECL_OVERRIDE;
-    virtual QString _id() const  Q_DECL_OVERRIDE;
+signals:
+    void completed(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);
 
-private slots:
-    void requestFinished(QNetworkReply* reply);
+public slots:
+    void process(int transactionId, const QString& sql, const QVariantList& args);
 
 private:
-    void parseLevel0(QNetworkReply* reply);
-    void parseLevel1(QNetworkReply* reply);
-    QNetworkReply* makeRequest(const QUrl& url) const;
-    void updateVodFetchingProgress();
-    QString makePageUrl(int page) const;
-    void pruneInvalidVods();
+    struct SqlData
+    {
+        QString sql;
+        QVariantList args;
+        int token;
+    };
+
+    qint64 getInsertIdOrAffectedRows() const;
+    void processStatement(int transactionId, const QString& sql, const QVariantList& args);
+    void abort();
+    int getToken();
 
 private:
-    QList<ScRecord> m_Vods;
-    QHash<QNetworkReply*, int> m_PendingRequests;
-    QHash<QNetworkReply*, int> m_ReplyToRecordTable;
-    qreal m_VodFetchingProgress;
-    int m_UrlsToFetch;
-    int m_UrlsFetched;
-    int m_CurrentPage;
+    QSqlDatabase m_Database;
+    QSqlQuery m_Query;
+    QAtomicInt m_TokenGenerator;
+    QHash<int, QList<SqlData> > m_IncompleteTransactions;
+    QList< QList<SqlData> > m_CompleteTransactions;
+    int m_LastTransactionId;
 };
-

@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -194,7 +194,7 @@ Sc2CastsDotCom::makeRequest(const QUrl& url) const {
 
 void
 Sc2CastsDotCom::requestFinished(QNetworkReply* reply) {
-    QMutexLocker g(lock());
+
     reply->deleteLater();
     const int level = m_PendingRequests.value(reply, -1);
     m_PendingRequests.remove(reply);
@@ -343,50 +343,55 @@ Sc2CastsDotCom::parseLevel0(QNetworkReply* reply) {
             continue;
         }
 
-        dateRecord.year = date.year();
-        dateRecord.matchDate = date;
+        if (yearToFetch() <= 0 || yearToFetch() == date.year()) {
 
-        bool exclude = false;
-        emit excludeRecord(dateRecord, &exclude);
-        if (exclude) {
-            continue;
-        }
+            dateRecord.year = date.year();
+            dateRecord.matchDate = date;
 
-        const auto matchSoup = soup.mid(dateGroupIndices[i-1], dateGroupIndices[i] - dateGroupIndices[i-1]);
-        for (int start = 0, found = matchUrlRegex.indexIn(matchSoup, start);
-             found != -1;
-             start = found + matchUrlRegex.cap(0).length(),
-             found = matchUrlRegex.indexIn(matchSoup, start)) {
-
-
-            auto relativeUrl = matchUrlRegex.cap(1);
-            auto junk = matchUrlRegex.cap(2);
-//            qDebug("%s\n", qPrintable(junk));
-
-            if (matchNameRegex.indexIn(junk) == -1) {
+            bool exclude = false;
+            emit excludeRecord(dateRecord, &exclude);
+            if (exclude) {
                 continue;
             }
 
-            ScRecord record = dateRecord;
-            record.matchName = matchNameRegex.cap(1).remove(tags).split(' ', QString::SkipEmptyParts).join(QStringLiteral(" "));
-            record.valid |= ScRecord::ValidMatchName;
+            const auto matchSoup = soup.mid(dateGroupIndices[i-1], dateGroupIndices[i] - dateGroupIndices[i-1]);
+            for (int start = 0, found = matchUrlRegex.indexIn(matchSoup, start);
+                 found != -1;
+                 start = found + matchUrlRegex.cap(0).length(),
+                 found = matchUrlRegex.indexIn(matchSoup, start)) {
 
-//            qDebug() << record.matchName << record.matchDate;
 
-            m_Vods << record;
+                auto relativeUrl = matchUrlRegex.cap(1);
+                auto junk = matchUrlRegex.cap(2);
+    //            qDebug("%s\n", qPrintable(junk));
 
-            QNetworkReply* level1Reply = makeRequest(baseUrl + relativeUrl);
-            m_PendingRequests.insert(level1Reply, 1);
-            m_ReplyToRecordTable.insert(level1Reply, m_Vods.size()-1);
-            ++m_UrlsToFetch;
-            updateVodFetchingProgress();
+                if (matchNameRegex.indexIn(junk) == -1) {
+                    continue;
+                }
+
+                ScRecord record = dateRecord;
+                record.matchName = matchNameRegex.cap(1).remove(tags).split(' ', QString::SkipEmptyParts).join(QStringLiteral(" "));
+                record.valid |= ScRecord::ValidMatchName;
+
+    //            qDebug() << record.matchName << record.matchDate;
+
+                m_Vods << record;
+
+                QNetworkReply* level1Reply = makeRequest(baseUrl + relativeUrl);
+                m_PendingRequests.insert(level1Reply, 1);
+                m_ReplyToRecordTable.insert(level1Reply, m_Vods.size()-1);
+                ++m_UrlsToFetch;
+                updateVodFetchingProgress();
+            }
         }
     }
 
 
 
     if (any) {
-        ++m_CurrentPage;
+        if (m_CurrentPage >= 1) {
+            ++m_CurrentPage;
+        }
 
     } else {
         qDebug("%s\n", qPrintable(soup));
@@ -716,13 +721,45 @@ Sc2CastsDotCom::updateVodFetchingProgress() {
     }
 }
 
+//void
+//Sc2CastsDotCom::_cancel(Cancelation cancelation) {
+//    qDebug() << "canceling level 0 fetches";
+
+//    switch (cancelation) {
+//    case Cancelation_Immediately:
+//        m_CurrentPage = -1;
+
+//        // aparently this causes replies to go to finished within this call, even
+//        // if called from dtor
+//        foreach (const auto& key, m_PendingRequests.keys()) {
+//            key->abort();
+//        }
+
+//        m_PendingRequests.clear();
+//        m_ReplyToRecordTable.clear();
+//        break;
+//    default:
+//        m_CurrentPage = -2; // cancel, but complete whatever is underway
+//        break;
+//    }
+
+//}
+
 void
 Sc2CastsDotCom::_cancel() {
     qDebug() << "canceling level 0 fetches";
+
     m_CurrentPage = -1;
-    if (m_PendingRequests.isEmpty()) {
-        setStatus(Status_VodFetchingCanceled);
+
+    // aparently this causes replies to go to finished within this call, even
+    // if called from dtor
+    foreach (const auto& key, m_PendingRequests.keys()) {
+        key->abort();
     }
+
+    m_PendingRequests.clear();
+    m_ReplyToRecordTable.clear();
+
 }
 
 QString

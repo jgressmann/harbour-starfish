@@ -28,8 +28,8 @@ import ".."
 
 ListItem {
     id: root
-    objectName: "MatchItem" // poor type check to call ownerGone()
     contentHeight: requiredHeight
+    readonly property int is_match_item: 1 // poor type check to call ownerGone()
     property string table
     property string eventFullName
     property string stageName
@@ -62,7 +62,7 @@ ListItem {
     property int _height: 0
     property int baseOffset: 0
     property int length: 0
-    property int _endOffset: 0
+    property int _endOffset: -1
     property bool _validRange: baseOffset >= 0 && baseOffset < _endOffset
     property bool _tryingToPlay: false
     property int _metaDataState: metaDataStateInitial
@@ -83,11 +83,15 @@ ListItem {
     readonly property int requiredHeight: content.height + watchProgress.height
     readonly property string title: titleLabel.text
     readonly property string thumbnailSource: thumbnail.source
+    property int _metaDataTicket: -1
+    property int _thumbnailTicket: -1
+    property int _vodFileTicket: -1
+    property int _vodDownloadExplicitlyStarted: -1
+    property MatchItemMemory memory
+    readonly property bool _toolEnabled: !VodDataManager.busy
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
-
-
 
     ProgressOverlay {
         id: progressOverlay
@@ -134,22 +138,48 @@ ListItem {
 
                     Image {
                         id: thumbnail
+                        property bool _hadImageLoadError: false
                         anchors.centerIn: parent
-                        height: _thumbnailState === thumbnailStateAvailable ? parent.height : thumbnailBusyIndicator.height
-                        width: _thumbnailState === thumbnailStateAvailable ? parent.width : thumbnailBusyIndicator.width
-                        sourceSize.width: width
-                        sourceSize.height: height
+                        height: _hadImageLoadError
+                                ? thumbnailBusyIndicator.height
+                                : (_thumbnailState === thumbnailStateAvailable ? parent.height : thumbnailBusyIndicator.height)
+                        width: _hadImageLoadError
+                                ? thumbnailBusyIndicator.width
+                                : (_thumbnailState === thumbnailStateAvailable ? parent.width : thumbnailBusyIndicator.width)
+                        sourceSize.width: parent.width
+                        sourceSize.height: parent.height
                         fillMode: Image.PreserveAspectFit
-                        // prevents the image from loading on device
-                        //asynchronous: true
-                        visible: status === Image.Ready && _thumbnailState !== thumbnailStateFetching
-                        source: _thumbnailState === thumbnailStateAvailable ? _thumbnailFilePath : "image://theme/icon-m-reload"
+                        asynchronous: true
+                        cache: false
+                        //visible: (status === Image.Ready || status === Image.Error) && _thumbnailState !== thumbnailStateFetching
+                        visible: _thumbnailState !== thumbnailStateFetching
+                        source: _hadImageLoadError
+                                ? "image://theme/icon-m-reload"
+                                : (_thumbnailState === thumbnailStateAvailable
+                                    ? _thumbnailFilePath : "image://theme/icon-m-reload")
 
-                        MouseArea {
-                            anchors.fill: parent
-                            enabled: parent.visible && _thumbnailState !== thumbnailStateAvailable
-                            onClicked: _fetchThumbnail()
+                        onStatusChanged: {
+                            if (Image.Error === status) {
+                                _hadImageLoadError = true
+                                console.debug("rowid=" + rowId + " error loading image " + _thumbnailFilePath)
+                            }
                         }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        z: thumbnail.z + 1
+                        //enabled: parent.visible && _thumbnailState !== thumbnailStateAvailable && Image.Error !== status
+                        //enabled: parent._hadImageLoadError || _thumbnailState === thumbnailStateDownloadFailed
+                        enabled: thumbnail.visible && (thumbnail._hadImageLoadError || _thumbnailState !== thumbnailStateAvailable)
+                        onClicked: {
+                            thumbnail._hadImageLoadError = false
+                            _fetchThumbnail()
+                        }
+
+//                        onEnabledChanged: {
+//                            console.debug("rowid=" + rowId  + " reload enabled=" + enabled)
+//                        }
                     }
 
                     BusyIndicator {
@@ -275,6 +305,14 @@ ListItem {
                                     result += _width + "x" + _height
                                 }
 
+                                if (debugApp.value) {
+                                    if (result) {
+                                        result += ", "
+                                    }
+
+                                    result += rowId
+                                }
+
 //                                if (startOffset > 0) {
 //                                    if (result) {
 //                                        result += ", "
@@ -380,32 +418,6 @@ ListItem {
                             }
                         }
                     } // date / format / status group
-
-
-//                    Label {
-//                        visible: !eventFullName && !stageName
-//                        width: parent.width
-//                        horizontalAlignment: Text.AlignLeft
-//                        font.pixelSize: Theme.fontSizeTiny
-//                        truncationMode: TruncationMode.Fade
-//                        text: {
-//                            var result = ""
-//                            if (showDate) {
-//                                result = Qt.formatDate(matchDate)
-//                            }
-
-//                            if (result.length > 0) {
-//                                result += ", "
-//                            }
-
-//                            result += (progressOverlay.progress * 100).toFixed(0) + "% downloaded"
-//                            if (_width > 0) {
-//                                result += ", " + _width + "x" + _height
-//                            }
-
-//                            return result
-//                        }
-//                    }
                 }
 
                 IconButton {
@@ -533,27 +545,29 @@ ListItem {
     }
 
     Component.onCompleted: {
-        VodDataManager.vodAvailable.connect(vodAvailable)
-        VodDataManager.thumbnailAvailable.connect(thumbnailAvailable)
-        VodDataManager.thumbnailDownloadFailed.connect(thumbnailDownloadFailed)
-        VodDataManager.fetchingMetaData.connect(fetchingMetaData)
-        VodDataManager.metaDataAvailable.connect(metaDataAvailable)
-        VodDataManager.metaDataDownloadFailed.connect(metaDataDownloadFailed)
-        VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
-        VodDataManager.vodDownloadCanceled.connect(vodDownloadCanceled)
-        _vodTitle = VodDataManager.title(rowId)
-        seenButton.seen = VodDataManager.seen(table, _where) >= 1
-//        console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
-        _endOffset = VodDataManager.vodEndOffset(rowId, baseOffset, length)
-//        console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
+        memory.addMatchItem(root)
+
+        updateStartOffset()
+
+        VodDataManager.fetchTitle(rowId)
+        VodDataManager.fetchSeen(rowId, table, _where)
+        VodDataManager.fetchVodEnd(rowId, baseOffset, length)
 
         // also fetch a valid meta data from cache
-        VodDataManager.fetchMetaDataFromCache(rowId)
-        VodDataManager.fetchThumbnailFromCache(rowId)
-        VodDataManager.queryVodFiles(rowId)
+        _metaDataTicket = VodDataManager.fetchMetaDataFromCache(rowId)
+//        if (-1 !== _metaDataTicket) {
+//            _metaDataState = metaDataStateFetching
+//        }
+
         if (App.isOnline) {
             _fetchThumbnail()
+        } else {
+            _thumbnailTicket = VodDataManager.fetchThumbnailFromCache(rowId)
+//            if (-1 !== _thumbnailTicket) {
+//                _thumbnailState = thumbnailStateFetching
+//            }
         }
+        _vodFileTicket = VodDataManager.queryVodFiles(rowId)
 
 //        console.debug("create match item rowid=" + rowId)
 
@@ -563,10 +577,24 @@ ListItem {
     }
 
     Component.onDestruction: {
-        if (_metaDataState === metaDataStateFetching) {
-            VodDataManager.cancelFetchMetaData(rowId)
-        }
 //        console.debug("destroy match item rowid=" + rowId)
+        if (memory) { // QML binding may have been removed due to the parent view being destroyed
+            memory.removeMatchItem(root)
+        }
+
+        var tickets = [_vodFileTicket]
+        for (var i = 0; i < tickets.length; ++i) {
+            if (-1 !== tickets[i])
+            VodDataManager.cancelTicket(tickets[i])
+        }
+
+        if (_metaDataState === metaDataStateFetching) {
+            VodDataManager.cancelFetchMetaData(_metaDataTicket, rowId)
+        }
+
+        if (_thumbnailState === thumbnailStateFetching) {
+            VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
+        }
     }
 
     RemorsePopup { id: remorse }
@@ -639,24 +667,12 @@ ListItem {
 
             MenuItem {
                 text: "Delete VOD file"
+                enabled: _toolEnabled
                 visible: rowId >= 0 && !!_vodFilePath
-//                onClicked: {
-//                    remorse.execute("Deleting VOD " + title, function() {
-//                        _cancelDownload()
-//                        progressOverlay.progress = 0
-//                        _clicked = false
-//                        _vodUrl = ""
-//                        _vodFilePath = ""
-//                        _vodFileSize = 0
-//                        _width = 0
-//                        _height = 0
-//                        _formatId = ""
-//                        VodDataManager.deleteVod(rowId)
-//                    })
-//                }
+
 
                 onClicked: {
-                    // still not sure why local vars are needed
+                    // still not sure why local vars are needed but they are!!!!
                     var item = root
                     var overlay = progressOverlay
                     var manager = VodDataManager
@@ -670,7 +686,7 @@ ListItem {
                         item._width = 0
                         item._height = 0
                         item._formatId = ""
-                        manager.deleteVod(item.rowId)
+                        manager.deleteVodFiles(item.rowId)
                     })
                 }
             }
@@ -696,120 +712,155 @@ ListItem {
                 visible: rowId >= 0 && _vodFileSize > 0 && !!_vodFilePath
                 onClicked: Clipboard.text = _vodFilePath
             }
+
+            MenuItem {
+                text: "Delete thumbnail"
+                visible: rowId >= 0
+                onClicked: {
+                    _thumbnailState = thumbnailStateInitial // reset
+                    VodDataManager.deleteThumbnail(rowId)
+                    if (App.isOnline) {
+                        _fetchThumbnail()
+                    }
+                }
+            }
+
+            MenuItem {
+                text: "Delete VOD from database"
+                enabled: _toolEnabled
+                visible: rowId >= 0
+                onClicked: {
+                    // still not sure why local vars are needed but they are!!!!
+                    var item = root
+                    var g = Global
+                    item.remorseAction("Deleting " + title, function() {
+                        item._cancelDownload()
+                        g.deleteVods("where id=" + item.rowId)
+                    })
+                }
+            }
         }
     }
 
-    function thumbnailAvailable(rowid, filePath) {
-        if (rowid === rowId) {
+    function fetchingThumbnail() {
+        _thumbnailState = thumbnailStateFetching
+        _thumbnailTicket = -1
+    }
+
+    function thumbnailAvailable(filePath) {
 //            console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
+        if (_thumbnailFilePath === filePath) {
             _thumbnailFilePath = "" // force reload
-            _thumbnailFilePath = filePath
-            _thumbnailState = thumbnailStateAvailable
         }
+
+        _thumbnailFilePath = filePath
+        _thumbnailState = thumbnailStateAvailable
+        _thumbnailTicket = -1
     }
 
-    function thumbnailDownloadFailed(rowid, error, url) {
-        if (rowid === rowId) {
-            console.debug("thumbnail download failed rowid=" + rowid + " error=" + error + " url=" + url)
+    function thumbnailDownloadFailed(error, url) {
+        console.debug("thumbnail download failed rowid=" + rowId + " error=" + error + " url=" + url)
+        _thumbnailState = thumbnailStateDownloadFailed
+        _thumbnailTicket = -1
+    }
+
+    function titleAvailable(title) {
+        _vodTitle = title
+    }
+
+    function seenAvailable(seen) {
+        seenButton.seen = seen >= 1
+    }
+
+    function vodEndAvailable(offset) {
+        _endOffset = offset
+    }
+
+    function fetchingMetaData() {
+        _metaDataState = metaDataStateFetching
+        _metaDataTicket = -1
+    }
+
+    function metaDataDownloadFailed(error) {
+        console.debug("meta data download failed rowid=" + rowId + " error=" + error)
+        _metaDataState = metaDataStateDownloadFailed
+        _clicked = false
+        _metaDataTicket = -1
+        if (_thumbnailState === thumbnailStateFetching) {
             _thumbnailState = thumbnailStateDownloadFailed
         }
     }
 
+    function metaDataAvailable(vod) {
+        console.debug("metaDataAvailable rowid=" + rowId)
+        _metaDataState = metaDataStateAvailable
+        _vod = vod
+        _vodTitle = vod.description.title
+        _clicked = false
+        _metaDataTicket = -1
+
+        // also set length which might be zero if we just downloaded the meta data
+        length = vod.description.duration
+
+        // now that we have meta data, we might
+        VodDataManager.fetchVodEnd(rowId, baseOffset, length)
 
 
-    function fetchingMetaData(rowid) {
-        if (rowid === rowId) {
-            _metaDataState = metaDataStateFetching
+        if (App.isOnline) {
+            _fetchThumbnail()
+        }
+
+        if (_clicking) {
+            _tryPlay()
         }
     }
 
-    function metaDataDownloadFailed(rowid, error) {
-        if (rowid === rowId) {
-            console.debug("meta data download failed rowid=" + rowid + " error=" + error)
-            _metaDataState = metaDataStateDownloadFailed
-            _clicked = false
-            if (_thumbnailState === thumbnailStateFetching) {
-                _thumbnailState = thumbnailStateDownloadFailed
-            }
-        }
+    function vodDownloadFailed(error) {
+        console.debug("vod download failed rowid=" + rowId + " error=" + error)
+        _vodDownloadFailed = true
+        _downloading = false
+        progressOverlay.show = false
+        _progress = -1
+        _vodDownloadExplicitlyStarted = -1
     }
 
-    function metaDataAvailable(rowid, vod) {
-        if (rowid === rowId) {
-//            console.debug("metaDataAvailable rowid=" + rowid)
-            _metaDataState = metaDataStateAvailable
-            _vod = vod
-            _vodTitle = vod.description.title
-            _clicked = false
-
-            // also set length which might be zero if we just downloaded the meta data
-            length = vod.description.duration
-
-            // now that we have meta data, we might
-            // be able to get a watch progress
-//            console.debug("rowid=" + rowId + " baseOffset=" + baseOffset+ " length=" + length)
-            _endOffset = VodDataManager.vodEndOffset(rowId, baseOffset, length)
-//            console.debug("rowid=" + rowId + " endoffset=" + _endOffset)
-
-
-            if (App.isOnline) {
-                _fetchThumbnail()
-            }
-
-            if (_clicking) {
-                _tryPlay()
-            }
-        }
+    function vodDownloadCanceled() {
+        console.debug("vod download canceled rowid=" + rowId)
+        _vodDownloadFailed = false
+        _downloading = false
+        progressOverlay.show = false
+        _progress = -1
     }
 
-    function vodDownloadFailed(rowid, error) {
-        if (rowid === rowId) {
-            console.debug("vod download failed rowid=" + rowid + " error=" + error)
-            _vodDownloadFailed = true
-            _downloading = false
-            progressOverlay.show = false
-            _progress = -1
-        }
+    function vodDownloading() {
+        _downloading = 1
     }
 
-    function vodDownloadCanceled(rowid) {
-        if (rowid === rowId) {
-            console.debug("vod download canceled rowid=" + rowid)
-            _vodDownloadFailed = false
-            _downloading = false
-            progressOverlay.show = false
-            _progress = -1
+    function vodAvailable(filePath, progress, fileSize, width, height, formatId) {
+        console.debug(
+                    "vodAvailable rowid=" + rowId + " path=" + filePath + " progress=" + progress +
+                    " size=" + fileSize + " width=" + width + " height=" + height + " formatId=" + formatId)
+        _vodFilePath = filePath
+        _vodFileSize = fileSize
+        if (-1 === _progress) {
+            _progress = progress
+        } else if (_progress < progress) {
+            _downloading = progress < 1
+            _progress = progress
         }
+
+        progressOverlay.show = _downloading && progress > 0 && progress < 1
+        progressOverlay.progress = progress
+        _width = width
+        _height = height
+        _formatId = formatId
+        _vodFileTicket = -1
     }
 
     function _play() {
         console.debug("play " + _vodUrl)
         playRequest(root)
     }
-
-    function vodAvailable(rowid, filePath, progress, fileSize, width, height, formatId) {
-        if (rowid === rowId) {
-            console.debug(
-                        "vodAvailable rowid=" + rowid + " path=" + filePath + " progress=" + progress +
-                        " size=" + fileSize + " width=" + width + " height=" + height + " formatId=" + formatId)
-            _vodFilePath = filePath
-            _vodFileSize = fileSize
-            if (-1 === _progress) {
-                _progress = progress
-            } else if (_progress < progress) {
-                _downloading = progress < 1
-                _progress = progress
-            }
-
-            progressOverlay.show = _downloading && progress > 0 && progress < 1
-            progressOverlay.progress = progress
-            _width = width
-            _height = height
-            _formatId = formatId
-        }
-    }
-
-
 
     function _getVideoFormatFromBearerMode() {
         var formatId
@@ -946,7 +997,7 @@ ListItem {
         }
     }
 
-    function _playStream(format) {
+    function _playStream() {
         var format = _getVideoFormatFromBearerMode()
         _playStreamWithFormat(format)
     }
@@ -966,9 +1017,20 @@ ListItem {
     }
 
     function _downloadFormat(formatIndex, autoStarted) {
+        if (-1 !== _vodFileTicket) {
+            VodDataManager.cancelTicket(_vodFileTicket)
+            _vodFileTicket = -1
+        }
+
         _vodDownloadFailed = false
-        VodDataManager.fetchVod(rowId, formatIndex, autoStarted)
+        _vodFileTicket = VodDataManager.fetchVod(rowId, formatIndex)
         _downloading = true
+        switch (_vodDownloadExplicitlyStarted) {
+        case -1:
+        case 0:
+            _vodDownloadExplicitlyStarted = autoStarted ? 0 : 1
+            break
+        }
     }
 
     function _download(autoStarted, format) {
@@ -984,32 +1046,52 @@ ListItem {
     }
 
     function _cancelDownload() {
+        if (-1 !== _vodFileTicket) {
+            VodDataManager.cancelTicket(_vodFileTicket)
+            _vodFileTicket = -1
+        }
+
         VodDataManager.cancelFetchVod(rowId)
         _progress = -1
         _downloading = false
+        _vodDownloadExplicitlyStarted = -1
         progressOverlay.show = false
     }
 
     function _fetchMetaData() {
-        _metaDataState = metaDataStateFetching
-        VodDataManager.fetchMetaData(rowId)
-    }
+        if (-1 !== _metaDataTicket) {
+            VodDataManager.cancelFetchMetaData(_metaDataTicket, rowId)
+        }
 
-    function _fetchThumbnail() {
-        _thumbnailState = thumbnailStateFetching
-        VodDataManager.fetchThumbnail(rowId)
-    }
-
-    function cancelImplicitVodFileFetch() {
-        if (VodDataManager.implicitlyStartedVodFetch(rowId)) {
-            console.debug("canceling download for rowid=" + rowId)
-            _cancelDownload()
+        _metaDataTicket = VodDataManager.fetchMetaData(rowId)
+        if (-1 !== _metaDataTicket) {
+            _metaDataState = metaDataStateFetching
         }
     }
 
+    function _fetchThumbnail() {
+        if (-1 !== _thumbnailTicket) {
+            VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
+        }
+
+        _thumbnailTicket = VodDataManager.fetchThumbnail(rowId)
+        if (-1 !== _thumbnailTicket) {
+            _thumbnailState = thumbnailStateFetching
+        }
+    }
+
+    function cancelImplicitVodFileFetch() {
+        // only cancel download if started on this item
+        if (0 === _vodDownloadExplicitlyStarted) {
+            console.debug("canceling download for rowid=" + rowId)
+            _cancelDownload()
+            return true
+        }
+        return false
+    }
+
     function ownerGone() {
-        cancelImplicitVodFileFetch()
-        if (!settingNetworkContinueDownload.value) {
+        if (!cancelImplicitVodFileFetch() && !settingNetworkContinueDownload.value) {
             console.debug("canceling download for rowid=" + rowId)
             _cancelDownload()
         }
@@ -1026,6 +1108,18 @@ ListItem {
         default:
             return 1080
         }
+    }
+
+
+    function updateStartOffset() {
+        var rows = recentlyUsedVideos.select(["offset"], {video_id: rowId});
+        if (rows.length === 1) {
+            startOffset = rows[0].offset
+        } else {
+            startOffset = baseOffset // base offset into multi match video
+        }
+
+//                    console.debug("rowid=" + vod_id + " start=" + Global.secondsToTimeString(startOffset))
     }
 }
 

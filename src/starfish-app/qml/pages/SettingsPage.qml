@@ -28,10 +28,12 @@ import org.duckdns.jgressmann 1.0
 import ".."
 
 
-Page {
+BasePage {
     id: root
+    showProgressPanel: false
     property string _currentdataDirectory
     property string _targetdataDirectory
+    readonly property bool _toolEnabled: !VodDataManager.busy
 
     Component.onDestruction: {
         settings.sync()
@@ -119,6 +121,7 @@ Do you want to continue?"
             id: saveDirectoryComboBox
             width: root.width
             label: "Directory"
+            enabled: _toolEnabled
             menu: ContextMenu {
                 MenuItem { text: "Cache" }
                 MenuItem { text: "Custom" }
@@ -133,6 +136,7 @@ Do you want to continue?"
             placeholderText: "Data directory"
             EnterKey.iconSource: "image://theme/icon-m-enter-close"
             EnterKey.onClicked: focus = false
+            enabled: _toolEnabled
 
             Component.onCompleted: {
                 // combobox initially has index 0 which may be wrong
@@ -147,11 +151,12 @@ Do you want to continue?"
             Button {
 //                anchors.horizontalCenter: parent.horizontalCenter
                 text: "Pick directory"
+                enabled: _toolEnabled
                 onClicked: pageStack.push(filePickerPage)
             }
 
             Button {
-                enabled: !!_targetdataDirectory &&
+                enabled: _toolEnabled && !!_targetdataDirectory &&
                          _currentdataDirectory !== _targetdataDirectory
 //                anchors.horizontalCenter: parent.horizontalCenter
                 text: "Apply change"
@@ -188,6 +193,7 @@ Do you want to continue?"
             text: settingNetworkMaxConcurrentMetaDataDownloads.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
+            enabled: _toolEnabled
             validator: IntValidator {
                 bottom: 1
             }
@@ -208,6 +214,7 @@ Do you want to continue?"
             width: root.width
             label: "VOD site"
             description: "This site is used to check for new VODs."
+            enabled: _toolEnabled
             menu: ContextMenu {
                 id: menu
                 MenuItem { text: "sc2casts.com" }
@@ -238,6 +245,7 @@ Do you want to continue?"
 
             text: "Periodically check for new VODs"
             checked: settingNetworkAutoUpdate.value
+            enabled: _toolEnabled
             onCheckedChanged: {
                 console.debug("auto update=" + checked)
                 settingNetworkAutoUpdate.value = checked
@@ -245,7 +253,7 @@ Do you want to continue?"
         }
 
         TextField {
-            enabled: settingNetworkAutoUpdate.value
+            enabled: _toolEnabled && settingNetworkAutoUpdate.value
             width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             label: "Minutes between checks"
@@ -271,6 +279,7 @@ Do you want to continue?"
         TextSwitch {
             text: "Continue VOD file download when page closes"
             checked: settingNetworkContinueDownload.value
+            enabled: _toolEnabled
             onCheckedChanged: {
                 console.debug("continue download=" + checked)
                 settingNetworkContinueDownload.value = checked
@@ -287,6 +296,7 @@ Do you want to continue?"
             label: "Broadband"
             excludeAskEveryTime: false
             format: settingBroadbandDefaultFormat.value
+            enabled: _toolEnabled
             onFormatChanged: {
 //                console.debug("save")
                 settingBroadbandDefaultFormat.value = format
@@ -298,6 +308,7 @@ Do you want to continue?"
             label: "Mobile"
             excludeAskEveryTime: false
             format: settingMobileDefaultFormat.value
+            enabled: _toolEnabled
             onFormatChanged: {
 //                console.debug("save")
                 settingMobileDefaultFormat.value = format
@@ -311,6 +322,7 @@ Do you want to continue?"
         TextSwitch {
             text: "Use external media player"
             checked: settingExternalMediaPlayer.value
+            enabled: _toolEnabled
             onCheckedChanged: {
                 console.debug("external media player=" + checked)
                 settingExternalMediaPlayer.value = checked
@@ -324,6 +336,7 @@ Do you want to continue?"
             text: settingPlaybackRecentVideosToKeep.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
+            enabled: _toolEnabled
             validator: IntValidator {
                 bottom: 1
             }
@@ -343,6 +356,7 @@ Do you want to continue?"
         TextSwitch {
             text: "Pause playback on device lock"
             checked: settingPlaybackPauseOnDeviceLock.value
+            enabled: _toolEnabled
             onCheckedChanged: {
                 console.debug("continue playback on device lock=" + checked)
                 settingPlaybackPauseOnDeviceLock.value = checked
@@ -352,6 +366,7 @@ Do you want to continue?"
         TextSwitch {
             text: "Pause playback when the cover page is shown"
             checked: settingPlaybackPauseInCoverMode.value
+            enabled: _toolEnabled
             onCheckedChanged: {
                 console.debug("continue playback in cover mode=" + checked)
                 settingPlaybackPauseInCoverMode.value = checked
@@ -369,6 +384,7 @@ Do you want to continue?"
             text: settingNewWindowDays.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
+            enabled: _toolEnabled
             validator: IntValidator {
                 bottom: 1
             }
@@ -388,6 +404,7 @@ Do you want to continue?"
         TextSwitch {
             text: "Remove watched VODs from 'New'"
             checked: settingNewRemoveSeen.value
+            enabled: _toolEnabled
             onCheckedChanged: {
                 console.debug("remove seen vods from new=" + checked)
                 settingNewRemoveSeen.value = checked
@@ -396,7 +413,7 @@ Do you want to continue?"
 
     }
 
-    SilicaFlickable {
+    contentItem: SilicaFlickable {
         anchors.fill: parent
         contentWidth: parent.width
 
@@ -408,6 +425,7 @@ Do you want to continue?"
             model: model
             header: PageHeader {
                 title: "Settings"
+                VodDataManagerBusyIndicator {}
             }
         }
     }

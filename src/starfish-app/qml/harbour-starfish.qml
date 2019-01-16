@@ -38,7 +38,9 @@ ApplicationWindow {
     cover: Qt.resolvedUrl("cover/CoverPage.qml")
     allowedOrientations: defaultAllowedOrientations
     property int _vodsAdded: 0
-
+    readonly property bool canFetchVods: !VodDataManager.busy &&
+                                          App.isOnline &&
+                                          vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
 
 
     Sc2LinksDotComScraper {
@@ -121,7 +123,7 @@ ApplicationWindow {
             defaultValue: 4
 
             onValueChanged: {
-                VodDataManager.vodman.maxConcurrentMetaDataDownloads = value
+                VodDataManager.maxConcurrentMetaDataDownloads = value
             }
         }
 
@@ -344,7 +346,7 @@ ApplicationWindow {
 //            return (60 * settingNetworkAutoUpdateIntervalM.value - diffS) * 1000
 //        }
         interval: 60000 * settingNetworkAutoUpdateIntervalM.value
-        running: settingNetworkAutoUpdate.value && App.isOnline && vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
+        running: settingNetworkAutoUpdate.value && window.canFetchVods
         onTriggered: {
             console.debug("Auto update timer expired")
             fetchNewVods()
@@ -373,7 +375,7 @@ ApplicationWindow {
     Component.onCompleted: {
         VodDataManager.vodsAdded.connect(_onVodsAdded)
         VodDataManager.busyChanged.connect(_busyChanged)
-        VodDataManager.vodman.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
+        VodDataManager.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
         _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
 
@@ -409,6 +411,7 @@ ApplicationWindow {
     function _onVodsAdded(count) {
         console.debug("vods added " + count)
         _vodsAdded += count
+        _notifyOfAddedVods();
     }
 
     function _busyChanged() {
@@ -420,9 +423,10 @@ ApplicationWindow {
         case VodDatabaseDownloader.Status_Canceled:
         case VodDatabaseDownloader.Status_Finished:
             if (!VodDataManager.busy && _vodsAdded) {
-                newVodNotification.itemCount = _vodsAdded
+                newVodNotification.itemCount = 1
                 newVodNotification.body = newVodNotification.previewBody = _vodsAdded + " VOD" + (_vodsAdded > 1 ? "s" : "") + " added"
                 newVodNotification.publish()
+                _vodsAdded = 0
             }
             break
         }

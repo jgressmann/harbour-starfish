@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,10 @@ import org.duckdns.jgressmann 1.0
 import ".."
 
 
-Page {
+BasePage {
     id: root
+
+    readonly property bool _toolEnabled: !VodDataManager.busy
 
     RemorsePopup { id: remorse }
 
@@ -59,6 +61,7 @@ Page {
                 Button {
                     text: "Reset VOD fetch marker"
                     anchors.horizontalCenter: parent.horizontalCenter
+                    enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         VodDataManager.resetDownloadMarker()
                     })
@@ -67,26 +70,29 @@ Page {
                 Button {
                     visible: debugApp.value
                     text: "Reset last fetch timestamp"
-                    onClicked: {
-                        console.debug("reset last fetch timestamp")
+                    enabled: _toolEnabled
+                    onClicked: remorse.execute(text, function() {
+                        console.debug(text)
                         settingLastUpdateTimestamp.value = 0
-                    }
+                    })
                 }
 
                 Button {
                     text: "Delete sc2links.com state"
-                    onClicked: {
+                    enabled: _toolEnabled
+                    onClicked: remorse.execute(text, function() {
                         console.debug(text)
                         App.unlink(sc2LinksDotComScraper.stateFilePath)
-                    }
+                    })
                 }
 
                 Button {
                     text: "Delete sc2casts.com state"
-                    onClicked: {
+                    enabled: _toolEnabled
+                    onClicked: remorse.execute(text, function() {
                         console.debug(text)
-                        App.unlink(sc2LinksDotComScraper.stateFilePath)
-                    }
+                        App.unlink(sc2CastsDotComScraper.stateFilePath)
+                    })
                 }
             }
 
@@ -98,6 +104,7 @@ Page {
             Button {
                 text: "Clear"
                 anchors.horizontalCenter: parent.horizontalCenter
+                enabled: _toolEnabled
                 onClicked: {
                     var dialog = pageStack.push(
                                 Qt.resolvedUrl("ConfirmClearDialog.qml"),
@@ -108,6 +115,7 @@ Page {
                                 })
                     dialog.accepted.connect(function() {
                         console.debug("clear")
+                        recentlyUsedVideos.recreateTable()
                         VodDataManager.clear()
                         VodDataManager.fetchIcons()
                     })
@@ -123,7 +131,8 @@ Page {
                 width: parent.width
 
                 Button {
-                    text: "Delete seen VOD files"
+                    text: Strings.deleteSeenVodFiles
+                    enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         Global.deleteSeenVodFiles()
                     })
@@ -131,6 +140,7 @@ Page {
 
                 Button {
                     text: "Reset recent videos"
+                    enabled: _toolEnabled
                     onClicked: {
                         recentlyUsedVideos.recreateTable()
                     }
@@ -189,6 +199,7 @@ Page {
 
                         Button {
                             text: "Clear meta data"
+                            enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear meta data")
                                 remorse.execute(text, function() {
@@ -200,6 +211,7 @@ Page {
 
                         Button {
                             text: "Clear thumbnails"
+                            enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear thumbnails")
                                 remorse.execute(text, function() {
@@ -210,6 +222,7 @@ Page {
 
                         Button {
                             text: "Clear VOD files"
+                            enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear vods")
                                 remorse.execute(text, function() {
@@ -221,6 +234,7 @@ Page {
 
                         Button {
                             text: "Clear icons"
+                            enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear icons")
                                 remorse.execute(text, function() {
@@ -239,7 +253,7 @@ Page {
 
 
 
-    SilicaFlickable {
+    contentItem: SilicaFlickable {
         anchors.fill: parent
         contentWidth: parent.width
 
@@ -251,6 +265,7 @@ Page {
             model: model
             header: PageHeader {
                 title: "Tools"
+                VodDataManagerBusyIndicator {}
             }
         }
     }

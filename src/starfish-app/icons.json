@@ -183,6 +183,11 @@
             "extension": ".png"
         },
         {
+            "regex": "laughngamez",
+            "url": "https://www.dropbox.com/s/mefmatbm5hepynt/laughngamez.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "leifeng|lei feng",
             "url": "https://www.dropbox.com/s/6gdyxatjg34d3xs/leifeng.png?dl=1",
             "extension": ".png"
