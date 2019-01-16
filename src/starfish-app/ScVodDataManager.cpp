@@ -1023,7 +1023,7 @@ ScVodDataManager::icon(const QString& key, const QVariant& value) const {
         case ScRecord::GameSc2:
             return s_Sc2IconPath;
         default:
-            return s_RandomIconPath;
+            return s_SailfishIconPath;
         }
     } else if (s_EventNameKey == key) {
         auto event = value.toString();
@@ -1067,6 +1067,8 @@ ScVodDataManager::raceIcon(int race) const
         return s_TerranIconPath;
     case ScRecord::RaceZerg:
         return s_ZergIconPath;
+    case ScRecord::RaceRandom:
+        return s_RandomIconPath;
     default:
         return QString();
     }

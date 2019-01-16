@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +44,7 @@ public: //
 
 protected:
     virtual void _fetch() Q_DECL_OVERRIDE;
+//    virtual void _cancel(Cancelation cancelation)  Q_DECL_OVERRIDE;
     virtual void _cancel()  Q_DECL_OVERRIDE;
     virtual QString _id() const  Q_DECL_OVERRIDE;
 

@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,6 +62,7 @@ const QRegExp tags(QStringLiteral("<[^>]+>"));
 const QString s_Protoss = QStringLiteral("protoss");
 const QString s_Terran = QStringLiteral("terran");
 const QString s_Zerg = QStringLiteral("zerg");
+const QString s_Random = QStringLiteral("random");
 
 int InitializeStatics() {
     Q_ASSERT(aHrefRegex.isValid());
@@ -111,6 +112,10 @@ ScRecord::Race getRace(const QString& str) {
 
     if (str.compare(s_Zerg, Qt::CaseInsensitive) == 0) {
         return ScRecord::RaceZerg;
+    }
+
+    if (str.compare(s_Random, Qt::CaseInsensitive) == 0) {
+        return ScRecord::RaceRandom;
     }
 
     return ScRecord::RaceUnknown;
@@ -357,6 +362,7 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
 
     bool any = false;
     ScRecord record;
+
     for (int start = 0, x = 0, found = aHrefRegex.indexIn(soup, start);
          found != -1/* && x < 1*/;
          start = found + aHrefRegex.cap(0).length(), found = aHrefRegex.indexIn(soup, start), ++x) {
@@ -381,6 +387,7 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
             auto it = m_State->LastModified.find(name);
             if (it != m_State->LastModified.end()) {
                 if (it.value() >= lastModified) {
+                    qDebug() << "skipping event" << name << "last modified" << lastModified << "have" << it.value();
                     continue;
                 }
             }
@@ -413,26 +420,34 @@ Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
             year = record.year;
         }
 
-        ScEvent ev;
-        ScEventData& data = ev.data();
+        if (year > 0) {
+            if (yearToFetch() <= 0 || year == yearToFetch()) {
+                ScEvent ev;
+                ScEventData& data = ev.data();
 
-        data.fullName = fullTitle;
-//        data.game = game;
-        data.name = record.eventName;
-        data.season = season;
-        data.year = year;
-        data.url = link;
-        data.lastModified = lastModified;
-        bool exclude = false;
-        emit excludeEvent(ev, &exclude);
+                data.fullName = fullTitle;
+        //        data.game = game;
+                data.name = record.eventName;
+                data.season = season;
+                data.year = year;
+                data.url = link;
+                data.lastModified = lastModified;
+                bool exclude = false;
+                emit excludeEvent(ev, &exclude);
 
-        if (exclude) {
-            qDebug() << "exclude event" << name << year << season;
+                if (exclude) {
+                    qDebug() << "exclude event" << name << year << season;
+                } else {
+                    m_Events << ev;
+                    m_EventRequestQueue << ev;
+
+                    qDebug() << "fetch event" << name << year << season;
+                }
+            } else {
+                qDebug() << "not fetching event" << name << year << season;
+            }
         } else {
-            m_Events << ev;
-            m_EventRequestQueue << ev;
-
-            qDebug() << "fetch event" << name << year << season;
+            qDebug() << "not fetching event" << name << year;
         }
     }
 
@@ -447,13 +462,20 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
         return;
     }
 
+    auto it = m_RequestStage.find(reply);
+    if (m_RequestStage.end() == it) {
+        return; // cancelled
+    }
+
+    ScEvent& event = it.value();
+
     QString soup = QString::fromUtf8(reply->readAll());
 //    qDebug("%s\n", qPrintable(soup));
 
     QList< int > stageOffsets;
     QList< bool > stageExclude;
     QList<ScStage> stages;
-    ScEvent& event = m_RequestStage[reply];
+
     ScEventData& eventData = event.data();
 
 
@@ -529,12 +551,25 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
 //            }
 
             QString race1, race2;
-            auto raceParts = races.split(QChar(' '), QString::SkipEmptyParts);
-            if (raceParts.size() == 2) {
-                race1 = raceParts[0];
-                race2 = raceParts[1];
-            } else if (matchOrEpisode.compare(QStringLiteral("match"), Qt::CaseInsensitive) == 0) {
-                qDebug() << "ouch";
+            if (races.length() >= 2) {
+                if (races.length() == 3) {
+                    race1 = races[0];
+                    race2 = races[2];
+                } else {
+                    if (races[0] == QChar(' ')) {
+//                        race1 = s_Random;
+                        race2 = races[1];
+                    } else {
+                        race1 = races[0];
+//                        race2 = s_Random;
+                    }
+                }
+            } else {
+#ifndef QT_NO_DEBUG_OUTPUT
+                if (matchOrEpisode.compare(QStringLiteral("match"), Qt::CaseInsensitive) == 0) {
+                    qDebug() << "ouch, unknown/random race";
+                }
+#endif
             }
 
             auto dateParts = matchDate.split(QChar('/'), QString::SkipEmptyParts);
@@ -629,7 +664,12 @@ Sc2LinksDotCom::parseLevel2(QNetworkReply* reply) {
     }
 
     if (!url.isEmpty()) {
-        ScMatch match = m_RequestVod.value(reply);
+        auto it = m_RequestVod.find(reply);
+        if (m_RequestVod.end() == it) {
+            return; // cancelled
+        }
+
+        ScMatch match = it.value();
         match.data().url = url;
         const ScStageData& stage = *match.data().owner.data();
         const ScEventData& event = *stage.owner.data();
@@ -659,11 +699,33 @@ Sc2LinksDotCom::updateVodFetchingProgress() {
     }
 }
 
+//void
+//Sc2LinksDotCom::_cancel(Cancelation cancelation) {
+//    qDebug() << "clearing event request queue";
+//    m_EventRequestQueue.clear();
+//    qDebug() << "canceling requests";
+
+//    if (Cancelation_Immediately == cancelation) {
+//        // aparently this causes replies to go to finished within this call, even
+//        // if called from dtor
+//        foreach (const auto& key, m_PendingRequests.keys()) {
+//            key->abort();
+//        }
+//        // This crashes
+//    //    const auto beg = m_PendingRequests.cbegin();
+//    //    const auto end = m_PendingRequests.cend();
+//    //    for (auto it = beg; it != end; ++it) {
+//    //        it.key()->abort();
+//    //    }
+//    }
+//}
+
 void
 Sc2LinksDotCom::_cancel() {
     qDebug() << "clearing event request queue";
     m_EventRequestQueue.clear();
     qDebug() << "canceling requests";
+
     // aparently this causes replies to go to finished within this call, even
     // if called from dtor
     foreach (const auto& key, m_PendingRequests.keys()) {
@@ -802,7 +864,8 @@ Sc2LinksDotCom::toRecord(const ScEventData& event, const ScStageData& stage, con
 
     record.side1Race = getRace(match.race1);
     record.side2Race = getRace(match.race2);
-    if (ScRecord::RaceUnknown != record.side1Race) {
+    if (ScRecord::RaceUnknown != record.side1Race ||
+        ScRecord::RaceUnknown != record.side2Race) {
         record.valid |= ScRecord::ValidRaces;
     }
 

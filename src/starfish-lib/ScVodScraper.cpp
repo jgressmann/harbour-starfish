@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,7 @@ ScVodScraper::ScVodScraper(QObject* parent)
     m_Error = Error_None;
     m_Progress = 0;
     m_Classifier = nullptr;
+    m_Year = -1;
 }
 
 
@@ -101,6 +102,24 @@ ScVodScraper::startFetch() {
     _fetch();
 }
 
+//void
+//ScVodScraper::cancelFetch(Cancelation cancelation) {
+
+//    switch (m_Status) {
+//    case Status_VodFetchingInProgress:
+//        setStatus(Status_VodFetchingBeingCanceled);
+//        _cancel(cancelation);
+//        break;
+//    default:
+//        break;
+//    }
+//}
+
+//void
+//ScVodScraper::_cancel(Cancelation) {
+//    setStatus(Status_VodFetchingCanceled);
+//}
+
 void
 ScVodScraper::cancelFetch() {
 
@@ -113,6 +132,7 @@ ScVodScraper::cancelFetch() {
         break;
     }
 }
+
 
 void
 ScVodScraper::_cancel() {
@@ -164,6 +184,13 @@ void
 ScVodScraper::_skip() {
 
 }
+
+//void
+//ScVodScraper::abort() {
+//    qDebug() << id() << "abort enter";
+//    cancelFetch(Cancelation_Immediately);
+//    qDebug() << id() << "abort exit";
+//}
 
 void
 ScVodScraper::abort() {
