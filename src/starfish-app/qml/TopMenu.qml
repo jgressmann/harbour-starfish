@@ -99,7 +99,7 @@ PullDownMenu {
 
     MenuItem {
         text: qsTr("Fetch new VODs")
-        enabled: vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
+        enabled: window.canFetchVods
         onClicked: window.fetchNewVods()
     }
 }
