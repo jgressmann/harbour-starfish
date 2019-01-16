@@ -67,9 +67,14 @@ Page {
         TopMenu {}
 
         ViewPlaceholder {
-            enabled: VodDataManager.ready && vodCount === 0
+            enabled: VodDataManager.ready && vodCount === 0 && vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
             text: Strings.noContent
             hintText: App.isOnline ? "Pull down to fetch new VODs." : "Connect to the internet to fetch new VODs"
+        }
+
+        ViewPlaceholder {
+            enabled: VodDataManager.ready && vodCount === 0 && vodDatabaseDownloader.status === VodDatabaseDownloader.Status_Downloading
+            text: "VODs are being downloaded. It won't be long, now."
         }
 
         ViewPlaceholder {
