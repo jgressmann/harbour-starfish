@@ -124,7 +124,7 @@ App.displayName + " lets you download and stream StarCraft Brood War " +
             Label {
                 x: Theme.horizontalPageMargin
                  width: parent.width-2*x
-                 text: "Copyright (c) 2018 by Jean Gressmann.
+                 text: "Copyright (c) 2018, 2019 Jean Gressmann.
 
 " + App.displayName  + " is available under the <a href=\"https://opensource.org/licenses/MIT\">MIT</a> license."
                  wrapMode: Text.WordWrap
