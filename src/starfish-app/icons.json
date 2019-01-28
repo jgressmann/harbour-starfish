@@ -258,6 +258,11 @@
             "extension": ".png"
         },
         {
+            "regex": "qlash casters invitational",
+            "url": "https://www.dropbox.com/s/zkiyw4gpbj8v72y/qci.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "qlash",
             "url": "https://www.dropbox.com/s/iiap1ys96bdtfnl/qlash.png?dl=1",
             "extension": ".png"
