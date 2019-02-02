@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,140 +38,116 @@ Page {
 
         Column {
             id: column
-            spacing: Theme.paddingLarge
-            x: Theme.paddingMedium
-            width: parent.width - 2*x
-            PageHeader { title: "About " + App.displayName }
+            width: parent.width
+
+            PageHeader {
+                //% "About %1"
+                title: "About " + App.displayName
+            }
 
             Column {
-                spacing: Theme.paddingSmall
-                width: parent.width
+                spacing: Theme.paddingLarge
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2*x
 
-                Image {
-                    source: "/usr/share/icons/hicolor/128x128/apps/harbour-starfish.png"
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    fillMode: Image.PreserveAspectFit
-                    width: Theme.iconSizeLarge
-                    height: Theme.iconSizeLarge
-//                    sourceSize.width: 512
-//                    sourceSize.height: 512
+                Column {
+                    spacing: Theme.paddingSmall
+                    width: parent.width
 
-                    MouseArea {
-                        id: debugEnabler
-                        property int clicks: 0
-                        anchors.fill: parent
+                    Image {
+                        source: "/usr/share/icons/hicolor/128x128/apps/harbour-starfish.png"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        fillMode: Image.PreserveAspectFit
+                        width: Theme.iconSizeLarge
+                        height: Theme.iconSizeLarge
 
-                        onClicked: {
-                            timer.running = true
-                            clicks = clicks + 1
-                        }
 
-                        function timerDone() {
-//                            console.debug("triggered")
-                            if (clicks >= 10) {
-                                debugApp.value = true
+                        MouseArea {
+                            id: debugEnabler
+                            property int clicks: 0
+                            anchors.fill: parent
+
+                            onClicked: {
+                                timer.running = true
+                                clicks = clicks + 1
                             }
 
-                            clicks = 0
-                        }
+                            function timerDone() {
+    //                            console.debug("triggered")
+                                if (clicks >= 10) {
+                                    debugApp.value = true
+                                }
 
-                        Timer {
-                            id: timer
-                            interval: 3000; running: false; repeat: false
-                            onTriggered: debugEnabler.timerDone()
+                                clicks = 0
+                            }
+
+                            Timer {
+                                id: timer
+                                interval: 3000; running: false; repeat: false
+                                onTriggered: debugEnabler.timerDone()
+                            }
                         }
                     }
-                }
 
-                Label {
-                    text: App.displayName + " " + App.version
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    font.pixelSize: Theme.fontSizeLarge
-                    color: Theme.highlightColor
-//                    font.bold: true
-                }
 
-                Button {
-                    text: "Disable debugging"
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    visible: debugApp.value
-                    onClicked: {
-                        debugApp.value = false
+                    Label {
+                        text: App.displayName + " " + App.version
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        font.pixelSize: Theme.fontSizeLarge
+                        color: Theme.highlightColor
+    //                    font.bold: true
                     }
-                 }
-            }
 
-            SectionHeader {
-                text: "Description"
-            }
+                    Button {
+                        text: "Disable debugging"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: debugApp.value
+                        onClicked: {
+                            debugApp.value = false
+                        }
+                     }
+                }
 
-            Label {
-                x: Theme.horizontalPageMargin
-                 width: parent.width-2*x
-                 text:
-App.displayName + " lets you download and stream StarCraft Brood War " +
-"and StarCraft II VODs from the internet."
-                 wrapMode: Text.WordWrap
-                 font.pixelSize: Theme.fontSizeExtraSmall
-                 color: Theme.highlightColor
-                 textFormat: TextEdit.RichText
-            }
+                SectionHeader {
+                    text: "Description"
+                }
 
-            SectionHeader {
-                text: "Licensing"
-            }
+                LinkedLabel {
+                    width: parent.width
+                    text:
+                        App.displayName + " lets you download and stream StarCraft Brood War " +
+                        "and StarCraft II VODs from the internet."
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                }
 
-            Label {
-                x: Theme.horizontalPageMargin
-                 width: parent.width-2*x
-                 text: "Copyright (c) 2018, 2019 Jean Gressmann.
+                SectionHeader {
+                    text: "Licensing"
+                }
 
-" + App.displayName  + " is available under the <a href=\"https://opensource.org/licenses/MIT\">MIT</a> license."
-                 wrapMode: Text.WordWrap
-                 font.pixelSize: Theme.fontSizeExtraSmall
-                 color: Theme.highlightColor
-                 textFormat: TextEdit.RichText
-                 onLinkActivated: function (link) { Qt.openUrlExternally(link) }
-            }
+                LinkedLabel {
+                    width: parent.width
+                    text: "Copyright (c) 2018, 2019 Jean Gressmann.<br/><br/>" +
+    App.displayName  + " is available under the <a href=\"https://opensource.org/licenses/MIT\">MIT</a> license.<br/><br/>" +
+                    "This application uses StarCraft (tm) related media from various sites on the internet.
+                        Should you feel you rights have been infringed please contact me and I'll remove the offending data.<br/><br/>" +
+                    App.displayName + " uses icons downloaded from <a href=\"https://www.flaticon.com\">flaticon</a> created by <a href=\"https://www.flaticon.com/authors/gregor-cresnar\">Gregor Cresnar</a>,
+                        <a href=\"https://www.flaticon.com/authors/freepik\">Freepik</a>, and <a href=\"https://www.flaticon.com/authors/smashicons\">Smashicons</a>."
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                }
 
-            Label {
-                x: Theme.horizontalPageMargin
-                 width: parent.width-2*x
-                 text: "This application uses StarCraft (tm) related media from various sites on the internet.
-Should you feel you rights have been infringed please contact me and I'll remove the offending data."
-                 wrapMode: Text.WordWrap
-                 font.pixelSize: Theme.fontSizeExtraSmall
-                 color: Theme.highlightColor
-                 textFormat: TextEdit.RichText
-                 onLinkActivated: function (link) { Qt.openUrlExternally(link) }
-            }
+                SectionHeader {
+                    text: "Sources"
+                }
 
-            Label {
-                x: Theme.horizontalPageMargin
-                 width: parent.width-2*x
-                 text: App.displayName + " uses icons downloaded from <a href=\"https://www.flaticon.com\">flaticon</a> created by <a href=\"https://www.flaticon.com/authors/gregor-cresnar\">Gregor Cresnar</a>,
-<a href=\"https://www.flaticon.com/authors/freepik\">Freepik</a>, and <a href=\"https://www.flaticon.com/authors/smashicons\">Smashicons</a>."
-                 wrapMode: Text.WordWrap
-                 font.pixelSize: Theme.fontSizeExtraSmall
-                 color: Theme.highlightColor
-                 textFormat: TextEdit.RichText
-                 onLinkActivated: function (link) { Qt.openUrlExternally(link) }
-            }
-
-            SectionHeader {
-                text: "Sources"
-            }
-
-            Label {
-                x: Theme.horizontalPageMargin
-                 width: parent.width-2*x
-                 text: "The sources are available on <a href=\"https://github.com/jgressmann/harbour-starfish\">GitHub</a>.
-"
-                 wrapMode: Text.WordWrap
-                 font.pixelSize: Theme.fontSizeExtraSmall
-                 color: Theme.highlightColor
-                 textFormat: TextEdit.RichText
-                 onLinkActivated: function (link) { Qt.openUrlExternally(link) }
+                LinkedLabel {
+                    width: parent.width
+                    text: "The sources are available on <a href=\"https://github.com/jgressmann/harbour-starfish\">GitHub</a>.
+    "
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                }
             }
         }
     }
