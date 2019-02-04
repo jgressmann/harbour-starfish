@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,11 +23,10 @@
 
 #pragma once
 
-#include "service_interface.h" // http://inz.fi/2011/02/18/qmake-and-d-bus/
-#include <vodman/VMVod.h>
+#include "VMYTDL.h"
+#include "VMService.h"
 
 class QByteArray;
-class QDBusPendingCallWatcher;
 class VMVod;
 class VMVodFileDownload;
 
@@ -45,7 +44,7 @@ public:
     void cancel(qint64 token);
     int maxConcurrentMetaDataDownloads() const { return m_MaxMeta; }
     void setMaxConcurrentMetaDataDownloads(int value);
-
+    void setYtdlPath(const QString& path);
 
 
 signals:
@@ -59,11 +58,6 @@ private slots:
     void onVodFileDownloadRemoved(qint64 handle, const QByteArray& download);
     void onVodFileDownloadChanged(qint64 handle, const QByteArray& download);
     void onVodFileMetaDataDownloadCompleted(qint64 handle, const QByteArray& download);
-    void onNewTokenReply(QDBusPendingCallWatcher *self);
-    void onMetaDataDownloadReply(QDBusPendingCallWatcher *self);
-    void onFileDownloadReply(QDBusPendingCallWatcher *self);
-
-
 
 private:
     enum RequestType {
@@ -87,11 +81,11 @@ private:
     void issueRequest(qint64 token, const Request& request);
 
 private:
-    org::duckdns::jgressmann::vodman::service* m_Service;
+    VMYTDL m_Ytdl;
+    VMService m_Service;
     QList<QPair<qint64, Request>> m_PendingFileRequests;
     QList<QPair<qint64, Request>> m_PendingMetaDataRequests;
     QHash<qint64, Request> m_ActiveRequests;
-    QHash<QDBusPendingCallWatcher*, qint64> m_PendingDBusResponses;
     QHash<qint64, qint64> m_MetaDataTokenMap;
     QHash<qint64, qint64> m_FileTokenMap;
     qint64 m_TokenGenerator;

@@ -1,15 +1,7 @@
-# NOTICE:
-#
-# Application name defined in TARGET has a corresponding QML filename.
-# If name defined in TARGET is changed, the following needs to be done
-# to match new name:
-#   - corresponding QML filename must be changed
-#   - desktop icon filename must be changed
-#   - desktop filename must be changed
-#   - icon definition filename in desktop file must be changed
-#   - translation filenames have to be changed
+include(../../common.pri)
+include(../starfish-lib/src.pri)
+include(../../3rd-party/harbour-vodman/src/vodman-lib/vodman.pri)
 
-# The name of your application
 TARGET = harbour-starfish
 
 CONFIG += sailfishapp
@@ -100,7 +92,7 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/Strings.qml
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
-!CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
+
 
 media.path = /usr/share/$${TARGET}/media
 media.files += media/sc2.png media/bw.png
@@ -134,31 +126,23 @@ SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172 256x256
 # to disable building translations every time, comment out the
 # following CONFIG line
 CONFIG += sailfishapp_i18n
+CONFIG += sailfishapp_i18n_idbased
+CONFIG += sailfishapp_i18n_unfinished
 
 # German translation is enabled as an example. If you aren't
 # planning to localize your app, remember to comment out the
 # following TRANSLATIONS line. And also do not forget to
 # modify the localized app name in the the .desktop file.
-#TRANSLATIONS += translations/harbour-starfish-de.ts
-
-DBUS_INTERFACES += /usr/share/dbus-1/interfaces/org.duckdns.jgressmann.vodman.service.xml
-
-
-QT *= network sql qml xml dbus
+TRANSLATIONS += translations/harbour-starfish.ts
+TRANSLATIONS += translations/harbour-starfish-de.ts
 
 
+QT *= network sql qml xml
 
 
-
-CONFIG *= link_pkgconfig
-PKGCONFIG += sailfishapp
-LIBS += -lvodman
-#LIBS += -L../starfish-lib -lstarfish
 LIBS += -lz
 
 
 
-include(../../common.pri)
-include(../starfish-lib/src.pri)
 
 

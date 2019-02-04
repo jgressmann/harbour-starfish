@@ -21,16 +21,16 @@ BuildRequires:  pkgconfig(Qt5Xml)
 BuildRequires:  pkgconfig(Qt5Sql)
 BuildRequires:  pkgconfig(sailfishapp) >= 0.0.10
 BuildRequires:  desktop-file-utils
-BuildRequires:  libvodman-devel >= 1.0.3
-BuildRequires:  vodman-service >= 1.0.3
 BuildRequires:  zlib-devel
 
 
-
 Requires:   sailfishsilica-qt5 >= 0.10.9
-Requires:   libvodman >= 1.0.3
-Requires:   vodman-service >= 1.0.3
-#Requires:   zlib
+# This line pulls in dependency on python3
+Requires:   pyotherside-qml-plugin-python3-qt5
+# QML Nemo plugins used
+Requires:   nemo-qml-plugin-notifications-qt5
+Requires:   nemo-qml-plugin-dbus-qt5
+Requires:   nemo-qml-plugin-configuration-qt5
 
 
 %description
@@ -48,6 +48,7 @@ Requires:   vodman-service >= 1.0.3
 %{_datadir}/%{name}/classifier.json.gz
 %{_datadir}/%{name}/COPYING
 %{_datadir}/%{name}/icons/*
+%{_datadir}/%{name}/translations/*
 
 
 

@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ import Sailfish.Silica 1.0
 import org.duckdns.jgressmann 1.0
 import ".."
 
-BasePage {
+ContentPage {
     id: page
 
     //property var itemPlaying: null

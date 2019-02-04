@@ -101,27 +101,28 @@ BasePage {
                 text: "Data"
             }
 
-            Button {
-                text: "Clear"
-                anchors.horizontalCenter: parent.horizontalCenter
-                enabled: _toolEnabled
-                onClicked: {
-                    var dialog = pageStack.push(
-                                Qt.resolvedUrl("ConfirmClearDialog.qml"),
-                                {
-                                    acceptDestination: Qt.resolvedUrl("StartPage.qml"),
-                                    acceptDestinationAction: PageStackAction.Replace,
-                                    acceptDestinationReplaceTarget: null,
-                                })
-                    dialog.accepted.connect(function() {
-                        console.debug("clear")
-                        recentlyUsedVideos.recreateTable()
-                        VodDataManager.clear()
-                        VodDataManager.fetchIcons()
-                    })
+            ButtonLayout {
+                width: parent.width
+                Button {
+                    text: "Clear"
+                    enabled: _toolEnabled
+                    onClicked: {
+                        var dialog = pageStack.push(
+                                    Qt.resolvedUrl("ConfirmClearDialog.qml"),
+                                    {
+                                        acceptDestination: Qt.resolvedUrl("StartPage.qml"),
+                                        acceptDestinationAction: PageStackAction.Replace,
+                                        acceptDestinationReplaceTarget: null,
+                                    })
+                        dialog.accepted.connect(function() {
+                            console.debug("clear")
+                            recentlyUsedVideos.recreateTable()
+                            VodDataManager.clear()
+                            VodDataManager.fetchIcons()
+                        })
+                    }
                 }
             }
-
 
             SectionHeader {
                 text: "Seen"
@@ -181,6 +182,63 @@ BasePage {
                         console.debug("reset sql patch level")
                         VodDataManager.resetSqlPatchLevel()
                     }
+                }
+            }
+
+            SectionHeader {
+                text: "youtube-dl"
+            }
+
+            Column {
+                width: parent.width
+                spacing: Theme.paddingMedium
+
+                Item {
+                    height: Theme.paddingSmall
+                    width: parent.width
+                }
+
+                Label {
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2*x
+                    color: Theme.highlightColor
+                    text: {
+                        switch (YTDLDownloader.status) {
+                        case YTDLDownloader.StatusDownloading:
+                            //% "youtube-dl is being downloaded"
+                            return qsTrId("tools-ytdl-downloading")
+                        case YTDLDownloader.StatusError:
+                        case YTDLDownloader.StatusUnavailable:
+                            //% "youtube-dl is not available"
+                            return qsTrId("tools-ytdl-unavailable")
+                        default:
+                            //% "youtube-dl version %1"
+                            return qsTrId("tools-ytdl-version").arg(YTDLDownloader.ytdlVersion)
+                        }
+                    }
+                }
+
+                ButtonLayout {
+                    width: parent.width
+                    Button {
+                        enabled: YTDLDownloader.isOnline &&
+                                 YTDLDownloader.status !== YTDLDownloader.StatusDownloading &&
+                                 !VodDataManager.busy
+                        //% "Update youtube-dl"
+                        text: qsTrId("tools-ytdl-update")
+                        onClicked: YTDLDownloader.download()
+                    }
+
+                    Button {
+                        visible: debugApp.value
+                        text: "delete youtube-dl"
+                        onClicked: YTDLDownloader.remove()
+                    }
+                }
+
+                Item {
+                    height: Theme.paddingSmall
+                    width: parent.width
                 }
             }
 

@@ -26,6 +26,7 @@
 #include <QStandardPaths>
 #include <QMetaObject>
 #include <QQuickItem>
+#include <QDir>
 #include <qqml.h>
 
 #include "Sc2LinksDotCom.h"
@@ -36,6 +37,7 @@
 #include "ScApp.h"
 #include "ScVodman.h"
 #include "ScRecentlyUsedModel.h"
+#include "VMQuickYTDLDownloader.h"
 
 #include <sailfishapp.h>
 
@@ -55,6 +57,14 @@ static QObject *appProvider(QQmlEngine *engine, QJSEngine *scriptEngine)
     Q_UNUSED(scriptEngine)
 
     return new ScApp();
+}
+
+static QObject *vmQuickYTDLDownloader(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+
+    return new VMQuickYTDLDownloader();
 }
 
 static void setupLogging();
@@ -81,7 +91,7 @@ main(int argc, char *argv[]) {
         qmlRegisterUncreatableType<VMVodEnums>(STARFISH_NAMESPACE, 1, 0, "VM", QStringLiteral("wrapper around C++ enums"));
         qmlRegisterUncreatableType<ScEnums>(STARFISH_NAMESPACE, 1, 0, "Sc", QStringLiteral("wrapper around C++ enums"));
         qmlRegisterSingletonType<ScVodDataManager>(STARFISH_NAMESPACE, 1, 0, "VodDataManager", dataManagerProvider);
-
+        qmlRegisterSingletonType<VMQuickYTDLDownloader>(STARFISH_NAMESPACE, 1, 0, "YTDLDownloader", vmQuickYTDLDownloader);
 
         {
             QScopedPointer<QQuickView> view(SailfishApp::createView());

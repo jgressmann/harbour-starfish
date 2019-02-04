@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <vodman/VMVod.h>
+#include "VMVod.h"
 #include "ScRecord.h"
 #include "ScIcons.h"
 #include "ScClassifier.h"
@@ -84,6 +84,7 @@ class ScVodDataManager : public QObject {
     Q_PROPERTY(int vodDownloads READ vodDownloads NOTIFY vodDownloadsChanged)
     Q_PROPERTY(int sqlPatchLevel READ sqlPatchLevel NOTIFY sqlPatchLevelChanged)
     Q_PROPERTY(QString dataDirectory READ dataDirectory NOTIFY dataDirectoryChanged)
+    //Q_PROPERTY(QString ytdlPath WRITE setYtdlPath NOTIFY ytdlPathChanged)
 
 public:
     enum Error {
@@ -195,6 +196,7 @@ public: //
     Q_INVOKABLE void deleteVod(qint64 rowid);
     Q_INVOKABLE int deleteVods(const QString& where);
     Q_INVOKABLE void deleteThumbnail(qint64 rowid);
+    Q_INVOKABLE void setYtdlPath(const QString&  path);
 
 signals:
     void readyChanged();
@@ -235,6 +237,7 @@ signals:
     void vodEndAvailable(qint64 rowid, int endOffsetS);
     void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
     void processVodsToAdd();
+    void ytdlPathChanged(QString path);
 
 
 public slots:

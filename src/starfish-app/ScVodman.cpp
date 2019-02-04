@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,12 +22,10 @@
  */
 
 #include "ScVodman.h"
-#include <vodman/VMVodMetaDataDownload.h>
-#include <vodman/VMVodFileDownload.h>
-#include <QDBusConnection>
+#include "VMVodMetaDataDownload.h"
+#include "VMVodFileDownload.h"
 #include <QDataStream>
-#include <QThread>
-#include <QCoreApplication>
+#include <QDebug>
 
 ScVodman::~ScVodman()
 {
@@ -38,24 +36,18 @@ ScVodman::~ScVodman()
 
     // abort file fetches
     foreach (auto serviceToken, m_FileTokenMap.keys()) {
-        m_Service->cancelFetchVodFile(serviceToken, false);
+        m_Service.cancelFetchVodFile(serviceToken, false);
     }
     qDebug() << "canceled running vod file fetches";
 
-    foreach (auto watcher, m_PendingDBusResponses.keys()) {
-        delete watcher;
-    }
-    qDebug() << "deleted pending D-BUS response watchers";
-
-    delete m_Service;
-    m_Service = nullptr;
-    qDebug() << "deleted D-BUS service";
 
     qDebug() << "dtor exit";
 }
 
 ScVodman::ScVodman(QObject *parent)
     : QObject(parent)
+    , m_Ytdl(this)
+    , m_Service(this)
 {
     m_TokenGenerator = 0;
     m_MaxFile = 1;
@@ -63,30 +55,11 @@ ScVodman::ScVodman(QObject *parent)
     m_CurrentFile = 0;
     m_CurrentMeta = 0;
 
+    m_Service.setYtdl(&m_Ytdl);
 
-    QDBusConnection connection = QDBusConnection::sessionBus();
-    m_Service = new org::duckdns::jgressmann::vodman::service("org.duckdns.jgressmann.vodman.service", "/instance", connection);
-    m_Service->setParent(this);
-
-    connect(
-                m_Service,
-                &org::duckdns::jgressmann::vodman::service::vodFileDownloadRemoved,
-                this,
-                &ScVodman::onVodFileDownloadRemoved);
-
-    connect(
-                m_Service,
-                &org::duckdns::jgressmann::vodman::service::vodFileDownloadChanged,
-                this,
-                &ScVodman::onVodFileDownloadChanged);
-
-
-
-    connect(
-                m_Service,
-                &org::duckdns::jgressmann::vodman::service::vodMetaDataDownloadCompleted,
-                this,
-                &ScVodman::onVodFileMetaDataDownloadCompleted);
+    connect(&m_Service, &VMService::vodFileDownloadRemoved, this, &ScVodman::onVodFileDownloadRemoved);
+    connect(&m_Service, &VMService::vodFileDownloadChanged, this, &ScVodman::onVodFileDownloadChanged);
+    connect(&m_Service, &VMService::vodMetaDataDownloadCompleted, this, &ScVodman::onVodFileMetaDataDownloadCompleted);
 }
 
 void
@@ -118,16 +91,32 @@ ScVodman::startFetchMetaData(qint64 token, const QString& url) {
 
 void
 ScVodman::issueRequest(qint64 token, const Request& request) {
-    m_ActiveRequests.insert(token, request);
-    auto reply = m_Service->newToken();
-    auto watcher = new QDBusPendingCallWatcher(reply, this);
-    connect(watcher, &QDBusPendingCallWatcher::finished, this, &ScVodman::onNewTokenReply);
-    m_PendingDBusResponses.insert(watcher, token);
-    // no need for this, async calls run on the event loop
-    // https://www.qtcentre.org/threads/48450-Problem-with-asyncCall-in-DBus
-//    if (reply.isFinished()) {
-//        onNewTokenReply(watcher);
-//    }
+    auto it = m_ActiveRequests.insert(token, request);
+    Request& r = it.value();
+    r.token = m_Service.newToken();
+    switch (r.type) {
+    case RT_MetaData: {
+        m_MetaDataTokenMap.insert(r.token, token);
+        m_Service.startFetchVodMetaData(r.token, r.url);
+    } break;
+    case RT_File: {
+        VMVodFileDownloadRequest serviceRequest;
+        serviceRequest.filePath = r.filePath;
+        serviceRequest.description = r.vod.description();
+        serviceRequest.format = r.vod.data()._formats[r.formatIndex];
+        QByteArray b;
+        {
+            QDataStream s(&b, QIODevice::WriteOnly);
+            s << serviceRequest;
+        }
+        m_FileTokenMap.insert(r.token, token);
+        m_Service.startFetchVodFile(r.token, b);
+    } break;
+    default:
+        m_ActiveRequests.remove(token);
+        emit downloadFailed(token, VMVodEnums::VM_ErrorUnknown);
+        break;
+    }
 }
 
 void
@@ -207,138 +196,6 @@ ScVodman::onVodFileMetaDataDownloadCompleted(qint64 token, const QByteArray& res
     qDebug() << "exit" << token;
 }
 
-
-void
-ScVodman::onNewTokenReply(QDBusPendingCallWatcher *self) {
-    self->deleteLater();
-    QDBusPendingReply<qint64> reply = *self;
-    auto requestId = m_PendingDBusResponses.value(self, -1);
-    if (requestId >= 0) {
-        m_PendingDBusResponses.remove(self);
-        auto it = m_ActiveRequests.find(requestId);
-        if (it != m_ActiveRequests.end()) {
-            Request& r = it.value();
-            if (reply.isValid()) {
-                r.token = reply.value();
-                switch (r.type) {
-                case RT_MetaData: {
-                    auto reply = m_Service->startFetchVodMetaData(r.token, r.url);
-                    auto watcher = new QDBusPendingCallWatcher(reply, this);
-                    connect(watcher, &QDBusPendingCallWatcher::finished, this, &ScVodman::onMetaDataDownloadReply);
-                    m_PendingDBusResponses.insert(watcher, requestId);
-                    m_MetaDataTokenMap.insert(r.token, requestId);
-                    // see comment in issueRequest
-//                    if (reply.isFinished()) {
-//                        onMetaDataDownloadReply(watcher);
-//                    }
-                } break;
-                case RT_File: {
-                    VMVodFileDownloadRequest serviceRequest;
-                    serviceRequest.filePath = r.filePath;
-                    serviceRequest.description = r.vod.description();
-                    serviceRequest.format = r.vod.data()._formats[r.formatIndex];
-                    QByteArray b;
-                    {
-                        QDataStream s(&b, QIODevice::WriteOnly);
-                        s << serviceRequest;
-                    }
-                    auto reply = m_Service->startFetchVodFile(r.token, b);
-                    auto watcher = new QDBusPendingCallWatcher(reply, this);
-                    connect(watcher, &QDBusPendingCallWatcher::finished, this, &ScVodman::onFileDownloadReply);
-                    m_PendingDBusResponses.insert(watcher, requestId);
-                    m_FileTokenMap.insert(r.token, requestId);
-                    // see comment in issueRequest
-//                    if (reply.isFinished()) {
-//                        onFileDownloadReply(watcher);
-//                    }
-                } break;
-                default:
-                    m_ActiveRequests.remove(requestId);
-                    emit downloadFailed(requestId, VMVodEnums::VM_ErrorUnknown);
-                    break;
-                }
-            } else {
-                 qDebug() << "invalid new token reply" << reply.error();
-                 m_ActiveRequests.remove(requestId);
-                 switch (r.type) {
-                 case RT_MetaData:
-                     --m_CurrentMeta;
-                     scheduleNextMetaDataRequest();
-                     break;
-                 case RT_File:
-                     --m_CurrentFile;
-                     scheduleNextFileRequest();
-                     break;
-                 default: // squelch compiler warning
-                     break;
-                 }
-                 emit downloadFailed(requestId, VMVodEnums::VM_ErrorServiceUnavailable);
-            }
-        } else {
-            qDebug() << "no active request for request id" << requestId;
-        }
-    } else {
-        qDebug() << "no request for DBUS reply" << reply;
-    }
-}
-
-
-void
-ScVodman::onMetaDataDownloadReply(QDBusPendingCallWatcher *self) {
-    self->deleteLater();
-    QDBusPendingReply<> reply = *self;
-    auto requestId = m_PendingDBusResponses.value(self, -1);
-    if (requestId >= 0) {
-        m_PendingDBusResponses.remove(self);
-        const auto it = m_ActiveRequests.constFind(requestId);
-        if (it != m_ActiveRequests.cend()) {
-            const Request& r = it.value();
-            if (reply.isValid()) {
-                // nothing to do
-            } else {
-                qDebug() << "invalid metadata download reply for" << r.url  << "error" << reply.error();
-                m_ActiveRequests.remove(requestId);
-                --m_CurrentMeta;
-                emit downloadFailed(requestId, VMVodEnums::VM_ErrorServiceUnavailable);
-                scheduleNextMetaDataRequest();
-            }
-        } else {
-            // reply is async to event onVodFileMetaDataDownloadCompleted
-            //qDebug() << "no active request for request id" << requestId;
-        }
-    } else {
-        qDebug() << "no request for DBUS reply";
-    }
-}
-
-void
-ScVodman::onFileDownloadReply(QDBusPendingCallWatcher *self) {
-    self->deleteLater();
-    QDBusPendingReply<> reply = *self;
-    auto requestId = m_PendingDBusResponses.value(self, -1);
-    if (requestId >= 0) {
-        m_PendingDBusResponses.remove(self);
-        const auto it = m_ActiveRequests.constFind(requestId);
-        if (it != m_ActiveRequests.cend()) {
-            const Request& r = it.value();
-            if (reply.isValid()) {
-                // nothing to do
-            } else {
-                qDebug() << "invalid file download reply for" << r.url  << "error" << reply.error();
-                m_ActiveRequests.remove(requestId);
-                --m_CurrentFile;
-                emit downloadFailed(requestId, VMVodEnums::VM_ErrorServiceUnavailable);
-                scheduleNextFileRequest();
-            }
-        } else {
-            // reply is async to event onVodFileDownloadRemoved
-            //qDebug() << "no active request for request id" << requestId;
-        }
-    } else {
-        qDebug() << "no request for DBUS reply";
-    }
-}
-
 qint64
 ScVodman::newToken() {
     return m_TokenGenerator++;
@@ -415,7 +272,7 @@ ScVodman::cancel(qint64 token) {
     auto end = m_FileTokenMap.end();
     for (auto it = beg; it != end; ++it) {
         if (it.value() == token) {
-            m_Service->cancelFetchVodFile(it.key(), false);
+            m_Service.cancelFetchVodFile(it.key(), false);
             return;
         }
     }
@@ -456,3 +313,8 @@ ScVodman::setMaxConcurrentMetaDataDownloads(int value) {
     }
 }
 
+void
+ScVodman::setYtdlPath(const QString& path)
+{
+    m_Ytdl.setYtdlPath(path);
+}

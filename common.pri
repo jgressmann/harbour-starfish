@@ -23,3 +23,4 @@ CONFIG(debug, debug|release) {
     QMAKE_CXXFLAGS += -O0
 }
 
+!CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT

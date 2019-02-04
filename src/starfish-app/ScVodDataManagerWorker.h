@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,9 +23,10 @@
 
 #pragma once
 
-#include <vodman/VMVod.h>
+
 #include <QSqlDatabase>
 #include <QSharedPointer>
+#include "VMVod.h"
 #include "ScVodman.h"
 #include "conq.h"
 #include <functional>
@@ -63,6 +64,7 @@ public:
     void fetchSeen(qint64 rowid, const QString& table, const QString& where);
     void fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS);
 
+
 signals:
     void fetchingMetaData(qint64 rowid);
     void fetchingThumbnail(qint64 rowid);
@@ -89,6 +91,7 @@ signals:
 public slots:
     void process();
     void maxConcurrentMetaDataDownloadsChanged(int value);
+    void setYtdlPath(const QString& path);
 
 private:
     struct VodmanMetaDataRequest {

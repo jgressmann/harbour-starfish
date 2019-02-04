@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,6 @@
 
 #include <QDebug>
 #include <QRegExp>
-#include <QMutexLocker>
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QSqlRecord>
@@ -51,6 +50,9 @@
 #include <QUrlQuery>
 #include <QMimeDatabase>
 #include <QMimeData>
+#include <QStandardPaths>
+#include <QJsonParseError>
+#include <QDataStream>
 #include <stdio.h>
 #include <cassert>
 #include <sys/types.h>
@@ -474,6 +476,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(this, &ScVodDataManager::startWorker, m_WorkerInterface, &ScVodDataManagerWorker::process);
     connect(this, &ScVodDataManager::stopThread, m_WorkerInterface, &QObject::deleteLater);
     connect(this, &ScVodDataManager::maxConcurrentMetaDataDownloadsChanged, m_WorkerInterface, &ScVodDataManagerWorker::maxConcurrentMetaDataDownloadsChanged);
+    connect(this, &ScVodDataManager::ytdlPathChanged, m_WorkerInterface, &ScVodDataManagerWorker::setYtdlPath);
 
     m_WorkerThread.start();
 
@@ -3026,4 +3029,11 @@ ScVodDataManager::databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffe
     } else {
         callback(insertIdOrNumRowsAffected, false);
     }
+}
+
+
+void
+ScVodDataManager::setYtdlPath(const QString& path)
+{
+    emit ytdlPathChanged(path);
 }

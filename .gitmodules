@@ -1,0 +1,3 @@
+[submodule "3rd-party/harbour-vodman"]
+	path = 3rd-party/harbour-vodman
+	url = git@github.com:jgressmann/harbour-vodman.git

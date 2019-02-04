@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,16 +32,21 @@ import "."
 
 ApplicationWindow {
     id: window
-//    initialPage: Component { StartPage {} }
-//    initialPage: Qt.resolvedUrl("pages/SettingsPage.qml")
-    initialPage: Qt.resolvedUrl("pages/StartPage.qml")
+
+    //    initialPage: Qt.resolvedUrl("pages/SettingsPage.qml")
+    initialPage: YTDLDownloader.status === YTDLDownloader.StatusReady
+                 ? Qt.resolvedUrl("pages/StartPage.qml")
+                 : Qt.resolvedUrl("pages/YTDLPage.qml")
     cover: Qt.resolvedUrl("cover/CoverPage.qml")
     allowedOrientations: defaultAllowedOrientations
     property int _vodsAdded: 0
-    readonly property bool canFetchVods: !VodDataManager.busy &&
-                                          App.isOnline &&
-                                          vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
+    readonly property bool canFetchVods:
+        YTDLDownloader.status === YTDLDownloader.StatusReady &&
+        !VodDataManager.busy &&
+        App.isOnline &&
+        vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
 
+    property bool _triggeringYtdlPage: false
 
     Sc2LinksDotComScraper {
         id: sc2LinksDotComScraper
@@ -181,6 +186,7 @@ ApplicationWindow {
             id: debugApp
             key: "/debug"
             defaultValue: false
+            onValueChanged: _setMode()
         }
 
         ConfigurationValue {
@@ -372,6 +378,18 @@ ApplicationWindow {
         }
     }
 
+    Connections {
+        target: YTDLDownloader
+        onStatusChanged: _switchContentPage()
+        onYtdlPathChanged: _setYtdlPath()
+    }
+
+    Connections {
+        target: pageStack
+        onCurrentPageChanged: _switchContentPage()
+        onBusyChanged: _switchContentPage()
+    }
+
     Component.onCompleted: {
         VodDataManager.vodsAdded.connect(_onVodsAdded)
         VodDataManager.busyChanged.connect(_busyChanged)
@@ -397,6 +415,9 @@ ApplicationWindow {
             return "match_date>=date('now', '-" + settingNewWindowDays.value.toFixed(0) + " days')" +
                                     (settingNewRemoveSeen.value ? " and seen=0" : "")
         }
+
+        _setMode()
+        _setYtdlPath()
     }
 
     function _setScraper() {
@@ -441,6 +462,41 @@ ApplicationWindow {
 
     function aboutToQuit() {
         console.debug("about to quit")
+    }
+
+    function _setYtdlPath() {
+        if (YTDLDownloader.status === YTDLDownloader.StatusReady) {
+            VodDataManager.setYtdlPath(YTDLDownloader.ytdlPath)
+        } else {
+            VodDataManager.setYtdlPath("")
+        }
+    }
+
+    function _setMode() {
+        YTDLDownloader.mode = debugApp.value ? YTDLDownloader.ModeTest : YTDLDownloader.ModeRelease
+    }
+
+    function _switchContentPage() {
+        if (!pageStack.busy) {
+            switch (YTDLDownloader.status) {
+            case YTDLDownloader.StatusReady:
+                if (pageStack.depth === 1 && pageStack.currentPage.isYTDLPage) {
+                    pageStack.replace(Qt.resolvedUrl("pages/StartPage.qml"))
+                }
+                break;
+            case YTDLDownloader.StatusUnavailable:
+                if (pageStack.depth > 1) {
+                    // sucks, after the next line will enter again to end up here once more
+                    pageStack.pop(null, PageStackAction.Immediate)
+//                        pageStack.completeAnimation()
+                }
+                if (!pageStack.currentPage.isYTDLPage) {
+                    pageStack.replace(Qt.resolvedUrl("pages/YTDLPage.qml"), {backNavigation: false})
+                }
+                break;
+            }
+
+        }
     }
 }
 

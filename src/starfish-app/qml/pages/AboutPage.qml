@@ -47,12 +47,13 @@ Page {
 
             Column {
                 spacing: Theme.paddingLarge
-                x: Theme.horizontalPageMargin
-                width: parent.width - 2*x
+                width: parent.width
 
                 Column {
                     spacing: Theme.paddingSmall
-                    width: parent.width
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2*x
+
 
                     Image {
                         source: "/usr/share/icons/hicolor/128x128/apps/harbour-starfish.png"
@@ -98,6 +99,14 @@ Page {
     //                    font.bold: true
                     }
 
+                    Label {
+                        visible: YTDLDownloader.status === YTDLDownloader.StatusReady
+                        text: "youtube-dl " + YTDLDownloader.ytdlVersion
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        font.pixelSize: Theme.fontSizeMedium
+                        color: Theme.highlightColor
+                    }
+
                     Button {
                         text: "Disable debugging"
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -105,7 +114,7 @@ Page {
                         onClicked: {
                             debugApp.value = false
                         }
-                     }
+                    }
                 }
 
                 SectionHeader {
@@ -113,12 +122,14 @@ Page {
                 }
 
                 LinkedLabel {
-                    width: parent.width
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2*x
+
                     text:
                         App.displayName + " lets you download and stream StarCraft Brood War " +
                         "and StarCraft II VODs from the internet."
                     wrapMode: Text.WordWrap
-                    font.pixelSize: Theme.fontSizeExtraSmall
+                    font.pixelSize: Theme.fontSizeSmall
                 }
 
                 SectionHeader {
@@ -126,7 +137,9 @@ Page {
                 }
 
                 LinkedLabel {
-                    width: parent.width
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2*x
+
                     text: "Copyright (c) 2018, 2019 Jean Gressmann.<br/><br/>" +
     App.displayName  + " is available under the <a href=\"https://opensource.org/licenses/MIT\">MIT</a> license.<br/><br/>" +
                     "This application uses StarCraft (tm) related media from various sites on the internet.
@@ -134,7 +147,7 @@ Page {
                     App.displayName + " uses icons downloaded from <a href=\"https://www.flaticon.com\">flaticon</a> created by <a href=\"https://www.flaticon.com/authors/gregor-cresnar\">Gregor Cresnar</a>,
                         <a href=\"https://www.flaticon.com/authors/freepik\">Freepik</a>, and <a href=\"https://www.flaticon.com/authors/smashicons\">Smashicons</a>."
                     wrapMode: Text.WordWrap
-                    font.pixelSize: Theme.fontSizeExtraSmall
+                    font.pixelSize: Theme.fontSizeSmall
                 }
 
                 SectionHeader {
@@ -142,11 +155,38 @@ Page {
                 }
 
                 LinkedLabel {
-                    width: parent.width
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2*x
+
                     text: "The sources are available on <a href=\"https://github.com/jgressmann/harbour-starfish\">GitHub</a>.
     "
                     wrapMode: Text.WordWrap
-                    font.pixelSize: Theme.fontSizeExtraSmall
+                    font.pixelSize: Theme.fontSizeSmall
+                }
+
+                SectionHeader {
+                    //% "Translations"
+                    text: qsTrId("about-translations-header")
+                }
+
+                Column {
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2*x
+                    spacing: Theme.paddingSmall
+
+                    DetailItem {
+                        //% "English"
+                        label: qsTrId("about-translations-english-label")
+                        //% "names of translators"
+                        value: qsTrId("about-translations-english-value")
+                    }
+
+                    DetailItem {
+                        //% "German"
+                        label: qsTrId("about-translations-german-label")
+                        //% "names of translators"
+                        value: qsTrId("about-translations-german-value")
+                    }
                 }
             }
         }
