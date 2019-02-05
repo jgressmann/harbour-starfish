@@ -24,11 +24,10 @@
 #pragma once
 
 #include "VMYTDL.h"
-#include "VMService.h"
 
-class QByteArray;
 class VMVod;
 class VMVodFileDownload;
+class VMVodMetaDataDownload;
 
 class ScVodman : public QObject
 {
@@ -55,9 +54,9 @@ signals:
     void maxConcurrentMetaDataDownloadsChanged();
 
 private slots:
-    void onVodFileDownloadRemoved(qint64 handle, const QByteArray& download);
-    void onVodFileDownloadChanged(qint64 handle, const QByteArray& download);
-    void onVodFileMetaDataDownloadCompleted(qint64 handle, const QByteArray& download);
+    void onVodFileDownloadRemoved(qint64 handle, const VMVodFileDownload& download);
+    void onVodFileDownloadChanged(qint64 handle, const VMVodFileDownload& download);
+    void onVodFileMetaDataDownloadCompleted(qint64 handle, const VMVodMetaDataDownload& download);
 
 private:
     enum RequestType {
@@ -68,7 +67,6 @@ private:
 
     struct Request {
         RequestType type;
-        qint64 token;
         QString url;
         QString filePath;
         VMVod vod;
@@ -82,12 +80,9 @@ private:
 
 private:
     VMYTDL m_Ytdl;
-    VMService m_Service;
     QList<QPair<qint64, Request>> m_PendingFileRequests;
     QList<QPair<qint64, Request>> m_PendingMetaDataRequests;
     QHash<qint64, Request> m_ActiveRequests;
-    QHash<qint64, qint64> m_MetaDataTokenMap;
-    QHash<qint64, qint64> m_FileTokenMap;
     qint64 m_TokenGenerator;
     int m_MaxFile, m_CurrentFile, m_MaxMeta, m_CurrentMeta;
 };

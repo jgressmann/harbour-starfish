@@ -24,7 +24,7 @@
 #include "ScVodman.h"
 #include "VMVodMetaDataDownload.h"
 #include "VMVodFileDownload.h"
-#include <QDataStream>
+
 #include <QDebug>
 
 ScVodman::~ScVodman()
@@ -35,8 +35,12 @@ ScVodman::~ScVodman()
     disconnect();
 
     // abort file fetches
-    foreach (auto serviceToken, m_FileTokenMap.keys()) {
-        m_Service.cancelFetchVodFile(serviceToken, false);
+    const auto beg = m_ActiveRequests.cbegin();
+    const auto end = m_ActiveRequests.cend();
+    for (auto it = beg; it != end; ++it) {
+        if (RT_File == it.value().type) {
+            m_Ytdl.cancelFetchVodFile(it.key(), false);
+        }
     }
     qDebug() << "canceled running vod file fetches";
 
@@ -47,7 +51,6 @@ ScVodman::~ScVodman()
 ScVodman::ScVodman(QObject *parent)
     : QObject(parent)
     , m_Ytdl(this)
-    , m_Service(this)
 {
     m_TokenGenerator = 0;
     m_MaxFile = 1;
@@ -55,11 +58,9 @@ ScVodman::ScVodman(QObject *parent)
     m_CurrentFile = 0;
     m_CurrentMeta = 0;
 
-    m_Service.setYtdl(&m_Ytdl);
-
-    connect(&m_Service, &VMService::vodFileDownloadRemoved, this, &ScVodman::onVodFileDownloadRemoved);
-    connect(&m_Service, &VMService::vodFileDownloadChanged, this, &ScVodman::onVodFileDownloadChanged);
-    connect(&m_Service, &VMService::vodMetaDataDownloadCompleted, this, &ScVodman::onVodFileMetaDataDownloadCompleted);
+    connect(&m_Ytdl, &VMYTDL::vodFileDownloadCompleted, this, &ScVodman::onVodFileDownloadRemoved);
+    connect(&m_Ytdl, &VMYTDL::vodFileDownloadChanged, this, &ScVodman::onVodFileDownloadChanged);
+    connect(&m_Ytdl, &VMYTDL::vodMetaDataDownloadCompleted, this, &ScVodman::onVodFileMetaDataDownloadCompleted);
 }
 
 void
@@ -78,7 +79,6 @@ ScVodman::startFetchMetaData(qint64 token, const QString& url) {
     r.type = RT_MetaData;
     r.url = url;
     r.formatIndex = -1;
-    r.token = -1;
 
 
     if (m_MaxMeta > 0 && m_CurrentMeta == m_MaxMeta) {
@@ -92,25 +92,17 @@ ScVodman::startFetchMetaData(qint64 token, const QString& url) {
 void
 ScVodman::issueRequest(qint64 token, const Request& request) {
     auto it = m_ActiveRequests.insert(token, request);
-    Request& r = it.value();
-    r.token = m_Service.newToken();
+    const Request& r = it.value();
     switch (r.type) {
     case RT_MetaData: {
-        m_MetaDataTokenMap.insert(r.token, token);
-        m_Service.startFetchVodMetaData(r.token, r.url);
+        m_Ytdl.startFetchVodMetaData(token, r.url);
     } break;
     case RT_File: {
         VMVodFileDownloadRequest serviceRequest;
         serviceRequest.filePath = r.filePath;
         serviceRequest.description = r.vod.description();
         serviceRequest.format = r.vod.data()._formats[r.formatIndex];
-        QByteArray b;
-        {
-            QDataStream s(&b, QIODevice::WriteOnly);
-            s << serviceRequest;
-        }
-        m_FileTokenMap.insert(r.token, token);
-        m_Service.startFetchVodFile(r.token, b);
+        m_Ytdl.startFetchVodFile(token, serviceRequest);
     } break;
     default:
         m_ActiveRequests.remove(token);
@@ -145,7 +137,6 @@ ScVodman::startFetchFile(qint64 token, const VMVod& vod, int formatIndex, const 
     r.type = RT_File;
     r.vod = vod;
     r.formatIndex = formatIndex;
-    r.token = -1;
     r.filePath = filePath;
 
     if (m_MaxMeta > 0 && m_CurrentMeta == m_MaxMeta) {
@@ -157,36 +148,26 @@ ScVodman::startFetchFile(qint64 token, const VMVod& vod, int formatIndex, const 
 }
 
 void
-ScVodman::onVodFileMetaDataDownloadCompleted(qint64 token, const QByteArray& result) {
+ScVodman::onVodFileMetaDataDownloadCompleted(qint64 token, const VMVodMetaDataDownload& download) {
 
     qDebug() << "enter" << token;
-    auto requestId = m_MetaDataTokenMap.value(token, -1);
-    if (requestId >= 0) {
-
-        VMVodMetaDataDownload download;
-        {
-            QDataStream s(result);
-            s >> download;
-        }
-
-        qDebug() << "mine" << requestId << download;
+    if (m_ActiveRequests.remove(token)) {
+        qDebug() << "mine" << token << download;
 
         if (download.isValid()) {
             if (download.error() == VMVodEnums::VM_ErrorNone) {
-                emit metaDataDownloadCompleted(requestId, download.vod());
+                emit metaDataDownloadCompleted(token, download.vod());
             } else {
-                emit downloadFailed(requestId, download.error());
+                emit downloadFailed(token, download.error());
             }
         } else {
             if (download.error() != VMVodEnums::VM_ErrorNone) {
-                emit downloadFailed(requestId, download.error());
+                emit downloadFailed(token, download.error());
             } else {
-                emit downloadFailed(requestId, VMVodEnums::VM_ErrorUnknown);
+                emit downloadFailed(token, VMVodEnums::VM_ErrorUnknown);
             }
         }
 
-        m_MetaDataTokenMap.remove(token);
-        m_ActiveRequests.remove(requestId);
         --m_CurrentMeta;
         scheduleNextMetaDataRequest();
     } else {
@@ -202,55 +183,48 @@ ScVodman::newToken() {
 }
 
 void
-ScVodman::onVodFileDownloadRemoved(qint64 handle, const QByteArray& result)
+ScVodman::onVodFileDownloadRemoved(qint64 token, const VMVodFileDownload& download)
 {
-    qDebug() << "enter" << handle;
+    qDebug() << "enter" << token;
 
-    auto requestId = m_FileTokenMap.value(handle, -1);
-    if (requestId >= 0) {
-
-        VMVodFileDownload download;
-        {
-            QDataStream s(result);
-            s >> download;
-        }
-
+    if (m_ActiveRequests.remove(token)) {
         if (download.isValid()) { // valid includes 'no error'
-            emit fileDownloadCompleted(requestId, download);
+            emit fileDownloadCompleted(token, download);
         } else {
-            emit downloadFailed(requestId, download.error());
+            emit downloadFailed(token, download.error());
         }
 
-        m_FileTokenMap.remove(handle);
-        m_ActiveRequests.remove(requestId);
         --m_CurrentFile;
         scheduleNextFileRequest();
     }
 
-    qDebug() << "exit" << handle;
+    qDebug() << "exit" << token;
 }
 
 void
-ScVodman::onVodFileDownloadChanged(qint64 handle, const QByteArray& result)
+ScVodman::onVodFileDownloadChanged(qint64 handle, const VMVodFileDownload& download)
 {
     qDebug() << "enter" << handle;
 
-    auto requestId = m_FileTokenMap.value(handle, -1);
-    if (requestId >= 0) {
-        VMVodFileDownload download;
-        {
-            QDataStream s(result);
-            s >> download;
-        }
-
-        emit fileDownloadChanged(requestId, download);
+    if (m_ActiveRequests.contains(handle)) {
+        emit fileDownloadChanged(handle, download);
     }
 
     qDebug() << "exit" << handle;
 }
 
 void
-ScVodman::cancel(qint64 token) {
+ScVodman::cancel(qint64 token)
+{
+    auto it = m_ActiveRequests.find(token);
+    if (it != m_ActiveRequests.end()) {
+        auto cancel = RT_File == it.value().type;
+        m_ActiveRequests.erase(it);
+        if (cancel) {
+            m_Ytdl.cancelFetchVodFile(token, false);
+        }
+        return;
+    }
 
     for (int i = 0; i < m_PendingFileRequests.size(); ++i) {
         const auto& pair = m_PendingFileRequests[i];
@@ -264,15 +238,6 @@ ScVodman::cancel(qint64 token) {
         const auto& pair = m_PendingMetaDataRequests[i];
         if (pair.first == token) {
             m_PendingMetaDataRequests.removeAt(i);
-            return;
-        }
-    }
-
-    auto beg = m_FileTokenMap.begin();
-    auto end = m_FileTokenMap.end();
-    for (auto it = beg; it != end; ++it) {
-        if (it.value() == token) {
-            m_Service.cancelFetchVodFile(it.key(), false);
             return;
         }
     }
