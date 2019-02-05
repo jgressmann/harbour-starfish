@@ -50,7 +50,7 @@ Requires:   nemo-qml-plugin-configuration-qt5
 %{_datadir}/%{name}/icons/*
 %{_datadir}/%{name}/translations/*
 
-
+%define __provides_exclude_from ^%{_datadir}/.*$
 
 %prep
 %setup -q -n %{name}-%{version}

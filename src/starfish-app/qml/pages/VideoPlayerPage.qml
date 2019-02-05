@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@ import QtQuick 2.0
 import QtGraphicalEffects 1.0
 import QtMultimedia 5.0
 import Sailfish.Silica 1.0
-import Nemo.KeepAlive 1.1
 import org.duckdns.jgressmann 1.0
 import ".."
 
@@ -53,7 +52,6 @@ Page {
     property bool _closed: false
     property bool _grabFrameWhenReady: false
     readonly property bool isPlaying: mediaplayer.playbackState === MediaPlayer.PlayingState
-
 
     signal videoFrameCaptured(string filepath)
     signal videoCoverCaptured(string filepath)
@@ -134,8 +132,8 @@ Page {
 
             // apparently isPlaying isn't updated here yet, sigh
 //            console.debug("isPlaying=" + isPlaying)
-            DisplayBlanking.preventBlanking = playbackState === MediaPlayer.PlayingState
-            console.debug("prevent blank="+DisplayBlanking.preventBlanking)
+
+            _preventBlanking(playbackState === MediaPlayer.PlayingState)
         }
 
 //        onVolumeChanged: {
@@ -562,7 +560,7 @@ Page {
 
     Component.onDestruction: {
         console.debug("destruction")
-        DisplayBlanking.preventBlanking = false
+        _preventBlanking(false)
         _closed = true
         Global.videoPlayerPage = null
         // save current frame
@@ -696,6 +694,15 @@ Page {
             a.saveToFile(Global.videoCoverPath)
             videoCoverCaptured(Global.videoCoverPath)
         })
+    }
+
+    function _preventBlanking(b) {
+        try {
+            KeepAlive.preventBlanking = b
+            console.debug("prevent blank="+KeepAlive.preventBlanking)
+        } catch (e) {
+            console.debug("prevent blanking not available")
+        }
     }
 }
 
