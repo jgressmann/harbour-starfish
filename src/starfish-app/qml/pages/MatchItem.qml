@@ -174,6 +174,7 @@ ListItem {
                         enabled: thumbnail.visible && (thumbnail._hadImageLoadError || _thumbnailState !== thumbnailStateAvailable)
                         onClicked: {
                             thumbnail._hadImageLoadError = false
+                            _thumbnailFilePath = ""
                             _fetchThumbnail()
                         }
 
@@ -588,13 +589,8 @@ ListItem {
             VodDataManager.cancelTicket(tickets[i])
         }
 
-        if (_metaDataState === metaDataStateFetching) {
-            VodDataManager.cancelFetchMetaData(_metaDataTicket, rowId)
-        }
-
-        if (_thumbnailState === thumbnailStateFetching) {
-            VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
-        }
+        _abortFetchMetaData()
+        _abortFetchThumbnail()
     }
 
     RemorsePopup { id: remorse }
@@ -653,10 +649,16 @@ ListItem {
                 visible: rowId >= 0 && !!_vod
                 onClicked: {
                     _cancelDownload()
+                    _abortFetchMetaData()
+                    _abortFetchThumbnail()
+
                     progressOverlay.progress = 0
                     _clicked = false
                     _vodUrl = ""
                     _vod = null
+                    _thumbnailFilePath = ""
+                    _metaDataState = metaDataStateInitial
+                    _thumbnailState = thumbnailStateInitial
                     VodDataManager.deleteMetaData(rowId)
                     if (App.isOnline) {
                         _fetchMetaData()
@@ -717,7 +719,10 @@ ListItem {
                 text: "Delete thumbnail"
                 visible: rowId >= 0
                 onClicked: {
-                    _thumbnailState = thumbnailStateInitial // reset
+                    _abortFetchThumbnail()
+
+                    _thumbnailFilePath = ""
+                    _thumbnailState = thumbnailStateInitial
                     VodDataManager.deleteThumbnail(rowId)
                     if (App.isOnline) {
                         _fetchThumbnail()
@@ -750,7 +755,9 @@ ListItem {
     function thumbnailAvailable(filePath) {
 //            console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
         if (_thumbnailFilePath === filePath) {
-            _thumbnailFilePath = "" // force reload
+            if (Image.Ready !== thumbnail.status) { // added to hopefully prevent some image popping
+                _thumbnailFilePath = "" // force reload
+            }
         }
 
         _thumbnailFilePath = filePath
@@ -1058,27 +1065,71 @@ ListItem {
         progressOverlay.show = false
     }
 
-    function _fetchMetaData() {
+    function _abortFetchMetaData() {
         if (-1 !== _metaDataTicket) {
             VodDataManager.cancelFetchMetaData(_metaDataTicket, rowId)
+            _metaDataTicket = -1;
         }
+    }
 
-        _metaDataTicket = VodDataManager.fetchMetaData(rowId)
-        if (-1 !== _metaDataTicket) {
-            _metaDataState = metaDataStateFetching
+    function _fetchMetaData() {
+        if (-1 === _metaDataTicket) {
+            _metaDataTicket = VodDataManager.fetchMetaData(rowId)
+            if (-1 !== _metaDataTicket) {
+                _metaDataState = metaDataStateFetching
+            }
+        }
+    }
+
+//    function _fetchMetaData() {
+//        if (-1 !== _metaDataTicket) {
+//            VodDataManager.cancelFetchMetaData(_metaDataTicket, rowId)
+//        }
+
+//        _metaDataTicket = VodDataManager.fetchMetaData(rowId)
+//        if (-1 !== _metaDataTicket) {
+//            _metaDataState = metaDataStateFetching
+//        }
+//    }
+
+    function _abortFetchThumbnail() {
+        if (-1 !== _thumbnailTicket) {
+            VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
+            _thumbnailTicket = -1
         }
     }
 
     function _fetchThumbnail() {
-        if (-1 !== _thumbnailTicket) {
-            VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
-        }
+        if (-1 === _thumbnailTicket) {
+            // fetch if not using the same image already
+            if (!_thumbnailFilePath ||
+                !thumbnail.source === _thumbnailFilePath ||
+                thumbnail.status === Image.Error) {
 
-        _thumbnailTicket = VodDataManager.fetchThumbnail(rowId)
-        if (-1 !== _thumbnailTicket) {
-            _thumbnailState = thumbnailStateFetching
+                _thumbnailTicket = VodDataManager.fetchThumbnail(rowId)
+                if (-1 !== _thumbnailTicket) {
+                    _thumbnailState = thumbnailStateFetching
+                }
+            }
         }
     }
+
+//    function _fetchThumbnail() {
+//        if (-1 !== _thumbnailTicket) {
+//            VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
+//        }
+
+//        // fetch if not using the same image already
+//        if (!_thumbnailFilePath ||
+//            !thumbnail.source === _thumbnailFilePath ||
+//            thumbnail.status === Image.Error) {
+
+//            _thumbnailTicket = VodDataManager.fetchThumbnail(rowId)
+//            if (-1 !== _thumbnailTicket) {
+//                _thumbnailState = thumbnailStateFetching
+//            }
+//        }
+//    }
 
     function cancelImplicitVodFileFetch() {
         // only cancel download if started on this item
