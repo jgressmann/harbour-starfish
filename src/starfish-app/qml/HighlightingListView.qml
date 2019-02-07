@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,12 +27,9 @@ import QtQuick 2.0
 import "."
 
 SilicaListView {
+    currentIndex: -1
     highlight: Rectangle {
         color: Theme.primaryColor
         opacity: Global.pathTraceOpacity
-    }
-
-    Component.onCompleted: {
-        currentIndex = -1
     }
 }
