@@ -41,7 +41,7 @@ ContentPage {
 
     SqlVodModel {
         id: sqlModel
-        dataManager: VodDataManager
+        database: VodDataManager.database
         columns: ["side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset", "length", "url"]
         columnAliases: {
             var x = {}
@@ -55,7 +55,7 @@ ContentPage {
 
     SqlVodModel {
         id: matchModel
-        dataManager: VodDataManager
+        database: VodDataManager.database
         columns: ["match_date"]
         select: "select distinct " + columns.join(",") + " from " + table + where
 
@@ -65,7 +65,7 @@ ContentPage {
 
     SqlVodModel {
         id: sidesModel
-        dataManager: VodDataManager
+        database: VodDataManager.database
         columns: ["side1_name", "side2_name"]
         select: "select distinct " + columns.join(",") + " from " + table + where
 

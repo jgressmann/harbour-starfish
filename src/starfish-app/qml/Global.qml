@@ -328,9 +328,7 @@ Item { // Components can't declare functions
 
     SqlVodModel {
         id: _model
-        columns: ["count"]
-        dataManager: VodDataManager
+//        columns: ["count"]
+        database: VodDataManager.database
     }
-
-
 }

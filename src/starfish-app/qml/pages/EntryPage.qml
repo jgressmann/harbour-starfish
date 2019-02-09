@@ -55,11 +55,12 @@ BasePage {
 
             SqlVodModel {
                 id: newModel
-                dataManager: VodDataManager
+                database: VodDataManager.database
                 columns: ["count"]
             }
 
             function update() {
+                newModel.reload()
                 if (Global.getNewVodsContstraints) { // gets called really early during setup of application page (before its .onCompleted runs)
                     constraints = Global.getNewVodsContstraints()
                     newModel.select = "select count(*) from " + Global.defaultTable + " where " + constraints
@@ -67,6 +68,17 @@ BasePage {
                 } else {
                     visible = false
                 }
+            }
+
+            Component.onCompleted: {
+                VodDataManager.vodsChanged.connect(update)
+                VodDataManager.seenChanged.connect(update)
+                update()
+            }
+
+            Component.onDestruction: {
+                VodDataManager.vodsChanged.disconnect(update)
+                VodDataManager.seenChanged.disconnect(update)
             }
 
             Connections {
@@ -110,13 +122,25 @@ BasePage {
 
             SqlVodModel {
                 id: unseenModel
-                dataManager: VodDataManager
+                database: VodDataManager.database
                 columns: ["count"]
                 select: "select count(*) from vods where seen=0"
             }
 
             function update() {
+                unseenModel.reload()
                 visible = unseenModel.data(unseenModel.index(0, 0)) > 0
+            }
+
+            Component.onCompleted: {
+                VodDataManager.vodsChanged.connect(update)
+                VodDataManager.seenChanged.connect(update)
+                update()
+            }
+
+            Component.onDestruction: {
+                VodDataManager.vodsChanged.disconnect(update)
+                VodDataManager.seenChanged.disconnect(update)
             }
         }
 
@@ -175,13 +199,23 @@ BasePage {
 
             SqlVodModel {
                 id: offlineModel
-                dataManager: VodDataManager
+                database: VodDataManager.database
                 columns: ["count"]
                 select: "select count(*) from offline_vods where progress>0"
             }
 
             function update() {
+                offlineModel.reload()
                 visible = offlineModel.data(offlineModel.index(0, 0)) > 0
+            }
+
+            Component.onCompleted: {
+                VodDataManager.vodsChanged.connect(update)
+                update()
+            }
+
+            Component.onDestruction: {
+                VodDataManager.vodsChanged.disconnect(update)
             }
         }
 
@@ -277,34 +311,6 @@ BasePage {
         }
     }
 
-    onStatusChanged: {
-        switch (status) {
-        case PageStatus.Activating:
-//            if (-1 !== _videoId) {
-//                var matchItem = recentlyWatchedVideoView.getMatchItemById(_videoId)
-//                if (matchItem) {
-//                    matchItem.cancelImplicitVodFileFetch()
-//                }
-//                _videoId = -1
-//            }
-
-            offlineVodsItem.update()
-            newVodsItem.update()
-            unseenVodsItem.update()
-
-//            // THIS doens't work for some reason
-//            console.debug("playing match item " + page.itemPlaying + " " + typeof(page.itemPlaying))
-//            if (itemPlaying) {
-//                if (itemPlaying.gone) {
-//                    console.debug("AAAAAAAAAAAA")
-//                }
-
-//                itemPlaying.cancelImplicitVodFileFetch()
-//                itemPlaying = null
-//            }
-            break
-        }
-    }
 
 //    Component.onDestruction: Global.performOwnerGone(recentlyWatchedVideoView.matchItems)
 }

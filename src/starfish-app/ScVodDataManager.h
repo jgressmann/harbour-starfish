@@ -238,6 +238,7 @@ signals:
     void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
     void processVodsToAdd();
     void ytdlPathChanged(QString path);
+    void seenChanged();
 
 
 public slots:

@@ -41,7 +41,7 @@ ContentPage {
 
     SqlVodModel {
         id: sqlModel
-        dataManager: VodDataManager
+        database: VodDataManager.database
         columns: [key]
         select: {
             var sql = "select distinct "+ key +" from " + table + where

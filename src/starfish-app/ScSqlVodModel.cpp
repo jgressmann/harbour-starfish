@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,34 +22,23 @@
  */
 
 #include "ScSqlVodModel.h"
-#include "ScVodDataManager.h"
 #include "ScStopwatch.h"
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
-#include <QDateTime>
 
 
 // https://wiki.qt.io/How_to_Use_a_QSqlQueryModel_in_QML
 
-namespace  {
-
-
-} // anon
-
-ScSqlVodModel::~ScSqlVodModel() {
-
-}
-
 ScSqlVodModel::ScSqlVodModel(QObject* parent)
     : QSqlQueryModel(parent)
 {
-    m_DataManager = Q_NULLPTR;
     m_Dirty = false;
 }
 
 QVariant
-ScSqlVodModel::data(const QModelIndex &modelIndex, int role) const {
+ScSqlVodModel::data(const QModelIndex &modelIndex, int role) const
+{
     if (role < Qt::UserRole) {
         return QSqlQueryModel::data(modelIndex, role);
     }
@@ -59,74 +48,48 @@ ScSqlVodModel::data(const QModelIndex &modelIndex, int role) const {
     return QSqlQueryModel::data(remappedIndex, Qt::DisplayRole);
 }
 
-QHash<int,QByteArray>
-ScSqlVodModel::roleNames() const {
-    return m_RoleNames;
-}
-
-QString
-ScSqlVodModel::select() const {
-    return m_Select;
-}
-
 void
-ScSqlVodModel::setSelect(QString newValue) {
+ScSqlVodModel::setSelect(QString newValue)
+{
     if (m_Select != newValue) {
         m_Select = newValue;
-        emit selectChanged();
         m_Dirty = true;
         update();
+        emit selectChanged();
     }
 }
 
-ScVodDataManager*
-ScSqlVodModel::dataManager() const {
-    return m_DataManager;
-}
-
 void
-ScSqlVodModel::setDataManager(ScVodDataManager* newValue) {
-    if (newValue != m_DataManager) {
-        m_Dirty = true;
-
-        if (m_DataManager) {
-            disconnect(m_DataManager, &ScVodDataManager::vodsChanged,
-                       this,  &ScSqlVodModel::update);
-        }
-
-        m_DataManager = newValue;
-        emit dataManagerChanged();
-
-        if (m_DataManager) {
-            connect(m_DataManager, &ScVodDataManager::vodsChanged,
-                       this,  &ScSqlVodModel::update);
-            update();
-        }
-    }
+ScSqlVodModel::setDatabase(const QVariant& newValue)
+{
+    m_Dirty = true;
+    m_Database = qvariant_cast<QSqlDatabase>(newValue);
+    update();
+    emit databaseChanged();
 }
 
 
-
 void
-ScSqlVodModel::update() {
+ScSqlVodModel::update()
+{
     ScStopwatch sw("update", 10);
     if (m_Dirty) {
         m_Dirty = !tryConfigureModel();
     } else {
-        setQuery(m_Select, m_DataManager->database());
+        setQuery();
     }
 }
 
 bool
-ScSqlVodModel::tryConfigureModel() {
-    if (m_DataManager &&
-       !m_Select.isEmpty() &&
-       !m_Columns.empty()) {
+ScSqlVodModel::tryConfigureModel()
+{
+    if (m_Database.isValid() &&
+            m_Database.isOpen() &&
+            !m_Select.isEmpty()) {
 
-        setQuery(m_Select, m_DataManager->database());
+        setQuery();
         beginResetModel();
         for (int i = 0; i < m_Columns.count(); ++i) {
-
             setHeaderData(0, Qt::Horizontal, m_ColumnAliases.value(m_Columns[i], m_Columns[i]).toString());
         }
         endResetModel();
@@ -138,35 +101,17 @@ ScSqlVodModel::tryConfigureModel() {
 }
 
 void
-ScSqlVodModel::refresh() {
-    beginResetModel();
-    setQuery(m_Select, m_DataManager->database());
-    for (int i = 0; i < m_Columns.count(); ++i) {
-        setHeaderData(0, Qt::Horizontal, m_ColumnAliases.value(m_Columns[i], m_Columns[i]).toString());
-    }
-    endResetModel();
-}
-
-QStringList
-ScSqlVodModel::columns() const {
-    return m_Columns;
-}
-
-void
-ScSqlVodModel::setColumns(const QStringList& newValue) {
+ScSqlVodModel::setColumns(const QStringList& newValue)
+{
     m_Dirty = true;
     m_Columns = newValue;
     updateColumns();
     emit columnsChanged();
 }
 
-QVariantMap
-ScSqlVodModel::columnAliases() const {
-    return m_ColumnAliases;
-}
-
 void
-ScSqlVodModel::setColumnAliases(const QVariantMap& newValue) {
+ScSqlVodModel::setColumnAliases(const QVariantMap& newValue)
+{
     m_Dirty = true;
     m_ColumnAliases = newValue;
     updateColumns();
@@ -174,11 +119,27 @@ ScSqlVodModel::setColumnAliases(const QVariantMap& newValue) {
 }
 
 void
-ScSqlVodModel::updateColumns() {
+ScSqlVodModel::updateColumns()
+{
     m_RoleNames.clear();
     for (int i = 0; i < m_Columns.count(); ++i) {
         m_RoleNames[Qt::UserRole + i + 1] = m_ColumnAliases.value(m_Columns[i], m_Columns[i]).toString().toLocal8Bit();
     }
 
     update();
+}
+
+void
+ScSqlVodModel::reload()
+{
+    update();
+}
+
+void
+ScSqlVodModel::setQuery()
+{
+    QSqlQueryModel::setQuery(QSqlQuery(m_Select, m_Database));
+    if (lastError().isValid()) {
+        qDebug() << "model error" << lastError();
+    }
 }

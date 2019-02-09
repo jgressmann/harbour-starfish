@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,48 +25,59 @@
 
 #include <QSqlQueryModel>
 #include <QList>
+#include <QSqlDatabase>
+#include <QVariant>
 
-class ScVodDataManager;
-class ScSqlVodModel : public QSqlQueryModel {
+#include "ScApp.h" // meta type for QSqlDatabase
+
+
+class ScSqlVodModel : public QSqlQueryModel
+{
     Q_OBJECT
     Q_PROPERTY(QString select READ select WRITE setSelect NOTIFY selectChanged)
-    Q_PROPERTY(ScVodDataManager* dataManager READ dataManager WRITE setDataManager NOTIFY dataManagerChanged)
     Q_PROPERTY(QStringList columns READ columns WRITE setColumns NOTIFY columnsChanged)
     Q_PROPERTY(QVariantMap columnAliases READ columnAliases WRITE setColumnAliases NOTIFY columnAliasesChanged)
+    Q_PROPERTY(QVariant database READ database WRITE setDatabase NOTIFY databaseChanged)
+
 public:
-    ~ScSqlVodModel();
+    ~ScSqlVodModel() = default;
     explicit ScSqlVodModel(QObject* parent = Q_NULLPTR);
 
 public:
-    QString select() const;
+    QString select() const { return m_Select; }
     void setSelect(QString newValue);
-    ScVodDataManager* dataManager() const;
-    void setDataManager(ScVodDataManager* newValue);
-    QStringList columns() const;
+    QStringList columns() const { return m_Columns; }
     void setColumns(const QStringList& newValue);
-    QVariantMap columnAliases() const;
+    QVariantMap columnAliases() const { return m_ColumnAliases; }
     void setColumnAliases(const QVariantMap& newValue);
+    QVariant database() const { return QVariant::fromValue(m_Database); }
+    void setDatabase(const QVariant& newValue);
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
-    QHash<int,QByteArray> roleNames() const Q_DECL_OVERRIDE;
+    QHash<int,QByteArray> roleNames() const Q_DECL_OVERRIDE { return m_RoleNames; }
 
 signals:
     void selectChanged();
     void dataManagerChanged();
     void columnsChanged();
     void columnAliasesChanged();
+    void databaseChanged();
+
+public slots:
+    // update is already used extensively in QML
+    Q_INVOKABLE void reload();
 
 private:
-    void update();
     bool tryConfigureModel();
-    void refresh();
     void updateColumns();
+    void update();
+    void setQuery();
 
 private:
+    QSqlDatabase m_Database;
     QStringList m_Columns;
     QVariantMap m_ColumnAliases;
     QHash<int, QByteArray> m_RoleNames;
     QString m_Select;
-    ScVodDataManager* m_DataManager;
     bool m_Dirty;
 };
 

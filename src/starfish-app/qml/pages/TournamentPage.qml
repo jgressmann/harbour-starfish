@@ -35,7 +35,7 @@ ContentPage {
 
     SqlVodModel {
         id: sqlModel
-        dataManager: VodDataManager
+        database: VodDataManager.database
         columns: ["event_full_name", "stage_name" ]
         select: "select distinct " + columns.join(",") + " from " + table + where + " order by stage_rank desc, match_date desc"
     }

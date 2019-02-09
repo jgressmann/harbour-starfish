@@ -810,11 +810,22 @@ ScVodDataManager::setupDatabase() {
         "    game INTEGER NOT NULL,\n"
         "    year INTEGER NOT NULL,\n"
         "    offset INTEGER NOT NULL,\n"
+//        "    end_offset INTEGER NOT NULL,\n
         "    seen INTEGER DEFAULT 0,\n"
         "    match_number INTEGER NOT NULL,\n"
         "    stage_rank INTEGER NOT NULL,\n"
         "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
         "    UNIQUE (event_name, game, match_date, match_name, match_number, season, stage_name, year) ON CONFLICT REPLACE\n"
+        ")\n",
+
+        "CREATE TABLE IF NOT EXISTS recently_watched (\n"
+        "    FOREIGN KEY(vod_id) REFERENCES vods(id) ON DELETE CASCADE,\n"
+        "    url TEXT,\n"
+        "    thumbnail_path TEXT,\n"
+        "    playback_offset INTEGER NOT NULL,\n"
+        "    modified INTEGER NOT NULL,\n"
+        "    seen INTEGER DEFAULT 0,\n"
+        "    UNIQUE (vod_id, url) ON CONFLICT IGNORE\n"
         ")\n",
 
         "CREATE TABLE IF NOT EXISTS settings (\n"
@@ -905,6 +916,11 @@ ScVodDataManager::setupDatabase() {
         "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
         "\n",
 
+//        "CREATE TRIGGER IF NOT EXISTS recently_watched_update_seen UPDATE OF seen ON vods\n"
+//        "   BEGIN\n"
+//        "       UPDATE recently_watched SET seen=new.seen WHERE vod_id=new.id\n"
+//        "   END\n"
+//        "\n",
     };
 
 
@@ -1849,9 +1865,6 @@ ScVodDataManager::setSeen(const QString& table, const QString& where, bool value
     qDebug() << where;
 
 
-
-    QSqlQuery q(m_Database);
-
     QString query;
 //    auto beg = filters.cbegin();
 //    auto end = filters.cend();
@@ -1865,23 +1878,18 @@ ScVodDataManager::setSeen(const QString& table, const QString& where, bool value
 ////        qDebug() << it.key() << it.value();
 //    }
 
+
     query = QStringLiteral("UPDATE vods SET seen=? WHERE id IN (SELECT id FROM %1 %2)").arg(table, where);
+    auto transactionId = m_SharedState->DatabaseStoreQueue->newTransactionId();
+    m_PendingDatabaseStores.insert(transactionId, [=] (qint64 rows, bool error)
+    {
+        if (!error && rows) {
+            emit seenChanged();
+        }
+    });
 
-
-    if (!q.prepare(query)) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
-
-    q.addBindValue(value);
-
-//    for (auto it = beg; it != end; ++it) {
-//        q.addBindValue(it.value());
-//    }
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-    }
+    emit startProcessDatabaseStoreQueue(transactionId, query, {value});
+    emit startProcessDatabaseStoreQueue(transactionId, {}, {});
 }
 
 void ScVodDataManager::fetchIcons() {

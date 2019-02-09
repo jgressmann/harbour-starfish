@@ -267,7 +267,7 @@ SilicaListView {
 
                     SqlVodModel {
                         id: sqlModel
-                        dataManager: VodDataManager
+                        database: VodDataManager.database
                         columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "offset", "length"]
                         columnAliases: {
                             var x = {}
@@ -276,6 +276,10 @@ SilicaListView {
                             return x
                         }
                         select: "select " + columns.join(",") + " from " + _table + " where id=" + video_id
+
+                        Component.onCompleted: {
+                            VodDataManager.vodsChanged.connect(reload)
+                        }
                     }
 
                     Component.onCompleted: {

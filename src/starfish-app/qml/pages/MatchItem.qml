@@ -555,18 +555,20 @@ ListItem {
         VodDataManager.fetchVodEnd(rowId, baseOffset, length)
 
         // also fetch a valid meta data from cache
+        _metaDataState = metaDataStateFetching
         _metaDataTicket = VodDataManager.fetchMetaDataFromCache(rowId)
-//        if (-1 !== _metaDataTicket) {
-//            _metaDataState = metaDataStateFetching
-//        }
+        if (-1 !== _metaDataTicket) {
+            _metaDataState = metaDataStateInitial
+        }
 
         if (App.isOnline) {
             _fetchThumbnail()
         } else {
+            _thumbnailState = thumbnailStateFetching
             _thumbnailTicket = VodDataManager.fetchThumbnailFromCache(rowId)
-//            if (-1 !== _thumbnailTicket) {
-//                _thumbnailState = thumbnailStateFetching
-//            }
+            if (-1 === _thumbnailTicket) {
+                _thumbnailState = thumbnailStateInitial
+            }
         }
         _vodFileTicket = VodDataManager.queryVodFiles(rowId)
 
@@ -722,7 +724,7 @@ ListItem {
                     _abortFetchThumbnail()
 
                     _thumbnailFilePath = ""
-                    _thumbnailState = thumbnailStateInitial
+                    _thumbnailState = thumbnailStateDownloadFailed
                     VodDataManager.deleteThumbnail(rowId)
                     if (App.isOnline) {
                         _fetchThumbnail()
@@ -1069,14 +1071,21 @@ ListItem {
         if (-1 !== _metaDataTicket) {
             VodDataManager.cancelFetchMetaData(_metaDataTicket, rowId)
             _metaDataTicket = -1;
+            if (_metaDataState === metaDataStateFetching) {
+                _metaDataState = metaDataStateInitial
+            }
         }
     }
 
     function _fetchMetaData() {
         if (-1 === _metaDataTicket) {
-            _metaDataTicket = VodDataManager.fetchMetaData(rowId)
-            if (-1 !== _metaDataTicket) {
+            if (_metaDataState != metaDataStateFetching) {
+                var prev = _metaDataState
                 _metaDataState = metaDataStateFetching
+                _metaDataTicket = VodDataManager.fetchMetaData(rowId)
+                if (-1 === _metaDataTicket) {
+                    _metaDataState = prev
+                }
             }
         }
     }
@@ -1096,19 +1105,25 @@ ListItem {
         if (-1 !== _thumbnailTicket) {
             VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
             _thumbnailTicket = -1
+            if (_thumbnailState === thumbnailStateFetching) {
+                _thumbnailState = thumbnailStateInitial
+            }
         }
     }
 
     function _fetchThumbnail() {
         if (-1 === _thumbnailTicket) {
-            // fetch if not using the same image already
-            if (!_thumbnailFilePath ||
-                !thumbnail.source === _thumbnailFilePath ||
-                thumbnail.status === Image.Error) {
-
-                _thumbnailTicket = VodDataManager.fetchThumbnail(rowId)
-                if (-1 !== _thumbnailTicket) {
+            if (_thumbnailState !== thumbnailStateFetching) {
+                // fetch if not using the same image already
+                if (!_thumbnailFilePath ||
+                    thumbnail.source !== _thumbnailFilePath ||
+                    thumbnail.status === Image.Error) {
+                    var prev = _thumbnailState
                     _thumbnailState = thumbnailStateFetching
+                    _thumbnailTicket = VodDataManager.fetchThumbnail(rowId)
+                    if (-1 === _thumbnailTicket) {
+                        _thumbnailState = prev
+                    }
                 }
             }
         }

@@ -157,12 +157,12 @@
 <context>
     <name>EntryPage</name>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="227"/>
+        <location filename="../qml/pages/EntryPage.qml" line="261"/>
         <source>Continue watching</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="196"/>
+        <location filename="../qml/pages/EntryPage.qml" line="230"/>
         <source>Active downloads</source>
         <translation type="unfinished"></translation>
     </message>
@@ -172,17 +172,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="130"/>
+        <location filename="../qml/pages/EntryPage.qml" line="154"/>
         <source>Browse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="157"/>
+        <location filename="../qml/pages/EntryPage.qml" line="181"/>
         <source>Offline available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="92"/>
+        <location filename="../qml/pages/EntryPage.qml" line="104"/>
         <source>Not yet watched</source>
         <translation type="unfinished"></translation>
     </message>

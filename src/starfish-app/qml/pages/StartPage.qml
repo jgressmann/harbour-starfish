@@ -43,17 +43,22 @@ Page {
     SqlVodModel {
         id: model
         columns: ["count"]
-        dataManager: VodDataManager
+        database: VodDataManager.database
+        select: "select count(*) as count from vods"
         onModelReset: {
             console.debug("sql model reset")
             _vodCount = data(index(0, 0), 0)
         }
 
-        Component.onCompleted: update()
+        Component.onCompleted: {
+            VodDataManager.vodsChanged.connect(reload)
+            update()
+        }
 
         function update() {
-            select = ""
-            select = "select count(*) as count from vods"
+            //select = ""
+            //select = "select count(*) as count from vods"
+            reload()
             _vodCount = data(index(0, 0), 0)
         }
     }
