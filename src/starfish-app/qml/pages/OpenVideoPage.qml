@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,7 @@ import ".."
 Page {
     id: root
 
-    signal videoSelected(var obj, string playbackUrl, int offset, bool saveScreenShot)
+    signal videoSelected(var key, string playbackUrl, int offset, bool saveScreenShot)
 
     PageHeader {
         id: header
@@ -54,9 +54,7 @@ Page {
                 enabled: Clipboard.hasText && App.isUrl(Clipboard.text)
                 onClicked: {
                     videoSelected(
-                                {
-                                    url: Clipboard.text
-                                },
+                                VodDataManager.recentlyWatched.urlKey(Clipboard.text),
                                 Clipboard.text,
                                 0,
                                 true)
@@ -74,9 +72,7 @@ Page {
                     FilePickerPage {
                         popOnSelection: false
                         onSelectedContentPropertiesChanged: {
-                            videoSelected({
-                                              url: selectedContentProperties.url
-                                          },
+                            videoSelected(VodDataManager.recentlyWatched.urlKey(selectedContentProperties.url),
                                           selectedContentProperties.url,
                                           0,
                                           true)

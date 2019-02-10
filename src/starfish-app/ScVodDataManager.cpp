@@ -24,7 +24,7 @@
 #include "ScVodDataManager.h"
 #include "ScVodDataManagerState.h"
 #include "ScVodDataManagerWorker.h"
-
+#include "ScRecentlyWatchedVideos.h"
 
 #include "Vods.h"
 #include "Sc.h"
@@ -59,6 +59,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+
 
 
 #ifndef _countof
@@ -321,6 +322,11 @@ ScVodDataManager::~ScVodDataManager() {
     setState(State_Finalizing);
     qDebug() << "set finalizing";
 
+    if (m_RecentlyWatchedVideos) {
+        delete m_RecentlyWatchedVideos;
+        m_RecentlyWatchedVideos = nullptr;
+    }
+
     cancelMoveDataDirectory();
 
     emit stopThread();
@@ -367,6 +373,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     , m_ClassfierRequest(nullptr)
     , m_SqlPatchesRequest(nullptr)
     , m_DataDirectoryMover(nullptr)
+    , m_RecentlyWatchedVideos(nullptr)
     , m_State(State_Initializing)
     , m_SharedState(new ScVodDataManagerState)
 {
@@ -454,6 +461,8 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     m_DatabaseStoreQueueThread.start();
 
     m_SharedState->DatabaseStoreQueue.reset(x);
+
+    m_RecentlyWatchedVideos = new ScRecentlyWatchedVideos(this);
 
     m_WorkerInterface = new ScVodDataManagerWorker(m_SharedState);
     m_WorkerInterface->moveToThread(&m_WorkerThread);
@@ -818,15 +827,7 @@ ScVodDataManager::setupDatabase() {
         "    UNIQUE (event_name, game, match_date, match_name, match_number, season, stage_name, year) ON CONFLICT REPLACE\n"
         ")\n",
 
-        "CREATE TABLE IF NOT EXISTS recently_watched (\n"
-        "    FOREIGN KEY(vod_id) REFERENCES vods(id) ON DELETE CASCADE,\n"
-        "    url TEXT,\n"
-        "    thumbnail_path TEXT,\n"
-        "    playback_offset INTEGER NOT NULL,\n"
-        "    modified INTEGER NOT NULL,\n"
-        "    seen INTEGER DEFAULT 0,\n"
-        "    UNIQUE (vod_id, url) ON CONFLICT IGNORE\n"
-        ")\n",
+
 
         "CREATE TABLE IF NOT EXISTS settings (\n"
         "    key TEXT NOT NULL UNIQUE,\n"
@@ -836,6 +837,18 @@ ScVodDataManager::setupDatabase() {
         "CREATE TABLE IF NOT EXISTS icons (\n"
         "    url TEXT NOT NULL,\n"
         "    file_name TEXT NOT NULL\n"
+        ")\n",
+
+        "CREATE TABLE IF NOT EXISTS recently_watched (\n"
+        "    vod_id INTEGER,\n"
+        "    url TEXT,\n"
+        "    thumbnail_path TEXT,\n"
+        "    playback_offset INTEGER NOT NULL,\n"
+        "    modified INTEGER NOT NULL,\n"
+        "    seen INTEGER DEFAULT 0,\n"
+        "    FOREIGN KEY(vod_id) REFERENCES vods(id) ON DELETE CASCADE,\n"
+        "    UNIQUE (vod_id) ON CONFLICT IGNORE,\n"
+        "    UNIQUE (url) ON CONFLICT IGNORE\n"
         ")\n",
 
 //        "CREATE INDEX IF NOT EXISTS vods_id ON vods (id)\n",
@@ -916,16 +929,16 @@ ScVodDataManager::setupDatabase() {
         "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
         "\n",
 
-//        "CREATE TRIGGER IF NOT EXISTS recently_watched_update_seen UPDATE OF seen ON vods\n"
-//        "   BEGIN\n"
-//        "       UPDATE recently_watched SET seen=new.seen WHERE vod_id=new.id\n"
-//        "   END\n"
-//        "\n",
+        "CREATE TRIGGER IF NOT EXISTS recently_watched_update_seen UPDATE OF seen ON vods\n"
+        "   BEGIN\n"
+        "       UPDATE recently_watched SET seen=new.seen WHERE vod_id=new.id;\n"
+        "   END\n"
+        "\n",
     };
 
 
 
-    const int Version = 6;
+    const int Version = 7;
 
     if (!scSetupWriteableConnection(m_Database)) {
         setError(Error_CouldntCreateSqlTables);
@@ -962,6 +975,8 @@ ScVodDataManager::setupDatabase() {
                 updateSql4(q);
             case 5:
                 updateSql5(q, CreateSql, _countof(CreateSql));
+            case 6:
+                updateSql6(q, CreateSql, _countof(CreateSql));
             default:
                 break;
             }
@@ -2605,6 +2620,55 @@ Error:
     goto Exit;
 }
 
+
+void
+ScVodDataManager::updateSql6(QSqlQuery& q, const char* const* createSql, size_t createSqlCount) {
+    qInfo("Begin update of database v6 to v7\n");
+
+
+    static char const* const Sql1[] = {
+        "SAVEPOINT master",
+        "PRAGMA user_version=7",
+        "DROP TABLE IF EXISTS recently_used_videos",
+    };
+
+    for (size_t i = 0; i < _countof(Sql1); ++i) {
+        qDebug() << Sql1[i];
+        if (!q.exec(Sql1[i])) {
+            goto Error;
+        }
+    }
+
+    for (size_t i = 0; i < createSqlCount; ++i) {
+        qDebug() << createSql[i];
+        if (!q.exec(createSql[i])) {
+            goto Error;
+        }
+    }
+
+    static char const* const Sql2[] = {
+        "RELEASE master"
+    };
+
+    for (size_t i = 0; i < _countof(Sql2); ++i) {
+        qDebug() << Sql2[i];
+        if (!q.exec(Sql2[i])) {
+            goto Error;
+        }
+    }
+
+    qInfo("Update of database v6 to v7 completed successfully\n");
+
+Exit:
+    return;
+
+Error:
+    qCritical() << "Failed to update database from v6 to v7" << q.lastError();
+    q.exec("ROLLBACK master");
+    setError(Error_CouldntCreateSqlTables);
+    goto Exit;
+}
+
 int
 ScVodDataManager::sqlPatchLevel() const
 {
@@ -3044,4 +3108,10 @@ void
 ScVodDataManager::setYtdlPath(const QString& path)
 {
     emit ytdlPathChanged(path);
+}
+
+ScDatabaseStoreQueue*
+ScVodDataManager::databaseStoreQueue() const
+{
+    return m_SharedState->DatabaseStoreQueue.data();
 }

@@ -126,22 +126,22 @@
         <translation>Jean Gressmann</translation>
     </message>
     <message id="tools-ytdl-downloading">
-        <location filename="../qml/pages/ToolsPage.qml" line="209"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="206"/>
         <source>youtube-dl is being downloaded</source>
         <translation type="unfinished">youtube-dl is being downloaded</translation>
     </message>
     <message id="tools-ytdl-unavailable">
-        <location filename="../qml/pages/ToolsPage.qml" line="213"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="210"/>
         <source>youtube-dl is not available</source>
         <translation type="unfinished"></translation>
     </message>
     <message id="tools-ytdl-version">
-        <location filename="../qml/pages/ToolsPage.qml" line="216"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="213"/>
         <source>youtube-dl version %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message id="tools-ytdl-update">
-        <location filename="../qml/pages/ToolsPage.qml" line="228"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="225"/>
         <source>Update youtube-dl</source>
         <translation type="unfinished"></translation>
     </message>
@@ -157,32 +157,32 @@
 <context>
     <name>EntryPage</name>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="261"/>
+        <location filename="../qml/pages/EntryPage.qml" line="258"/>
         <source>Continue watching</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="230"/>
+        <location filename="../qml/pages/EntryPage.qml" line="227"/>
         <source>Active downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="48"/>
+        <location filename="../qml/pages/EntryPage.qml" line="45"/>
         <source>New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="154"/>
+        <location filename="../qml/pages/EntryPage.qml" line="151"/>
         <source>Browse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="181"/>
+        <location filename="../qml/pages/EntryPage.qml" line="178"/>
         <source>Offline available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/EntryPage.qml" line="104"/>
+        <location filename="../qml/pages/EntryPage.qml" line="101"/>
         <source>Not yet watched</source>
         <translation type="unfinished"></translation>
     </message>
@@ -208,7 +208,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/TopMenu.qml" line="101"/>
+        <location filename="../qml/TopMenu.qml" line="102"/>
         <source>Fetch new VODs</source>
         <translation type="unfinished"></translation>
     </message>

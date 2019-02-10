@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,7 @@
 #include "ScVodDataManager.h"
 #include "ScApp.h"
 #include "ScVodman.h"
-#include "ScRecentlyUsedModel.h"
+#include "ScRecentlyWatchedVideos.h"
 #include "VMQuickYTDLDownloader.h"
 
 #include <sailfishapp.h>
@@ -69,8 +69,6 @@ static QObject *vmQuickYTDLDownloader(QQmlEngine *engine, QJSEngine *scriptEngin
 
 static void setupLogging();
 static void teardownLogging();
-static void aboutToQuit();
-static QQuickView* s_View;
 
 int
 main(int argc, char *argv[]) {
@@ -84,12 +82,14 @@ main(int argc, char *argv[]) {
         qmlRegisterType<ScVodDatabaseDownloader>(STARFISH_NAMESPACE, 1, 0, "VodDatabaseDownloader");
         qmlRegisterType<Sc2LinksDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2LinksDotComScraper");
         qmlRegisterType<Sc2CastsDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2CastsDotComScraper");
-        qmlRegisterType<ScRecentlyUsedModel>(STARFISH_NAMESPACE, 1, 0, "RecentlyUsedModel");
+
         qmlRegisterSingletonType<ScApp>(STARFISH_NAMESPACE, 1, 0, "App", appProvider);
         qmlRegisterUncreatableType<ScVodScraper>(STARFISH_NAMESPACE, 1, 0, "VodScraper", "VodScraper");
         qmlRegisterUncreatableType<ScVodman>(STARFISH_NAMESPACE, 1, 0, "Vodman", "Vodman");
         qmlRegisterUncreatableType<VMVodEnums>(STARFISH_NAMESPACE, 1, 0, "VM", QStringLiteral("wrapper around C++ enums"));
         qmlRegisterUncreatableType<ScEnums>(STARFISH_NAMESPACE, 1, 0, "Sc", QStringLiteral("wrapper around C++ enums"));
+        qmlRegisterUncreatableType<ScRecentlyWatchedVideos>(STARFISH_NAMESPACE, 1, 0, "RecentlyWatchedVideos", "RecentlyWatchedVideos");
+
         qmlRegisterSingletonType<ScVodDataManager>(STARFISH_NAMESPACE, 1, 0, "VodDataManager", dataManagerProvider);
         qmlRegisterSingletonType<VMQuickYTDLDownloader>(STARFISH_NAMESPACE, 1, 0, "YTDLDownloader", vmQuickYTDLDownloader);
 
@@ -123,10 +123,7 @@ main(int argc, char *argv[]) {
             }
 
             view->show();
-            s_View = view.data();
-            QObject::connect(app.data(), &QCoreApplication::aboutToQuit, aboutToQuit);
             result = app->exec();
-            s_View = nullptr;
         }
     }
 
@@ -216,18 +213,5 @@ setupLogging() {
     s_LogFile = fopen(logFilePath.toLocal8Bit(), "a");
     if (s_LogFile) {
         qInstallMessageHandler(messageHandler);
-    }
-}
-
-
-static
-void
-aboutToQuit()
-{
-    if (s_View) {
-        auto item = s_View->rootObject();
-        if (item) {
-            QMetaObject::invokeMethod(item, "aboutToQuit");
-        }
     }
 }

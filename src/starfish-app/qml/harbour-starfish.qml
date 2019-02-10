@@ -168,6 +168,7 @@ ApplicationWindow {
             id: settingPlaybackRecentVideosToKeep
             key: "/playback/recent_videos_to_keep"
             defaultValue: 10
+            onValueChanged: VodDataManager.recentlyWatched.count = value
         }
 
         ConfigurationValue {
@@ -211,28 +212,6 @@ ApplicationWindow {
             id: settingNewRemoveSeen
             key: "/new/remove_seen"
             defaultValue: true
-        }
-    }
-
-    RecentlyUsedModel {
-        id: recentlyUsedVideos
-        columnNames: ["video_id", "url", "offset", "thumbnail_path"]
-        keyColumns: ["video_id", "url"]
-        columnTypes: ["INTEGER DEFAULT -1", "TEXT", "INTEGER DEFAULT 0", "TEXT"]
-        table: "recently_used_videos"
-        count: settingPlaybackRecentVideosToKeep.value
-        database: VodDataManager.database
-        changeForcesReset: true
-
-        onRowsAboutToBeRemoved: function (parent, from, to) {
-            console.debug("removing rows from=" + from + " to=" + to)
-            for (var i = from; i <= to; ++i) {
-                var thumbNailFilePath = data(index(i, 3), 0)
-                console.debug("row=" + i + " thumbnail path=" + thumbNailFilePath)
-                if (thumbNailFilePath) {
-                    App.unlink(thumbNailFilePath)
-                }
-            }
         }
     }
 
@@ -391,14 +370,16 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        VodDataManager.recentlyWatched.count = settingPlaybackRecentVideosToKeep.value
         VodDataManager.vodsAdded.connect(_onVodsAdded)
         VodDataManager.busyChanged.connect(_busyChanged)
         VodDataManager.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
         _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
 
-        Global.playVideoHandler = function (updater, obj, url, offset) {
-            recentlyUsedVideos.add(obj)
+        Global.playVideoHandler = function (updater, key, url, offset, seen) {
+            VodDataManager.recentlyWatched.add(key, seen)
+            VodDataManager.recentlyWatched.setOffset(key, offset)
             if (settingExternalMediaPlayer.value && self.url.indexOf("http") !== 0) {
                 Qt.openUrlExternally(url)
             } else {
@@ -406,7 +387,7 @@ ApplicationWindow {
                 var playerPage = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
                 playerPage.play(Global.completeFileUrl(url), offset)
                 updater.playerPage = playerPage
-                updater.setKey(obj)
+                updater.setKey(key)
             }
         }
 
@@ -458,10 +439,6 @@ ApplicationWindow {
         settingNumberOfUpdates.value = settingNumberOfUpdates.value + 1
         settingLastUpdateTimestamp.value = Global.secondsSinceTheEpoch() // in case debugging ends
         vodDatabaseDownloader.downloadNew()
-    }
-
-    function aboutToQuit() {
-        console.debug("about to quit")
     }
 
     function _setYtdlPath() {

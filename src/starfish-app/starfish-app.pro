@@ -15,10 +15,10 @@ SOURCES += harbour-starfish.cpp \
     ScVodDatabaseDownloader.cpp \
     ScIcons.cpp \
     ScSqlVodModel.cpp \
-    ScRecentlyUsedModel.cpp \
     ScStopwatch.cpp \
     ScDatabaseStoreQueue.cpp \
-    ScDatabase.cpp
+    ScDatabase.cpp \
+    ScRecentlyWatchedVideos.cpp \
 
 
 
@@ -31,10 +31,10 @@ HEADERS += \
     ScVodDatabaseDownloader.h \
     ScIcons.h \
     ScSqlVodModel.h \
-    ScRecentlyUsedModel.h \
     ScStopwatch.h \
     ScDatabaseStoreQueue.h \
-    ScDatabase.h
+    ScDatabase.h \
+    ScRecentlyWatchedVideos.h \
 
 #../../rpm/harbour-starfish.changes.run.in \
 #../../rpm/harbour-starfish.yaml \

@@ -48,6 +48,7 @@ class ScMatch;
 class ScVodDataManagerState;
 class ScVodDataManagerWorker;
 class VMVodFileDownload;
+class ScRecentlyWatchedVideos;
 
 
 class DataDirectoryMover : public QObject
@@ -84,7 +85,7 @@ class ScVodDataManager : public QObject {
     Q_PROPERTY(int vodDownloads READ vodDownloads NOTIFY vodDownloadsChanged)
     Q_PROPERTY(int sqlPatchLevel READ sqlPatchLevel NOTIFY sqlPatchLevelChanged)
     Q_PROPERTY(QString dataDirectory READ dataDirectory NOTIFY dataDirectoryChanged)
-    //Q_PROPERTY(QString ytdlPath WRITE setYtdlPath NOTIFY ytdlPathChanged)
+    Q_PROPERTY(ScRecentlyWatchedVideos* recentlyWatched READ recentlyWatched CONSTANT)
 
 public:
     enum Error {
@@ -197,6 +198,12 @@ public: //
     Q_INVOKABLE int deleteVods(const QString& where);
     Q_INVOKABLE void deleteThumbnail(qint64 rowid);
     Q_INVOKABLE void setYtdlPath(const QString&  path);
+//    Q_INVOKABLE void addVodToRecentlyWatchedList(qint64 rowid);
+//    Q_INVOKABLE void addFileToRecentlyWatchedList(const QString& path);
+//    Q_INVOKABLE void removeVodFromRecentlyWatchedList(qint64 rowid);
+//    Q_INVOKABLE void removeFileFromRecentlyWatchedList(const QString& path);
+    ScDatabaseStoreQueue* databaseStoreQueue() const;
+    ScRecentlyWatchedVideos* recentlyWatched() const { return m_RecentlyWatchedVideos; }
 
 signals:
     void readyChanged();
@@ -314,6 +321,7 @@ private:
     void updateSql3(QSqlQuery& q);
     void updateSql4(QSqlQuery& q);
     void updateSql5(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
+    void updateSql6(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
 
 private:
     QList<ScRecord> m_AddQueue;
@@ -327,6 +335,7 @@ private:
     QNetworkReply* m_ClassfierRequest;
     QNetworkReply* m_SqlPatchesRequest;
     DataDirectoryMover* m_DataDirectoryMover;
+    ScRecentlyWatchedVideos* m_RecentlyWatchedVideos;
     ScIcons m_Icons;
     ScClassifier m_Classifier;
     int m_SuspendedVodsChangedEventCount;

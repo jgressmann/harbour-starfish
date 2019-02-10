@@ -140,6 +140,6 @@ ScSqlVodModel::setQuery()
 {
     QSqlQueryModel::setQuery(QSqlQuery(m_Select, m_Database));
     if (lastError().isValid()) {
-        qDebug() << "model error" << lastError();
+        qDebug() << "model error" << lastError() << "select" << m_Select;
     }
 }

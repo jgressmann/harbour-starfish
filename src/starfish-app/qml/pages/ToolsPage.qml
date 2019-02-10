@@ -116,7 +116,6 @@ BasePage {
                                     })
                         dialog.accepted.connect(function() {
                             console.debug("clear")
-                            recentlyUsedVideos.recreateTable()
                             VodDataManager.clear()
                             VodDataManager.fetchIcons()
                         })
@@ -142,9 +141,7 @@ BasePage {
                 Button {
                     text: "Reset recent videos"
                     enabled: _toolEnabled
-                    onClicked: {
-                        recentlyUsedVideos.recreateTable()
-                    }
+                    onClicked: VodDataManager.recentlyWatched.clear()
                 }
 
                 Button {

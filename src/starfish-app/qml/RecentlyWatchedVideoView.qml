@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,9 +32,9 @@ SilicaListView {
     id: listView
     readonly property string _table: Global.defaultTable
 
-    model: recentlyUsedVideos
+    model: VodDataManager.recentlyWatched
 
-    signal clicked(var obj, string playbackUrl, int offset, var matchItem)
+    signal clicked(var key, string playbackUrl, int offset, var matchItem)
 
     MatchItemMemory {
         id: matchItemConnections
@@ -46,7 +46,7 @@ SilicaListView {
                 console.debug("loaded video_id="+video_id+" url="+url)
             }
 
-            sourceComponent: video_id === -1 ? fileComponent : vodComponent
+            sourceComponent: url ? fileComponent : vodComponent
 
             Component {
                 id: fileComponent
@@ -64,8 +64,8 @@ SilicaListView {
                                 text: "Remove from list"
                                 onClicked: {
                                     // not sure why I need locals here
-                                    var removeArgs = {url: url}
-                                    var model = recentlyUsedVideos
+                                    var removeArgs = VodDataManager.recentlyWatched.urlKey(url)
+                                    var model = VodDataManager.recentlyWatched
                                     listItem.remorseAction(
                                         "Removing " + labelLabel.text,
                                         function() {
@@ -169,21 +169,19 @@ SilicaListView {
 
                     onClicked: {
                         console.debug("url=" + url)
-                        listView.clicked({
-                                             url: url
-                                         },
+                        listView.clicked(VodDataManager.recentlyWatched.urlKey(url),
                                          url,
                                          offset,
                                          null)
                     }
 
 
-                    property date modififedChangedListener: modified
-                    onModififedChangedListenerChanged: {
-                        console.debug("index="+ index+" modified=" + modified)
-                        thumbnail.source = ""
-                        thumbnail.source = thumbnail_path
-                    }
+//                    property date modififedChangedListener: modified
+//                    onModififedChangedListenerChanged: {
+//                        console.debug("index="+ index+" modified=" + modified)
+//                        thumbnail.source = ""
+//                        thumbnail.source = thumbnail_path
+//                    }
 
                     Component.onCompleted: {
                         console.debug("index=" + index + " offset=" + offset + " url=" + url)
@@ -232,15 +230,7 @@ SilicaListView {
                             memory: matchItemConnections
 
                             onPlayRequest: function (self) {
-//                                console.debug("xvideo_id=" + xvideo_id)
-//                                console.debug("video_id=" + video_id)
-//                                console.debug("rowid=" + rowId)
-//                                if (video_id === -1) {
-//                                    console.debug("rowid=" + rowId)
-//                                    console.debug("ARRRRRRRRRRRRRRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGG")
-//                                }
-
-                                listView.clicked({video_id: rowId}, self.vodUrl, self.startOffset, self)
+                                listView.clicked(VodDataManager.recentlyWatched.vodKey(self.rowId), self.vodUrl, self.startOffset, self)
                             }
 
 
@@ -251,8 +241,8 @@ SilicaListView {
                                         text: "Remove from list"
                                         onClicked: {
                                             // not sure why I need locals here
-                                            var removeArgs = { video_id: matchItem.rowId }
-                                            var model = recentlyUsedVideos //
+                                            var removeArgs = VodDataManager.recentlyWatched.vodKey(matchItem.rowId)
+                                            var model = VodDataManager.recentlyWatched //
                                             matchItem.remorseAction(
                                                 "Removing " + matchItem.title,
                                                 function() {
@@ -283,7 +273,7 @@ SilicaListView {
                     }
 
                     Component.onCompleted: {
-                        console.debug("index=" + index + " offset=" + offset + " video_id=" + video_id)
+                        console.debug("index=" + index + " offset=" + offset + " video_id=" + video_id + " url=" + url)
                     }
                 }
             }
@@ -296,6 +286,6 @@ SilicaListView {
     }
 
     function clear() {
-        recentlyUsedVideos.clear()
+        VodDataManager.recentlyWatched.clear()
     }
 }

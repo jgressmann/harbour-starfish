@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,6 @@ Item {
     property string title
     readonly property int playbackOffset: _playbackOffset
     property int _playbackOffset: 0
-//    readonly property string thumbnailFilePath: _thumbnailFilePath
-//    property string _thumbnailFilePath
     property alias playerPage: videoPlayerPageConnections.target
     property var _key
 
@@ -60,49 +58,28 @@ Item {
         _saveVideoData()
 
         _key = k
-
-//        if (!!key) {
-//            _thumbnailFilePath = recentlyUsedVideos.select(["thumbnail_path"], key)[0].thumbnail_path
-//            if (!_thumbnailFilePath) {
-//                _thumbnailFilePath = VodDataManager.makeThumbnailFile(Global.videoThumbnailPath)
-//                recentlyUsedVideos.update({ thumbnail_path: _thumbnailFilePath}, key)
-//            }
-
-//            console.debug("thumbnail path=" + _thumbnailFilePath)
-//        }
     }
 
     function _saveVideoData() {
         if (!!key) {
             var k = _key
             _key = null
-            var _thumbnailFilePath = recentlyUsedVideos.select(["thumbnail_path"], k)[0].thumbnail_path
-            if (!_thumbnailFilePath) {
-                _thumbnailFilePath = VodDataManager.makeThumbnailFile(Global.videoThumbnailPath)
-            }
 
-            console.debug("unlink " + _thumbnailFilePath)
-            var result = App.unlink(_thumbnailFilePath)
-            if (!result) {
-                console.debug("unlink failed!!!!!!!!!!!!!!")
-            }
-
-            console.debug("copy " + Global.videoThumbnailPath + " -> " + _thumbnailFilePath)
-            result = App.copy(Global.videoThumbnailPath, _thumbnailFilePath)
-            if (!result) {
-                console.debug("copy failed!!!!!!!!!!!!!!")
-            }
-
+            var thumbnailFilePath = VodDataManager.makeThumbnailFile(Global.videoThumbnailPath)
             console.debug("unlink " + Global.videoThumbnailPath)
-            result = App.unlink(Global.videoThumbnailPath)
-            if (!result) {
+            var unlinkResult = App.unlink(Global.videoThumbnailPath)
+            if (!unlinkResult) {
                 console.debug("unlink failed!!!!!!!!!!!!!!")
             }
 
-            recentlyUsedVideos.update({ offset: _playbackOffset, thumbnail_path: _thumbnailFilePath}, k)
-            dataSaved(k, _playbackOffset, _thumbnailFilePath)
+            if (thumbnailFilePath) {
+                VodDataManager.recentlyWatched.setThumbnailPath(k, thumbnailFilePath)
+            }
 
-//            _thumbnailFilePath = ""
+            VodDataManager.recentlyWatched.setOffset(k, _playbackOffset)
+
+            dataSaved(k, _playbackOffset, thumbnailFilePath)
+
             _playbackOffset = 0
         }
     }

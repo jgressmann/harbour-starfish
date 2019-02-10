@@ -161,22 +161,8 @@ ContentPage {
 
                 onPlayRequest: function (self) {
                     _videoId = vod_id
-                    Global.playVideoHandler(updater, {video_id: vod_id}, self.vodUrl, self.startOffset)
+                    Global.playVideoHandler(updater, VodDataManager.recentlyWatched.vodKey(self.rowId), self.vodUrl, self.startOffset, self.seen)
                 }
-
-//                FIX ME MOVE TO MatchItem
-//                function updateStartOffset() {
-//                    var rows = recentlyUsedVideos.select(["offset"], {video_id: vod_id});
-//                    if (rows.length === 1) {
-//                        startOffset = rows[0].offset
-//                    } else {
-//                        startOffset = offset // base offset into multi match video
-//                    }
-
-////                    console.debug("rowid=" + vod_id + " start=" + Global.secondsToTimeString(startOffset))
-//                }
-
-//                Component.onCompleted: updateStartOffset()
             }
 
             ViewPlaceholder {

@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,9 +28,6 @@ import ".."
 
 BasePage {
     id: page
-
-//    property var itemPlaying: null
-    property int _videoId: -1
 
     VisualItemModel {
         id: visualModel
@@ -272,11 +269,9 @@ BasePage {
                         id: updater
                     }
 
-                    onClicked: function (obj, url, offset, matchItem) {
-    //                    itemPlaying = matchItem
-                        _videoId = obj["video_id"] || -1
+                    onClicked: function (key, url, offset, matchItem, seen) {
                         console.debug("clicked match item " + matchItem + " " + typeof(matchItem))
-                        Global.playVideoHandler(updater, obj, url, offset)
+                        Global.playVideoHandler(updater, key, url, offset, seen)
                     }
 
                     onCountChanged: {

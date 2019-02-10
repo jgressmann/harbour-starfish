@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -89,6 +89,7 @@ ListItem {
     property int _vodDownloadExplicitlyStarted: -1
     property MatchItemMemory memory
     readonly property bool _toolEnabled: !VodDataManager.busy
+    readonly property alias seen: seenButton.seen
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -1178,14 +1179,12 @@ ListItem {
 
 
     function updateStartOffset() {
-        var rows = recentlyUsedVideos.select(["offset"], {video_id: rowId});
-        if (rows.length === 1) {
-            startOffset = rows[0].offset
+        var offset = VodDataManager.recentlyWatched.offset(VodDataManager.recentlyWatched.vodKey(rowId));
+        if (offset >= 0) {
+            startOffset = offset
         } else {
             startOffset = baseOffset // base offset into multi match video
         }
-
-//                    console.debug("rowid=" + vod_id + " start=" + Global.secondsToTimeString(startOffset))
     }
 }
 

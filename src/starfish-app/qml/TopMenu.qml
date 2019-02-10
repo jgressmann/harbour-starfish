@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -88,10 +88,11 @@ PullDownMenu {
 
         function _openVideoPage(callback) {
             var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
-            openPage.videoSelected.connect(function (obj, url, offset, saveScreenShot) {
-                recentlyUsedVideos.add(obj)
-                offset = Math.max(offset, recentlyUsedVideos.select(["offset"], obj)[0].offset)
-                updater.setKey(obj)
+            openPage.videoSelected.connect(function (key, url, offset, saveScreenShot) {
+                VodDataManager.recentlyWatched.add(key, false)
+                offset = Math.max(offset, VodDataManager.recentlyWatched.offset(key))
+                VodDataManager.recentlyWatched.setOffset(key, offset)
+                updater.setKey(key)
                 callback(url, offset, saveScreenShot)
             })
         }
