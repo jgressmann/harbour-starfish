@@ -322,6 +322,12 @@ ScVodDataManager::~ScVodDataManager() {
     setState(State_Finalizing);
     qDebug() << "set finalizing";
 
+    {
+        clearMatchItems(m_ValidMatchItems);
+        pruneExpiredMatchItems();
+        qDebug() << "deleted match items";
+    }
+
     if (m_RecentlyWatchedVideos) {
         delete m_RecentlyWatchedVideos;
         m_RecentlyWatchedVideos = nullptr;
@@ -494,6 +500,11 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     fetchIcons();
     fetchClassifier();
     fetchSqlPatches();
+
+    m_MatchItemTimer.setSingleShot(true);
+    m_MatchItemTimer.setTimerType(Qt::CoarseTimer);
+    m_MatchItemTimer.setInterval(60000);
+    connect(&m_MatchItemTimer, &QTimer::timeout, this, &ScVodDataManager::pruneExpiredMatchItems);
 }
 
 void
@@ -819,7 +830,6 @@ ScVodDataManager::setupDatabase() {
         "    game INTEGER NOT NULL,\n"
         "    year INTEGER NOT NULL,\n"
         "    offset INTEGER NOT NULL,\n"
-//        "    end_offset INTEGER NOT NULL,\n
         "    seen INTEGER DEFAULT 0,\n"
         "    match_number INTEGER NOT NULL,\n"
         "    stage_rank INTEGER NOT NULL,\n"
@@ -3114,4 +3124,76 @@ ScDatabaseStoreQueue*
 ScVodDataManager::databaseStoreQueue() const
 {
     return m_SharedState->DatabaseStoreQueue.data();
+}
+
+ScMatchItem*
+ScVodDataManager::acquireMatchItem(qint64 rowid)
+{
+    if (rowid < 0) {
+        qWarning("invalid row id\n");
+        return nullptr;
+    }
+
+    auto it = m_ValidMatchItems.find(rowid);
+    if (it == m_ValidMatchItems.end()) {
+        auto it2 = m_ExpiredMatchItems.find(rowid);
+        if (it2 == m_ExpiredMatchItems.end()) {
+            it = m_ValidMatchItems.insert(rowid, new MatchItemData{});
+            void* ptr = it.value()->Raw;
+            auto item = new (ptr) ScMatchItem(rowid, this);
+            // propagate signal
+            connect(item, &ScMatchItem::seenChanged, this, &ScVodDataManager::seenChanged);
+        } else {
+            it = m_ValidMatchItems.insert(rowid, it2.value());
+            m_ExpiredMatchItems.erase(it2);
+            qDebug() << "match item" << rowid << "ressurected";
+        }
+    }
+
+    ++it.value()->RefCount;
+    qDebug() << "match item" << rowid << "ref count" << it.value()->RefCount;
+
+    return static_cast<ScMatchItem*>(static_cast<void*>(it.value()->Raw));
+}
+
+void
+ScVodDataManager::releaseMatchItem(ScMatchItem* item)
+{
+    if (!item) {
+        qWarning("nullptr match item\n");
+        return;
+    }
+
+    auto rowid = item->rowId();
+    auto it = m_ValidMatchItems.find(rowid);
+    if (it != m_ValidMatchItems.end()) {
+        auto data = it.value();
+        --data->RefCount;
+        qDebug() << "match item" << rowid << "ref count" << data->RefCount;
+        if (0 == data->RefCount) {
+            m_ValidMatchItems.erase(it);
+            m_ExpiredMatchItems.insert(item->rowId(), data);
+            m_MatchItemTimer.start();
+        }
+    } else {
+        qDebug() << "no match item with rowid" << rowid;
+    }
+}
+
+void
+ScVodDataManager::pruneExpiredMatchItems()
+{
+    clearMatchItems(m_ExpiredMatchItems);
+}
+
+void
+ScVodDataManager::clearMatchItems(QHash<qint64, MatchItemData*>& h)
+{
+    auto beg = h.cbegin();
+    auto end = h.cend();
+    for (auto it = beg; it != end; ++it) {
+        static_cast<ScMatchItem*>(static_cast<void*>(it.value()->Raw))->~ScMatchItem();
+        delete it.value();
+    }
+    h.clear();
 }

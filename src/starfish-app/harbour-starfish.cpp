@@ -38,6 +38,7 @@
 #include "ScVodman.h"
 #include "ScRecentlyWatchedVideos.h"
 #include "VMQuickYTDLDownloader.h"
+#include "ScMatchItem.h"
 
 #include <sailfishapp.h>
 
@@ -89,6 +90,7 @@ main(int argc, char *argv[]) {
         qmlRegisterUncreatableType<VMVodEnums>(STARFISH_NAMESPACE, 1, 0, "VM", QStringLiteral("wrapper around C++ enums"));
         qmlRegisterUncreatableType<ScEnums>(STARFISH_NAMESPACE, 1, 0, "Sc", QStringLiteral("wrapper around C++ enums"));
         qmlRegisterUncreatableType<ScRecentlyWatchedVideos>(STARFISH_NAMESPACE, 1, 0, "RecentlyWatchedVideos", "RecentlyWatchedVideos");
+        qmlRegisterUncreatableType<ScMatchItem>(STARFISH_NAMESPACE, 1, 0, "MatchItemData", "MatchItemData");
 
         qmlRegisterSingletonType<ScVodDataManager>(STARFISH_NAMESPACE, 1, 0, "VodDataManager", dataManagerProvider);
         qmlRegisterSingletonType<VMQuickYTDLDownloader>(STARFISH_NAMESPACE, 1, 0, "YTDLDownloader", vmQuickYTDLDownloader);

@@ -37,9 +37,9 @@ Item {
         VodDataManager.metaDataDownloadFailed.connect(metaDataDownloadFailed)
         VodDataManager.vodDownloadFailed.connect(vodDownloadFailed)
         VodDataManager.vodDownloadCanceled.connect(vodDownloadCanceled)
-        VodDataManager.titleAvailable.connect(titleAvailable)
-        VodDataManager.seenAvailable.connect(seenAvailable)
-        VodDataManager.vodEndAvailable.connect(vodEndAvailable)
+//        VodDataManager.titleAvailable.connect(titleAvailable)
+//        VodDataManager.seenAvailable.connect(seenAvailable)
+//        VodDataManager.vodEndAvailable.connect(vodEndAvailable)
         VodDataManager.vodDownloadsChanged.connect(vodDownloadsChanged)
     }
 
@@ -54,9 +54,9 @@ Item {
         VodDataManager.metaDataDownloadFailed.disconnect(metaDataDownloadFailed)
         VodDataManager.vodDownloadFailed.disconnect(vodDownloadFailed)
         VodDataManager.vodDownloadCanceled.disconnect(vodDownloadCanceled)
-        VodDataManager.titleAvailable.disconnect(titleAvailable)
-        VodDataManager.seenAvailable.disconnect(seenAvailable)
-        VodDataManager.vodEndAvailable.disconnect(vodEndAvailable)
+//        VodDataManager.titleAvailable.disconnect(titleAvailable)
+//        VodDataManager.seenAvailable.disconnect(seenAvailable)
+//        VodDataManager.vodEndAvailable.disconnect(vodEndAvailable)
         VodDataManager.vodDownloadsChanged.disconnect(vodDownloadsChanged)
     }
 /* CONNECTIONS DO NOT WORK!!! */

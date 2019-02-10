@@ -19,6 +19,7 @@ SOURCES += harbour-starfish.cpp \
     ScDatabaseStoreQueue.cpp \
     ScDatabase.cpp \
     ScRecentlyWatchedVideos.cpp \
+    ScMatchItem.cpp
 
 
 
@@ -35,6 +36,7 @@ HEADERS += \
     ScDatabaseStoreQueue.h \
     ScDatabase.h \
     ScRecentlyWatchedVideos.h \
+    ScMatchItem.h
 
 #../../rpm/harbour-starfish.changes.run.in \
 #../../rpm/harbour-starfish.yaml \

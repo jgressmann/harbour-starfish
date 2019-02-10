@@ -27,6 +27,7 @@
 #include "ScRecord.h"
 #include "ScIcons.h"
 #include "ScClassifier.h"
+#include "ScMatchItem.h"
 #include "ScVodDataManagerWorker.h" // for typedef ScVodIdList
 
 
@@ -34,6 +35,7 @@
 #include <QThread>
 #include <QVariant>
 #include <QSharedPointer>
+#include <QTimer>
 
 
 class QNetworkAccessManager;
@@ -49,6 +51,7 @@ class ScVodDataManagerState;
 class ScVodDataManagerWorker;
 class VMVodFileDownload;
 class ScRecentlyWatchedVideos;
+class ScMatchItem;
 
 
 class DataDirectoryMover : public QObject
@@ -204,6 +207,8 @@ public: //
 //    Q_INVOKABLE void removeFileFromRecentlyWatchedList(const QString& path);
     ScDatabaseStoreQueue* databaseStoreQueue() const;
     ScRecentlyWatchedVideos* recentlyWatched() const { return m_RecentlyWatchedVideos; }
+    Q_INVOKABLE ScMatchItem* acquireMatchItem(qint64 rowid);
+    Q_INVOKABLE void releaseMatchItem(ScMatchItem* item);
 
 signals:
     void readyChanged();
@@ -270,6 +275,14 @@ private:
         QString url;
     };
 
+    struct MatchItemData
+    {
+        alignas(std::alignment_of<ScMatchItem>::value) unsigned char Raw[sizeof(ScMatchItem)];
+        int RefCount;
+
+        MatchItemData() : Raw{}, RefCount(0) {}
+    };
+
     using DatabaseCallback = std::function<void(qint64 insertIdOrNumRows, bool error)>;
 
 private slots:
@@ -278,6 +291,8 @@ private slots:
     void onVodDownloadsChanged(ScVodIdList ids);
     void databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);
     void addVodFromQueue();
+    void pruneExpiredMatchItems();
+    static void clearMatchItems(QHash<qint64, MatchItemData*>& h);
 
 private:
     static bool tryGetEvent(QString& inoutSrc, QString* location);
@@ -316,6 +331,7 @@ private:
     void setState(State state);
     void setDataDirectory(const QString& value);
     void setDirectories();
+
     void updateSql1(QSqlQuery& q);
     void updateSql2(QSqlQuery& q);
     void updateSql3(QSqlQuery& q);
@@ -323,7 +339,9 @@ private:
     void updateSql5(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
     void updateSql6(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
 
+
 private:
+    QTimer m_MatchItemTimer;
     QList<ScRecord> m_AddQueue;
     QThread m_WorkerThread;
     QThread m_DatabaseStoreQueueThread;
@@ -345,5 +363,7 @@ private:
     QSharedPointer<ScVodDataManagerState> m_SharedState;
     QVariantList m_VodDownloads;
     QHash<int, DatabaseCallback> m_PendingDatabaseStores;
+    QHash<qint64, MatchItemData*> m_ValidMatchItems;
+    QHash<qint64, MatchItemData*> m_ExpiredMatchItems;
 };
 

@@ -31,17 +31,9 @@ ListItem {
     contentHeight: requiredHeight
     readonly property int is_match_item: 1 // poor type check to call ownerGone()
     property string table
-    property string eventFullName
-    property string stageName
-    property string side1
-    property string side2
-    property string matchName
-    property int race1: -1
-    property int race2: -1
-    property date matchDate
     property bool showDate: true
-    property bool showSides: (side1 && side2) || (side1 && !_vodTitle)
-    property bool showTitle: !side2
+    property bool showSides: _c && (_c.side1 && _c.side2) || (_c.side1 && !_c.title)
+    property bool showTitle: _c && !_c.side2
     property bool menuEnabled: true
     property int rowId: -1
     property string url
@@ -54,16 +46,11 @@ ListItem {
     property variant _vod
     readonly property string vodUrl: _vodUrl
     property string _vodUrl
-    property string _vodTitle
     property string _formatId
     property int startOffset: 0
     property bool _downloading: false
-    property int _width: 0
-    property int _height: 0
-    property int baseOffset: 0
-    property int length: 0
-    property int _endOffset: -1
-    property bool _validRange: baseOffset >= 0 && baseOffset < _endOffset
+    readonly property int baseOffset: _c ? _c.videoStartOffset : 0
+    property bool _validRange: _c && baseOffset >= 0 && baseOffset < _c.videoEndOffset
     property bool _tryingToPlay: false
     property int _metaDataState: metaDataStateInitial
     property int _thumbnailState: thumbnailStateInitial
@@ -79,7 +66,7 @@ ListItem {
     readonly property int thumbnailStateDownloadFailed: 0
     readonly property int thumbnailStateAvailable: 1
     readonly property string _where: " where id=" + rowId
-    readonly property bool _hasValidRaces: race1 >= 1 && race2 >= 1
+    readonly property bool _hasValidRaces: _c && _c.race1 >= 1 && _c.race2 >= 1
     readonly property int requiredHeight: content.height + watchProgress.height
     readonly property string title: titleLabel.text
     readonly property string thumbnailSource: thumbnail.source
@@ -89,7 +76,8 @@ ListItem {
     property int _vodDownloadExplicitlyStarted: -1
     property MatchItemMemory memory
     readonly property bool _toolEnabled: !VodDataManager.busy
-    readonly property alias seen: seenButton.seen
+    readonly property bool seen: _c && _c.seen
+    property QtObject _c: null
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
@@ -108,16 +96,16 @@ ListItem {
 
             Label {
                 width: parent.width
-                visible: !!eventFullName || !!stageName
+                visible: !!_c.eventFullName || !!_c.stageName
                 truncationMode: TruncationMode.Fade
                 font.pixelSize: Theme.fontSizeSmall
                 text: {
-                    var result = eventFullName
-                    if (stageName) {
+                    var result = _c.eventFullName
+                    if (_c.stageName) {
                         if (result) {
-                            result += " / " + stageName
+                            result += " / " + _c.stageName
                         } else {
-                            result = stageName
+                            result = _c.stageName
                         }
                     }
 
@@ -213,18 +201,18 @@ ListItem {
                         visible: !sidesWithRaceLogosGroup.visible
                         text: {
                             if (showSides) {
-                                if (side2) {
-                                    return side1 + " - " + side2
+                                if (_c.side2) {
+                                    return _c.side1 + " - " + _c.side2
                                 }
 
-                                return side1
+                                return _c.side1
                             }
 
-                            if (showTitle && _vodTitle) {
-                                return _vodTitle
+                            if (showTitle && _c.title) {
+                                return _c.title
                             }
 
-                            return matchName
+                            return _c.matchName
                         }
                     } // title/vs label
 
@@ -243,7 +231,7 @@ ListItem {
                             height: Theme.iconSizeSmall
                             sourceSize.width: width
                             sourceSize.height: height
-                            source: VodDataManager.raceIcon(race1)
+                            source: VodDataManager.raceIcon(_c.race1)
                         }
 
                         Label {
@@ -252,7 +240,7 @@ ListItem {
                             anchors.verticalCenter: parent.verticalCenter
                             width: parent.labelWidth
                             truncationMode: TruncationMode.Fade
-                            text: " " + side1
+                            text: " " + _c.side1
                             horizontalAlignment: Text.AlignLeft
                         }
 
@@ -262,7 +250,7 @@ ListItem {
                             anchors.verticalCenter: parent.verticalCenter
                             width: parent.labelWidth
                             truncationMode: TruncationMode.Fade
-                            text: side2  + " "
+                            text: _c.side2  + " "
                             horizontalAlignment: Text.AlignRight
                         }
 
@@ -274,14 +262,13 @@ ListItem {
                             height: Theme.iconSizeSmall
                             sourceSize.width: width
                             sourceSize.height: height
-                            source: VodDataManager.raceIcon(race2)
+                            source: VodDataManager.raceIcon(_c.race2)
                         }
                     } // vs label with race icons
 
                     Item {
                         height: dateLabel2.height
                         width: parent.width
-//                        visible: !eventFullName && !stageName
 
 
                         Label {
@@ -296,15 +283,15 @@ ListItem {
                             text: {
                                 var result = ""
                                 if (showDate) {
-                                    result = Qt.formatDate(matchDate)
+                                    result = Qt.formatDate(_c.matchDate)
                                 }
 
-                                if (_width > 0) {
+                                if (_c.width > 0) {
                                     if (result) {
                                         result += ", "
                                     }
 
-                                    result += _width + "x" + _height
+                                    result += _c.width + "x" + _cheight
                                 }
 
                                 if (debugApp.value) {
@@ -425,17 +412,17 @@ ListItem {
                 IconButton {
                     id: seenButton
                     anchors.right: parent.right
-                    enabled: rowId >= 0
-                    icon.source: seen ? "image://theme/icon-m-favorite-selected" : "image://theme/icon-m-favorite"
+//                    enabled: rowId >= 0
+                    //icon.source: seen ? "image://theme/icon-m-favorite-selected" : "image://theme/icon-m-favorite"
+                    icon.source: _c.seen ? "image://theme/icon-m-favorite-selected" : "image://theme/icon-m-favorite"
                     anchors.verticalCenter: parent.verticalCenter
-                    property bool seen: false
+//                    property bool seen: false
 
                     onClicked: {
-                        seen = !seen
-                        console.debug("seen=" + seen)
-                        VodDataManager.setSeen(table, _where, seen)
+                        _c.seen = !_c.seen
+                        console.debug("seen=" + _c.seen)
+//                        VodDataManager.setSeen(table, _where, seen)
                     }
-
                 }
             }
         }
@@ -445,11 +432,11 @@ ListItem {
             color: Theme.highlightColor
             opacity: Theme.highlightBackgroundOpacity
             width: parent.width * _range
-            visible: !seenButton.seen && _validRange
+            visible: !seen && _validRange
             readonly property real _range:
                 startOffset < baseOffset
                 ? 0
-                : (startOffset > _endOffset ? 1 : (startOffset-baseOffset)/(_endOffset-baseOffset))
+                : (startOffset > _c.videoEndOffset ? 1 : (startOffset-baseOffset)/(_c.videoEndOffset-baseOffset))
             height: 4
             anchors.top: content.bottom
 //            onVisibleChanged: {
@@ -547,13 +534,13 @@ ListItem {
     }
 
     Component.onCompleted: {
+        _c = VodDataManager.acquireMatchItem(rowId)
         memory.addMatchItem(root)
+
 
         updateStartOffset()
 
-        VodDataManager.fetchTitle(rowId)
-        VodDataManager.fetchSeen(rowId, table, _where)
-        VodDataManager.fetchVodEnd(rowId, baseOffset, length)
+
 
         // also fetch a valid meta data from cache
         _metaDataState = metaDataStateFetching
@@ -594,6 +581,7 @@ ListItem {
 
         _abortFetchMetaData()
         _abortFetchThumbnail()
+        VodDataManager.releaseMatchItem(_c)
     }
 
     RemorsePopup { id: remorse }
@@ -688,8 +676,6 @@ ListItem {
                         item._vodUrl = ""
                         item._vodFilePath = ""
                         item._vodFileSize = 0
-                        item._width = 0
-                        item._height = 0
                         item._formatId = ""
                         manager.deleteVodFiles(item.rowId)
                     })
@@ -705,8 +691,8 @@ ListItem {
                                    vodTitle: titleLabel.text,
                                    vodFilePath: _vodFilePath,
                                    vodFileSize: _vodFileSize,
-                                   vodWidth: _width,
-                                   vodHeight: _height,
+                                   vodWidth: _c.width,
+                                   vodHeight: _c.height,
                                    vodRowId: rowId,
                                    vodProgress: _progress
                                })
@@ -774,18 +760,6 @@ ListItem {
         _thumbnailTicket = -1
     }
 
-    function titleAvailable(title) {
-        _vodTitle = title
-    }
-
-    function seenAvailable(seen) {
-        seenButton.seen = seen >= 1
-    }
-
-    function vodEndAvailable(offset) {
-        _endOffset = offset
-    }
-
     function fetchingMetaData() {
         _metaDataState = metaDataStateFetching
         _metaDataTicket = -1
@@ -805,15 +779,8 @@ ListItem {
         console.debug("metaDataAvailable rowid=" + rowId)
         _metaDataState = metaDataStateAvailable
         _vod = vod
-        _vodTitle = vod.description.title
         _clicked = false
         _metaDataTicket = -1
-
-        // also set length which might be zero if we just downloaded the meta data
-        length = vod.description.duration
-
-        // now that we have meta data, we might
-        VodDataManager.fetchVodEnd(rowId, baseOffset, length)
 
 
         if (App.isOnline) {
@@ -861,8 +828,7 @@ ListItem {
 
         progressOverlay.show = _downloading && progress > 0 && progress < 1
         progressOverlay.progress = progress
-        _width = width
-        _height = height
+
         _formatId = formatId
         _vodFileTicket = -1
     }

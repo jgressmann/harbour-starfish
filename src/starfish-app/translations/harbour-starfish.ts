@@ -190,7 +190,7 @@
 <context>
     <name>NewPage</name>
     <message>
-        <location filename="../qml/pages/NewPage.qml" line="82"/>
+        <location filename="../qml/pages/NewPage.qml" line="80"/>
         <source>New</source>
         <translation type="unfinished"></translation>
     </message>

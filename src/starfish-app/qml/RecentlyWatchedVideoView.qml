@@ -193,87 +193,34 @@ SilicaListView {
             Component {
                 id: vodComponent
 
-
-
-                SilicaListView {
-                    id: wrapperView
+                MatchItem {
+                    id: matchItem
                     width: listView.width
 
+                    rowId: video_id
+                    table: _table
+                    memory: matchItemConnections
 
-                    quickScrollEnabled: false
-//                                clip: true
-                    model: sqlModel
+                    onPlayRequest: function (self) {
+                        listView.clicked(VodDataManager.recentlyWatched.vodKey(self.rowId), self.vodUrl, self.startOffset, self)
+                    }
 
-//                    readonly property int xindex: index
-//                    readonly property int xoffset: offset
-//                    readonly property int xvideo_id: video_id
-
-                    delegate: Component {
-                        MatchItem {
-                            id: matchItem
-                            width: ListView.view.width
-//                            contentHeight: Global.itemHeight + Theme.fontSizeMedium
-                            onHeightChanged: wrapperView.height = height
-
-                            eventFullName: event_full_name
-                            stageName: stage_name
-                            side1: side1_name
-                            side2: side2_name
-                            race1: side1_race
-                            race2: side2_race
-                            matchName: match_name
-                            matchDate: match_date
-                            rowId: video_id
-                            baseOffset: vod_offset
-                            length: vod_length
-                            table: _table
-                            memory: matchItemConnections
-
-                            onPlayRequest: function (self) {
-                                listView.clicked(VodDataManager.recentlyWatched.vodKey(self.rowId), self.vodUrl, self.startOffset, self)
-                            }
-
-
-
-                            menu: Component {
-                                ContextMenu {
-                                    MenuItem {
-                                        text: "Remove from list"
-                                        onClicked: {
-                                            // not sure why I need locals here
-                                            var removeArgs = VodDataManager.recentlyWatched.vodKey(matchItem.rowId)
-                                            var model = VodDataManager.recentlyWatched //
-                                            matchItem.remorseAction(
-                                                "Removing " + matchItem.title,
-                                                function() {
-                                                    model.remove(removeArgs)
-                                                })
-                                        }
-                                    }
+                    menu: Component {
+                        ContextMenu {
+                            MenuItem {
+                                text: "Remove from list"
+                                onClicked: {
+                                    // not sure why I need locals here
+                                    var removeArgs = VodDataManager.recentlyWatched.vodKey(matchItem.rowId)
+                                    var model = VodDataManager.recentlyWatched //
+                                    matchItem.remorseAction(
+                                        "Removing " + matchItem.title,
+                                        function() {
+                                            model.remove(removeArgs)
+                                        })
                                 }
                             }
                         }
-                    }
-
-                    SqlVodModel {
-                        id: sqlModel
-                        database: VodDataManager.database
-                        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "offset", "length"]
-                        columnAliases: {
-                            var x = {}
-                            x["length"] = "vod_length"
-                            x["offset"] = "vod_offset"
-                            return x
-                        }
-                        select: "select " + columns.join(",") + " from " + _table + " where id=" + video_id
-
-                        Component.onCompleted: {
-                            VodDataManager.vodsChanged.connect(reload)
-                        }
-                    }
-
-                    Component.onCompleted: {
-                        console.debug("index=" + index + " offset=" + offset + " video_id=" + video_id + " url=" + url)
                     }
                 }
             }

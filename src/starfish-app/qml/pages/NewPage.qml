@@ -38,12 +38,10 @@ ContentPage {
     SqlVodModel {
         id: sqlModel
         database: VodDataManager.database
-        columns: ["event_full_name", "stage_name", "side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset", "offset", "length", "url"]
+        columns: ["id"]
         columnAliases: {
             var x = {}
             x["id"] = "vod_id"
-            x["length"] = "vod_length"
-            x["url"] = "vod_url"
             return x
         }
         select: "select " + columns.join(",") + " from " + table + " where "
@@ -88,20 +86,8 @@ ContentPage {
                 MatchItem {
                     width: listView.width
 //                    contentHeight: Global.itemHeight + Theme.fontSizeMedium // MatchItem is a ListItem
-                    eventFullName: event_full_name
-                    stageName: stage_name
-                    side1: side1_name
-                    side2: side2_name
-                    race1: side1_race
-                    race2: side2_race
-                    matchName: match_name
-                    matchDate: match_date
                     rowId: vod_id
-                    startOffset: offset
-                    baseOffset: offset
                     table: page.table
-                    length: vod_length
-                    url: vod_url
                     memory: matchItemConnections
 
                     onClicked: {
