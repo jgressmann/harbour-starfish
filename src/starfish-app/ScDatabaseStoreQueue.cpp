@@ -148,6 +148,7 @@ void ScDatabaseStoreQueue::processStatement(int transactionId, const QString& sq
 #endif
                     //emit completed(t.token, getInsertIdOrAffectedRows(), 0, QString());
                 } else {
+                    qDebug() << "failed" << sql;
                     emit completed(transactionId, getInsertIdOrAffectedRows(), m_Query.lastError().number(), m_Query.lastError().databaseText());
                     abort();
                 }

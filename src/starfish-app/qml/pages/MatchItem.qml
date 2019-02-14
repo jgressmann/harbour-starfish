@@ -30,62 +30,39 @@ ListItem {
     id: root
     contentHeight: requiredHeight
     readonly property int is_match_item: 1 // poor type check to call ownerGone()
-    property string table
     property bool showDate: true
-    property bool showSides: _c && (_c.side1 && _c.side2) || (_c.side1 && !_c.title)
+    property bool showSides: _c && ((_c.side1 && _c.side2) || (_c.side1 && !_c.urlShare.title))
     property bool showTitle: _c && !_c.side2
     property bool menuEnabled: true
     property int rowId: -1
-    property string url
-    property string _vodFilePath
-    property int _vodFileSize
-    property bool _fetchingVod: false
     property bool _clicked: false
     property bool _clicking: false
     property bool _playWhenTransitionDone: false
-    property variant _vod
     readonly property string vodUrl: _vodUrl
     property string _vodUrl
     property string _formatId
     property int startOffset: 0
-    property bool _downloading: false
     readonly property int baseOffset: _c ? _c.videoStartOffset : 0
     property bool _validRange: _c && baseOffset >= 0 && baseOffset < _c.videoEndOffset
     property bool _tryingToPlay: false
-    property int _metaDataState: metaDataStateInitial
-    property int _thumbnailState: thumbnailStateInitial
-    property bool _vodDownloadFailed: false
-    property real _progress: -1
-    property string _thumbnailFilePath
-    readonly property int metaDataStateFetching: -2
-    readonly property int metaDataStateInitial: -1
-    readonly property int metaDataStateDownloadFailed: 0
-    readonly property int metaDataStateAvailable: 1
-    readonly property int thumbnailStateFetching: -2
-    readonly property int thumbnailStateInitial: -1
-    readonly property int thumbnailStateDownloadFailed: 0
-    readonly property int thumbnailStateAvailable: 1
-    readonly property string _where: " where id=" + rowId
     readonly property bool _hasValidRaces: _c && _c.race1 >= 1 && _c.race2 >= 1
     readonly property int requiredHeight: content.height + watchProgress.height
     readonly property string title: titleLabel.text
     readonly property string thumbnailSource: thumbnail.source
-    property int _metaDataTicket: -1
-    property int _thumbnailTicket: -1
-    property int _vodFileTicket: -1
     property int _vodDownloadExplicitlyStarted: -1
     property MatchItemMemory memory
     readonly property bool _toolEnabled: !VodDataManager.busy
     readonly property bool seen: _c && _c.seen
     property QtObject _c: null
+//    property MatchItemData _c: null
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
 
     ProgressOverlay {
         id: progressOverlay
-        show: false
-        progress: 0
+        show: _c && _c.urlShare.vodFetchStatus === UrlShare.Fetching
+        progress: _c ? _c.urlShare.downloadProgress : 0
 
         anchors.fill: parent
 
@@ -131,26 +108,26 @@ ListItem {
                         anchors.centerIn: parent
                         height: _hadImageLoadError
                                 ? thumbnailBusyIndicator.height
-                                : (_thumbnailState === thumbnailStateAvailable ? parent.height : thumbnailBusyIndicator.height)
+                                : (_c.urlShare.thumbnailFetchStatus === UrlShare.Available ? parent.height : thumbnailBusyIndicator.height)
                         width: _hadImageLoadError
                                 ? thumbnailBusyIndicator.width
-                                : (_thumbnailState === thumbnailStateAvailable ? parent.width : thumbnailBusyIndicator.width)
+                                : (_c.urlShare.thumbnailFetchStatus === UrlShare.Available ? parent.width : thumbnailBusyIndicator.width)
                         sourceSize.width: parent.width
                         sourceSize.height: parent.height
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
                         cache: false
-                        //visible: (status === Image.Ready || status === Image.Error) && _thumbnailState !== thumbnailStateFetching
-                        visible: _thumbnailState !== thumbnailStateFetching
+                        //visible: (status === Image.Ready || status === Image.Error) && _c.urlShare.thumbnailFetchStatus !== UrlShare.Fetching
+                        visible: _c.urlShare.thumbnailFetchStatus !== UrlShare.Fetching
                         source: _hadImageLoadError
                                 ? "image://theme/icon-m-reload"
-                                : (_thumbnailState === thumbnailStateAvailable
-                                    ? _thumbnailFilePath : "image://theme/icon-m-reload")
+                                : (_c.urlShare.thumbnailFetchStatus === UrlShare.Available
+                                    ? _c.urlShare.thumbnailFilePath : "image://theme/icon-m-reload")
 
                         onStatusChanged: {
                             if (Image.Error === status) {
                                 _hadImageLoadError = true
-                                console.debug("rowid=" + rowId + " error loading image " + _thumbnailFilePath)
+                                console.debug("rowid=" + rowId + " error loading image " + _c.urlShare.thumbnailFilePath)
                             }
                         }
                     }
@@ -158,13 +135,12 @@ ListItem {
                     MouseArea {
                         anchors.fill: parent
                         z: thumbnail.z + 1
-                        //enabled: parent.visible && _thumbnailState !== thumbnailStateAvailable && Image.Error !== status
-                        //enabled: parent._hadImageLoadError || _thumbnailState === thumbnailStateDownloadFailed
-                        enabled: thumbnail.visible && (thumbnail._hadImageLoadError || _thumbnailState !== thumbnailStateAvailable)
+                        //enabled: parent.visible && _c.urlShare.thumbnailFetchStatus !== UrlShare.Available && Image.Error !== status
+                        //enabled: parent._hadImageLoadError || _c.urlShare.thumbnailFetchStatus === thumbnailStateDownloadFailed
+                        enabled: thumbnail.visible && (thumbnail._hadImageLoadError || _c.urlShare.thumbnailFetchStatus !== UrlShare.Available)
                         onClicked: {
                             thumbnail._hadImageLoadError = false
-                            _thumbnailFilePath = ""
-                            _fetchThumbnail()
+                            _c.urlShare.fetchThumbnail()
                         }
 
 //                        onEnabledChanged: {
@@ -177,7 +153,7 @@ ListItem {
                         size: BusyIndicatorSize.Medium
                         anchors.centerIn: parent
                         running: visible
-                        visible: _thumbnailState === thumbnailStateFetching
+                        visible: _c.urlShare.thumbnailFetchStatus === UrlShare.Fetching
                     }
                 } // thumbnail group
 
@@ -208,8 +184,8 @@ ListItem {
                                 return _c.side1
                             }
 
-                            if (showTitle && _c.title) {
-                                return _c.title
+                            if (showTitle && _c.urlShare.title) {
+                                return _c.urlShare.title
                             }
 
                             return _c.matchName
@@ -286,12 +262,12 @@ ListItem {
                                     result = Qt.formatDate(_c.matchDate)
                                 }
 
-                                if (_c.width > 0) {
+                                if (_c.urlShare.vodResolution.width > 0) {
                                     if (result) {
                                         result += ", "
                                     }
 
-                                    result += _c.width + "x" + _cheight
+                                    result += _c.urlShare.vodResolution.width + "x" + _c.urlShare.vodResolution.height
                                 }
 
                                 if (debugApp.value) {
@@ -321,7 +297,7 @@ ListItem {
 
 
                             Item {
-                                visible: _metaDataState === metaDataStateFetching
+                                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Fetching
                                 width: visible ? parent.height : 0
                                 height: parent.height
                                 anchors.verticalCenter: parent.verticalCenter
@@ -339,13 +315,13 @@ ListItem {
                                 height: Theme.iconSizeSmall
                                 sourceSize.width: width
                                 sourceSize.height: height
-                                source: _metaDataState == metaDataStateDownloadFailed
+                                source: _c.urlShare.metaDataFetchStatus === UrlShare.Failed
                                         ? //"/usr/share/harbour-starfish/icons/warning.png"
                                           "/usr/share/harbour-starfish/icons/flash.png"
                                         : "image://theme/icon-s-date"
 
                                 anchors.verticalCenter: parent.verticalCenter
-                                visible: _metaDataState === metaDataStateAvailable || _metaDataState === metaDataStateDownloadFailed
+                                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available || _c.urlShare.metaDataFetchStatus === UrlShare.Failed
                             }
 
 
@@ -366,9 +342,9 @@ ListItem {
                                     src: loadCompleteImage2a
                                     width: loadCompleteImage2a.width
                                     height: loadCompleteImage2a.height
-                                    visible: !_downloading && !_vodDownloadFailed && progressOverlay.progress < 1
+                                    visible: _c.urlShare.vodFetchStatus === UrlShare.Available && _c.urlShare.downloadProgress < 1
                                     progress: {
-                                        var s = Math.max(0, Math.min(progressOverlay.progress, 1))
+                                        var s = Math.max(0, Math.min(_c.urlShare.downloadProgress, 1))
                                         if (s > 0) {
                                             if (s >= 1) {
                                                 return 1
@@ -385,7 +361,7 @@ ListItem {
                                     source: "image://theme/icon-s-like"
     //                                anchors.verticalCenter: parent.verticalCenter
     //                                anchors.right: parent.right
-                                    visible: !_downloading && !_vodDownloadFailed && progressOverlay.progress >= 1
+                                    visible: _c.urlShare.vodFetchStatus === UrlShare.Available && _c.urlShare.downloadProgress >= 1
                                 }
 
                                 Image {
@@ -395,14 +371,14 @@ ListItem {
                                     sourceSize.height: height
                                     source: "/usr/share/harbour-starfish/icons/flash.png"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    visible: !_downloading && _vodDownloadFailed
+                                    visible: _c.urlShare.vodFetchStatus === UrlShare.Failed
                                 }
 
                                 BusyIndicator {
                                     id: downloadingVodIndicator
                                     size: BusyIndicatorSize.Small
                                     anchors.centerIn: parent
-                                    running: _downloading
+                                    running: _c.urlShare.vodFetchStatus === UrlShare.Fetching
                                 }
                             }
                         }
@@ -412,7 +388,7 @@ ListItem {
                 IconButton {
                     id: seenButton
                     anchors.right: parent.right
-//                    enabled: rowId >= 0
+
                     //icon.source: seen ? "image://theme/icon-m-favorite-selected" : "image://theme/icon-m-favorite"
                     icon.source: _c.seen ? "image://theme/icon-m-favorite-selected" : "image://theme/icon-m-favorite"
                     anchors.verticalCenter: parent.verticalCenter
@@ -421,7 +397,6 @@ ListItem {
                     onClicked: {
                         _c.seen = !_c.seen
                         console.debug("seen=" + _c.seen)
-//                        VodDataManager.setSeen(table, _where, seen)
                     }
                 }
             }
@@ -453,54 +428,30 @@ ListItem {
         _clicking = true
         _clicked = true
 
-        if (_vod) {
+        if (_c.urlShare.metaDataFetchStatus === UrlShare.Available) {
             _tryPlay()
         } else {
-            if (_vodFilePath && _progress >= 1) {
+            if (_c.urlShare.vodFilePath && _c.urlShare.downloadProgress >= 1) {
                 // play fully downloaded vods immediately
                 _tryPlay()
             } else {
-                switch (_metaDataState) {
-                case metaDataStateAvailable:
+                switch (_c.urlShare.metaDataFetchStatus) {
+                case UrlShare.Available:
                     // should have _vod then
                     console.debug("OHHH NOOOOOESS")
                     break
-                case metaDataStateDownloadFailed:
-                    if (_vodFilePath) {
+                case UrlShare.Failed:
+                    if (_c.urlShare.vodFilePath) {
                         _tryPlay()
                     }
                     break
-                case metaDataStateFetching:
+                case UrlShare.Fetching:
                     // wait for meta data,
                     // playing now will abort md fetch
-                    break
-                case metaDataStateInitial:
-                    if (App.isOnline) {
-                        _fetchMetaData()
-                    } else {
-                        _metaDataState = metaDataStateDownloadFailed
-                    }
                     break
                 }
             }
         }
-
-//        if (!_vod) {
-//            if (_fetchingMetaData) {
-//                // don't play, player will cancel meta data fetch
-//            } else {
-//                if (App.isOnline) {
-//                    // Fetch meta data only if online
-//                    // Can't fetch in the background, onDestruction will
-//                    // cancel the fetch upon push of video player page
-
-//                } else {
-//                    _metaDataDownloadFailed = true
-//                }
-//            }
-//        } else if (_vodFilePath || _vod) {
-
-//        }
         _clicking = false
     }
 
@@ -518,49 +469,12 @@ ListItem {
         }
     }
 
-    Connections {
-        target: App
-        onIsOnlineChanged: {
-            if (App.isOnline) {
-                if (_metaDataState === metaDataStateDownloadFailed) {
-                    _metaDataState = metaDataStateInitial
-                }
-
-                if (_thumbnailState === thumbnailStateDownloadFailed) {
-                    _thumbnailState = thumbnailStateInitial
-                }
-            }
-        }
-    }
-
     Component.onCompleted: {
         _c = VodDataManager.acquireMatchItem(rowId)
+
         memory.addMatchItem(root)
 
-
         updateStartOffset()
-
-
-
-        // also fetch a valid meta data from cache
-        _metaDataState = metaDataStateFetching
-        _metaDataTicket = VodDataManager.fetchMetaDataFromCache(rowId)
-        if (-1 !== _metaDataTicket) {
-            _metaDataState = metaDataStateInitial
-        }
-
-        if (App.isOnline) {
-            _fetchThumbnail()
-        } else {
-            _thumbnailState = thumbnailStateFetching
-            _thumbnailTicket = VodDataManager.fetchThumbnailFromCache(rowId)
-            if (-1 === _thumbnailTicket) {
-                _thumbnailState = thumbnailStateInitial
-            }
-        }
-        _vodFileTicket = VodDataManager.queryVodFiles(rowId)
-
-//        console.debug("create match item rowid=" + rowId)
 
         if (requiredHeight > height) {
             console.warn("rowid " + rowId + " match item height is " + height + " which is less than required height " + requiredHeight)
@@ -568,19 +482,12 @@ ListItem {
     }
 
     Component.onDestruction: {
+
 //        console.debug("destroy match item rowid=" + rowId)
         if (memory) { // QML binding may have been removed due to the parent view being destroyed
             memory.removeMatchItem(root)
         }
 
-        var tickets = [_vodFileTicket]
-        for (var i = 0; i < tickets.length; ++i) {
-            if (-1 !== tickets[i])
-            VodDataManager.cancelTicket(tickets[i])
-        }
-
-        _abortFetchMetaData()
-        _abortFetchThumbnail()
         VodDataManager.releaseMatchItem(_c)
     }
 
@@ -591,20 +498,20 @@ ListItem {
         ContextMenu {
             MenuItem {
                 text: "Copy URL to clipboard"
-                visible: rowId >= 0
-                onClicked: Clipboard.text = url
+                onClicked: Clipboard.text = _c.url
             }
 
             MenuItem {
                 text: "Download meta data"
-                visible: rowId >= 0 && !_vod && App.isOnline
-                onClicked: {
-                    _fetchMetaData()
-                }
+                visible: _c.urlShare.vodFetchStatus !== UrlShare.Fetching && _c.urlShare.vodFetchStatus !== UrlShare.Available && App.isOnline
+                onClicked: _c.urlShare.fetchMetaData()
             }
+
             MenuItem {
                 text: "Download VOD"
-                visible: rowId >= 0 && !!_vod && !_downloading && progressOverlay.progress < 1 && App.isOnline
+                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available &&
+                         _c.urlShare.vodFetchStatus !== UrlShare.Fetching &&
+                         _c.urlShare.downloadProgress < 1 && App.isOnline
                 onClicked: {
                     var format = _getVideoFormatFromBearerMode()
                     _download(false, format)
@@ -613,56 +520,43 @@ ListItem {
 
             MenuItem {
                 text: "Download VOD with format..."
-                visible: rowId >= 0 && !!_vod && !_downloading && progressOverlay.progress < 1 && App.isOnline
+                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available &&
+                         _c.urlShare.vodFetchStatus !== UrlShare.Fetching &&
+                         _c.urlShare.downloadProgress < 1 && App.isOnline
                 onClicked: _download(false, VM.VM_Any)
             }
 
             MenuItem {
                 text: "Cancel VOD download"
-                visible: rowId >= 0 && _downloading && progressOverlay.progress < 1
+                visible: _c.urlShare.vodFetchStatus !== UrlShare.Fetching && _c.urlShare.downloadProgress < 1
                 onClicked: _cancelDownload()
             }
 
             MenuItem {
                 text: "Play stream"
-                visible: rowId >= 0 && !!_vod && App.isOnline //&& !!_vodFilePath
+                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available && App.isOnline
                 onClicked: _playStream()
             }
 
             MenuItem {
                 text: "Play stream with format..."
-                visible: rowId >= 0 && !!_vod && App.isOnline //&& !!_vodFilePath
+                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available && App.isOnline
                 onClicked: _playStreamWithFormat(VM.VM_Any)
             }
 
             MenuItem {
                 text: "Delete meta data"
-                visible: rowId >= 0 && !!_vod
+                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available
                 onClicked: {
-                    _cancelDownload()
-                    _abortFetchMetaData()
-                    _abortFetchThumbnail()
-
-                    progressOverlay.progress = 0
                     _clicked = false
-                    _vodUrl = ""
-                    _vod = null
-                    _thumbnailFilePath = ""
-                    _metaDataState = metaDataStateInitial
-                    _thumbnailState = thumbnailStateInitial
                     VodDataManager.deleteMetaData(rowId)
-                    if (App.isOnline) {
-                        _fetchMetaData()
-                        _fetchThumbnail()
-                    }
                 }
             }
 
             MenuItem {
                 text: "Delete VOD file"
                 enabled: _toolEnabled
-                visible: rowId >= 0 && !!_vodFilePath
-
+                visible: !!_c.urlShare.vodFilePath
 
                 onClicked: {
                     // still not sure why local vars are needed but they are!!!!
@@ -671,11 +565,7 @@ ListItem {
                     var manager = VodDataManager
                     item.remorseAction("Deleting " + title, function() {
                         item._cancelDownload()
-                        overlay.progress = 0
                         item._clicked = false
-                        item._vodUrl = ""
-                        item._vodFilePath = ""
-                        item._vodFileSize = 0
                         item._formatId = ""
                         manager.deleteVodFiles(item.rowId)
                     })
@@ -684,34 +574,29 @@ ListItem {
 
             MenuItem {
                 text: "VOD details"
-                visible: rowId >= 0 && _vodFileSize > 0 && !!_vodFilePath
+                visible: _c.urlShare.vodFileSize > 0 && !!_c.urlShare.vodFilePath
                 onClicked: pageStack.push(
                                Qt.resolvedUrl("VodDetailPage.qml"),
                                {
                                    vodTitle: titleLabel.text,
-                                   vodFilePath: _vodFilePath,
-                                   vodFileSize: _vodFileSize,
-                                   vodWidth: _c.width,
-                                   vodHeight: _c.height,
+                                   vodFilePath: _c.urlShare.vodFilePath,
+                                   vodFileSize: _c.urlShare.vodFileSize,
+                                   vodWidth: _c.urlShare.vodResolution.width,
+                                   vodHeight: _c.urlShare.vodResolution.height,
                                    vodRowId: rowId,
-                                   vodProgress: _progress
+                                   vodProgress: _c.urlShare.downloadProgress
                                })
             }
 
             MenuItem {
                 text: "Copy VOD file path to clipboard"
-                visible: rowId >= 0 && _vodFileSize > 0 && !!_vodFilePath
-                onClicked: Clipboard.text = _vodFilePath
+                visible: _c.urlShare.vodFileSize > 0 && _c.urlShare.vodFilePath
+                onClicked: Clipboard.text = _c.urlShare.vodFilePath
             }
 
             MenuItem {
                 text: "Delete thumbnail"
-                visible: rowId >= 0
                 onClicked: {
-                    _abortFetchThumbnail()
-
-                    _thumbnailFilePath = ""
-                    _thumbnailState = thumbnailStateDownloadFailed
                     VodDataManager.deleteThumbnail(rowId)
                     if (App.isOnline) {
                         _fetchThumbnail()
@@ -722,7 +607,6 @@ ListItem {
             MenuItem {
                 text: "Delete VOD from database"
                 enabled: _toolEnabled
-                visible: rowId >= 0
                 onClicked: {
                     // still not sure why local vars are needed but they are!!!!
                     var item = root
@@ -737,100 +621,100 @@ ListItem {
     }
 
     function fetchingThumbnail() {
-        _thumbnailState = thumbnailStateFetching
-        _thumbnailTicket = -1
+//        _c.urlShare.thumbnailFetchStatus = UrlShare.Fetching
+//        _thumbnailTicket = -1
     }
 
     function thumbnailAvailable(filePath) {
 //            console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
-        if (_thumbnailFilePath === filePath) {
-            if (Image.Ready !== thumbnail.status) { // added to hopefully prevent some image popping
-                _thumbnailFilePath = "" // force reload
-            }
-        }
+//        if (_c.urlShare.thumbnailFilePath === filePath) {
+//            if (Image.Ready !== thumbnail.status) { // added to hopefully prevent some image popping
+//                _c.urlShare.thumbnailFilePath = "" // force reload
+//            }
+//        }
 
-        _thumbnailFilePath = filePath
-        _thumbnailState = thumbnailStateAvailable
-        _thumbnailTicket = -1
+//        _c.urlShare.thumbnailFilePath = filePath
+//        _c.urlShare.thumbnailFetchStatus = UrlShare.Available
+//        _thumbnailTicket = -1
     }
 
     function thumbnailDownloadFailed(error, url) {
-        console.debug("thumbnail download failed rowid=" + rowId + " error=" + error + " url=" + url)
-        _thumbnailState = thumbnailStateDownloadFailed
-        _thumbnailTicket = -1
+//        console.debug("thumbnail download failed rowid=" + rowId + " error=" + error + " url=" + url)
+//        _c.urlShare.thumbnailFetchStatus = thumbnailStateDownloadFailed
+//        _thumbnailTicket = -1
     }
 
     function fetchingMetaData() {
-        _metaDataState = metaDataStateFetching
-        _metaDataTicket = -1
+//        _c.urlShare.metaDataFetchStatus = UrlShare.Fetching
+//        _metaDataTicket = -1
     }
 
     function metaDataDownloadFailed(error) {
-        console.debug("meta data download failed rowid=" + rowId + " error=" + error)
-        _metaDataState = metaDataStateDownloadFailed
-        _clicked = false
-        _metaDataTicket = -1
-        if (_thumbnailState === thumbnailStateFetching) {
-            _thumbnailState = thumbnailStateDownloadFailed
-        }
+//        console.debug("meta data download failed rowid=" + rowId + " error=" + error)
+//        _c.urlShare.metaDataFetchStatus = metaDataStateDownloadFailed
+//        _clicked = false
+//        _metaDataTicket = -1
+//        if (_c.urlShare.thumbnailFetchStatus === UrlShare.Fetching) {
+//            _c.urlShare.thumbnailFetchStatus = thumbnailStateDownloadFailed
+//        }
     }
 
     function metaDataAvailable(vod) {
-        console.debug("metaDataAvailable rowid=" + rowId)
-        _metaDataState = metaDataStateAvailable
-        _vod = vod
-        _clicked = false
-        _metaDataTicket = -1
+//        console.debug("metaDataAvailable rowid=" + rowId)
+//        _c.urlShare.metaDataFetchStatus = UrlShare.Available
+//        _vod = vod
+//        _clicked = false
+//        _metaDataTicket = -1
 
 
-        if (App.isOnline) {
-            _fetchThumbnail()
-        }
+//        if (App.isOnline) {
+//            _fetchThumbnail()
+//        }
 
-        if (_clicking) {
-            _tryPlay()
-        }
+//        if (_clicking) {
+//            _tryPlay()
+//        }
     }
 
     function vodDownloadFailed(error) {
-        console.debug("vod download failed rowid=" + rowId + " error=" + error)
-        _vodDownloadFailed = true
-        _downloading = false
-        progressOverlay.show = false
-        _progress = -1
-        _vodDownloadExplicitlyStarted = -1
+//        console.debug("vod download failed rowid=" + rowId + " error=" + error)
+//        _vodDownloadFailed = true
+//        UrlShare.Fetching = false
+//        progressOverlay.show = false
+//        _progress = -1
+//        _vodDownloadExplicitlyStarted = -1
     }
 
     function vodDownloadCanceled() {
-        console.debug("vod download canceled rowid=" + rowId)
-        _vodDownloadFailed = false
-        _downloading = false
-        progressOverlay.show = false
-        _progress = -1
+//        console.debug("vod download canceled rowid=" + rowId)
+//        _vodDownloadFailed = false
+//        UrlShare.Fetching = false
+//        progressOverlay.show = false
+//        _progress = -1
     }
 
     function vodDownloading() {
-        _downloading = 1
+//        UrlShare.Fetching = 1
     }
 
     function vodAvailable(filePath, progress, fileSize, width, height, formatId) {
-        console.debug(
-                    "vodAvailable rowid=" + rowId + " path=" + filePath + " progress=" + progress +
-                    " size=" + fileSize + " width=" + width + " height=" + height + " formatId=" + formatId)
-        _vodFilePath = filePath
-        _vodFileSize = fileSize
-        if (-1 === _progress) {
-            _progress = progress
-        } else if (_progress < progress) {
-            _downloading = progress < 1
-            _progress = progress
-        }
+//        console.debug(
+//                    "vodAvailable rowid=" + rowId + " path=" + filePath + " progress=" + progress +
+//                    " size=" + fileSize + " width=" + width + " height=" + height + " formatId=" + formatId)
+//        _c.urlShare.vodFilePath = filePath
+//        _c.urlShare.vodFileSize = fileSize
+//        if (-1 === _progress) {
+//            _progress = progress
+//        } else if (_progress < progress) {
+//            UrlShare.Fetching = progress < 1
+//            _progress = progress
+//        }
 
-        progressOverlay.show = _downloading && progress > 0 && progress < 1
-        progressOverlay.progress = progress
+//        progressOverlay.show = UrlShare.Fetching && progress > 0 && progress < 1
+//        progressOverlay.progress = progress
 
-        _formatId = formatId
-        _vodFileTicket = -1
+//        _formatId = formatId
+//        _vodFileTicket = -1
     }
 
     function _play() {
@@ -954,9 +838,9 @@ ListItem {
     function _tryPlay() {
         if (!_tryingToPlay) {
             _tryingToPlay = true
-            if (_vodFilePath && _vodFileSize > 0) {
+            if (_c.urlShare.vodFilePath && _c.urlShare.vodFileSize > 0) {
                 // try download rest if incomplete and format matches
-                if (_vod && progressOverlay.progress < 1 && !_downloading) {
+                if (_vod && progressOverlay.progress < 1 && !UrlShare.Fetching) {
                     var index = _getVodFormatIndexFromId()
                     if (index >= 0) {
                         _downloadFormat(index, true)
@@ -964,7 +848,7 @@ ListItem {
                 }
 
                 // at any rate, play the file
-                _vodUrl = _vodFilePath
+                _vodUrl = _c.urlShare.vodFilePath
                 _play()
             } else if (_vod) {
                 _playStream()
@@ -1000,7 +884,7 @@ ListItem {
 
         _vodDownloadFailed = false
         _vodFileTicket = VodDataManager.fetchVod(rowId, formatIndex)
-        _downloading = true
+        UrlShare.Fetching = true
         switch (_vodDownloadExplicitlyStarted) {
         case -1:
         case 0:
@@ -1029,89 +913,10 @@ ListItem {
 
         VodDataManager.cancelFetchVod(rowId)
         _progress = -1
-        _downloading = false
+        UrlShare.Fetching = false
         _vodDownloadExplicitlyStarted = -1
         progressOverlay.show = false
     }
-
-    function _abortFetchMetaData() {
-        if (-1 !== _metaDataTicket) {
-            VodDataManager.cancelFetchMetaData(_metaDataTicket, rowId)
-            _metaDataTicket = -1;
-            if (_metaDataState === metaDataStateFetching) {
-                _metaDataState = metaDataStateInitial
-            }
-        }
-    }
-
-    function _fetchMetaData() {
-        if (-1 === _metaDataTicket) {
-            if (_metaDataState != metaDataStateFetching) {
-                var prev = _metaDataState
-                _metaDataState = metaDataStateFetching
-                _metaDataTicket = VodDataManager.fetchMetaData(rowId)
-                if (-1 === _metaDataTicket) {
-                    _metaDataState = prev
-                }
-            }
-        }
-    }
-
-//    function _fetchMetaData() {
-//        if (-1 !== _metaDataTicket) {
-//            VodDataManager.cancelFetchMetaData(_metaDataTicket, rowId)
-//        }
-
-//        _metaDataTicket = VodDataManager.fetchMetaData(rowId)
-//        if (-1 !== _metaDataTicket) {
-//            _metaDataState = metaDataStateFetching
-//        }
-//    }
-
-    function _abortFetchThumbnail() {
-        if (-1 !== _thumbnailTicket) {
-            VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
-            _thumbnailTicket = -1
-            if (_thumbnailState === thumbnailStateFetching) {
-                _thumbnailState = thumbnailStateInitial
-            }
-        }
-    }
-
-    function _fetchThumbnail() {
-        if (-1 === _thumbnailTicket) {
-            if (_thumbnailState !== thumbnailStateFetching) {
-                // fetch if not using the same image already
-                if (!_thumbnailFilePath ||
-                    thumbnail.source !== _thumbnailFilePath ||
-                    thumbnail.status === Image.Error) {
-                    var prev = _thumbnailState
-                    _thumbnailState = thumbnailStateFetching
-                    _thumbnailTicket = VodDataManager.fetchThumbnail(rowId)
-                    if (-1 === _thumbnailTicket) {
-                        _thumbnailState = prev
-                    }
-                }
-            }
-        }
-    }
-
-//    function _fetchThumbnail() {
-//        if (-1 !== _thumbnailTicket) {
-//            VodDataManager.cancelFetchThumbnail(_thumbnailTicket, rowId)
-//        }
-
-//        // fetch if not using the same image already
-//        if (!_thumbnailFilePath ||
-//            !thumbnail.source === _thumbnailFilePath ||
-//            thumbnail.status === Image.Error) {
-
-//            _thumbnailTicket = VodDataManager.fetchThumbnail(rowId)
-//            if (-1 !== _thumbnailTicket) {
-//                _thumbnailState = thumbnailStateFetching
-//            }
-//        }
-//    }
 
     function cancelImplicitVodFileFetch() {
         // only cancel download if started on this item

@@ -374,6 +374,8 @@ ApplicationWindow {
         VodDataManager.vodsAdded.connect(_onVodsAdded)
         VodDataManager.busyChanged.connect(_busyChanged)
         VodDataManager.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
+        _setMode()
+        _setYtdlPath()
         _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
 
@@ -397,8 +399,7 @@ ApplicationWindow {
                                     (settingNewRemoveSeen.value ? " and seen=0" : "")
         }
 
-        _setMode()
-        _setYtdlPath()
+
     }
 
     function _setScraper() {

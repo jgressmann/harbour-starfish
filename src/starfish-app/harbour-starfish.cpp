@@ -91,6 +91,8 @@ main(int argc, char *argv[]) {
         qmlRegisterUncreatableType<ScEnums>(STARFISH_NAMESPACE, 1, 0, "Sc", QStringLiteral("wrapper around C++ enums"));
         qmlRegisterUncreatableType<ScRecentlyWatchedVideos>(STARFISH_NAMESPACE, 1, 0, "RecentlyWatchedVideos", "RecentlyWatchedVideos");
         qmlRegisterUncreatableType<ScMatchItem>(STARFISH_NAMESPACE, 1, 0, "MatchItemData", "MatchItemData");
+        qmlRegisterUncreatableType<ScMatchItem>(STARFISH_NAMESPACE, 1, 0, "Match", "Match");
+        qmlRegisterUncreatableType<ScUrlShareItem>(STARFISH_NAMESPACE, 1, 0, "UrlShare", "UrlShare");
 
         qmlRegisterSingletonType<ScVodDataManager>(STARFISH_NAMESPACE, 1, 0, "VodDataManager", dataManagerProvider);
         qmlRegisterSingletonType<VMQuickYTDLDownloader>(STARFISH_NAMESPACE, 1, 0, "YTDLDownloader", vmQuickYTDLDownloader);

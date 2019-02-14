@@ -198,7 +198,6 @@ SilicaListView {
                     width: listView.width
 
                     rowId: video_id
-                    table: _table
                     memory: matchItemConnections
 
                     onPlayRequest: function (self) {

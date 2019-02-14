@@ -43,6 +43,7 @@
 #include <QFile>
 #include <QDir>
 #include <QNetworkAccessManager>
+#include <QNetworkConfigurationManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QTemporaryFile>
@@ -323,7 +324,7 @@ ScVodDataManager::~ScVodDataManager() {
     qDebug() << "set finalizing";
 
     {
-        clearMatchItems(m_ValidMatchItems);
+        clearMatchItems(m_ActiveMatchItems);
         pruneExpiredMatchItems();
         qDebug() << "deleted match items";
     }
@@ -365,6 +366,10 @@ ScVodDataManager::~ScVodDataManager() {
     m_Manager = nullptr;
     qDebug() << "deleted network manager";
 
+    delete m_NetworkConfigurationManager;
+    m_NetworkConfigurationManager = nullptr;
+    qDebug() << "deleted network configuration manager";
+
 
     m_Database = QSqlDatabase(); // to remove ref count
     QSqlDatabase::removeDatabase(QStringLiteral("ScVodDataManager"));
@@ -386,6 +391,9 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     m_Manager = new QNetworkAccessManager(this);
     connect(m_Manager, &QNetworkAccessManager::finished, this,
             &ScVodDataManager::requestFinished);
+
+    m_NetworkConfigurationManager = new QNetworkConfigurationManager(this);
+    connect(m_NetworkConfigurationManager, &QNetworkConfigurationManager::onlineStateChanged, this, &ScVodDataManager::isOnlineChanged);
 
     m_Error = Error_None;
     m_SuspendedVodsChangedEventCount = 0;
@@ -474,19 +482,22 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     m_WorkerInterface->moveToThread(&m_WorkerThread);
 
     // worker->manager
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::fetchingMetaData, this, &ScVodDataManager::fetchingMetaData);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::fetchingThumbnail, this, &ScVodDataManager::fetchingThumbnail);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::metaDataAvailable, this, &ScVodDataManager::metaDataAvailable);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::metaDataDownloadFailed, this, &ScVodDataManager::metaDataDownloadFailed);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodAvailable, this, &ScVodDataManager::vodAvailable);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailAvailable, this, &ScVodDataManager::thumbnailAvailable);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailDownloadFailed, this, &ScVodDataManager::thumbnailDownloadFailed);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadFailed, this, &ScVodDataManager::vodDownloadFailed);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadCanceled, this, &ScVodDataManager::vodDownloadCanceled);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadsChanged, this, &ScVodDataManager::onVodDownloadsChanged);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::titleAvailable, this, &ScVodDataManager::titleAvailable);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::seenAvailable, this, &ScVodDataManager::seenAvailable);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodEndAvailable, this, &ScVodDataManager::vodEndAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::fetchingMetaData, this, &ScVodDataManager::onFetchingMetaData);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::fetchingThumbnail, this, &ScVodDataManager::onFetchingThumbnail);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::metaDataAvailable, this, &ScVodDataManager::onMetaDataAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::metaDataUnavailable, this, &ScVodDataManager::onMetaDataUnavailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::metaDataDownloadFailed, this, &ScVodDataManager::onMetaDataDownloadFailed);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodAvailable, this, &ScVodDataManager::onVodAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodUnavailable, this, &ScVodDataManager::onVodUnavailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailAvailable, this, &ScVodDataManager::onThumbnailAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailUnavailable, this, &ScVodDataManager::onThumbnailUnavailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailDownloadFailed, this, &ScVodDataManager::onThumbnailDownloadFailed);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadFailed, this, &ScVodDataManager::onVodDownloadFailed);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadCanceled, this, &ScVodDataManager::onVodDownloadCanceled);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadsChanged, this, &ScVodDataManager::vodDownloadsChanged);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::titleAvailable, this, &ScVodDataManager::onTitleAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::seenAvailable, this, &ScVodDataManager::onSeenAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodEndAvailable, this, &ScVodDataManager::onVodEndAvailable);
     // manager->worker
     connect(this, &ScVodDataManager::startWorker, m_WorkerInterface, &ScVodDataManagerWorker::process);
     connect(this, &ScVodDataManager::stopThread, m_WorkerInterface, &QObject::deleteLater);
@@ -1532,21 +1543,11 @@ ScVodDataManager::insertVod(const ScRecord& record, qint64 urlShareId, int start
 }
 
 int
-ScVodDataManager::fetchMetaData(qint64 rowid) {
-    return fetchMetaData(rowid, true);
-}
-
-int
-ScVodDataManager::fetchMetaDataFromCache(qint64 rowid) {
-    return fetchMetaData(rowid, false);
-}
-
-int
-ScVodDataManager::fetchMetaData(qint64 rowid, bool download) {
+ScVodDataManager::fetchMetaData(qint64 urlShareId, const QString& url, bool download) {
     RETURN_MINUS_ON_ERROR;
 
     ScVodDataManagerWorker::Task t = [=]() {
-        m_WorkerInterface->fetchMetaData(rowid, download);
+        m_WorkerInterface->fetchMetaData(urlShareId, url, download);
     };
     auto result = m_WorkerInterface->enqueue(std::move(t));
     if (result != -1) {
@@ -1555,22 +1556,13 @@ ScVodDataManager::fetchMetaData(qint64 rowid, bool download) {
     return result;
 }
 
-int
-ScVodDataManager::fetchThumbnail(qint64 rowid) {
-    return fetchThumbnail(rowid, true);
-}
 
 int
-ScVodDataManager::fetchThumbnailFromCache(qint64 rowid) {
-    return fetchThumbnail(rowid, false);
-}
-
-int
-ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
+ScVodDataManager::fetchThumbnail(qint64 urlShareId, bool download) {
     RETURN_MINUS_ON_ERROR;
 
     ScVodDataManagerWorker::Task t = [=]() {
-        m_WorkerInterface->fetchThumbnail(rowid, download);
+        m_WorkerInterface->fetchThumbnail(urlShareId, download);
     };
     auto result = m_WorkerInterface->enqueue(std::move(t));
     if (result != -1) {
@@ -1581,7 +1573,7 @@ ScVodDataManager::fetchThumbnail(qint64 rowid, bool download) {
 
 
 
-int ScVodDataManager::fetchVod(qint64 rowid, int formatIndex) {
+int ScVodDataManager::fetchVod(qint64 urlShareId, int formatIndex) {
     RETURN_MINUS_ON_ERROR;
 
     if (formatIndex < 0) {
@@ -1590,7 +1582,7 @@ int ScVodDataManager::fetchVod(qint64 rowid, int formatIndex) {
     }
 
     ScVodDataManagerWorker::Task t = [=]() {
-        m_WorkerInterface->fetchVod(rowid, formatIndex);
+        m_WorkerInterface->fetchVod(urlShareId, formatIndex);
     };
     auto result = m_WorkerInterface->enqueue(std::move(t));
     if (result != -1) {
@@ -1625,7 +1617,7 @@ ScVodDataManager::cancelFetchVod(qint64 rowid) {
 
 
 void
-ScVodDataManager::cancelFetchMetaData(int ticket, qint64 rowid) {
+ScVodDataManager::cancelFetchMetaData(int ticket, qint64 urlShareId) {
     RETURN_IF_ERROR;
 
     if (ticket >= 0 && m_WorkerInterface->cancel(ticket)) {
@@ -1634,7 +1626,7 @@ ScVodDataManager::cancelFetchMetaData(int ticket, qint64 rowid) {
     }
 
     ScVodDataManagerWorker::Task t = [=]() {
-        m_WorkerInterface->cancelFetchMetaData(rowid);
+        m_WorkerInterface->cancelFetchMetaData(urlShareId);
     };
 
     auto result = m_WorkerInterface->enqueue(std::move(t));
@@ -1825,11 +1817,11 @@ ScVodDataManager::tryRaiseVodsChanged() {
 }
 
 int
-ScVodDataManager::queryVodFiles(qint64 rowid) {
+ScVodDataManager::queryVodFiles(qint64 urlShareId) {
     RETURN_MINUS_ON_ERROR;
 
     ScVodDataManagerWorker::Task t = [=]() {
-        m_WorkerInterface->queryVodFiles(rowid);
+        m_WorkerInterface->queryVodFiles(urlShareId);
     };
     auto result = m_WorkerInterface->enqueue(std::move(t));
     if (result != -1) {
@@ -3134,17 +3126,42 @@ ScVodDataManager::acquireMatchItem(qint64 rowid)
         return nullptr;
     }
 
-    auto it = m_ValidMatchItems.find(rowid);
-    if (it == m_ValidMatchItems.end()) {
+    auto it = m_ActiveMatchItems.find(rowid);
+    if (it == m_ActiveMatchItems.end()) {
         auto it2 = m_ExpiredMatchItems.find(rowid);
         if (it2 == m_ExpiredMatchItems.end()) {
-            it = m_ValidMatchItems.insert(rowid, new MatchItemData{});
-            void* ptr = it.value()->Raw;
-            auto item = new (ptr) ScMatchItem(rowid, this);
-            // propagate signal
-            connect(item, &ScMatchItem::seenChanged, this, &ScVodDataManager::seenChanged);
+            QSqlQuery q(m_Database);
+            if (q.prepare(QStringLiteral("SELECT vod_url_share_id FROM url_share_vods WHERE id=?"))) {
+                q.addBindValue(rowid);
+                if (q.exec()) {
+                    if (q.next()) {
+                        it = m_ActiveMatchItems.insert(rowid, new MatchItemData{});
+                        void* raw = it.value()->Raw;
+
+                        auto urlShareId = qvariant_cast<qint64>(q.value(0));
+                        auto uit = m_UrlShareItems.find(urlShareId);
+                        if (uit == m_UrlShareItems.end()) {
+                            QSharedPointer<ScUrlShareItem> urlShareItem(new ScUrlShareItem(urlShareId, this));
+                            m_UrlShareItems.insert(urlShareId, urlShareItem.toWeakRef());
+                            m_UrlShareItemToId.insert(urlShareItem.data(), urlShareId);
+                            connect(urlShareItem.data(), &QObject::destroyed, this, &ScVodDataManager::onUrlShareItemDestroyed);
+                            new (raw) ScMatchItem(rowid, this, std::move(urlShareItem));
+                        } else {
+                            new (raw) ScMatchItem(rowid, this, std::move(uit.value().toStrongRef()));
+                        }
+                    } else {
+                        return nullptr;
+                    }
+                } else {
+                    qWarning() << "failed to exec:" << q.lastError();
+                    return nullptr;
+                }
+            } else {
+                qWarning() << "failed to prepare:" << q.lastError();
+                return nullptr;
+            }
         } else {
-            it = m_ValidMatchItems.insert(rowid, it2.value());
+            it = m_ActiveMatchItems.insert(rowid, it2.value());
             m_ExpiredMatchItems.erase(it2);
             qDebug() << "match item" << rowid << "ressurected";
         }
@@ -3153,7 +3170,7 @@ ScVodDataManager::acquireMatchItem(qint64 rowid)
     ++it.value()->RefCount;
     qDebug() << "match item" << rowid << "ref count" << it.value()->RefCount;
 
-    return static_cast<ScMatchItem*>(static_cast<void*>(it.value()->Raw));
+    return it.value()->matchItem();
 }
 
 void
@@ -3165,19 +3182,26 @@ ScVodDataManager::releaseMatchItem(ScMatchItem* item)
     }
 
     auto rowid = item->rowId();
-    auto it = m_ValidMatchItems.find(rowid);
-    if (it != m_ValidMatchItems.end()) {
+    auto it = m_ActiveMatchItems.find(rowid);
+    if (it != m_ActiveMatchItems.end()) {
         auto data = it.value();
         --data->RefCount;
         qDebug() << "match item" << rowid << "ref count" << data->RefCount;
         if (0 == data->RefCount) {
-            m_ValidMatchItems.erase(it);
+            m_ActiveMatchItems.erase(it);
             m_ExpiredMatchItems.insert(item->rowId(), data);
             m_MatchItemTimer.start();
         }
     } else {
         qDebug() << "no match item with rowid" << rowid;
     }
+}
+
+void
+ScVodDataManager::ScVodDataManager::onUrlShareItemDestroyed(QObject *obj)
+{
+    m_UrlShareItems.remove(m_UrlShareItemToId.value(obj, -1));
+    m_UrlShareItemToId.remove(obj);
 }
 
 void
@@ -3196,4 +3220,148 @@ ScVodDataManager::clearMatchItems(QHash<qint64, MatchItemData*>& h)
         delete it.value();
     }
     h.clear();
+}
+
+bool ScVodDataManager::isOnline() const
+{
+    return m_NetworkConfigurationManager->isOnline();
+}
+
+void
+ScVodDataManager::onFetchingMetaData(qint64 urlShareId)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onFetchingMetaData();
+    }
+}
+void
+ScVodDataManager::onFetchingThumbnail(qint64 urlShareId)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onFetchingThumbnail();
+    }
+}
+void
+ScVodDataManager::onMetaDataAvailable(qint64 urlShareId, VMVod vod)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onMetaDataAvailable(vod);
+    }
+}
+void
+ScVodDataManager::onMetaDataUnavailable(qint64 urlShareId)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onMetaDataUnavailable();
+    }
+}
+void
+ScVodDataManager::onMetaDataDownloadFailed(qint64 urlShareId, int error)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onMetaDataDownloadFailed(error);
+    }
+}
+void
+ScVodDataManager::onVodAvailable(
+        qint64 urlShareId,
+        QString filePath,
+        qreal progress,
+        quint64 fileSize,
+        int width,
+        int height,
+        QString formatId)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onVodAvailable(filePath, progress, fileSize, width, height, formatId);
+    }
+}
+void
+ScVodDataManager::onVodUnavailable(qint64 urlShareId)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onVodUnavailable();
+    }
+}
+void
+ScVodDataManager::onThumbnailAvailable(qint64 urlShareId, QString filePath)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onThumbnailAvailable(filePath);
+    }
+}
+void
+ScVodDataManager::onThumbnailUnavailable(qint64 urlShareId)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onThumbnailUnavailable();
+    }
+}
+void
+ScVodDataManager::onThumbnailDownloadFailed(qint64 urlShareId, int error, QString url)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onThumbnailDownloadFailed(error, url);
+    }
+}
+void
+ScVodDataManager::onTitleAvailable(qint64 urlShareId, QString title)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onTitleAvailable(title);
+    }
+}
+
+void
+ScVodDataManager::onVodDownloadFailed(qint64 urlShareId, int error)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onVodDownloadFailed(error);
+    }
+}
+void
+ScVodDataManager::onVodDownloadCanceled(qint64 urlShareId)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onVodDownloadCanceled();
+    }
+}
+
+void
+ScVodDataManager::onSeenAvailable(qint64 rowid, qreal seen)
+{
+    auto data = m_ActiveMatchItems.value(rowid, nullptr);
+    if (!data) {
+        data = m_ExpiredMatchItems.value(rowid, nullptr);
+    }
+
+    if (data) {
+        data->matchItem()->onSeenAvailable(seen > 0);
+    }
+}
+
+void
+ScVodDataManager::onVodEndAvailable(qint64 rowid, int endOffsetS)
+{
+    auto data = m_ActiveMatchItems.value(rowid, nullptr);
+    if (!data) {
+        data = m_ExpiredMatchItems.value(rowid, nullptr);
+    }
+
+    if (data) {
+        data->matchItem()->onVodEndAvailable(endOffsetS);
+    }
 }

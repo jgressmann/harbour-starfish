@@ -25,20 +25,20 @@
 
 #include <QObject>
 #include <QDate>
+#include <QSize>
+#include <QSharedPointer>
+#include <QVariant>
 #include <functional>
 
-#include "VMVod.h"
-
 class ScVodDataManager;
+class ScUrlShareItem;
 
 class ScMatchItem : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qint64 rowId READ rowId CONSTANT)
+    Q_PROPERTY(ScUrlShareItem* urlShare READ urlShare CONSTANT)
     Q_PROPERTY(bool seen READ seen WRITE setSeen NOTIFY seenChanged)
-    Q_PROPERTY(bool metaDataAvailable READ metaDataAvailable NOTIFY metaDataAvailableChanged)
-    Q_PROPERTY(QString thumbnailAvailable READ thumbnailAvailable NOTIFY thumbnailAvailableChanged)
-    Q_PROPERTY(QString title READ title NOTIFY titleChanged)
     Q_PROPERTY(QString eventFullName READ eventFullName CONSTANT)
     Q_PROPERTY(QString eventName READ eventName CONSTANT)
     Q_PROPERTY(QString stageName READ stageName CONSTANT)
@@ -47,36 +47,18 @@ class ScMatchItem : public QObject
     Q_PROPERTY(int race1 READ race1 CONSTANT)
     Q_PROPERTY(int race2 READ race2 CONSTANT)
     Q_PROPERTY(QDate matchDate READ matchDate CONSTANT)
-    Q_PROPERTY(QString filePath READ filePath NOTIFY filePathChanged)
-    Q_PROPERTY(quint64 fileSize READ fileSize NOTIFY fileSizeChanged)
     Q_PROPERTY(int videoStartOffset READ videoStartOffset CONSTANT)
     Q_PROPERTY(int videoEndOffset READ videoEndOffset NOTIFY videoEndOffsetChanged)
-    Q_PROPERTY(float downloadProgress READ downloadProgress NOTIFY downloadProgressChanged)
-    Q_PROPERTY(int width READ width NOTIFY widthChanged)
-    Q_PROPERTY(int height READ height NOTIFY heightChanged)
     Q_PROPERTY(int season READ season CONSTANT)
     Q_PROPERTY(int year READ year CONSTANT)
-    Q_PROPERTY(int length READ length NOTIFY lengthChanged)
-    Q_PROPERTY(QString url READ url CONSTANT)
-public:
-    enum Race
-    {
-        Unknown,
-        Protoss,
-        Random,
-        Terran,
-        Zerg
-    };
-    Q_ENUMS(Race)
 
 public:
-    explicit ScMatchItem(qint64 rowid, ScVodDataManager *parent);
+    explicit ScMatchItem(qint64 rowid, ScVodDataManager *parent, QSharedPointer<ScUrlShareItem>&& urlShareItem);
 
 public:
     qint64 rowId() const { return m_RowId; }
+    ScUrlShareItem* urlShare() const { return m_UrlShareItem.data(); }
     bool seen() const { return m_seen; }
-    bool metaDataAvailable() const { return m_MetaData.isValid(); }
-    QString thumbnailAvailable() const { return m_ThumbnailPath; }
     QString eventFullName() const { return m_EventFullName; }
     QString eventName() const { return m_EventName; }
     QString stageName() const { return m_stageName; }
@@ -85,38 +67,21 @@ public:
     int race1() const { return m_race1; }
     int race2() const { return m_race2; }
     QDate matchDate() const { return m_matchDate; }
-    QString filePath() const { return m_FilePath; }
-    qint64 fileSize() const { return m_FileSize; }
     int videoStartOffset() const { return m_VideoStartOffset; }
     int videoEndOffset() const { return m_VideoEndOffset; }
-    float downloadProgress() const { return m_Progress; }
-    int width() const { return m_Width; }
-    int height() const { return m_Height; }
     int season() const { return m_season; }
     int year() const { return m_year; }
-    QString title() const { return m_Title; }
-    int length() const { return m_Length; }
-    QString url() const { return m_Url; }
+    void onSeenAvailable(bool seen);
+    void onVodEndAvailable(int endOffsetS);
 
 signals:
     void seenChanged();
-    void metaDataAvailableChanged();
-    void thumbnailAvailableChanged();
-    void filePathChanged();
-    void fileSizeChanged();
     void videoEndOffsetChanged();
-    void downloadProgressChanged();
-    void widthChanged();
-    void heightChanged();
     void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
-    void titleChanged();
-    void lengthChanged();
 
 private:
     struct Data
     {
-        QString title;
-        int length;
         bool seen;
 
         Data() = default;
@@ -126,32 +91,27 @@ private:
 
 private slots:
     void reset();
-    void onSeenChanged();
-    void onTitleAvailable(qint64 rowid, QString title);
-    void onSeenAvailable(qint64 rowid, qreal seen);
-    void onVodEndAvailable(qint64 rowid, int endOffsetS);
+//    void onSeenAvailable(qint64 rowid, qreal seen);
     void databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);
+    void onLengthChanged();
+//    void onVodEndAvailable(qint64 rowid, int endOffsetS);
 
 private:
     ScVodDataManager* manager() const;
     bool fetch(Data* data) const;
     void setSeen(bool seen);
+    void setSeenMember(bool value);
 
 private:
     QHash<int, DatabaseCallback> m_PendingDatabaseStores;
-    VMVod m_MetaData;
+    QSharedPointer<ScUrlShareItem> m_UrlShareItem;
     QString m_EventFullName;
     QString m_EventName;
     QString m_stageName;
     QString m_matchName;
     QString m_side1;
     QString m_side2;
-    QString m_ThumbnailPath;
-    QString m_FilePath;
-    QString m_Title;
-    QString m_Url;
     qint64 m_RowId;
-    qint64 m_FileSize;
     QDate m_matchDate;
     int m_race1;
     int m_race2;
@@ -161,9 +121,5 @@ private:
     int m_year;
     int m_match_number;
     int m_stage_rank;
-    int m_Width;
-    int m_Height;
-    int m_Length;
-    float m_Progress;
     bool m_seen;
 };

@@ -53,36 +53,39 @@ public:
 
     int enqueue(Task&& req);
     bool cancel(int ticket);
-    void fetchMetaData(qint64 rowid, bool download);
-    void fetchThumbnail(qint64 rowid, bool download);
-    void fetchVod(qint64 rowid, int formatIndex);
-    void queryVodFiles(qint64 rowid);
-    void cancelFetchVod(qint64 rowid);
-    void cancelFetchMetaData(qint64 rowid);
-    void cancelFetchThumbnail(qint64 rowid);
-    void fetchTitle(qint64 rowid);
+    void fetchMetaData(qint64 urlShareId, const QString& url, bool download);
+    void fetchThumbnail(qint64 urlShareId, bool download);
+    void fetchVod(qint64 urlShareId, int formatIndex);
+    void queryVodFiles(qint64 urlShareId);
+    void cancelFetchVod(qint64 urlShareId);
+    void cancelFetchMetaData(qint64 urlShareId);
+    void cancelFetchThumbnail(qint64 urlShareId);
+    void fetchTitle(qint64 urlShareId);
     void fetchSeen(qint64 rowid, const QString& table, const QString& where);
     void fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS);
 
 
 signals:
-    void fetchingMetaData(qint64 rowid);
-    void fetchingThumbnail(qint64 rowid);
-    void metaDataAvailable(qint64 rowid, VMVod vod);
-    void metaDataDownloadFailed(qint64 rowid, int error);
+    void fetchingMetaData(qint64 urlShareId);
+    void fetchingThumbnail(qint64 urlShareId);
+    void metaDataAvailable(qint64 urlShareId, VMVod vod);
+    void metaDataUnavailable(qint64 urlShareId);
+    void metaDataDownloadFailed(qint64 urlShareId, int error);
     void vodAvailable(
-            qint64 rowid,
+            qint64 urlShareId,
             QString filePath,
             qreal progress,
             quint64 fileSize,
             int width,
             int height,
             QString formatId);
-    void thumbnailAvailable(qint64 rowid, QString filePath);
-    void thumbnailDownloadFailed(qint64 rowid, int error, QString url);
-    void vodDownloadFailed(qint64 rowid, int error);
-    void vodDownloadCanceled(qint64 rowid);
-    void titleAvailable(qint64 rowid, QString title);
+    void vodUnavailable(qint64 urlShareId);
+    void thumbnailAvailable(qint64 urlShareId, QString filePath);
+    void thumbnailUnavailable(qint64 urlShareId);
+    void thumbnailDownloadFailed(qint64 urlShareId, int error, QString url);
+    void vodDownloadFailed(qint64 urlShareId, int error);
+    void vodDownloadCanceled(qint64 urlShareId);
+    void titleAvailable(qint64 urlShareId, QString title);
     void seenAvailable(qint64 rowid, qreal seen);
     void vodEndAvailable(qint64 rowid, int endOffsetS);
     void vodDownloadsChanged(ScVodIdList ids);
@@ -121,16 +124,12 @@ private slots:
     void databaseStoreCompleted(int ticket, qint64 insertId, int error, QString errorDescription);
 
 private:
-    void fetchMetaData(QSqlQuery& q, qint64 urlShareId, const QString& url);
+    void fetchMetaData(qint64 urlShareId, const QString& url);
     void updateVodDownloadStatus(qint64 urlShareId, const VMVodFileDownload& download);
     void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
     void fetchThumbnailFromUrl(qint64 urlShareId, qint64 thumbnailId, const QString& url);
     void addThumbnail(ThumbnailRequest& r, const QByteArray& bytes);
     void notifyVodDownloadsChanged(QSqlQuery& q);
-    void notifyFetchingMetaData(QSqlQuery& q, qint64 urlShareId);
-    void notifyFetchingThumbnail(QSqlQuery& q, qint64 urlShareId);
-    void notifyMetaDataAvailable(QSqlQuery& q, qint64 urlShareId, const VMVod& vod);
-    void notifyThumbnailRequestFailed(qint64 urlShareId, int error, const QString& url);
 
 private:
     QSharedPointer<ScVodDataManagerState> m_SharedState;

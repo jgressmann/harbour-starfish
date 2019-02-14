@@ -28,6 +28,7 @@
 #include "ScIcons.h"
 #include "ScClassifier.h"
 #include "ScMatchItem.h"
+#include "ScUrlShareItem.h"
 #include "ScVodDataManagerWorker.h" // for typedef ScVodIdList
 
 
@@ -37,7 +38,7 @@
 #include <QSharedPointer>
 #include <QTimer>
 
-
+class QNetworkConfigurationManager;
 class QNetworkAccessManager;
 class QNetworkRequest;
 class QNetworkReply;
@@ -89,6 +90,7 @@ class ScVodDataManager : public QObject {
     Q_PROPERTY(int sqlPatchLevel READ sqlPatchLevel NOTIFY sqlPatchLevelChanged)
     Q_PROPERTY(QString dataDirectory READ dataDirectory NOTIFY dataDirectoryChanged)
     Q_PROPERTY(ScRecentlyWatchedVideos* recentlyWatched READ recentlyWatched CONSTANT)
+    Q_PROPERTY(bool isOnline READ isOnline NOTIFY isOnlineChanged)
 
 public:
     enum Error {
@@ -152,16 +154,14 @@ public: //
     bool ready() const;
     Error error() const { return m_Error; }
     inline QSqlDatabase database() const { return m_Database; }
-    Q_INVOKABLE int fetchMetaData(qint64 rowid);
-    Q_INVOKABLE int fetchMetaDataFromCache(qint64 rowid);
-    Q_INVOKABLE int fetchThumbnail(qint64 rowid);
-    Q_INVOKABLE int fetchThumbnailFromCache(qint64 rowid);
-    Q_INVOKABLE int fetchTitle(qint64 rowid);
-    Q_INVOKABLE int fetchVod(qint64 rowid, int formatIndex);
-    Q_INVOKABLE void cancelFetchVod(qint64 rowid);
-    Q_INVOKABLE void cancelFetchMetaData(int ticket, qint64 rowid);
-    Q_INVOKABLE void cancelFetchThumbnail(int ticket, qint64 rowid);
-    Q_INVOKABLE int queryVodFiles(qint64 rowid);
+    int fetchThumbnail(qint64 urlShareId, bool download);
+    int fetchMetaData(qint64 urlShareId, const QString& url, bool download);
+    int fetchTitle(qint64 urlShareId);
+    int fetchVod(qint64 urlShareId, int formatIndex);
+    void cancelFetchVod(qint64 urlShareId);
+    void cancelFetchMetaData(int ticket, qint64 urlShareId);
+    void cancelFetchThumbnail(int ticket, qint64 urlShareId);
+    int queryVodFiles(qint64 urlShareId);
     Q_INVOKABLE void deleteVodFiles(qint64 rowid);
     Q_INVOKABLE void deleteMetaData(qint64 rowid);
     Q_INVOKABLE void fetchIcons();
@@ -209,33 +209,37 @@ public: //
     ScRecentlyWatchedVideos* recentlyWatched() const { return m_RecentlyWatchedVideos; }
     Q_INVOKABLE ScMatchItem* acquireMatchItem(qint64 rowid);
     Q_INVOKABLE void releaseMatchItem(ScMatchItem* item);
+    bool isOnline() const;
 
 signals:
     void readyChanged();
     void errorChanged();
     void vodsChanged();
-    void fetchingMetaData(qint64 rowid);
-    void fetchingThumbnail(qint64 rowid);
-    void metaDataAvailable(qint64 rowid, VMVod vod);
-    void metaDataDownloadFailed(qint64 rowid, int error);
-    void vodAvailable(
-            qint64 rowid,
-            QString filePath,
-            qreal progress,
-            quint64 fileSize,
-            int width,
-            int height,
-            QString formatId);
-    void thumbnailAvailable(qint64 rowid, QString filePath);
-    void thumbnailDownloadFailed(qint64 rowid, int error, QString url);
+//    void fetchingMetaData(qint64 urlShareId);
+//    void fetchingThumbnail(qint64 urlShareId);
+//    void metaDataAvailable(qint64 urlShareId, VMVod vod);
+//    void metaDataUnavailable(qint64 urlShareId);
+//    void metaDataDownloadFailed(qint64 urlShareId, int error);
+//    void vodAvailable(
+//            qint64 urlShareId,
+//            QString filePath,
+//            qreal progress,
+//            quint64 fileSize,
+//            int width,
+//            int height,
+//            QString formatId);
+//    void vodUnavailable(qint64 urlShareId);
+//    void thumbnailAvailable(qint64 urlShareId, QString filePath);
+//    void thumbnailUnavailable(qint64 urlShareId);
+//    void thumbnailDownloadFailed(qint64 urlShareId, int error, QString url);
     void downloadFailed(QString url, int error, QString filePath);
     void downloadMarkerChanged();
     void busyChanged();
     void vodsToAdd();
     void vodsCleared();
     void vodmanError(int error);
-    void vodDownloadFailed(qint64 rowid, int error);
-    void vodDownloadCanceled(qint64 rowid);
+//    void vodDownloadFailed(qint64 urlShareId, int error);
+//    void vodDownloadCanceled(qint64 urlShareId);
     void vodsAdded(int count);
     void vodDownloadsChanged();
     void sqlPatchLevelChanged();
@@ -244,13 +248,14 @@ signals:
     void startWorker();
     void stopThread();
     void maxConcurrentMetaDataDownloadsChanged(int value);
-    void titleAvailable(qint64 rowid, QString title);
-    void seenAvailable(qint64 rowid, qreal seen);
-    void vodEndAvailable(qint64 rowid, int endOffsetS);
+//    void titleAvailable(qint64 urlShareId, QString title);
+//    void seenAvailable(qint64 rowid, qreal seen);
+//    void vodEndAvailable(qint64 rowid, int endOffsetS);
     void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
     void processVodsToAdd();
     void ytdlPathChanged(QString path);
     void seenChanged();
+    void isOnlineChanged();
 
 
 public slots:
@@ -281,6 +286,8 @@ private:
         int RefCount;
 
         MatchItemData() : Raw{}, RefCount(0) {}
+        const ScMatchItem* matchItem() const { return reinterpret_cast<const ScMatchItem*>(Raw); }
+        ScMatchItem* matchItem() { return reinterpret_cast<ScMatchItem*>(Raw); }
     };
 
     using DatabaseCallback = std::function<void(qint64 insertIdOrNumRows, bool error)>;
@@ -292,9 +299,32 @@ private slots:
     void databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);
     void addVodFromQueue();
     void pruneExpiredMatchItems();
-    static void clearMatchItems(QHash<qint64, MatchItemData*>& h);
+    void onUrlShareItemDestroyed(QObject* obj);
 
+    void onFetchingMetaData(qint64 urlShareId);
+    void onFetchingThumbnail(qint64 urlShareId);
+    void onMetaDataAvailable(qint64 urlShareId, VMVod vod);
+    void onMetaDataUnavailable(qint64 urlShareId);
+    void onMetaDataDownloadFailed(qint64 urlShareId, int error);
+    void onVodAvailable(
+            qint64 urlShareId,
+            QString filePath,
+            qreal progress,
+            quint64 fileSize,
+            int width,
+            int height,
+            QString formatId);
+    void onVodUnavailable(qint64 urlShareId);
+    void onVodDownloadFailed(qint64 urlShareId, int error);
+    void onVodDownloadCanceled(qint64 urlShareId);
+    void onThumbnailAvailable(qint64 urlShareId, QString filePath);
+    void onThumbnailUnavailable(qint64 urlShareId);
+    void onThumbnailDownloadFailed(qint64 urlShareId, int error, QString url);
+    void onTitleAvailable(qint64 urlShareId, QString title);
+    void onSeenAvailable(qint64 rowid, qreal seen);
+    void onVodEndAvailable(qint64 rowid, int endOffsetS);
 private:
+    static void clearMatchItems(QHash<qint64, MatchItemData*>& h);
     static bool tryGetEvent(QString& inoutSrc, QString* location);
     static bool tryGetIcon(const QString& title, QString* iconPath);
     void setupDatabase();
@@ -302,8 +332,6 @@ private:
     void updateStatus();
     void setStatusFromRowCount();
     void clearVods();
-
-    void fetchMetaData(qint64 urlShareId, const QString& url);
     static void parseUrl(const QString& url,
                          QString* cannonicalUrl,
                          QString* outId, int* outUrlType, int* outStartOffset);
@@ -318,11 +346,10 @@ private:
 
     bool exists(QSqlQuery& query, const ScRecord& record, qint64* id) const;
 
-    int fetchMetaData(qint64 rowid, bool download);
+
     void iconRequestFinished(QNetworkReply* reply, IconRequest& r);
     void insertVod(const ScRecord& record, qint64 urlShareId, int startOffset);
     void dropTables();
-    int fetchThumbnail(qint64 rowid, bool download);
     int deleteVodFilesWhere(int transactionId, const QString& where, bool raiseChanged);
     int deleteThumbnailsWhere(int transactionId, const QString& where);
     void fetchSqlPatches();
@@ -346,6 +373,7 @@ private:
     QThread m_WorkerThread;
     QThread m_DatabaseStoreQueueThread;
     QNetworkAccessManager* m_Manager;
+    QNetworkConfigurationManager* m_NetworkConfigurationManager;
     ScVodDataManagerWorker* m_WorkerInterface;
     QSqlDatabase m_Database;
     Error m_Error;
@@ -363,7 +391,9 @@ private:
     QSharedPointer<ScVodDataManagerState> m_SharedState;
     QVariantList m_VodDownloads;
     QHash<int, DatabaseCallback> m_PendingDatabaseStores;
-    QHash<qint64, MatchItemData*> m_ValidMatchItems;
+    QHash<qint64, QWeakPointer<ScUrlShareItem>> m_UrlShareItems;
+    QHash<QObject*, qint64> m_UrlShareItemToId;
+    QHash<qint64, MatchItemData*> m_ActiveMatchItems;
     QHash<qint64, MatchItemData*> m_ExpiredMatchItems;
 };
 
