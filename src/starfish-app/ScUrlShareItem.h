@@ -45,8 +45,10 @@ class ScUrlShareItem : public QObject
     Q_PROPERTY(FetchStatus thumbnailFetchStatus READ thumbnailFetchStatus NOTIFY thumbnailFetchStatusChanged)
     Q_PROPERTY(FetchStatus vodFetchStatus READ vodFetchStatus NOTIFY vodFetchStatusChanged)
     Q_PROPERTY(VMVod metaData READ metaData NOTIFY metaDataChanged)
-    Q_PROPERTY(QString formatId READ formatId NOTIFY formatIdChanged)
     Q_PROPERTY(QString title READ title NOTIFY titleChanged)
+    Q_PROPERTY(int vodFormatIndex READ vodFormatIndex NOTIFY vodFormatIndexChanged)
+    Q_PROPERTY(int shareCount READ shareCount NOTIFY shareCountChanged)
+
 public:
     enum FetchStatus
     {
@@ -54,7 +56,8 @@ public:
         Fetching,
         Failed,
         Available,
-        Unavailable
+        Unavailable,
+        Gone
     };
     Q_ENUMS(FetchStatus)
 
@@ -74,11 +77,18 @@ public:
     FetchStatus thumbnailFetchStatus() const { return m_ThumbnailFetchStatus; }
     FetchStatus vodFetchStatus() const { return m_VodFetchStatus; }
     VMVod metaData() const { return m_MetaData; }
-    QString formatId() const { return m_FormatId; }
+//    QString vodFormatId() const { return m_FormatId; }
     qint64 vodFileSize() const { return m_FileSize; }
-    Q_INVOKABLE void fetchVod(int formatIndex);
+    int vodFormatIndex() const { return m_FormatIndex; }
+    int shareCount() const { return m_ShareCount; }
+    bool isBeingDownloaded() const { return m_isBeingDownloaded; }
+    Q_INVOKABLE void fetchVodFile(int formatIndex);
+    Q_INVOKABLE void cancelFetchVodFile();
     Q_INVOKABLE void fetchThumbnail();
     Q_INVOKABLE void fetchMetaData();
+    Q_INVOKABLE void deleteMetaData();
+    Q_INVOKABLE void deleteThumbnail();
+    Q_INVOKABLE void deleteVodFile();
 
 
 signals:
@@ -94,13 +104,17 @@ signals:
     void thumbnailFetchStatusChanged();
     void vodFetchStatusChanged();
     void vodResolutionChanged();
-    void formatIdChanged();
+//    void formatIdChanged();
+    void vodFormatIndexChanged();
+    void shareCountChanged();
+    void isBeingDownloadedChanged();
 
 private:
     struct Data
     {
         QString title;
         int length;
+        int shareCount;
 
         Data() = default;
     };
@@ -110,7 +124,7 @@ public:
     void onMetaDataAvailable(const VMVod& vod);
     void onMetaDataUnavailable();
     void onFetchingMetaData();
-    void onMetaDataDownloadFailed(int error);
+    void onMetaDataDownloadFailed(VMVodEnums::Error error);
     void onThumbnailAvailable(const QString& vodFilePath);
     void onThumbnailUnavailable();
     void onFetchingThumbnail();
@@ -121,7 +135,14 @@ public:
             quint64 vodFileSize,
             int width,
             int height,
-            const QString& formatId);
+            const QString& vodFormatId);
+    void onFetchingVod(
+            const QString& vodFilePath,
+            qreal progress,
+            quint64 vodFileSize,
+            int width,
+            int height,
+            const QString& vodFormatId);
     void onVodUnavailable();
     void onVodDownloadCanceled();
     void onVodDownloadFailed(int error);
@@ -162,6 +183,8 @@ private:
     void setFormatId(const QString& value);
     void setSize(const QSize& value);
     void setTitle(const QString& value);
+    void setFormatIndex(int value);
+    void updateFormatIndex();
 
 private:
     VMVod m_MetaData;
@@ -175,10 +198,13 @@ private:
     qreal m_Progress;
     QSize m_Size;
     int m_Length;
+    int m_FormatIndex;
+    int m_ShareCount;
     FetchStatus m_MetaDataFetchStatus;
     FetchStatus m_ThumbnailFetchStatus;
     FetchStatus m_VodFetchStatus;
     bool m_seen;
+    bool m_isBeingDownloaded;
 };
 
 

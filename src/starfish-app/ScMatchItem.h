@@ -42,6 +42,7 @@ class ScMatchItem : public QObject
     Q_PROPERTY(QString eventFullName READ eventFullName CONSTANT)
     Q_PROPERTY(QString eventName READ eventName CONSTANT)
     Q_PROPERTY(QString stageName READ stageName CONSTANT)
+    Q_PROPERTY(QString matchName READ matchName CONSTANT)
     Q_PROPERTY(QString side1 READ side1 CONSTANT)
     Q_PROPERTY(QString side2 READ side2 CONSTANT)
     Q_PROPERTY(int race1 READ race1 CONSTANT)
@@ -51,6 +52,7 @@ class ScMatchItem : public QObject
     Q_PROPERTY(int videoEndOffset READ videoEndOffset NOTIFY videoEndOffsetChanged)
     Q_PROPERTY(int season READ season CONSTANT)
     Q_PROPERTY(int year READ year CONSTANT)
+    Q_PROPERTY(int matchNumber READ matchNumber CONSTANT)
 
 public:
     explicit ScMatchItem(qint64 rowid, ScVodDataManager *parent, QSharedPointer<ScUrlShareItem>&& urlShareItem);
@@ -71,6 +73,8 @@ public:
     int videoEndOffset() const { return m_VideoEndOffset; }
     int season() const { return m_season; }
     int year() const { return m_year; }
+    QString matchName() const { return m_matchName; }
+    int matchNumber() const { return m_match_number; }
     void onSeenAvailable(bool seen);
     void onVodEndAvailable(int endOffsetS);
 

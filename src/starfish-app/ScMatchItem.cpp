@@ -25,8 +25,6 @@ ScMatchItem::ScMatchItem(qint64 rowid, ScVodDataManager *parent, QSharedPointer<
 
     connect(parent, &ScVodDataManager::vodsChanged, this, &ScMatchItem::reset);
     connect(parent, &ScVodDataManager::seenChanged, this, &ScMatchItem::reset);
-//    connect(parent, &ScVodDataManager::seenAvailable, this, &ScMatchItem::onSeenAvailable);
-//    connect(parent, &ScVodDataManager::vodEndAvailable, this, &ScMatchItem::onVodEndAvailable);
     connect(m_UrlShareItem.data(), &ScUrlShareItem::vodLengthChanged, this, &ScMatchItem::onLengthChanged);
 
     auto x = manager()->databaseStoreQueue();
@@ -121,7 +119,7 @@ void ScMatchItem::setSeen(bool value)
     m_PendingDatabaseStores.insert(transactionId, [=] (qint64 rows, bool error)
     {
         if (!error && rows) {
-            emit seenChanged();
+            setSeenMember(value);
         }
     });
     auto sql = QStringLiteral("UPDATE vods SET seen=? WHERE id=?");

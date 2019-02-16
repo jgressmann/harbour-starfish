@@ -17,6 +17,8 @@ ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
     m_FileSize = -1;
     m_Length = -1;
     m_Progress = -1;
+    m_FormatIndex = -1;
+    m_ShareCount = -1;
     m_ThumbnailFetchStatus = Unknown;
     m_MetaDataFetchStatus = Unknown;
     m_VodFetchStatus = Unknown;
@@ -24,18 +26,6 @@ ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
     connect(parent, &ScVodDataManager::vodsChanged, this, &ScUrlShareItem::reset);
     connect(parent, &ScVodDataManager::ytdlPathChanged, this, &ScUrlShareItem::reset);
     connect(parent, &ScVodDataManager::isOnlineChanged, this, &ScUrlShareItem::onIsOnlineChanged);
-//    connect(parent, &ScVodDataManager::titleAvailable, this, &ScUrlShareItem::onTitleAvailable);
-//    connect(parent, &ScVodDataManager::metaDataAvailable, this, &ScUrlShareItem::onMetaDataAvailable);
-//    connect(parent, &ScVodDataManager::metaDataUnavailable, this, &ScUrlShareItem::onMetaDataUnavailable);
-//    connect(parent, &ScVodDataManager::metaDataDownloadFailed, this, &ScUrlShareItem::onMetaDataDownloadFailed);
-//    connect(parent, &ScVodDataManager::thumbnailAvailable, this, &ScUrlShareItem::onThumbnailAvailable);
-//    connect(parent, &ScVodDataManager::thumbnailUnavailable, this, &ScUrlShareItem::onThumbnailUnavailable);
-//    connect(parent, &ScVodDataManager::thumbnailDownloadFailed, this, &ScUrlShareItem::onThumbnailFailed);
-//    connect(parent, &ScVodDataManager::vodAvailable, this, &ScUrlShareItem::onVodAvailable);
-//    connect(parent, &ScVodDataManager::vodUnavailable, this, &ScUrlShareItem::onVodUnavailable);
-//    connect(parent, &ScVodDataManager::fetchingMetaData, this, &ScUrlShareItem::onFetchingMetaData);
-//    connect(parent, &ScVodDataManager::fetchingThumbnail, this, &ScUrlShareItem::onFetchingThumbnail);
-
 
     QSqlQuery q(manager()->database());
     auto sql = QStringLiteral("SELECT url FROM vod_url_share WHERE id=?");
@@ -73,13 +63,14 @@ bool ScUrlShareItem::fetch(Data* data) const
 {
     Q_ASSERT(data);
     QSqlQuery q(manager()->database());
-    auto sql = QStringLiteral("SELECT title, length FROM vod_url_share WHERE id=?");
+    auto sql = QStringLiteral("SELECT title, length, count(*) FROM url_share_vods WHERE vod_url_share_id=?");
     if (q.prepare(sql)) {
         q.addBindValue(m_UrlShareId);
         if (q.exec()) {
             if (q.next()) {
                 data->title = q.value(0).toString();
                 data->length = q.value(1).toInt();
+                data->shareCount = q.value(2).toInt();
                 return true;
             } else {
                 qDebug() << "no data for urlShareId" << m_UrlShareId;
@@ -109,6 +100,11 @@ void ScUrlShareItem::reset()
             m_Length = data.length;
             emit vodLengthChanged();
         }
+
+        if (m_ShareCount != data.shareCount) {
+            m_ShareCount = data.shareCount;
+            emit shareCountChanged();
+        }
     }
 
     onIsOnlineChanged();
@@ -127,6 +123,7 @@ ScUrlShareItem::setMetaDataFetchStatus(FetchStatus value)
 {
     if (value != m_MetaDataFetchStatus) {
         m_MetaDataFetchStatus = value;
+        qDebug() << m_UrlShareId << "meta data fetch status" << value;
         emit metaDataFetchStatusChanged();
     }
 }
@@ -136,6 +133,7 @@ ScUrlShareItem::setThumbnailFetchStatus(FetchStatus value)
 {
     if (value != m_ThumbnailFetchStatus) {
         m_ThumbnailFetchStatus = value;
+        qDebug() << m_UrlShareId << "thumbnail fetch status" << value;
         emit thumbnailFetchStatusChanged();
     }
 }
@@ -152,28 +150,50 @@ ScUrlShareItem::setVodFetchStatus(FetchStatus value)
 void
 ScUrlShareItem::onMetaDataAvailable(const VMVod& vod)
 {
-    setMetaData(vod);
-    setMetaDataFetchStatus(Available);
+    switch (m_MetaDataFetchStatus) {
+    case Gone:
+        break;
+    default:
+        setMetaData(vod);
+        setMetaDataFetchStatus(Available);
+        break;
+    }
 }
 
 void
-ScUrlShareItem::onFetchingMetaData() {
-    setMetaDataFetchStatus(Fetching);
+ScUrlShareItem::onFetchingMetaData()
+{
+    switch (m_MetaDataFetchStatus) {
+    case Gone:
+        break;
+    default:
+        setMetaDataFetchStatus(Fetching);
+        break;
+    }
 }
 
 void
 ScUrlShareItem::onMetaDataUnavailable()
 {
-    setMetaData(VMVod());
-    setMetaDataFetchStatus(Unavailable);
+    switch (m_MetaDataFetchStatus) {
+    case Gone:
+        break;
+    default:
+        setMetaDataFetchStatus(Unavailable);
+        break;
+    }
 }
 
 void
-ScUrlShareItem::onMetaDataDownloadFailed(int error)
+ScUrlShareItem::onMetaDataDownloadFailed(VMVodEnums::Error error)
 {
-    Q_UNUSED(error);
-    setMetaData(VMVod());
-    setMetaDataFetchStatus(Failed);
+    switch (m_MetaDataFetchStatus) {
+    case Gone:
+        break;
+    default:
+        setMetaDataFetchStatus(error == VMVodEnums::VM_ErrorNoVideo ? Gone : Failed);
+        break;
+    }
 }
 
 void
@@ -191,7 +211,7 @@ ScUrlShareItem::onFetchingThumbnail() {
 void
 ScUrlShareItem::onThumbnailUnavailable()
 {
-    setThumbnailPath(QString());
+    //setThumbnailPath(QString());
     setThumbnailFetchStatus(Unavailable);
 }
 
@@ -200,7 +220,7 @@ ScUrlShareItem::onThumbnailDownloadFailed(int error, const QString& url)
 {
     Q_UNUSED(error);
     Q_UNUSED(url);
-    setThumbnailPath(QString());
+//    setThumbnailPath(QString());
     setThumbnailFetchStatus(Failed);
 }
 
@@ -223,22 +243,44 @@ ScUrlShareItem::onVodAvailable(
 }
 
 void
+ScUrlShareItem::onFetchingVod(
+        const QString& filePath,
+        qreal progress,
+        quint64 fileSize,
+        int width,
+        int height,
+        const QString& formatId) {
+
+    setVodFilePath(filePath);
+    setDownloadProgress(progress);
+    setFilesize(fileSize);
+    setSize(QSize(width, height));
+    setFormatId(formatId);
+    setVodFetchStatus(Fetching);
+}
+
+void
 ScUrlShareItem::onVodUnavailable()
 {
+    setFormatIndex(-1);
     setVodFetchStatus(Unavailable);
 }
 
 void
 ScUrlShareItem::onVodDownloadCanceled()
 {
-
-
+    if (m_FilePath.isEmpty() || m_FileSize == 0) {
+        setVodFetchStatus(Unavailable);
+    } else {
+        setVodFetchStatus(Available);
+    }
 }
 
 void
 ScUrlShareItem::onVodDownloadFailed(int error)
 {
     Q_UNUSED(error);
+    setFormatIndex(-1);
     setVodFetchStatus(Failed);
 }
 
@@ -370,6 +412,8 @@ ScUrlShareItem::setMetaData(const VMVod& value)
     m_MetaData = value;
     emit metaDataChanged();
 
+    updateFormatIndex();
+
     fetchThumbnail();
 }
 
@@ -377,7 +421,7 @@ void
 ScUrlShareItem::setVodFilePath(const QString& value)
 {
     if (value != m_FilePath) {
-        m_FilePath = std::move(value);
+        m_FilePath = value;
         emit vodFilePathChanged();
     }
 }
@@ -395,6 +439,15 @@ ScUrlShareItem::setFilesize(qint64 value)
     if (value != m_FileSize) {
         m_FileSize = value;
         emit vodFileSizeChanged();
+    }
+}
+
+void
+ScUrlShareItem::setFormatIndex(int value)
+{
+    if (value != m_FormatIndex) {
+        m_FormatIndex = value;
+        emit vodFormatIndexChanged();
     }
 }
 
@@ -419,29 +472,29 @@ ScUrlShareItem::setSize(const QSize& value)
 void
 ScUrlShareItem::setFormatId(const QString& value)
 {
-    if (value != m_FormatId) {
-        m_FormatId = value;
-        emit formatIdChanged();
-    }
+    m_FormatId = value;
+    updateFormatIndex();
+
+//    if (value != m_FormatId) {
+//        m_FormatId = value;
+//        emit formatIdChanged();
+
+//        updateFormatIndex();
+//    }
 }
 
 void
-ScUrlShareItem::fetchVod(int formatIndex)
+ScUrlShareItem::fetchVodFile(int formatIndex)
 {
     switch (m_VodFetchStatus) {
     case Available:
-        if (formatIndex < 0 || formatIndex >= m_MetaData.formats()) {
-            qWarning() << "invalid format index" << formatIndex;
-            return;
-        }
-
-        if (m_MetaData._formats()[formatIndex].id() == m_FormatId) {
-            // already available
+        if (m_FormatIndex == formatIndex && m_Progress >= 1) {
+            qDebug() << "fully downloaded";
             return;
         }
     case Unknown:
     case Failed:
-    case Unavailable:{
+    case Unavailable: {
         if (manager()->isOnline()) {
             auto last = m_VodFetchStatus;
             setVodFetchStatus(Fetching);
@@ -513,6 +566,85 @@ ScUrlShareItem::fetchMetaData()
         }
     } break;
     default:
+        // implicit handle of gone
         break;
+    }
+}
+
+void
+ScUrlShareItem::deleteMetaData()
+{
+    switch (m_MetaDataFetchStatus) {
+    case Gone:
+        break;
+    default:
+        manager()->deleteMetaData(m_UrlShareId);
+//        setMetaData(VMVod());
+        setMetaDataFetchStatus(Unavailable);
+        break;
+    }
+}
+
+void
+ScUrlShareItem::deleteVodFile()
+{
+    switch (m_VodFetchStatus) {
+    case Available:
+        manager()->deleteVodFiles(m_UrlShareId);
+        // set all of these to give QML a better chance to show/hide menu items
+        setVodFilePath(QString());
+        setDownloadProgress(0);
+        setFilesize(0);
+        setSize(QSize());
+        setFormatId(QString());
+        setFormatIndex(-1);
+        setVodFetchStatus(Unavailable);
+        break;
+    default:
+        break;
+    }
+}
+
+void
+ScUrlShareItem::cancelFetchVodFile()
+{
+    switch (m_VodFetchStatus) {
+    case Fetching:
+        manager()->cancelFetchVod(m_UrlShareId);
+        break;
+    default:
+        break;
+    }
+}
+
+void
+ScUrlShareItem::deleteThumbnail()
+{
+    switch (m_ThumbnailFetchStatus) {
+    case Gone:
+        break;
+    default:
+        manager()->deleteThumbnail(m_UrlShareId);
+        setThumbnailPath(QString());
+        setThumbnailFetchStatus(Unavailable);
+        break;
+    }
+}
+
+void
+ScUrlShareItem::updateFormatIndex()
+{
+    if (m_MetaData.isValid() && !m_FormatId.isEmpty()) {
+        auto result = -1;
+        const auto& fs = m_MetaData.data()._formats;
+        for (auto i = 0; i < fs.size(); ++i) {
+            if (fs[i].id() == m_FormatId) {
+                result = i;
+                break;
+            }
+        }
+        setFormatIndex(result);
+    } else {
+        setFormatIndex(-1);
     }
 }

@@ -35,16 +35,12 @@ ListItem {
     property bool showTitle: _c && !_c.side2
     property bool menuEnabled: true
     property int rowId: -1
-    property bool _clicked: false
-    property bool _clicking: false
     property bool _playWhenTransitionDone: false
     readonly property string vodUrl: _vodUrl
     property string _vodUrl
-    property string _formatId
     property int startOffset: 0
     readonly property int baseOffset: _c ? _c.videoStartOffset : 0
     property bool _validRange: _c && baseOffset >= 0 && baseOffset < _c.videoEndOffset
-    property bool _tryingToPlay: false
     readonly property bool _hasValidRaces: _c && _c.race1 >= 1 && _c.race2 >= 1
     readonly property int requiredHeight: content.height + watchProgress.height
     readonly property string title: titleLabel.text
@@ -117,8 +113,8 @@ ListItem {
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
                         cache: false
-                        //visible: (status === Image.Ready || status === Image.Error) && _c.urlShare.thumbnailFetchStatus !== UrlShare.Fetching
-                        visible: _c.urlShare.thumbnailFetchStatus !== UrlShare.Fetching
+                        visible: !thumbnailBusyIndicator.visible
+                        //_c.urlShare.thumbnailFetchStatus !== UrlShare.Fetching
                         source: _hadImageLoadError
                                 ? "image://theme/icon-m-reload"
                                 : (_c.urlShare.thumbnailFetchStatus === UrlShare.Available
@@ -153,7 +149,8 @@ ListItem {
                         size: BusyIndicatorSize.Medium
                         anchors.centerIn: parent
                         running: visible
-                        visible: _c.urlShare.thumbnailFetchStatus === UrlShare.Fetching
+                        visible: _c.urlShare.thumbnailFetchStatus === UrlShare.Fetching ||
+                                 (_c.urlShare.thumbnailFetchStatus === UrlShare.Unavailable && _c.urlShare.metaDataFetchStatus === UrlShare.Fetching)
                     }
                 } // thumbnail group
 
@@ -226,7 +223,7 @@ ListItem {
                             anchors.verticalCenter: parent.verticalCenter
                             width: parent.labelWidth
                             truncationMode: TruncationMode.Fade
-                            text: _c.side2  + " "
+                            text: _c.side2 + " "
                             horizontalAlignment: Text.AlignRight
                         }
 
@@ -304,7 +301,7 @@ ListItem {
 
                                 BusyIndicator {
                                     id: loadingIndicator
-                                    size: BusyIndicatorSize.Small
+                                    size: BusyIndicatorSize.ExtraSmall
                                     anchors.centerIn: parent
                                     running: parent.visible
                                 }
@@ -315,16 +312,22 @@ ListItem {
                                 height: Theme.iconSizeSmall
                                 sourceSize.width: width
                                 sourceSize.height: height
-                                source: _c.urlShare.metaDataFetchStatus === UrlShare.Failed
-                                        ? //"/usr/share/harbour-starfish/icons/warning.png"
-                                          "/usr/share/harbour-starfish/icons/flash.png"
-                                        : "image://theme/icon-s-date"
+                                source: {
+                                    switch (_c.urlShare.metaDataFetchStatus) {
+                                    case UrlShare.Gone:
+                                        return "image://theme/icon-s-clear-opaque-cross"
+                                    case UrlShare.Failed:
+                                        return "/usr/share/harbour-starfish/icons/flash.png"
+                                    default:
+                                        return "image://theme/icon-s-date"
+                                    }
+                                }
 
                                 anchors.verticalCenter: parent.verticalCenter
-                                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available || _c.urlShare.metaDataFetchStatus === UrlShare.Failed
+                                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available ||
+                                         _c.urlShare.metaDataFetchStatus === UrlShare.Failed ||
+                                         _c.urlShare.metaDataFetchStatus === UrlShare.Gone
                             }
-
-
 
                             Item {
                                 width: loadCompleteImage2a.width
@@ -376,7 +379,7 @@ ListItem {
 
                                 BusyIndicator {
                                     id: downloadingVodIndicator
-                                    size: BusyIndicatorSize.Small
+                                    size: BusyIndicatorSize.ExtraSmall
                                     anchors.centerIn: parent
                                     running: _c.urlShare.vodFetchStatus === UrlShare.Fetching
                                 }
@@ -424,40 +427,7 @@ ListItem {
         }
     }
 
-    onClicked: {
-        _clicking = true
-        _clicked = true
-
-        if (_c.urlShare.metaDataFetchStatus === UrlShare.Available) {
-            _tryPlay()
-        } else {
-            if (_c.urlShare.vodFilePath && _c.urlShare.downloadProgress >= 1) {
-                // play fully downloaded vods immediately
-                _tryPlay()
-            } else {
-                switch (_c.urlShare.metaDataFetchStatus) {
-                case UrlShare.Available:
-                    // should have _vod then
-                    console.debug("OHHH NOOOOOESS")
-                    break
-                case UrlShare.Failed:
-                    if (_c.urlShare.vodFilePath) {
-                        _tryPlay()
-                    }
-                    break
-                case UrlShare.Fetching:
-                    // wait for meta data,
-                    // playing now will abort md fetch
-                    break
-                }
-            }
-        }
-        _clicking = false
-    }
-
-    on_ClickedChanged: {
-        console.debug("_clicked=" + _clicked)
-    }
+    onClicked: _tryPlay()
 
     Connections {
         target: pageStack
@@ -498,12 +468,14 @@ ListItem {
         ContextMenu {
             MenuItem {
                 text: "Copy URL to clipboard"
-                onClicked: Clipboard.text = _c.url
+                onClicked: Clipboard.text = _c.urlShare.url
             }
 
             MenuItem {
                 text: "Download meta data"
-                visible: _c.urlShare.vodFetchStatus !== UrlShare.Fetching && _c.urlShare.vodFetchStatus !== UrlShare.Available && App.isOnline
+                visible: _c.urlShare.metaDataFetchStatus !== UrlShare.Fetching &&
+                         _c.urlShare.metaDataFetchStatus !== UrlShare.Available &&
+                         App.isOnline
                 onClicked: _c.urlShare.fetchMetaData()
             }
 
@@ -511,7 +483,8 @@ ListItem {
                 text: "Download VOD"
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available &&
                          _c.urlShare.vodFetchStatus !== UrlShare.Fetching &&
-                         _c.urlShare.downloadProgress < 1 && App.isOnline
+                         _c.urlShare.downloadProgress < 1 &&
+                         App.isOnline
                 onClicked: {
                     var format = _getVideoFormatFromBearerMode()
                     _download(false, format)
@@ -522,13 +495,14 @@ ListItem {
                 text: "Download VOD with format..."
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available &&
                          _c.urlShare.vodFetchStatus !== UrlShare.Fetching &&
-                         _c.urlShare.downloadProgress < 1 && App.isOnline
+                         _c.urlShare.downloadProgress < 1 &&
+                         App.isOnline
                 onClicked: _download(false, VM.VM_Any)
             }
 
             MenuItem {
                 text: "Cancel VOD download"
-                visible: _c.urlShare.vodFetchStatus !== UrlShare.Fetching && _c.urlShare.downloadProgress < 1
+                visible: _c.urlShare.vodFetchStatus === UrlShare.Fetching && _c.urlShare.downloadProgress < 1
                 onClicked: _cancelDownload()
             }
 
@@ -547,34 +521,27 @@ ListItem {
             MenuItem {
                 text: "Delete meta data"
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available
-                onClicked: {
-                    _clicked = false
-                    VodDataManager.deleteMetaData(rowId)
-                }
+                onClicked: _c.urlShare.deleteMetaData()
             }
 
             MenuItem {
                 text: "Delete VOD file"
                 enabled: _toolEnabled
-                visible: !!_c.urlShare.vodFilePath
+                visible: _c.urlShare.vodFetchStatus === UrlShare.Available
 
                 onClicked: {
                     // still not sure why local vars are needed but they are!!!!
                     var item = root
-                    var overlay = progressOverlay
-                    var manager = VodDataManager
                     item.remorseAction("Deleting " + title, function() {
                         item._cancelDownload()
-                        item._clicked = false
-                        item._formatId = ""
-                        manager.deleteVodFiles(item.rowId)
+                        item._c.urlShare.deleteVodFile()
                     })
                 }
             }
 
             MenuItem {
                 text: "VOD details"
-                visible: _c.urlShare.vodFileSize > 0 && !!_c.urlShare.vodFilePath
+                visible: _c.urlShare.vodFetchStatus === UrlShare.Available
                 onClicked: pageStack.push(
                                Qt.resolvedUrl("VodDetailPage.qml"),
                                {
@@ -590,18 +557,13 @@ ListItem {
 
             MenuItem {
                 text: "Copy VOD file path to clipboard"
-                visible: _c.urlShare.vodFileSize > 0 && _c.urlShare.vodFilePath
+                visible: _c.urlShare.vodFetchStatus === UrlShare.Available
                 onClicked: Clipboard.text = _c.urlShare.vodFilePath
             }
 
             MenuItem {
                 text: "Delete thumbnail"
-                onClicked: {
-                    VodDataManager.deleteThumbnail(rowId)
-                    if (App.isOnline) {
-                        _fetchThumbnail()
-                    }
-                }
+                onClicked: _c.urlShare.deleteThumbnail()
             }
 
             MenuItem {
@@ -611,110 +573,13 @@ ListItem {
                     // still not sure why local vars are needed but they are!!!!
                     var item = root
                     var g = Global
-                    item.remorseAction("Deleting " + title, function() {
+                    item.remorseAction("Deleting " + _c.urlShare.title, function() {
                         item._cancelDownload()
                         g.deleteVods("where id=" + item.rowId)
                     })
                 }
             }
         }
-    }
-
-    function fetchingThumbnail() {
-//        _c.urlShare.thumbnailFetchStatus = UrlShare.Fetching
-//        _thumbnailTicket = -1
-    }
-
-    function thumbnailAvailable(filePath) {
-//            console.debug("thumbnailAvailable rowid=" + rowid + " path=" + filePath)
-//        if (_c.urlShare.thumbnailFilePath === filePath) {
-//            if (Image.Ready !== thumbnail.status) { // added to hopefully prevent some image popping
-//                _c.urlShare.thumbnailFilePath = "" // force reload
-//            }
-//        }
-
-//        _c.urlShare.thumbnailFilePath = filePath
-//        _c.urlShare.thumbnailFetchStatus = UrlShare.Available
-//        _thumbnailTicket = -1
-    }
-
-    function thumbnailDownloadFailed(error, url) {
-//        console.debug("thumbnail download failed rowid=" + rowId + " error=" + error + " url=" + url)
-//        _c.urlShare.thumbnailFetchStatus = thumbnailStateDownloadFailed
-//        _thumbnailTicket = -1
-    }
-
-    function fetchingMetaData() {
-//        _c.urlShare.metaDataFetchStatus = UrlShare.Fetching
-//        _metaDataTicket = -1
-    }
-
-    function metaDataDownloadFailed(error) {
-//        console.debug("meta data download failed rowid=" + rowId + " error=" + error)
-//        _c.urlShare.metaDataFetchStatus = metaDataStateDownloadFailed
-//        _clicked = false
-//        _metaDataTicket = -1
-//        if (_c.urlShare.thumbnailFetchStatus === UrlShare.Fetching) {
-//            _c.urlShare.thumbnailFetchStatus = thumbnailStateDownloadFailed
-//        }
-    }
-
-    function metaDataAvailable(vod) {
-//        console.debug("metaDataAvailable rowid=" + rowId)
-//        _c.urlShare.metaDataFetchStatus = UrlShare.Available
-//        _vod = vod
-//        _clicked = false
-//        _metaDataTicket = -1
-
-
-//        if (App.isOnline) {
-//            _fetchThumbnail()
-//        }
-
-//        if (_clicking) {
-//            _tryPlay()
-//        }
-    }
-
-    function vodDownloadFailed(error) {
-//        console.debug("vod download failed rowid=" + rowId + " error=" + error)
-//        _vodDownloadFailed = true
-//        UrlShare.Fetching = false
-//        progressOverlay.show = false
-//        _progress = -1
-//        _vodDownloadExplicitlyStarted = -1
-    }
-
-    function vodDownloadCanceled() {
-//        console.debug("vod download canceled rowid=" + rowId)
-//        _vodDownloadFailed = false
-//        UrlShare.Fetching = false
-//        progressOverlay.show = false
-//        _progress = -1
-    }
-
-    function vodDownloading() {
-//        UrlShare.Fetching = 1
-    }
-
-    function vodAvailable(filePath, progress, fileSize, width, height, formatId) {
-//        console.debug(
-//                    "vodAvailable rowid=" + rowId + " path=" + filePath + " progress=" + progress +
-//                    " size=" + fileSize + " width=" + width + " height=" + height + " formatId=" + formatId)
-//        _c.urlShare.vodFilePath = filePath
-//        _c.urlShare.vodFileSize = fileSize
-//        if (-1 === _progress) {
-//            _progress = progress
-//        } else if (_progress < progress) {
-//            UrlShare.Fetching = progress < 1
-//            _progress = progress
-//        }
-
-//        progressOverlay.show = UrlShare.Fetching && progress > 0 && progress < 1
-//        progressOverlay.progress = progress
-
-//        _formatId = formatId
-//        _vodFileTicket = -1
     }
 
     function _play() {
@@ -805,6 +670,7 @@ ListItem {
     function _selectFormat(callback) {
         var labels = []
         var values = []
+        var _vod = _c.urlShare.metaData
         for (var i = 0; i < _vod.formats; ++i) {
             var f = _vod.format(i)
             labels.push(f.displayName)
@@ -824,36 +690,28 @@ ListItem {
         dialog.updateMenu()
     }
 
-    function _getVodFormatIndexFromId() {
-        for (var i = 0; i < _vod.formats; ++i) {
-            var f = _vod.format(i)
-            if (f.id === _formatId) {
-                return i
-            }
-        }
-
-        return -1
-    }
-
     function _tryPlay() {
-        if (!_tryingToPlay) {
-            _tryingToPlay = true
-            if (_c.urlShare.vodFilePath && _c.urlShare.vodFileSize > 0) {
-                // try download rest if incomplete and format matches
-                if (_vod && progressOverlay.progress < 1 && !UrlShare.Fetching) {
-                    var index = _getVodFormatIndexFromId()
+        if (_c.urlShare.vodFetchStatus === UrlShare.Fetching) {
+            _vodUrl = _c.urlShare.vodFilePath
+            _play()
+        } else if (_c.urlShare.vodFetchStatus === UrlShare.Available) {
+            // try download rest if incomplete and format matches
+            if (_c.urlShare.downloadProgress < 1) {
+                if (_c.urlShare.metaDataFetchStatus === UrlShare.Available) {
+                    var index = _c.urlShare.vodFormatIndex
                     if (index >= 0) {
                         _downloadFormat(index, true)
                     }
+                } else {
+                    _c.urlShare.fetchMetaData()
                 }
-
-                // at any rate, play the file
-                _vodUrl = _c.urlShare.vodFilePath
-                _play()
-            } else if (_vod) {
-                _playStream()
             }
-            _tryingToPlay = false
+
+            // at any rate, play the file
+            _vodUrl = _c.urlShare.vodFilePath
+            _play()
+        } else if (_c.urlShare.metaDataFetchStatus === UrlShare.Available) {
+            _playStream()
         }
     }
 
@@ -863,28 +721,21 @@ ListItem {
     }
 
     function _playStreamWithFormat(format) {
+        var vod = _c.urlShare.metaData
         if (VM.VM_Any === format) {
             _selectFormat(function(index) {
-                _vodUrl = _vod.format(index).fileUrl
+                _vodUrl = vod.format(index).fileUrl
                 _playWhenTransitionDone = true
             })
-            return
+        } else {
+            var formatIndex = _findBestFormat(vod, format)
+            _vodUrl = vod.format(index).fileUrl
+            _play()
         }
-
-        var formatIndex = _findBestFormat(_vod, format)
-        _vodUrl = _vod.format(formatIndex).fileUrl
-        _play()
     }
 
     function _downloadFormat(formatIndex, autoStarted) {
-        if (-1 !== _vodFileTicket) {
-            VodDataManager.cancelTicket(_vodFileTicket)
-            _vodFileTicket = -1
-        }
-
-        _vodDownloadFailed = false
-        _vodFileTicket = VodDataManager.fetchVod(rowId, formatIndex)
-        UrlShare.Fetching = true
+        _c.urlShare.fetchVodFile(formatIndex)
         switch (_vodDownloadExplicitlyStarted) {
         case -1:
         case 0:
@@ -898,24 +749,15 @@ ListItem {
             _selectFormat(function(index) {
                 _downloadFormat(index, autoStarted)
             })
-            return
+        } else {
+            var formatIndex = _findBestFormat(_c.urlShare.metaData, format)
+            _downloadFormat(formatIndex, autoStarted)
         }
-
-        var formatIndex = _findBestFormat(_vod, format)
-        _downloadFormat(formatIndex, autoStarted)
     }
 
     function _cancelDownload() {
-        if (-1 !== _vodFileTicket) {
-            VodDataManager.cancelTicket(_vodFileTicket)
-            _vodFileTicket = -1
-        }
-
-        VodDataManager.cancelFetchVod(rowId)
-        _progress = -1
-        UrlShare.Fetching = false
+        _c.urlShare.cancelFetchVodFile()
         _vodDownloadExplicitlyStarted = -1
-        progressOverlay.show = false
     }
 
     function cancelImplicitVodFileFetch() {

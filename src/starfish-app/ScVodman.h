@@ -44,13 +44,14 @@ public:
     int maxConcurrentMetaDataDownloads() const { return m_MaxMeta; }
     void setMaxConcurrentMetaDataDownloads(int value);
     void setYtdlPath(const QString& path);
+    void clearYtdlCache();
 
 
 signals:
     void metaDataDownloadCompleted(qint64 token, const VMVod& vod);
     void fileDownloadChanged(qint64 token, const VMVodFileDownload& download);
     void fileDownloadCompleted(qint64 token, const VMVodFileDownload& download);
-    void downloadFailed(qint64 token, int serviceErrorCode);
+    void downloadFailed(qint64 token, VMVodEnums::Error serviceErrorCode);
     void maxConcurrentMetaDataDownloadsChanged();
 
 private slots:

@@ -231,6 +231,12 @@ BasePage {
                         text: "delete youtube-dl"
                         onClicked: YTDLDownloader.remove()
                     }
+
+                    Button {
+                        visible: debugApp.value
+                        text: "clear cache"
+                        onClicked: VodDataManager.clearYtdlCache()
+                    }
                 }
 
                 Item {

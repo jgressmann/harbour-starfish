@@ -283,3 +283,9 @@ ScVodman::setYtdlPath(const QString& path)
 {
     m_Ytdl.setYtdlPath(path);
 }
+
+void
+ScVodman::clearYtdlCache()
+{
+    m_Ytdl.clearCache();
+}

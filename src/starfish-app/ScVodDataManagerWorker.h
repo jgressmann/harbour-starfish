@@ -63,6 +63,7 @@ public:
     void fetchTitle(qint64 urlShareId);
     void fetchSeen(qint64 rowid, const QString& table, const QString& where);
     void fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS);
+    void clearYtdlCache();
 
 
 signals:
@@ -70,7 +71,7 @@ signals:
     void fetchingThumbnail(qint64 urlShareId);
     void metaDataAvailable(qint64 urlShareId, VMVod vod);
     void metaDataUnavailable(qint64 urlShareId);
-    void metaDataDownloadFailed(qint64 urlShareId, int error);
+    void metaDataDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
     void vodAvailable(
             qint64 urlShareId,
             QString filePath,
@@ -80,10 +81,18 @@ signals:
             int height,
             QString formatId);
     void vodUnavailable(qint64 urlShareId);
+    void fetchingVod(
+            qint64 urlShareId,
+            QString filePath,
+            qreal progress,
+            quint64 fileSize,
+            int width,
+            int height,
+            QString formatId);
     void thumbnailAvailable(qint64 urlShareId, QString filePath);
     void thumbnailUnavailable(qint64 urlShareId);
     void thumbnailDownloadFailed(qint64 urlShareId, int error, QString url);
-    void vodDownloadFailed(qint64 urlShareId, int error);
+    void vodDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
     void vodDownloadCanceled(qint64 urlShareId);
     void titleAvailable(qint64 urlShareId, QString title);
     void seenAvailable(qint64 rowid, qreal seen);
@@ -119,7 +128,7 @@ private slots:
     void onMetaDataDownloadCompleted(qint64 token, const VMVod& vod);
     void onFileDownloadChanged(qint64 token, const VMVodFileDownload& download);
     void onFileDownloadCompleted(qint64 token, const VMVodFileDownload& download);
-    void onDownloadFailed(qint64 token, int serviceErrorCode);
+    void onDownloadFailed(qint64 token, VMVodEnums::Error serviceErrorCode);
     void requestFinished(QNetworkReply* reply);
     void databaseStoreCompleted(int ticket, qint64 insertId, int error, QString errorDescription);
 

@@ -158,12 +158,12 @@ public: //
     int fetchMetaData(qint64 urlShareId, const QString& url, bool download);
     int fetchTitle(qint64 urlShareId);
     int fetchVod(qint64 urlShareId, int formatIndex);
-    void cancelFetchVod(qint64 urlShareId);
+    int cancelFetchVod(qint64 urlShareId);
     void cancelFetchMetaData(int ticket, qint64 urlShareId);
     void cancelFetchThumbnail(int ticket, qint64 urlShareId);
     int queryVodFiles(qint64 urlShareId);
-    Q_INVOKABLE void deleteVodFiles(qint64 rowid);
-    Q_INVOKABLE void deleteMetaData(qint64 rowid);
+    void deleteVodFiles(qint64 urlShareId);
+    void deleteMetaData(qint64 urlShareId);
     Q_INVOKABLE void fetchIcons();
     Q_INVOKABLE void fetchClassifier();
     Q_INVOKABLE void resetDownloadMarker();
@@ -172,6 +172,7 @@ public: //
     void setDownloadMarker(QDate value);
     void suspendVodsChangedEvents(int count = 1);
     void resumeVodsChangedEvents();
+    // filter pages
     Q_INVOKABLE qreal seen(const QString& table, const QString& where) const;
     Q_INVOKABLE void setSeen(const QString& table, const QString& where, bool value);
     ScClassifier* classifier() const;
@@ -197,19 +198,18 @@ public: //
     void setMaxConcurrentMetaDataDownloads(int value);
     Q_INVOKABLE int fetchSeen(qint64 rowid, const QString& table, const QString& where);
     Q_INVOKABLE int fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS);
+    // filter pages
     Q_INVOKABLE void deleteVod(qint64 rowid);
     Q_INVOKABLE int deleteVods(const QString& where);
-    Q_INVOKABLE void deleteThumbnail(qint64 rowid);
+    void deleteThumbnail(qint64 urlShareId);
     Q_INVOKABLE void setYtdlPath(const QString&  path);
-//    Q_INVOKABLE void addVodToRecentlyWatchedList(qint64 rowid);
-//    Q_INVOKABLE void addFileToRecentlyWatchedList(const QString& path);
-//    Q_INVOKABLE void removeVodFromRecentlyWatchedList(qint64 rowid);
-//    Q_INVOKABLE void removeFileFromRecentlyWatchedList(const QString& path);
+    Q_INVOKABLE QString sqlEscapeLiteral(QString value);
     ScDatabaseStoreQueue* databaseStoreQueue() const;
     ScRecentlyWatchedVideos* recentlyWatched() const { return m_RecentlyWatchedVideos; }
     Q_INVOKABLE ScMatchItem* acquireMatchItem(qint64 rowid);
     Q_INVOKABLE void releaseMatchItem(ScMatchItem* item);
     bool isOnline() const;
+    Q_INVOKABLE void clearYtdlCache();
 
 signals:
     void readyChanged();
@@ -305,7 +305,7 @@ private slots:
     void onFetchingThumbnail(qint64 urlShareId);
     void onMetaDataAvailable(qint64 urlShareId, VMVod vod);
     void onMetaDataUnavailable(qint64 urlShareId);
-    void onMetaDataDownloadFailed(qint64 urlShareId, int error);
+    void onMetaDataDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
     void onVodAvailable(
             qint64 urlShareId,
             QString filePath,
@@ -314,8 +314,16 @@ private slots:
             int width,
             int height,
             QString formatId);
+    void onFetchingVod(
+            qint64 urlShareId,
+            QString filePath,
+            qreal progress,
+            quint64 fileSize,
+            int width,
+            int height,
+            QString formatId);
     void onVodUnavailable(qint64 urlShareId);
-    void onVodDownloadFailed(qint64 urlShareId, int error);
+    void onVodDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
     void onVodDownloadCanceled(qint64 urlShareId);
     void onThumbnailAvailable(qint64 urlShareId, QString filePath);
     void onThumbnailUnavailable(qint64 urlShareId);

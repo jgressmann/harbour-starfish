@@ -488,6 +488,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(m_WorkerInterface, &ScVodDataManagerWorker::metaDataUnavailable, this, &ScVodDataManager::onMetaDataUnavailable);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::metaDataDownloadFailed, this, &ScVodDataManager::onMetaDataDownloadFailed);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodAvailable, this, &ScVodDataManager::onVodAvailable);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::fetchingVod, this, &ScVodDataManager::onFetchingVod);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodUnavailable, this, &ScVodDataManager::onVodUnavailable);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailAvailable, this, &ScVodDataManager::onThumbnailAvailable);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailUnavailable, this, &ScVodDataManager::onThumbnailUnavailable);
@@ -1602,17 +1603,19 @@ ScVodDataManager::cancelTicket(int ticket)
     return false;
 }
 
-void
-ScVodDataManager::cancelFetchVod(qint64 rowid) {
-    RETURN_IF_ERROR;
+int
+ScVodDataManager::cancelFetchVod(qint64 urlShareId) {
+    RETURN_MINUS_ON_ERROR;
 
     ScVodDataManagerWorker::Task t = [=]() {
-        m_WorkerInterface->cancelFetchVod(rowid);
+        m_WorkerInterface->cancelFetchVod(urlShareId);
     };
     auto result = m_WorkerInterface->enqueue(std::move(t));
     if (result != -1) {
         emit startWorker();
     }
+
+    return result;
 }
 
 
@@ -1720,45 +1723,32 @@ ScVodDataManager::parseTwitchOffset(const QString& str) {
 }
 
 void
-ScVodDataManager::deleteVodFiles(qint64 rowid) {
-    auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
-    deleteVodFilesWhere(tid, QStringLiteral("WHERE id=%1").arg(rowid), true);
-    emit startProcessDatabaseStoreQueue(tid, {}, {});
+ScVodDataManager::deleteVodFiles(qint64 urlShareId) {
+
+    QSqlQuery q(m_Database);
+    if (q.prepare(QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=?"))) {
+        q.addBindValue(urlShareId);
+        if (q.exec()) {
+            if (q.next()) {
+                auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
+                deleteVodFilesWhere(tid, QStringLiteral("WHERE id=%1").arg(qvariant_cast<qint64>(q.value(0))), true);
+                emit startProcessDatabaseStoreQueue(tid, {}, {});
+            }
+        } else {
+            qCritical() << "failed to exec" << q.lastError();
+        }
+    } else {
+        qCritical() << "failed to prepare" << q.lastError();
+    }
 }
 
 void
-ScVodDataManager::deleteMetaData(qint64 rowid) {
-
+ScVodDataManager::deleteMetaData(qint64 urlShareId)
+{
     RETURN_IF_ERROR;
+//    deleteThumbnail(rowid);
 
 
-
-
-    deleteThumbnail(rowid);
-
-    QSqlQuery q(m_Database);
-
-    // meta data file
-    if (!q.prepare(QStringLiteral(
-"SELECT u.id FROM vods AS v INNER JOIN vod_url_share "
-"AS u ON v.vod_url_share_id=u.id WHERE v.id=?"))) {
-        qCritical() << "failed to prepare query" << q.lastError();
-        return;
-    }
-
-    q.addBindValue(rowid);
-
-    if (!q.exec()) {
-        qCritical() << "failed to exec query" << q.lastError();
-        return;
-    }
-
-    if (!q.next()) {
-        qDebug() << "rowid" << rowid << "gone";
-        return;
-    }
-
-    const auto urlShareId = qvariant_cast<qint64>(q.value(0));
     auto metaDataFilePath = m_SharedState->m_MetaDataDir + QString::number(urlShareId);
     if (QFile::remove(metaDataFilePath)) {
         qDebug() << "removed" << metaDataFilePath;
@@ -1855,14 +1845,18 @@ ScVodDataManager::seen(const QString& table, const QString& where) const {
                 "    %1\n"
                 "%2\n");
 
-    if (!q.exec(sql.arg(table, where))) {
-        qCritical() << "failed to exec query" << q.lastError();
+    auto query = sql.arg(table, where);
+    if (!q.exec(query)) {
+        qCritical() << "failed to exec query" << q.lastError() << query;
         return -1;
     }
 
-    q.next();
-
-    return q.value(0).toReal();
+    if (q.next()) {
+        return q.value(0).toReal();
+    } else {
+        qCritical() << "no result for aggregate query";
+        return -1;
+    }
 }
 
 void
@@ -2860,6 +2854,17 @@ ScVodDataManager::fetchSeen(qint64 rowId, const QString& table, const QString& w
     return result;
 }
 
+void ScVodDataManager::clearYtdlCache()
+{
+    ScVodDataManagerWorker::Task t = [=]() {
+        m_WorkerInterface->clearYtdlCache();
+    };
+    auto result = m_WorkerInterface->enqueue(std::move(t));
+    if (result != -1) {
+        emit startWorker();
+    }
+}
+
 int
 ScVodDataManager::fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS)
 {
@@ -3019,11 +3024,23 @@ ScVodDataManager::deleteVods(const QString& where)
 
 
 void
-ScVodDataManager::deleteThumbnail(qint64 rowid)
+ScVodDataManager::deleteThumbnail(qint64 urlShareId)
 {
-    auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
-    deleteThumbnailsWhere(tid, QStringLiteral("WHERE v.id=%1").arg(rowid));
-    emit startProcessDatabaseStoreQueue(tid, {}, {});
+    QSqlQuery q(m_Database);
+    if (q.prepare(QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=?"))) {
+        q.addBindValue(urlShareId);
+        if (q.exec()) {
+            if (q.next()) {
+                auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
+                deleteThumbnailsWhere(tid, QStringLiteral("WHERE v.id=%1").arg(qvariant_cast<qint64>(q.value(0))));
+                emit startProcessDatabaseStoreQueue(tid, {}, {});
+            }
+        } else {
+            qCritical() << "failed to exec" << q.lastError();
+        }
+    } else {
+        qCritical() << "failed to prepare" << q.lastError();
+    }
 }
 
 int
@@ -3149,6 +3166,8 @@ ScVodDataManager::acquireMatchItem(qint64 rowid)
                         } else {
                             new (raw) ScMatchItem(rowid, this, std::move(uit.value().toStrongRef()));
                         }
+                        // forward signal
+                        connect(it.value()->matchItem(), &ScMatchItem::seenChanged, this, &ScVodDataManager::seenChanged);
                     } else {
                         return nullptr;
                     }
@@ -3216,7 +3235,7 @@ ScVodDataManager::clearMatchItems(QHash<qint64, MatchItemData*>& h)
     auto beg = h.cbegin();
     auto end = h.cend();
     for (auto it = beg; it != end; ++it) {
-        static_cast<ScMatchItem*>(static_cast<void*>(it.value()->Raw))->~ScMatchItem();
+        it.value()->matchItem()->~ScMatchItem();
         delete it.value();
     }
     h.clear();
@@ -3260,7 +3279,7 @@ ScVodDataManager::onMetaDataUnavailable(qint64 urlShareId)
     }
 }
 void
-ScVodDataManager::onMetaDataDownloadFailed(qint64 urlShareId, int error)
+ScVodDataManager::onMetaDataDownloadFailed(qint64 urlShareId, VMVodEnums::Error error)
 {
     auto it = m_UrlShareItems.find(urlShareId);
     if (it != m_UrlShareItems.end()) {
@@ -3282,6 +3301,23 @@ ScVodDataManager::onVodAvailable(
         it.value().toStrongRef()->onVodAvailable(filePath, progress, fileSize, width, height, formatId);
     }
 }
+
+void
+ScVodDataManager::onFetchingVod(
+        qint64 urlShareId,
+        QString filePath,
+        qreal progress,
+        quint64 fileSize,
+        int width,
+        int height,
+        QString formatId)
+{
+    auto it = m_UrlShareItems.find(urlShareId);
+    if (it != m_UrlShareItems.end()) {
+        it.value().toStrongRef()->onFetchingVod(filePath, progress, fileSize, width, height, formatId);
+    }
+}
+
 void
 ScVodDataManager::onVodUnavailable(qint64 urlShareId)
 {
@@ -3324,7 +3360,7 @@ ScVodDataManager::onTitleAvailable(qint64 urlShareId, QString title)
 }
 
 void
-ScVodDataManager::onVodDownloadFailed(qint64 urlShareId, int error)
+ScVodDataManager::onVodDownloadFailed(qint64 urlShareId, VMVodEnums::Error error)
 {
     auto it = m_UrlShareItems.find(urlShareId);
     if (it != m_UrlShareItems.end()) {
@@ -3364,4 +3400,13 @@ ScVodDataManager::onVodEndAvailable(qint64 rowid, int endOffsetS)
     if (data) {
         data->matchItem()->onVodEndAvailable(endOffsetS);
     }
+}
+
+QString
+ScVodDataManager::sqlEscapeLiteral(QString value)
+{
+    // This is probably a bad idea.
+    value.replace(QChar('\''), QStringLiteral("''"));
+    value.replace(QChar(';'), QString());
+    return value;
 }

@@ -79,6 +79,9 @@ main(int argc, char *argv[]) {
         QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
         setupLogging(); // need to have the app paths
 
+        qRegisterMetaType<VMVodEnums::Error>();
+        qRegisterMetaType<VMVodEnums::Format>();
+
         qmlRegisterType<ScSqlVodModel>(STARFISH_NAMESPACE, 1, 0, "SqlVodModel");
         qmlRegisterType<ScVodDatabaseDownloader>(STARFISH_NAMESPACE, 1, 0, "VodDatabaseDownloader");
         qmlRegisterType<Sc2LinksDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2LinksDotComScraper");

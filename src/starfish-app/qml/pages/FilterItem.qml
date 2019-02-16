@@ -188,7 +188,7 @@ ListItem {
             _icon = VodDataManager.icon(page.key, value)
         }
 
-        var myFilter = page.key + "='" + value + "'"
+        var myFilter = page.key + "='" + VodDataManager.sqlEscapeLiteral(value) + "'"
         if (page.where.length > 0) {
             _where = page.where + " and " + myFilter
         } else {

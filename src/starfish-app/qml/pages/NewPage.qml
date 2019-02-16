@@ -87,7 +87,6 @@ ContentPage {
                     width: listView.width
 //                    contentHeight: Global.itemHeight + Theme.fontSizeMedium // MatchItem is a ListItem
                     rowId: vod_id
-                    table: page.table
                     memory: matchItemConnections
 
                     onClicked: {
