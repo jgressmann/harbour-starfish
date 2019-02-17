@@ -51,9 +51,15 @@ ListItem {
     readonly property bool seen: _c && _c.seen
     property QtObject _c: null
 //    property MatchItemData _c: null
+    readonly property bool tangibleDownloadProgress:
+        _c &&
+        (_c.urlShare.vodFetchStatus === UrlShare.Available ||
+        (_c.urlShare.vodFetchStatus === UrlShare.Fetching && _c.urlShare.downloadProgress > 0))
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
+
+    RemorsePopup { id: remorse }
 
     ProgressOverlay {
         id: progressOverlay
@@ -472,8 +478,6 @@ ListItem {
         VodDataManager.releaseMatchItem(_c)
     }
 
-    RemorsePopup { id: remorse }
-
     Component {
         id: contextMenu
         ContextMenu {
@@ -543,16 +547,33 @@ ListItem {
                 onClicked: {
                     // still not sure why local vars are needed but they are!!!!
                     var item = root
-                    item.remorseAction("Deleting " + title, function() {
-                        item._cancelDownload()
-                        item._c.urlShare.deleteVodFile()
-                    })
+                    var r = remorse
+                    if (_c.urlShare.shareCount > 1) {
+                        var dialog = pageStack.push(
+                               Qt.resolvedUrl("ConfirmDeleteVodFile.qml"),
+                               {
+                                   name: titleLabel.text,
+                                   count: _c.urlShare.shareCount - 1
+                               })
+                        dialog.accepted.connect(function () {
+                            r.execute("Deleting %1 VOD files".arg(item._c.urlShare.shareCount), function () {
+                                item._cancelDownload()
+                                item._c.urlShare.deleteVodFile()
+                            })
+                        })
+                    } else {
+
+                        item.remorseAction("Deleting VOD file for " + title, function() {
+                            item._cancelDownload()
+                            item._c.urlShare.deleteVodFile()
+                        })
+                    }
                 }
             }
 
             MenuItem {
                 text: "VOD details"
-                visible: _c.urlShare.vodFetchStatus === UrlShare.Available
+                visible: tangibleDownloadProgress
                 onClicked: pageStack.push(
                                Qt.resolvedUrl("VodDetailPage.qml"),
                                {
@@ -568,7 +589,7 @@ ListItem {
 
             MenuItem {
                 text: "Copy VOD file path to clipboard"
-                visible: _c.urlShare.vodFetchStatus === UrlShare.Available
+                visible: tangibleDownloadProgress
                 onClicked: Clipboard.text = _c.urlShare.vodFilePath
             }
 

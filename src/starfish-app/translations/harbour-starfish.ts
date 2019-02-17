@@ -149,7 +149,7 @@
 <context>
     <name>ActiveDownloadPage</name>
     <message>
-        <location filename="../qml/pages/ActiveDownloadPage.qml" line="75"/>
+        <location filename="../qml/pages/ActiveDownloadPage.qml" line="73"/>
         <source>Active downloads</source>
         <translation type="unfinished"></translation>
     </message>
