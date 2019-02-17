@@ -114,7 +114,7 @@ void ScUrlShareItem::reset()
 void
 ScUrlShareItem::onIsOnlineChanged()
 {
-    fetchMetaData();
+    fetchMetaData(false);
     fetchThumbnail();
 }
 
@@ -544,6 +544,12 @@ ScUrlShareItem::fetchThumbnail()
 void
 ScUrlShareItem::fetchMetaData()
 {
+    fetchMetaData(true);
+}
+
+void
+ScUrlShareItem::fetchMetaData(bool download)
+{
     switch (m_MetaDataFetchStatus) {
 //    case Unavailable:
 //        if (manager()->isOnline()) {
@@ -560,7 +566,7 @@ ScUrlShareItem::fetchMetaData()
     case Failed: {
         auto last = m_MetaDataFetchStatus;
         setMetaDataFetchStatus(Fetching);
-        auto result = manager()->fetchMetaData(m_UrlShareId, m_Url, manager()->isOnline());
+        auto result = manager()->fetchMetaData(m_UrlShareId, m_Url, download && manager()->isOnline());
         if (-1 == result) {
             setMetaDataFetchStatus(last);
         }

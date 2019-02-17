@@ -115,10 +115,20 @@ ListItem {
                         cache: false
                         visible: !thumbnailBusyIndicator.visible
                         //_c.urlShare.thumbnailFetchStatus !== UrlShare.Fetching
-                        source: _hadImageLoadError
-                                ? "image://theme/icon-m-reload"
-                                : (_c.urlShare.thumbnailFetchStatus === UrlShare.Available
-                                    ? _c.urlShare.thumbnailFilePath : "image://theme/icon-m-reload")
+                        source: {
+                            if (_hadImageLoadError) {
+                                return "image://theme/icon-m-reload"
+                            }
+
+                            switch (_c.urlShare.thumbnailFetchStatus) {
+                            case UrlShare.Available:
+                                return _c.urlShare.thumbnailFilePath
+                            case UrlShare.Failed:
+                                return "image://theme/icon-m-reload"
+                            case UrlShare.Unavailable:
+                                return "image://theme/icon-m-sailfish"
+                            }
+                        }
 
                         onStatusChanged: {
                             if (Image.Error === status) {
@@ -712,6 +722,8 @@ ListItem {
             _play()
         } else if (_c.urlShare.metaDataFetchStatus === UrlShare.Available) {
             _playStream()
+        } else if (_c.urlShare.metaDataFetchStatus !== UrlShare.Fetching) {
+            _c.urlShare.fetchMetaData()
         }
     }
 

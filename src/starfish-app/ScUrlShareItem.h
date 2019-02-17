@@ -185,6 +185,7 @@ private:
     void setTitle(const QString& value);
     void setFormatIndex(int value);
     void updateFormatIndex();
+    void fetchMetaData(bool download);
 
 private:
     VMVod m_MetaData;
