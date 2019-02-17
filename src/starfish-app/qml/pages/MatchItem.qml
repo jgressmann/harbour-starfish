@@ -125,6 +125,7 @@ ListItem {
                                 return _c.urlShare.thumbnailFilePath
                             case UrlShare.Failed:
                                 return "image://theme/icon-m-reload"
+                            default:
                             case UrlShare.Unavailable:
                                 return "image://theme/icon-m-sailfish"
                             }
