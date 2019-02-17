@@ -110,7 +110,7 @@ public:
         Error_StatFailed,
         Error_NoSpaceLeftOnDevice,
     };
-    Q_ENUMS(Error)
+    Q_ENUM(Error)
 
     enum State {
         State_Initializing,
@@ -118,7 +118,7 @@ public:
         State_Error,
         State_Finalizing
     };
-    Q_ENUMS(State)
+    Q_ENUM(State)
 
 
     enum ClearFlags {
@@ -132,7 +132,7 @@ public:
             CF_Vods |
             CF_Icons
     };
-    Q_ENUMS(ClearFlags)
+    Q_ENUM(ClearFlags)
 
     enum DataDirectoryChangeType {
         DDCT_StatCurrentDir,
@@ -142,7 +142,7 @@ public:
         DDCT_Move,
         DDCT_Finished,
     };
-    Q_ENUMS(DataDirectoryChangeType)
+    Q_ENUM(DataDirectoryChangeType)
 
 public:
     ~ScVodDataManager();
@@ -191,7 +191,7 @@ public: //
     Q_INVOKABLE void clearCache(ClearFlags flags);
     Q_INVOKABLE void moveDataDirectory(const QString& targetDirectory);
     Q_INVOKABLE void cancelMoveDataDirectory();
-    Q_INVOKABLE bool cancelTicket(int ticket);
+    bool cancelTicket(int ticket);
     QString dataDirectory() const;
     int sqlPatchLevel() const;
     inline int maxConcurrentMetaDataDownloads() const { return m_MaxConcurrentMetaDataDownloads; }
@@ -215,31 +215,11 @@ signals:
     void readyChanged();
     void errorChanged();
     void vodsChanged();
-//    void fetchingMetaData(qint64 urlShareId);
-//    void fetchingThumbnail(qint64 urlShareId);
-//    void metaDataAvailable(qint64 urlShareId, VMVod vod);
-//    void metaDataUnavailable(qint64 urlShareId);
-//    void metaDataDownloadFailed(qint64 urlShareId, int error);
-//    void vodAvailable(
-//            qint64 urlShareId,
-//            QString filePath,
-//            qreal progress,
-//            quint64 fileSize,
-//            int width,
-//            int height,
-//            QString formatId);
-//    void vodUnavailable(qint64 urlShareId);
-//    void thumbnailAvailable(qint64 urlShareId, QString filePath);
-//    void thumbnailUnavailable(qint64 urlShareId);
-//    void thumbnailDownloadFailed(qint64 urlShareId, int error, QString url);
     void downloadFailed(QString url, int error, QString filePath);
     void downloadMarkerChanged();
     void busyChanged();
     void vodsToAdd();
     void vodsCleared();
-    void vodmanError(int error);
-//    void vodDownloadFailed(qint64 urlShareId, int error);
-//    void vodDownloadCanceled(qint64 urlShareId);
     void vodsAdded(int count);
     void vodDownloadsChanged();
     void sqlPatchLevelChanged();
@@ -248,9 +228,6 @@ signals:
     void startWorker();
     void stopThread();
     void maxConcurrentMetaDataDownloadsChanged(int value);
-//    void titleAvailable(qint64 urlShareId, QString title);
-//    void seenAvailable(qint64 rowid, qreal seen);
-//    void vodEndAvailable(qint64 rowid, int endOffsetS);
     void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
     void processVodsToAdd();
     void ytdlPathChanged(QString path);
@@ -298,9 +275,7 @@ private slots:
     void onVodDownloadsChanged(ScVodIdList ids);
     void databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);
     void addVodFromQueue();
-    void pruneExpiredMatchItems();
     void onUrlShareItemDestroyed(QObject* obj);
-
     void onFetchingMetaData(qint64 urlShareId);
     void onFetchingThumbnail(qint64 urlShareId);
     void onMetaDataAvailable(qint64 urlShareId, VMVod vod);
@@ -366,6 +341,8 @@ private:
     void setState(State state);
     void setDataDirectory(const QString& value);
     void setDirectories();
+    void pruneExpiredMatchItems();
+
 
     void updateSql1(QSqlQuery& q);
     void updateSql2(QSqlQuery& q);
