@@ -543,7 +543,7 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, int formatIndex)
                 r.refCount = 1;
                 m_VodmanFileRequests.insert(r.token, r);
                 m_Vodman->startFetchFile(r.token, vod, formatIndex, vodFilePath);
-                notifyVodDownloadsChanged(q);
+                notifyVodDownloadsChanged();
             } else {
                 // don't help, will mess up meta data fetch logic
                 emit vodUnavailable(urlShareId);
@@ -690,6 +690,8 @@ void ScVodDataManagerWorker::onFileDownloadCompleted(qint64 token, const VMVodFi
                     download.format().width(),
                     download.format().height(),
                     download.format().id());
+
+        notifyVodDownloadsChanged();
     }
 }
 
@@ -750,7 +752,7 @@ ScVodDataManagerWorker::onDownloadFailed(qint64 token, VMVodEnums::Error service
 
         urlShareId = r.vod_url_share_id;
         metaData = false;
-        notifyVodDownloadsChanged(q);
+        notifyVodDownloadsChanged();
     } else {
         auto it2 = m_VodmanMetaDataRequests.find(token);
         if (it2 != m_VodmanMetaDataRequests.end()) {
@@ -791,6 +793,7 @@ ScVodDataManagerWorker::cancelFetchVod(qint64 urlShareId)
 
     if (canceled) {
         emit vodDownloadCanceled(urlShareId);
+        notifyVodDownloadsChanged();
     }
 }
 
@@ -1069,9 +1072,11 @@ ScVodDataManagerWorker::fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengt
 }
 
 void
-ScVodDataManagerWorker::notifyVodDownloadsChanged(QSqlQuery& q)
+ScVodDataManagerWorker::notifyVodDownloadsChanged()
 {
+    QSqlQuery q(m_Database);
     ScVodIdList downloads;
+    downloads.reserve(m_VodmanFileRequests.size());
 
     auto beg = m_VodmanFileRequests.cbegin();
     auto end = m_VodmanFileRequests.cend();

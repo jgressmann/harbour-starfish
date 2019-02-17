@@ -138,7 +138,7 @@ private:
     void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
     void fetchThumbnailFromUrl(qint64 urlShareId, qint64 thumbnailId, const QString& url);
     void addThumbnail(ThumbnailRequest& r, const QByteArray& bytes);
-    void notifyVodDownloadsChanged(QSqlQuery& q);
+    void notifyVodDownloadsChanged();
 
 private:
     QSharedPointer<ScVodDataManagerState> m_SharedState;

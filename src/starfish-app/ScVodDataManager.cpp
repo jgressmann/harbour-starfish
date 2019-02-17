@@ -495,7 +495,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(m_WorkerInterface, &ScVodDataManagerWorker::thumbnailDownloadFailed, this, &ScVodDataManager::onThumbnailDownloadFailed);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadFailed, this, &ScVodDataManager::onVodDownloadFailed);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadCanceled, this, &ScVodDataManager::onVodDownloadCanceled);
-    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadsChanged, this, &ScVodDataManager::vodDownloadsChanged);
+    connect(m_WorkerInterface, &ScVodDataManagerWorker::vodDownloadsChanged, this, &ScVodDataManager::onVodDownloadsChanged);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::titleAvailable, this, &ScVodDataManager::onTitleAvailable);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::seenAvailable, this, &ScVodDataManager::onSeenAvailable);
     connect(m_WorkerInterface, &ScVodDataManagerWorker::vodEndAvailable, this, &ScVodDataManager::onVodEndAvailable);
