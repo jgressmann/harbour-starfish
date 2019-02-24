@@ -22,6 +22,7 @@ ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
     m_ThumbnailFetchStatus = Unknown;
     m_MetaDataFetchStatus = Unknown;
     m_VodFetchStatus = Unknown;
+    m_ThumbnailIsWaitingForMetaData = false;
 
     connect(parent, &ScVodDataManager::vodsChanged, this, &ScUrlShareItem::reset);
     connect(parent, &ScVodDataManager::ytdlPathChanged, this, &ScUrlShareItem::reset);
@@ -107,15 +108,18 @@ void ScUrlShareItem::reset()
         }
     }
 
-    onIsOnlineChanged();
+    fetchMetaData(false);
+    fetchThumbnail();
 }
 
 
 void
 ScUrlShareItem::onIsOnlineChanged()
 {
-    fetchMetaData(false);
-    fetchThumbnail();
+    if (manager()->isOnline()) {
+        fetchMetaData(m_ThumbnailIsWaitingForMetaData);
+        fetchThumbnail();
+    }
 }
 
 void
@@ -156,6 +160,9 @@ ScUrlShareItem::onMetaDataAvailable(const VMVod& vod)
     default:
         setMetaData(vod);
         setMetaDataFetchStatus(Available);
+        if (m_ThumbnailIsWaitingForMetaData) {
+            fetchThumbnail();
+        }
         break;
     }
 }
@@ -191,7 +198,7 @@ ScUrlShareItem::onMetaDataDownloadFailed(VMVodEnums::Error error)
     case Gone:
         break;
     default:
-        setMetaDataFetchStatus(error == VMVodEnums::VM_ErrorNoVideo ? Gone : Failed);
+        setMetaDataFetchStatus(error == VMVodEnums::VM_ErrorContentGone ? Gone : Failed);
         break;
     }
 }
@@ -199,20 +206,54 @@ ScUrlShareItem::onMetaDataDownloadFailed(VMVodEnums::Error error)
 void
 ScUrlShareItem::onThumbnailAvailable(const QString& filePath)
 {
-    setThumbnailPath(filePath);
-    setThumbnailFetchStatus(Available);
+    switch (m_ThumbnailFetchStatus) {
+    case Gone:
+        break;
+    default:
+        m_ThumbnailIsWaitingForMetaData = false;
+        setThumbnailPath(filePath);
+        setThumbnailFetchStatus(Available);
+        break;
+    }
 }
 
 void
-ScUrlShareItem::onFetchingThumbnail() {
-    setThumbnailFetchStatus(Fetching);
-}
-
-void
-ScUrlShareItem::onThumbnailUnavailable()
+ScUrlShareItem::onFetchingThumbnail()
 {
-    //setThumbnailPath(QString());
-    setThumbnailFetchStatus(Unavailable);
+    switch (m_ThumbnailFetchStatus) {
+    case Gone:
+        break;
+    default:
+        m_ThumbnailIsWaitingForMetaData = false;
+        setThumbnailFetchStatus(Fetching);
+        break;
+    }
+}
+
+void
+ScUrlShareItem::onThumbnailUnavailable(ScVodDataManagerWorker::ThumbnailError error)
+{
+    switch (m_ThumbnailFetchStatus) {
+    case Gone:
+        break;
+    default:
+        switch (error) {
+        case ScVodDataManagerWorker::TE_ContentGone:
+            m_ThumbnailIsWaitingForMetaData = false;
+            setThumbnailFetchStatus(Gone);
+            break;
+        case ScVodDataManagerWorker::TE_MetaDataUnavailable:
+            m_ThumbnailIsWaitingForMetaData = true;
+            setThumbnailFetchStatus(Unavailable);
+            // no/invalid meta data, fetch so we can show the thumbnail
+            fetchMetaData(true);
+            break;
+        default:
+            m_ThumbnailIsWaitingForMetaData = false;
+            setThumbnailFetchStatus(Unavailable);
+            break;
+        }
+    }
 }
 
 void
@@ -220,8 +261,14 @@ ScUrlShareItem::onThumbnailDownloadFailed(int error, const QString& url)
 {
     Q_UNUSED(error);
     Q_UNUSED(url);
-//    setThumbnailPath(QString());
-    setThumbnailFetchStatus(Failed);
+
+    switch (m_ThumbnailFetchStatus) {
+    case Gone:
+        break;
+    default:
+        setThumbnailFetchStatus(Failed);
+        break;
+    }
 }
 
 
@@ -414,7 +461,7 @@ ScUrlShareItem::setMetaData(const VMVod& value)
 
     updateFormatIndex();
 
-    fetchThumbnail();
+//    fetchThumbnail();
 }
 
 void
@@ -631,8 +678,8 @@ ScUrlShareItem::deleteThumbnail()
         break;
     default:
         manager()->deleteThumbnail(m_UrlShareId);
-        setThumbnailPath(QString());
         setThumbnailFetchStatus(Unavailable);
+        m_ThumbnailIsWaitingForMetaData = false;
         break;
     }
 }

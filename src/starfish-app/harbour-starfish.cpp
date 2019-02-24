@@ -81,8 +81,9 @@ main(int argc, char *argv[]) {
         QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
         setupLogging(); // need to have the app paths
 
-        qRegisterMetaType<VMVodEnums::Error>();
-        qRegisterMetaType<VMVodEnums::Format>();
+        qRegisterMetaType<VMVodEnums::Error>("VMVodEnums::Error");
+        qRegisterMetaType<VMVodEnums::Format>("VMVodEnums::Format");
+        qRegisterMetaType<ScVodDataManagerWorker::ThumbnailError>("ScVodDataManagerWorker::ThumbnailError");
 
         qmlRegisterType<ScSqlVodModel>(STARFISH_NAMESPACE, 1, 0, "SqlVodModel");
         qmlRegisterType<ScVodDatabaseDownloader>(STARFISH_NAMESPACE, 1, 0, "VodDatabaseDownloader");

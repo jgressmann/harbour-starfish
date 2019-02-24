@@ -287,12 +287,12 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 urlShareId, bool download)
         if (hasThumbnailFile) {
             emit thumbnailAvailable(urlShareId, thumbNailFilePath);
         } else {
+            auto thumbnailUrl = q.value(1).toString();
             if (download) {
-                auto thumbnailUrl = q.value(1).toString();
                 emit fetchingThumbnail(urlShareId);
                 fetchThumbnailFromUrl(urlShareId, thumbnailId, thumbnailUrl);
             } else {
-                emit thumbnailUnavailable(urlShareId);
+                emit thumbnailUnavailable(urlShareId, TE_Other);
             }
         }
     } else { // thumbnail id not set
@@ -310,7 +310,7 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 urlShareId, bool download)
                     if (vod.isValid()) {
                         auto thumnailUrl = vod.description().thumbnailUrl();
                         if (thumnailUrl.isEmpty()) {
-                            emit thumbnailUnavailable(urlShareId);
+                            emit thumbnailUnavailable(urlShareId, TE_Other);
                             return;
                         }
 
@@ -336,7 +336,7 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 urlShareId, bool download)
                             {
                                 Q_UNUSED(_thumbnailId);
                                 if (error) {
-                                    emit thumbnailUnavailable(urlShareId);
+                                    emit thumbnailUnavailable(urlShareId, TE_Other);
                                 } else {
                                     emit fetchingThumbnail(urlShareId);
                                     fetchThumbnailFromUrl(urlShareId, thumbnailId, thumnailUrl);
@@ -364,6 +364,7 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 urlShareId, bool download)
                                 {
                                     if (error) {
                                         QFile::remove(thumbNailFilePath);
+                                        emit thumbnailUnavailable(urlShareId, TE_Other);
                                     } else {
                                         auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
                                         emit startProcessDatabaseStoreQueue(tid, UpdateSql, { thumbnailId, urlShareId });
@@ -382,24 +383,26 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 urlShareId, bool download)
                         }
                     } else {
                         // read invalid vod, try again
-                        file.close();
-                        file.remove();
-                        emit fetchingMetaData(urlShareId);
-                        fetchMetaData(urlShareId, vodUrl);
+//                        file.close();
+//                        file.remove();
+                        // don't try to help, it will mess up meta data fetch logic
+                        emit thumbnailUnavailable(urlShareId, TE_MetaDataUnavailable);
+//                        emit fetchingMetaData(urlShareId);
+//                        fetchMetaData(urlShareId, vodUrl);
                     }
                 } else {
                     // don't try to help, it will mess up meta data fetch logic
 //                    file.remove();
 //                    emit metaDataUnavailable(urlShareId);
-                    emit thumbnailUnavailable(urlShareId);
+                    emit thumbnailUnavailable(urlShareId, TE_MetaDataUnavailable);
                 }
             } else {
                 // don't try to help, it will mess up meta data fetch logic
 //                emit metaDataUnavailable(urlShareId);
-                emit thumbnailUnavailable(urlShareId);
+                emit thumbnailUnavailable(urlShareId, TE_MetaDataUnavailable);
             }
         } else {
-            emit thumbnailUnavailable(urlShareId);
+            emit thumbnailUnavailable(urlShareId, TE_MetaDataUnavailable);
         }
     }
 }
@@ -868,7 +871,7 @@ ScVodDataManagerWorker::thumbnailRequestFinished(QNetworkReply* reply, Thumbnail
                 // this really shouldn't happen anymore
                 // the code remains here to safeguard against errors
                 // in the program logic
-                emit thumbnailDownloadFailed(r.url_share_id, QNetworkReply::ContentNotFoundError, reply->url().toString());
+                emit thumbnailDownloadFailed(r.url_share_id, reply->error(), reply->url().toString());
             } else {
                 addThumbnail(r, bytes);
             }
@@ -882,7 +885,13 @@ ScVodDataManagerWorker::thumbnailRequestFinished(QNetworkReply* reply, Thumbnail
             m_ThumbnailRequests.insert(m_Manager->get(Sc::makeRequest(newUrl)), r);
         } else  {
             qDebug() << "Http status code:" << v;
+            emit thumbnailDownloadFailed(r.url_share_id, reply->error(), reply->url().toString());
         }
+    } break;
+    case QNetworkReply::ContentNotFoundError:
+    case QNetworkReply::ContentGoneError: {
+        qDebug() << "Network request failed: " << reply->errorString() << reply->url();
+        removeThumbnail(r);
     } break;
     default: {
         qDebug() << "Network request failed: " << reply->errorString() << reply->url();
@@ -940,7 +949,7 @@ ScVodDataManagerWorker::addThumbnail(ThumbnailRequest& r, const QByteArray& byte
     auto mimeData = QMimeDatabase().mimeTypeForData(bytes);
     if (mimeData.isValid() && !mimeData.suffixes().contains(extension)) {
         auto newFileName = thumbnailFileName.left(lastDot) + QStringLiteral(".") + mimeData.preferredSuffix();
-        qDebug() << "changing" << thumbnailFileName << "to" << newFileName;
+        qDebug() << "renaming" << thumbnailFileName << "to" << newFileName;
 
 
         auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
@@ -963,7 +972,7 @@ ScVodDataManagerWorker::addThumbnail(ThumbnailRequest& r, const QByteArray& byte
             file.close();
             // all is well
 
-            qDebug() << "thumbnailAvailable" << r.url_share_id << thumbnailFilePath;
+//            qDebug() << "thumbnailAvailable" << r.url_share_id << thumbnailFilePath;
             emit thumbnailAvailable(r.url_share_id, thumbnailFilePath);
         } else {
             qDebug() << "no space left on device";
@@ -973,6 +982,53 @@ ScVodDataManagerWorker::addThumbnail(ThumbnailRequest& r, const QByteArray& byte
         qDebug() << "failed to open" << thumbnailFilePath << "for writing";
         emit thumbnailDownloadFailed(r.url_share_id, VMVodEnums::VM_ErrorAccess, QString());
     }
+}
+
+
+void
+ScVodDataManagerWorker::removeThumbnail(ThumbnailRequest& r)
+{
+    QSqlQuery q(m_Database);
+
+    if (!q.prepare(QStringLiteral("SELECT file_name FROM vod_thumbnails WHERE id=?"))) {
+        qCritical() << "failed to prepare query" << q.lastError();
+        return;
+    }
+
+    q.addBindValue(r.thumbnail_id);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return;
+    }
+
+    if (!q.next()) {
+        qDebug() << "thumbnail rowid" << r.thumbnail_id << "gone";
+        return;
+    }
+
+    auto thumbnailFileName = q.value(0).toString();
+
+    if (!q.prepare(QStringLiteral("DELETE FROM vod_thumbnails WHERE id=?"))) {
+        qCritical() << "failed to prepare query" << q.lastError();
+        return;
+    }
+
+    q.addBindValue(r.thumbnail_id);
+
+    if (!q.exec()) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return;
+    }
+
+    qDebug() << "removed thumbnail from database" << r.thumbnail_id;
+
+    auto filePath = m_SharedState->m_ThumbnailDir + thumbnailFileName;
+    if (QFile::remove(filePath)) {
+        qDebug() << "removed thumbnail file" << filePath;
+    }
+
+    emit thumbnailUnavailable(r.url_share_id, TE_ContentGone);
 }
 
 void ScVodDataManagerWorker::maxConcurrentMetaDataDownloadsChanged(int value)

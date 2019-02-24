@@ -27,6 +27,7 @@
 #include <QSize>
 
 #include "VMVod.h"
+#include "ScVodDataManagerWorker.h"
 
 
 class ScVodDataManager;
@@ -81,7 +82,6 @@ public:
     qint64 vodFileSize() const { return m_FileSize; }
     int vodFormatIndex() const { return m_FormatIndex; }
     int shareCount() const { return m_ShareCount; }
-    bool isBeingDownloaded() const { return m_isBeingDownloaded; }
     Q_INVOKABLE void fetchVodFile(int formatIndex);
     Q_INVOKABLE void cancelFetchVodFile();
     Q_INVOKABLE void fetchThumbnail();
@@ -104,10 +104,8 @@ signals:
     void thumbnailFetchStatusChanged();
     void vodFetchStatusChanged();
     void vodResolutionChanged();
-//    void formatIdChanged();
     void vodFormatIndexChanged();
     void shareCountChanged();
-    void isBeingDownloadedChanged();
 
 private:
     struct Data
@@ -126,7 +124,7 @@ public:
     void onFetchingMetaData();
     void onMetaDataDownloadFailed(VMVodEnums::Error error);
     void onThumbnailAvailable(const QString& vodFilePath);
-    void onThumbnailUnavailable();
+    void onThumbnailUnavailable(ScVodDataManagerWorker::ThumbnailError error);
     void onFetchingThumbnail();
     void onThumbnailDownloadFailed(int error, const QString& url);
     void onVodAvailable(
@@ -150,24 +148,6 @@ public:
 private slots:
     void reset();
     void onIsOnlineChanged();
-//    void onTitleAvailable(qint64 urlShareId, QString title);
-//    void onMetaDataAvailable(qint64 urlShareId, VMVod vod);
-//    void onMetaDataUnavailable(qint64 urlShareId);
-//    void onFetchingMetaData(qint64 urlShareId);
-//    void onMetaDataDownloadFailed(qint64 urlShareId, int error);
-//    void onThumbnailAvailable(qint64 urlShareId, QString vodFilePath);
-//    void onThumbnailUnavailable(qint64 urlShareId);
-//    void onFetchingThumbnail(qint64 urlShareId);
-//    void onThumbnailFailed(qint64 urlShareId, int error, QString url);
-//    void onVodAvailable(
-//            qint64 urlShareId,
-//            QString vodFilePath,
-//            qreal progress,
-//            quint64 vodFileSize,
-//            int width,
-//            int height,
-//            QString formatId);
-//    void onVodUnavailable(qint64 urlShareId);
 
 private:
     ScVodDataManager* manager() const;
@@ -204,8 +184,7 @@ private:
     FetchStatus m_MetaDataFetchStatus;
     FetchStatus m_ThumbnailFetchStatus;
     FetchStatus m_VodFetchStatus;
-    bool m_seen;
-    bool m_isBeingDownloaded;
+    bool m_ThumbnailIsWaitingForMetaData;
 };
 
 

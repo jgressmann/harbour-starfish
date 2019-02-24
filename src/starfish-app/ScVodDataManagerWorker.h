@@ -46,6 +46,14 @@ public:
     using Task = std::function<void()>;
     using DatabaseCallback = std::function<void(qint64 insertId, bool error)>;
 
+    enum ThumbnailError
+    {
+        TE_MetaDataUnavailable,
+        TE_ContentGone,
+        TE_Other,
+    };
+    Q_ENUM(ThumbnailError)
+
 
 public:
     ~ScVodDataManagerWorker();
@@ -90,7 +98,7 @@ signals:
             int height,
             QString formatId);
     void thumbnailAvailable(qint64 urlShareId, QString filePath);
-    void thumbnailUnavailable(qint64 urlShareId);
+    void thumbnailUnavailable(qint64 urlShareId, ScVodDataManagerWorker::ThumbnailError error);
     void thumbnailDownloadFailed(qint64 urlShareId, int error, QString url);
     void vodDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
     void vodDownloadCanceled(qint64 urlShareId);
@@ -138,6 +146,7 @@ private:
     void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
     void fetchThumbnailFromUrl(qint64 urlShareId, qint64 thumbnailId, const QString& url);
     void addThumbnail(ThumbnailRequest& r, const QByteArray& bytes);
+    void removeThumbnail(ThumbnailRequest& r);
     void notifyVodDownloadsChanged();
 
 private:

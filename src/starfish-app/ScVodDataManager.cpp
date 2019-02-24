@@ -3336,11 +3336,11 @@ ScVodDataManager::onThumbnailAvailable(qint64 urlShareId, QString filePath)
     }
 }
 void
-ScVodDataManager::onThumbnailUnavailable(qint64 urlShareId)
+ScVodDataManager::onThumbnailUnavailable(qint64 urlShareId, ScVodDataManagerWorker::ThumbnailError error)
 {
     auto it = m_UrlShareItems.find(urlShareId);
     if (it != m_UrlShareItems.end()) {
-        it.value().toStrongRef()->onThumbnailUnavailable();
+        it.value().toStrongRef()->onThumbnailUnavailable(error);
     }
 }
 void

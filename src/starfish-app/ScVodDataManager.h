@@ -144,6 +144,7 @@ public:
     };
     Q_ENUM(DataDirectoryChangeType)
 
+
 public:
     ~ScVodDataManager();
     explicit ScVodDataManager(QObject *parent = Q_NULLPTR);
@@ -301,7 +302,7 @@ private slots:
     void onVodDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
     void onVodDownloadCanceled(qint64 urlShareId);
     void onThumbnailAvailable(qint64 urlShareId, QString filePath);
-    void onThumbnailUnavailable(qint64 urlShareId);
+    void onThumbnailUnavailable(qint64 urlShareId, ScVodDataManagerWorker::ThumbnailError error);
     void onThumbnailDownloadFailed(qint64 urlShareId, int error, QString url);
     void onTitleAvailable(qint64 urlShareId, QString title);
     void onSeenAvailable(qint64 rowid, qreal seen);
