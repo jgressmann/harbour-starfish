@@ -3235,6 +3235,7 @@ ScVodDataManager::clearMatchItems(QHash<qint64, MatchItemData*>& h)
     auto beg = h.cbegin();
     auto end = h.cend();
     for (auto it = beg; it != end; ++it) {
+        qDebug() << "delete match item" << it.key();
         it.value()->matchItem()->~ScMatchItem();
         delete it.value();
     }

@@ -290,6 +290,9 @@ ListItem {
                                     }
 
                                     result += rowId
+
+                                    result += ", "
+                                    result += _c.urlShare.urlShareId
                                 }
 
 //                                if (startOffset > 0) {
