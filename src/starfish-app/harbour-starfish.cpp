@@ -26,6 +26,8 @@
 #include <QStandardPaths>
 #include <QMetaObject>
 #include <QQuickItem>
+#include <QQmlEngine>
+#include <QQmlContext>
 #include <QDir>
 #include <qqml.h>
 
