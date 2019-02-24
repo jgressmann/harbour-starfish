@@ -273,24 +273,27 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 urlShareId, bool download)
 
         auto fileName = q.value(0).toString();
         auto thumbNailFilePath = m_SharedState->m_ThumbnailDir + fileName;
-        auto fetch = true;
+        auto hasThumbnailFile = false;
         QFileInfo fi(thumbNailFilePath);
         if (fi.exists()) {
             if (fi.size() > 0) {
-                fetch = false;
-                emit thumbnailAvailable(urlShareId, thumbNailFilePath);
+                hasThumbnailFile = true;
             } else {
                 // keep empty file so that temp file allocation for
                 // other thumbnails doesn't allocate same name multiple times
             }
         }
 
-        if (fetch && download) {
-            auto thumbnailUrl = q.value(1).toString();
-            emit fetchingThumbnail(urlShareId);
-            fetchThumbnailFromUrl(urlShareId, thumbnailId, thumbnailUrl);
-        } else if (!download) {
-            emit thumbnailUnavailable(urlShareId);
+        if (hasThumbnailFile) {
+            emit thumbnailAvailable(urlShareId, thumbNailFilePath);
+        } else {
+            if (download) {
+                auto thumbnailUrl = q.value(1).toString();
+                emit fetchingThumbnail(urlShareId);
+                fetchThumbnailFromUrl(urlShareId, thumbnailId, thumbnailUrl);
+            } else {
+                emit thumbnailUnavailable(urlShareId);
+            }
         }
     } else { // thumbnail id not set
         if (download) {
