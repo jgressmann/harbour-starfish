@@ -12,6 +12,11 @@
             "extension": ".png"
         },
         {
+            "regex": "^afreeca\\s*tv",
+            "url": "https://www.dropbox.com/s/9fcomyl3kwjtx61/afreecatv.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "afreeca world invitational",
             "url": "https://www.dropbox.com/s/mh1pw1xm6vb5bit/awi.jpeg?dl=1",
             "extension": ".jpeg"
@@ -76,6 +81,11 @@
             "regex": "day9|day\\[9\\]",
             "url": "https://www.dropbox.com/s/tfg6hzm4dy9xhj6/day9.png?dl=1",
             "extension": ".png"
+        },
+        {
+            "regex": "deepmind",
+            "url": "https://www.dropbox.com/s/efss8ze6fbvxmha/deepmind.jpg?dl=1",
+            "extension": ".jpg"
         },
         {
             "regex": "eschamp",
@@ -335,6 +345,11 @@
         {
             "regex": "ting",
             "url": "https://www.dropbox.com/s/hqewdtgo3gngbf1/ting.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "twitch rivals",
+            "url": "https://www.dropbox.com/s/1yefklxooqu4agx/tr.png?dl=1",
             "extension": ".png"
         },
         {
