@@ -379,11 +379,11 @@ Page {
                     console.debug("control panel open=" + open)
                     //positionSlider.value = Math.max(0, mediaplayer.position)
 
-                    // Grab frame when closing again, better to have it than
-                    // to miss it :D
-                    if (_hasSource && mediaplayer.status === MediaPlayer.Buffered) {
-                        _grabFrame()
-                    }
+//                    // Grab frame when closing again, better to have it than
+//                    // to miss it :D
+//                    if (_hasSource && mediaplayer.status === MediaPlayer.Buffered) {
+//                        _grabFrame()
+//                    }
                 }
 
                 Column {
@@ -612,6 +612,11 @@ Page {
         switch (status) {
         case PageStatus.Deactivating: {
             console.debug("page status=deactivating")
+            // moved here from panel open/close, seems to be less disruptive to
+            // user experience
+            if (_hasSource && mediaplayer.status === MediaPlayer.Buffered) {
+                _grabFrame()
+            }
             //pause()
         } break
         case PageStatus.Activating:
