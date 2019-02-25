@@ -766,7 +766,7 @@ ListItem {
             })
         } else {
             var formatIndex = _findBestFormat(vod, format)
-            _vodUrl = vod.format(index).fileUrl
+            _vodUrl = vod.format(formatIndex).fileUrl
             _play()
         }
     }
