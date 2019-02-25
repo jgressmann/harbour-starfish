@@ -548,6 +548,18 @@ Page {
                                 source: ((mediaplayer.source || "") + "").indexOf("file://") === 0 ? "image://theme/icon-s-like" : "image://theme/icon-s-cloud-download"
                             }
                         }
+
+                        Row {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: leftMargin2.right
+
+                            Label {
+                                visible: videoOutput.sourceRect.width > 0 && videoOutput.sourceRect.height > 0
+                                text: videoOutput.sourceRect.width + "x" + videoOutput.sourceRect.height
+                                font.pixelSize: Theme.fontSizeExtraSmall
+                                color: Theme.highlightColor
+                            }
+                        }
                     }
                 }
             }
