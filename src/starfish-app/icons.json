@@ -2,6 +2,11 @@
     "version": 1,
     "event": [
         {
+            "regex": "^acer",
+            "url": "https://www.dropbox.com/s/u1yik7yeavwscr3/acer.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "alienware",
             "url": "https://www.dropbox.com/s/yn80hqnlxbbwk8h/alienware.jpg?dl=1",
             "extension": ".jpg"
@@ -35,6 +40,11 @@
             "regex": "beasty",
             "url": "https://www.dropbox.com/s/vqrxsszvtem0fm8/beastyqtsc2.jpg?dl=1",
             "extension": ".jpg"
+        },
+        {
+            "regex": "^benq",
+            "url": "https://www.dropbox.com/s/wfsa5mr6qkl0wq2/benq.png?dl=1",
+            "extension": ".png"
         },
         {
             "regex": "blizz?con|blizzard",
@@ -88,8 +98,18 @@
             "extension": ".jpg"
         },
         {
+            "regex": "^dignitas",
+            "url": "https://www.dropbox.com/s/nkt4lr987nb04ko/dignitas.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "eschamp",
             "url": "https://www.dropbox.com/s/i5qs80rdvbyivg7/eschamp.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^eset",
+            "url": "https://www.dropbox.com/s/xqrnw80mw1h8avq/eset.png?dl=1",
             "extension": ".png"
         },
         {
@@ -98,8 +118,13 @@
             "extension": ".png"
         },
         {
-            "regex": "^eg |evil geniuses",
+            "regex": "^eg |evil geniuses|most evil genius",
             "url": "https://www.dropbox.com/s/8eqogownh96nqgk/eg.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^eps",
+            "url": "https://www.dropbox.com/s/n9m56qr0l3uqh8i/eps.png?dl=1",
             "extension": ".png"
         },
         {
@@ -113,8 +138,18 @@
             "extension": ".jpg"
         },
         {
+            "regex": "^fxopen",
+            "url": "https://www.dropbox.com/s/3sn4el7c420353n/fxopen.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "gfinity",
             "url": "https://www.dropbox.com/s/sutnuet5trlxx70/gfinity.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^gigabyte",
+            "url": "https://www.dropbox.com/s/zrad178fr6qaa7e/gigabyte.png?dl=1",
             "extension": ".png"
         },
         {
@@ -148,7 +183,17 @@
             "extension": ".png"
         },
         {
-            "regex": "iem",
+            "regex": "^hyperx|^hyper x|^kingston hyper",
+            "url": "https://www.dropbox.com/s/d6xmaxmteq5nagd/khx.jpeg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "iccup",
+            "url": "https://www.dropbox.com/s/p2kl9mhipm2gxmz/iccup.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "iem|intel extreme masters",
             "url": "https://www.dropbox.com/s/b1ptynou2krqwt3/iem.png?dl=1",
             "extension": ".png"
         },
@@ -158,7 +203,12 @@
             "extension": ".jpg"
         },
         {
-            "regex": "ipl|iptl|ipsl|ign pro league|ip team league",
+            "regex": "^intel$",
+            "url": "https://www.dropbox.com/s/d85s0i9ftaws28h/intel.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^ipl|^iptl|^ipsl|ign pro league|ip team league",
             "url": "https://www.dropbox.com/s/39s85luc0p8dbti/ipl.png?dl=1",
             "extension": ".png"
         },
@@ -168,8 +218,18 @@
             "extension": ".png"
         },
         {
+            "regex": "iron lady",
+            "url": "https://www.dropbox.com/s/dt44ysygee89pj8/ironlady.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "iron squid",
             "url": "https://www.dropbox.com/s/iiojidrwaxkasrz/ironsquid.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^kaspersky",
+            "url": "https://www.dropbox.com/s/x67l14kavj0i8f0/kaspersky.png?dl=1",
             "extension": ".png"
         },
         {
@@ -223,12 +283,17 @@
             "extension": ".png"
         },
         {
-            "regex": "nasl|north american starleague",
+            "regex": "^msi",
+            "url": "https://www.dropbox.com/s/0ma6a48c6itfi0y/msi.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "nasl|nastl|north american starleague",
             "url": "https://www.dropbox.com/s/ghe3hfyd7zpeg2q/nasl.jpg?dl=1",
             "extension": ".jpg"
         },
         {
-            "regex": "nation wars|nationwars",
+            "regex": "nation wars?|nationwars",
             "url": "https://www.dropbox.com/s/pkn46lj53b5vp0o/nw.jpeg?dl=1",
             "extension": ".jpg"
         },
@@ -248,6 +313,11 @@
             "extension": ".png"
         },
         {
+            "regex": "^playhem",
+            "url": "https://www.dropbox.com/s/k07rglv0kdwsxf2/playhem.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "pig",
             "url": "https://www.dropbox.com/s/s20i7hfulpk1lo0/pig.jpg?dl=1",
             "extension": ".jpg"
@@ -263,7 +333,7 @@
             "extension": ".png"
         },
         {
-            "regex": "psistorm",
+            "regex": "psistorm|psi storm tournament",
             "url": "https://www.dropbox.com/s/lgzwotl34qg4c0r/psistormgaming.png?dl=1",
             "extension": ".png"
         },
@@ -275,6 +345,11 @@
         {
             "regex": "qlash",
             "url": "https://www.dropbox.com/s/iiap1ys96bdtfnl/qlash.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^razer |gosucup razer",
+            "url": "https://www.dropbox.com/s/b563pg5zijxade5/razer.png?dl=1",
             "extension": ".png"
         },
         {
@@ -290,6 +365,12 @@
         {
             "regex": "^root | root ",
             "url": "https://www.dropbox.com/s/6nj4z6rk1e6govu/root.png?dl=1",
+            "extension": ".png"
+        },
+
+        {
+            "regex": "^sc2casts",
+            "url": "https://www.dropbox.com/s/0vy1lsykc0vjpsw/sc2casts.png?dl=1",
             "extension": ".png"
         },
         {
@@ -328,7 +409,7 @@
             "extension": ".png"
         },
         {
-            "regex": "teamliquid|team liquid|^tl |^tsl |tlownage",
+            "regex": "teamliquid|team liquid|^tl |^tsl |^tsl$|tlownage",
             "url": "https://www.dropbox.com/s/z0n61ss3syrwk15/tl.png?dl=1",
             "extension": ".png"
         },
@@ -350,6 +431,11 @@
         {
             "regex": "twitch rivals",
             "url": "https://www.dropbox.com/s/1yefklxooqu4agx/tr.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^twitch.tv|^justin.tv",
+            "url": "https://www.dropbox.com/s/uttdv29ljb169vn/twitchtv.png?dl=1",
             "extension": ".png"
         },
         {
@@ -376,6 +462,11 @@
             "regex": "winterstarcraft",
             "url": "https://www.dropbox.com/s/4ocz2nkr54d83p5/winter.jpeg?dl=1",
             "extension": ".jpg"
+        },
+        {
+            "regex": "^xmg",
+            "url": "https://www.dropbox.com/s/gfj8b6t8gttpkr9/xmg.png?dl=1",
+            "extension": ".png"
         },
         {
             "regex": "zotac",
