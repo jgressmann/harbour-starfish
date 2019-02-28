@@ -32,7 +32,7 @@
             "extension": ".jpg"
         },
         {
-            "regex": "basetrade|bstl|btsl",
+            "regex": "basetrade|bstl|btsl|bttv",
             "url": "https://www.dropbox.com/s/k90yhh5cp74b4ub/bttv.png?dl=1",
             "extension": ".png"
         },
@@ -178,9 +178,19 @@
             "extension": ".png"
         },
         {
+            "regex": "hell it'?s aboot time",
+            "url": "https://www.dropbox.com/s/ix80f1hc31e42ev/hiat.jpeg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "hsc|homestory cup|home story cup",
             "url": "https://www.dropbox.com/s/upb0a78gw5dx02s/hsc.png?dl=1",
             "extension": ".png"
+        },
+        {
+            "regex": "^hot6",
+            "url": "https://www.dropbox.com/s/qpuxpxtvvsyy1va/hot6.jpg?dl=1",
+            "extension": ".jpg"
         },
         {
             "regex": "^hyperx|^hyper x|^kingston hyper",
@@ -225,6 +235,11 @@
         {
             "regex": "iron squid",
             "url": "https://www.dropbox.com/s/iiojidrwaxkasrz/ironsquid.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^jord|wood you watch this",
+            "url": "https://www.dropbox.com/s/eq8titjdgp2vpva/jord.png?dl=1",
             "extension": ".png"
         },
         {
@@ -273,6 +288,11 @@
             "extension": ".png"
         },
         {
+            "regex": "^matcherino",
+            "url": "https://www.dropbox.com/s/8gh9f442j2btlfa/matcherino.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "mlg|major league gaming",
             "url": "https://www.dropbox.com/s/36j7pjy1v1qmqam/mlg.png?dl=1",
             "extension": ".png"
@@ -308,8 +328,19 @@
             "extension": ".jpg"
         },
         {
+            "regex": "nordic championship",
+            "url": "https://www.dropbox.com/s/b8jqfdot17xnk4m/nc.png?dl=1",
+            "extension": ".png"
+        },
+
+        {
             "regex": "olimoleague",
             "url": "https://www.dropbox.com/s/4aha3rht1jpc3ju/olimoleague.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^osc",
+            "url": "https://www.dropbox.com/s/lwkwplcobb29mrn/osc.png?dl=1",
             "extension": ".png"
         },
         {
@@ -367,11 +398,15 @@
             "url": "https://www.dropbox.com/s/6nj4z6rk1e6govu/root.png?dl=1",
             "extension": ".png"
         },
-
         {
             "regex": "^sc2casts",
             "url": "https://www.dropbox.com/s/0vy1lsykc0vjpsw/sc2casts.png?dl=1",
             "extension": ".png"
+        },
+        {
+            "regex": "^sgl cup",
+            "url": "https://www.dropbox.com/s/3dsabur3u2p62hc/sgl.jpeg?dl=1",
+            "extension": ".jpg"
         },
         {
             "regex": "shoutcraft kings",
@@ -429,6 +464,11 @@
             "extension": ".png"
         },
         {
+            "regex": "^topdogs|international top ?dogs",
+            "url": "https://www.dropbox.com/s/ykron2sogbsd1ll/topdogs.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "twitch rivals",
             "url": "https://www.dropbox.com/s/1yefklxooqu4agx/tr.png?dl=1",
             "extension": ".png"
@@ -436,6 +476,11 @@
         {
             "regex": "^twitch.tv|^justin.tv",
             "url": "https://www.dropbox.com/s/uttdv29ljb169vn/twitchtv.png?dl=1",
+            "extension": ".png"
+        },
+        {
+            "regex": "^vsl",
+            "url": "https://www.dropbox.com/s/t62t801r69639fj/vsl.png?dl=1",
             "extension": ".png"
         },
         {
