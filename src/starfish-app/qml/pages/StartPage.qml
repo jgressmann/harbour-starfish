@@ -28,6 +28,7 @@ import ".."
 
 Page {
     id: page
+    property real completed: -1
 
     readonly property int vodCount: _vodCount
     property int _vodCount: 0
@@ -59,6 +60,10 @@ Page {
             reload()
             _vodCount = data(index(0, 0), 0)
         }
+    }
+
+    Component.onCompleted: {
+        completed = new Date().getTime()
     }
 
     SilicaFlickable {
@@ -98,18 +103,8 @@ Page {
         if (PageStatus.Active === status &&
                 VodDataManager.ready &&
                 vodCount > 0) {
-//            pageStack.replace(
-//                Qt.resolvedUrl("FilterPage.qml"),
-//                {
-//                    title: qsTr("Game"),
-//                    filters: {},
-//                    key: "game",
-//                    grid: true,
-//                })
-//            pageStack.replace(
-//                Qt.resolvedUrl("NewPage.qml"))
-            pageStack.replace(
-                        Qt.resolvedUrl("EntryPage.qml"))
+            var secondsElapsed = (new Date().getTime() - completed) / 1000
+            pageStack.replace(Qt.resolvedUrl("EntryPage.qml"), null, secondsElapsed < 1 ? PageStackAction.Immediate : PageStackAction.Animated)
         }
     }
 }
