@@ -89,13 +89,17 @@ bool ScUrlShareItem::fetch(Data* data) const
 
 void ScUrlShareItem::reset()
 {
+    updateUrlShareData(); // in case meta data isn't available was previously
+    fetchMetaData(false);
+    fetchThumbnail();
+}
+
+void
+ScUrlShareItem::updateUrlShareData()
+{
     Data data;
     if (fetch(&data)) {
         setTitle(data.title);
-        if (m_Title != data.title) {
-            m_Title = data.title;
-            emit titleChanged();
-        }
 
         if (m_Length != data.length) {
             m_Length = data.length;
@@ -107,11 +111,7 @@ void ScUrlShareItem::reset()
             emit shareCountChanged();
         }
     }
-
-    fetchMetaData(false);
-    fetchThumbnail();
 }
-
 
 void
 ScUrlShareItem::onIsOnlineChanged()
@@ -160,6 +160,7 @@ ScUrlShareItem::onMetaDataAvailable(const VMVod& vod)
     default:
         setMetaData(vod);
         setMetaDataFetchStatus(Available);
+        updateUrlShareData(); // now that meta data is available try again for title, length, ...
         if (m_ThumbnailIsWaitingForMetaData) {
             fetchThumbnail();
         }

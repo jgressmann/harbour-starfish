@@ -166,6 +166,7 @@ private:
     void setFormatIndex(int value);
     void updateFormatIndex();
     void fetchMetaData(bool download);
+    void updateUrlShareData();
 
 private:
     VMVod m_MetaData;
