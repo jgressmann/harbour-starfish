@@ -130,6 +130,8 @@ Page {
                         "and StarCraft II VODs from the internet."
                     wrapMode: Text.WordWrap
                     font.pixelSize: Theme.fontSizeSmall
+                    color: Theme.secondaryHighlightColor
+                    linkColor: Theme.secondaryColor
                 }
 
                 SectionHeader {
@@ -148,6 +150,8 @@ Page {
                         <a href=\"https://www.flaticon.com/authors/freepik\">Freepik</a>, and <a href=\"https://www.flaticon.com/authors/smashicons\">Smashicons</a>."
                     wrapMode: Text.WordWrap
                     font.pixelSize: Theme.fontSizeSmall
+                    color: Theme.secondaryHighlightColor
+                    linkColor: Theme.secondaryColor
                 }
 
                 SectionHeader {
@@ -162,6 +166,9 @@ Page {
     "
                     wrapMode: Text.WordWrap
                     font.pixelSize: Theme.fontSizeSmall
+                    color: Theme.secondaryHighlightColor
+                    linkColor: Theme.secondaryColor
+                    Component.onCompleted: console.debug(text)
                 }
 
                 SectionHeader {
