@@ -96,31 +96,73 @@
         <source>Click the button below to try again</source>
         <translation>Click the button below to try again</translation>
     </message>
+    <message id="about-page-header">
+        <location filename="../qml/pages/AboutPage.qml" line="45"/>
+        <source>About %1</source>
+        <translation>About %1</translation>
+    </message>
+    <message id="about-version-text">
+        <location filename="../qml/pages/AboutPage.qml" line="96"/>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message id="about-description-header">
+        <location filename="../qml/pages/AboutPage.qml" line="123"/>
+        <source>Description</source>
+        <translation>Description</translation>
+    </message>
+    <message id="about-description-text">
+        <location filename="../qml/pages/AboutPage.qml" line="130"/>
+        <source>%1 lets you download and stream StarCraft Brood War and StarCraft II VODs from the internet.</source>
+        <translation>%1 lets you download and stream StarCraft Brood War and StarCraft II VODs from the internet.</translation>
+    </message>
+    <message id="about-licensing-header">
+        <location filename="../qml/pages/AboutPage.qml" line="138"/>
+        <source>Licensing</source>
+        <translation>Licensing</translation>
+    </message>
+    <message id="about-licensing-text">
+        <location filename="../qml/pages/AboutPage.qml" line="146"/>
+        <source>Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 is available under the &lt;a href=&apos;https://opensource.org/licenses/MIT&apos;&gt;MIT&lt;/a&gt; license.&lt;br/&gt;&lt;br/&gt;This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I&apos;ll remove the offending data.&lt;br/&gt;&lt;br/&gt;%1 uses icons downloaded from &lt;a href=&apos;https://www.flaticon.com&apos;&gt;flaticon&lt;/a&gt; created by &lt;a href=&apos;https://www.flaticon.com/authors/gregor-cresnar&apos;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&apos;https://www.flaticon.com/authors/freepik&apos;&gt;Freepik&lt;/a&gt;, and &lt;a href=&apos;https://www.flaticon.com/authors/smashicons&apos;&gt;Smashicons&lt;/a&gt;.</source>
+        <oldsource>Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 is available under the &lt;a href=&apos;https://opensource.org/licenses/MIT&apos;&gt;MIT&lt;/a&gt; license.&lt;br/&gt;&lt;br/&gt;This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I&apos;ll remove the offending data.&lt;br/&gt;&lt;br/&gt;%1 uses icons downloaded from &lt;a href=&apos;https://www.flaticon.com&apos;&gt;flaticon&lt;/a&gt; created by &lt;a href=&apos;https://www.flaticon.com/authors/gregor-cresnar&apos;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&apos;https://www.flaticon.com/authors/freepik&apos;&gt;Freepik&lt;/a&gt;, and &lt;a href=&apos;https://www.flaticon.com/authors/smashicons</oldsource>
+        <translation type="unfinished">Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 is available under the &lt;a href=&quot;https://opensource.org/licenses/MIT&quot;&gt;MIT&lt;/a&gt; license.&lt;br/&gt;&lt;br/&gt;This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I&apos;ll remove the offending data.&lt;br/&gt;&lt;br/&gt;%1 uses icons downloaded from &lt;a href=&quot;https://www.flaticon.com&quot;&gt;flaticon&lt;/a&gt; created by &lt;a href=&quot;https://www.flaticon.com/authors/gregor-cresnar&quot;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&quot;https://www.flaticon.com/authors/freepik&quot;&gt;Freepik&lt;/a&gt;, and &lt;a href=&quot;https://www.flaticon.com/authors/smashicons&quot;&gt;Smashicons&lt;/a&gt;.</translation>
+    </message>
+    <message id="about-sources-header">
+        <location filename="../qml/pages/AboutPage.qml" line="154"/>
+        <source>Sources</source>
+        <translation>Sources</translation>
+    </message>
+    <message id="about-sources-text">
+        <location filename="../qml/pages/AboutPage.qml" line="161"/>
+        <source>The sources are available on &lt;a href=&apos;https://github.com/jgressmann/harbour-starfish&apos;&gt;GitHub&lt;/a&gt;.</source>
+        <oldsource>The sources are available on &lt;a href=&quot;https://github.com/jgressmann/harbour-starfish&quot;&gt;GitHub&lt;/a&gt;.</oldsource>
+        <translation>The sources are available on &lt;a href=&quot;https://github.com/jgressmann/harbour-starfish&quot;&gt;GitHub&lt;/a&gt;.</translation>
+    </message>
     <message id="about-translations-header">
-        <location filename="../qml/pages/AboutPage.qml" line="169"/>
+        <location filename="../qml/pages/AboutPage.qml" line="170"/>
         <source>Translations</source>
         <translation>Translations</translation>
     </message>
     <message id="about-translations-english-label">
-        <location filename="../qml/pages/AboutPage.qml" line="179"/>
+        <location filename="../qml/pages/AboutPage.qml" line="180"/>
         <source>English</source>
         <oldsource>names of translators</oldsource>
         <translation>English</translation>
     </message>
     <message id="about-translations-english-value">
-        <location filename="../qml/pages/AboutPage.qml" line="181"/>
+        <location filename="../qml/pages/AboutPage.qml" line="182"/>
         <source>names of translators</source>
         <oldsource>English</oldsource>
         <translation>Jean Gressmann</translation>
     </message>
     <message id="about-translations-german-label">
-        <location filename="../qml/pages/AboutPage.qml" line="186"/>
+        <location filename="../qml/pages/AboutPage.qml" line="187"/>
         <source>German</source>
         <oldsource>names of translators</oldsource>
         <translation>German</translation>
     </message>
     <message id="about-translations-german-value">
-        <location filename="../qml/pages/AboutPage.qml" line="188"/>
+        <location filename="../qml/pages/AboutPage.qml" line="189"/>
         <source>names of translators</source>
         <oldsource>German</oldsource>
         <translation>Jean Gressmann</translation>
@@ -128,22 +170,22 @@
     <message id="tools-ytdl-downloading">
         <location filename="../qml/pages/ToolsPage.qml" line="206"/>
         <source>youtube-dl is being downloaded</source>
-        <translation type="unfinished">youtube-dl is being downloaded</translation>
+        <translation>youtube-dl is being downloaded</translation>
     </message>
     <message id="tools-ytdl-unavailable">
         <location filename="../qml/pages/ToolsPage.qml" line="210"/>
         <source>youtube-dl is not available</source>
-        <translation type="unfinished"></translation>
+        <translation>youtube-dl is not available</translation>
     </message>
     <message id="tools-ytdl-version">
         <location filename="../qml/pages/ToolsPage.qml" line="213"/>
         <source>youtube-dl version %1</source>
-        <translation type="unfinished"></translation>
+        <translation>youtube-dl version %1</translation>
     </message>
     <message id="tools-ytdl-update">
         <location filename="../qml/pages/ToolsPage.qml" line="225"/>
         <source>Update youtube-dl</source>
-        <translation type="unfinished"></translation>
+        <translation>Update youtube-dl</translation>
     </message>
 </context>
 <context>

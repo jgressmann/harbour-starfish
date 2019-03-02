@@ -42,7 +42,7 @@ Page {
 
             PageHeader {
                 //% "About %1"
-                title: "About " + App.displayName
+                title: qsTrId("about-page-header").arg(App.displayName)
             }
 
             Column {
@@ -92,7 +92,8 @@ Page {
 
 
                     Label {
-                        text: App.displayName + " " + App.version
+                        //% "%1 %2"
+                        text: qsTrId("about-version-text").arg(App.displayName).arg(App.version)
                         anchors.horizontalCenter: parent.horizontalCenter
                         font.pixelSize: Theme.fontSizeLarge
                         color: Theme.highlightColor
@@ -118,57 +119,50 @@ Page {
                 }
 
                 SectionHeader {
-                    text: "Description"
+                    //% "Description"
+                    text: qsTrId("about-description-header")
                 }
 
                 LinkedLabel {
                     x: Theme.horizontalPageMargin
                     width: parent.width - 2*x
-
-                    text:
-                        App.displayName + " lets you download and stream StarCraft Brood War " +
-                        "and StarCraft II VODs from the internet."
-                    wrapMode: Text.WordWrap
+                    //% "%1 lets you download and stream StarCraft Brood War and StarCraft II VODs from the internet."
+                    text: qsTrId("about-description-text").arg(App.displayName)
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.secondaryHighlightColor
                     linkColor: Theme.secondaryColor
                 }
 
                 SectionHeader {
-                    text: "Licensing"
+                    //% "Licensing"
+                    text: qsTrId("about-licensing-header")
                 }
 
                 LinkedLabel {
                     x: Theme.horizontalPageMargin
                     width: parent.width - 2*x
 
-                    text: "Copyright (c) 2018, 2019 Jean Gressmann.<br/><br/>" +
-    App.displayName  + " is available under the <a href=\"https://opensource.org/licenses/MIT\">MIT</a> license.<br/><br/>" +
-                    "This application uses StarCraft (tm) related media from various sites on the internet.
-                        Should you feel you rights have been infringed please contact me and I'll remove the offending data.<br/><br/>" +
-                    App.displayName + " uses icons downloaded from <a href=\"https://www.flaticon.com\">flaticon</a> created by <a href=\"https://www.flaticon.com/authors/gregor-cresnar\">Gregor Cresnar</a>,
-                        <a href=\"https://www.flaticon.com/authors/freepik\">Freepik</a>, and <a href=\"https://www.flaticon.com/authors/smashicons\">Smashicons</a>."
-                    wrapMode: Text.WordWrap
+                    //% "Copyright (c) 2018, 2019 Jean Gressmann.<br/><br/>%1 is available under the <a href='https://opensource.org/licenses/MIT'>MIT</a> license.<br/><br/>This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I'll remove the offending data.<br/><br/>%1 uses icons downloaded from <a href='https://www.flaticon.com'>flaticon</a> created by <a href='https://www.flaticon.com/authors/gregor-cresnar'>Gregor Cresnar</a>, <a href='https://www.flaticon.com/authors/freepik'>Freepik</a>, and <a href='https://www.flaticon.com/authors/smashicons'>Smashicons</a>."
+                    text: qsTrId("about-licensing-text").arg(App.displayName)
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.secondaryHighlightColor
                     linkColor: Theme.secondaryColor
                 }
 
                 SectionHeader {
-                    text: "Sources"
+                    //% "Sources"
+                    text: qsTrId("about-sources-header")
                 }
 
                 LinkedLabel {
                     x: Theme.horizontalPageMargin
                     width: parent.width - 2*x
-
-                    text: "The sources are available on <a href=\"https://github.com/jgressmann/harbour-starfish\">GitHub</a>.
-    "
-                    wrapMode: Text.WordWrap
+                    //% "The sources are available on <a href='https://github.com/jgressmann/harbour-starfish'>GitHub</a>."
+                    text: qsTrId("about-sources-text")
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.secondaryHighlightColor
                     linkColor: Theme.secondaryColor
-                    Component.onCompleted: console.debug(text)
+//                    Component.onCompleted: console.debug(text)
                 }
 
                 SectionHeader {
