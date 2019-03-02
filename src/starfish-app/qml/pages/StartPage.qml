@@ -52,8 +52,12 @@ Page {
         }
 
         Component.onCompleted: {
-            VodDataManager.vodsChanged.connect(reload)
+            VodDataManager.vodsChanged.connect(update)
             update()
+        }
+
+        Component.onDestruction: {
+            VodDataManager.vodsChanged.disconnect(update)
         }
 
         function update() {

@@ -85,6 +85,10 @@ You can cancel the move at any time using the button below."
 //        VodDataManager.moveDataDirectory(targetDirectory)
     }
 
+    Component.onDestruction: {
+        VodDataManager.dataDirectoryChanging.disconnect(dataDirectoryChanging)
+    }
+
     function dataDirectoryChanging(changeType, path, progress, error, errorDescription) {
         console.debug("change type=" + changeType + ", path=" + path + ", progress=" + progress
                       + ", error=" + error + ", error desc=" + errorDescription)

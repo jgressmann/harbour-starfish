@@ -40,6 +40,10 @@ CoverBackground {
         Component.onCompleted: {
             VodDataManager.vodsChanged.connect(reload)
         }
+
+        Component.onDestruction: {
+            VodDataManager.vodsChanged.disconnect(reload)
+        }
     }
 
     Image {
