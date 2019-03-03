@@ -195,7 +195,7 @@ BasePage {
                                 key: "game",
                                 grid: true,
                                 //% "Offline"
-                                breadCrumbs: [qsTrId("entry-page-offline-available")]
+                                breadCrumbs: [qsTrId("entry-page-offline-breadcrump")]
                             })
             }
 
@@ -246,7 +246,8 @@ BasePage {
 
             menu: ContextMenu {
                 MenuItem {
-                    text: "Clear"
+                    //% "Clear"
+                    text: qsTrId("entry-page-clear-recently-watched-videos")
                     onClicked: recentlyWatchedVideosItem.remorseAction(
                                    //% "Clearing recently watched videos"
                                    qsTrId("entry-page-clearing-recently-watched-videos"),

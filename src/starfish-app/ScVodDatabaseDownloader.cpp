@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -86,7 +86,8 @@ void ScVodDatabaseDownloader::_downloadNew()
     auto marker = m_DataManager->downloadMarker();
 
     if (m_YearMin == -1) {
-        setProgressDescription(QStringLiteral("Fetching database metadata"));
+        //% "Fetching database metadata"
+        setProgressDescription(qtTrId("ScVodDatabaseDownloader-fetching-database-metadata"));
         auto url = QStringLiteral("https://www.dropbox.com/s/kahfxt2qqpve424/database.json?dl=1");
         m_Reply = m_NetworkAccessManager.get(Sc::makeRequest(url));
         m_DownloadState = DS_FetchingMetaData;
@@ -113,7 +114,8 @@ void ScVodDatabaseDownloader::_downloadNew()
             setProgress(0);
             m_TargetMarker = QDate(year+1, 1, 1);
         } else {
-            setProgressDescription(QStringLiteral("Fetching new VODs"));
+            //% "Fetching new VODs"
+            setProgressDescription(qtTrId("ScVodDatabaseDownloader-fetching-new-vods"));
             m_TargetMarker = QDate();
             m_LimitMarker = marker;
         }
@@ -587,11 +589,13 @@ ScVodDatabaseDownloader::updateProgressDescription() {
         switch (m_DownloadState) {
         case DS_FetchingMetaData:
             setProgressIndeterminate(true);
-            setProgressDescription(QStringLiteral("Fetching meta data"));
+            //% "Fetching meta data"
+            setProgressDescription(qtTrId("ScVodDatabaseDownloader-fetching-meta-data"));
             break;
         case DS_FetchingDatabases:
             setProgressIndeterminate(true);
-            setProgressDescription(QString::asprintf("Fetching VODs for %d", m_TargetMarker.year()-1));
+            //% "Fetching VODs for %1"
+            setProgressDescription(qtTrId("ScVodDatabaseDownloader-fetching-year").arg(m_TargetMarker.year()-1));
             break;
         case DS_Scraping:
             setProgressIndeterminate(false);
@@ -600,7 +604,8 @@ ScVodDatabaseDownloader::updateProgressDescription() {
             break;
         case DS_Canceling:
             setProgressIndeterminate(true);
-            setProgressDescription(QStringLiteral("Adding VODs"));
+            //% "Adding VODs"
+            setProgressDescription(qtTrId("ScVodDatabaseDownloader-adding-vods"));
             break;
         default:
             setProgressIndeterminate(true);

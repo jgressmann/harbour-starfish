@@ -43,12 +43,14 @@ BasePage {
             spacing: Theme.paddingLarge
 
             SectionHeader {
-                text: "Fetch"
+                //% "Fetch"
+                text: qsTrId("tools-page-fetch-section-header")
             }
 
             TextField {
                 width: parent.width
-                label: "VOD fetch marker"
+                //% "VOD fetch marker"
+                label: qsTrId("tools-page-vod-fetch-marker")
                 text: VodDataManager.downloadMarker
                 readOnly: true
                 placeholderText: label
@@ -59,7 +61,8 @@ BasePage {
                 width: parent.width
 
                 Button {
-                    text: "Reset VOD fetch marker"
+                    //% "Reset VOD fetch marker"
+                    text: qsTrId("tools-page-reset-vod-fetch-marker")
                     anchors.horizontalCenter: parent.horizontalCenter
                     enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
@@ -69,7 +72,8 @@ BasePage {
 
                 Button {
                     visible: debugApp.value
-                    text: "Reset last fetch timestamp"
+                    //% "Reset last fetch timestamp"
+                    text: qsTrId("tools-page-reset-last-fetch-timestamp")
                     enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         console.debug(text)
@@ -78,7 +82,8 @@ BasePage {
                 }
 
                 Button {
-                    text: "Delete sc2links.com state"
+                    //% "Delete sc2links.com state"
+                    text: qsTrId("tools-page-delete-sc2links.com-state")
                     enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         console.debug(text)
@@ -87,7 +92,8 @@ BasePage {
                 }
 
                 Button {
-                    text: "Delete sc2casts.com state"
+                    //% "Delete sc2casts.com state"
+                    text: qsTrId("tools-page-delete-sc2casts.com-state")
                     enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         console.debug(text)
@@ -98,13 +104,15 @@ BasePage {
 
 
             SectionHeader {
-                text: "Data"
+                //% "Data"
+                text: qsTrId("tools-page-data-section-header")
             }
 
             ButtonLayout {
                 width: parent.width
                 Button {
-                    text: "Clear"
+                    //% "Clear"
+                    text: qsTrId("tools-page-data-clear")
                     enabled: _toolEnabled
                     onClicked: {
                         var dialog = pageStack.push(
@@ -124,7 +132,8 @@ BasePage {
             }
 
             SectionHeader {
-                text: "Seen"
+                //% "Seen"
+                text: qsTrId("tools-page-seen-section-header")
             }
 
             ButtonLayout {
@@ -139,7 +148,8 @@ BasePage {
                 }
 
                 Button {
-                    text: "Reset recent videos"
+                    //% "Reset recent videos"
+                    text: qsTrId("tools-page-seen-recently-watched-videos")
                     enabled: _toolEnabled
                     onClicked: VodDataManager.recentlyWatched.clear()
                 }
@@ -250,7 +260,8 @@ BasePage {
                 width: parent.width
 
                 ExpandingSection {
-                    title: "Cache"
+                    //% "Cache"
+                    title: qsTrId("tools-page-cache-section-title")
                     id: cacheSection
                     width: parent.width
                     content.sourceComponent: ButtonLayout {
@@ -259,7 +270,8 @@ BasePage {
 
 
                         Button {
-                            text: "Clear meta data"
+                            //% "Clear meta data"
+                            text: qsTrId("tools-page-cache-section-clear-meta-data")
                             enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear meta data")
@@ -271,7 +283,8 @@ BasePage {
                         }
 
                         Button {
-                            text: "Clear thumbnails"
+                            //% "Clear thumbnails"
+                            text: qsTrId("tools-page-cache-section-clear-thumbnails")
                             enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear thumbnails")
@@ -282,7 +295,8 @@ BasePage {
                         }
 
                         Button {
-                            text: "Clear VOD files"
+                            //% "Clear VOD files"
+                            text: qsTrId("tools-page-cache-section-clear-vod-files")
                             enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear vods")
@@ -294,7 +308,8 @@ BasePage {
                         }
 
                         Button {
-                            text: "Clear icons"
+                            //% "Clear icons"
+                            text: qsTrId("tools-page-cache-section-clear-icons")
                             enabled: _toolEnabled
                             onClicked: {
                                 console.debug("clear icons")
@@ -325,7 +340,8 @@ BasePage {
             anchors.fill: parent
             model: model
             header: PageHeader {
-                title: "Tools"
+                //% "Tools"
+                title: qsTrId("tools-page-title")
                 VodDataManagerBusyIndicator {}
             }
         }

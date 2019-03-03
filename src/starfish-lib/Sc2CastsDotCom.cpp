@@ -181,8 +181,8 @@ Sc2CastsDotCom::_fetch() {
     m_UrlsToFetch = 1;
     m_UrlsFetched = 0;
     m_CurrentPage = 0;
-
-    setProgressDescription(tr("Fetching page 1"));
+    //% "Fetching page %1"
+    setProgressDescription(qtTrId("Sc2CastsDotCom-fetching-page").arg(1));
     updateVodFetchingProgress();
     qDebug("fetch started");
 }
@@ -257,7 +257,8 @@ Sc2CastsDotCom::requestFinished(QNetworkReply* reply) {
                 ++m_UrlsToFetch;
                 QNetworkReply* reply = makeRequest(makePageUrl(m_CurrentPage));
                 m_PendingRequests.insert(reply, 0);
-                setProgressDescription(QString::asprintf("Fetching page %d", m_CurrentPage));
+                //% "Fetching page %1"
+                setProgressDescription(qtTrId("Sc2CastsDotCom-fetching-page").arg(m_CurrentPage));
                 updateVodFetchingProgress();
             } else {
                 m_ReplyToRecordTable.clear();

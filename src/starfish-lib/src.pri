@@ -18,7 +18,7 @@ HEADERS += $$PWD/Vods.h
 HEADERS += $$PWD/ScClassifier.h
 
 
-
+TRANSLATION_SOURCES += $$PWD
 
 
 

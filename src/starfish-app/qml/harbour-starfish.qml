@@ -82,19 +82,23 @@ ApplicationWindow {
             case VodDatabaseDownloader.Error_None:
                 break
             case VodDatabaseDownloader.Error_NetworkFailure:
-                errorNotification.body = errorNotification.previewBody = "Network down"
+                //% "Network down"
+                errorNotification.body = errorNotification.previewBody = qsTrId("database-error-network-failure")
                 errorNotification.publish()
                 break
             case VodDatabaseDownloader.Error_DataInvalid:
-                errorNotification.body = errorNotification.previewBody = "Data downloaded is invalid"
+                //% "Data downloaded is invalid"
+                errorNotification.body = errorNotification.previewBody = qsTrId("database-error-invalid-data")
                 errorNotification.publish()
                 break
             case VodDatabaseDownloader.Error_DataDecompressionFailed:
-                errorNotification.body = errorNotification.previewBody = "Data decompression failed"
+                //% "Data decompression failed"
+                errorNotification.body = errorNotification.previewBody = qsTrId("database-error-decompression-failed")
                 errorNotification.publish()
                 break
             default:
-                errorNotification.body = errorNotification.previewBody = "Yikes! An unknown error has occurred"
+                //% "Yikes! An unknown error has occurred"
+                errorNotification.body = errorNotification.previewBody = qsTrId("database-error-unknown")
                 errorNotification.publish()
                 break
             }
@@ -218,8 +222,9 @@ ApplicationWindow {
     Notification {
          id: errorNotification
          category: "x-nemo.transfer.error"
-         summary: "Download failed"
-         previewSummary: "Download failed"
+         //% "Download failed"
+         summary: qsTrId("vod-download-failed-notification-summary")
+         previewSummary: qsTrId("vod-download-failed-notification-summary")
          appName: App.displayName
          appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
 //         icon: "icon-lock-transfer"
@@ -230,7 +235,8 @@ ApplicationWindow {
         id: newVodNotification
         appName: App.displayName
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
-        summary: "VODs added"
+        //% "VODs added"
+        summary: qsTrId("new-vods-notification-summary")
 //        icon: "icon-lock-application-update"
         icon: appIcon
 //        icon: "icon-lock-information"
@@ -249,7 +255,8 @@ ApplicationWindow {
     Notification {
         id: deleteVodNotification
         appName: App.displayName
-        summary: "Seen VODs deleted"
+        //% "Seen VODs deleted"
+        summary: qsTrId("seen-vods-deleted-notification-summary")
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
 //        icon: "icon-lock-information"
         icon: appIcon
@@ -427,7 +434,8 @@ ApplicationWindow {
         case VodDatabaseDownloader.Status_Finished:
             if (!VodDataManager.busy && _vodsAdded) {
                 newVodNotification.itemCount = 1
-                newVodNotification.body = newVodNotification.previewBody = _vodsAdded + " VOD" + (_vodsAdded > 1 ? "s" : "") + " added"
+                //% "%1 VODs added"
+                newVodNotification.body = newVodNotification.previewBody = qsTrId("vods-added-notification-body", _vodsAdded).arg(_vodsAdded)
                 newVodNotification.publish()
                 _vodsAdded = 0
             }

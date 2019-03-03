@@ -167,25 +167,105 @@
         <oldsource>German</oldsource>
         <translation>Jean Gressmann</translation>
     </message>
+    <message id="tools-page-fetch-section-header">
+        <location filename="../qml/pages/ToolsPage.qml" line="47"/>
+        <source>Fetch</source>
+        <translation>Fetch</translation>
+    </message>
+    <message id="tools-page-vod-fetch-marker">
+        <location filename="../qml/pages/ToolsPage.qml" line="53"/>
+        <source>VOD fetch marker</source>
+        <translation>VOD fetch marker</translation>
+    </message>
+    <message id="tools-page-reset-vod-fetch-marker">
+        <location filename="../qml/pages/ToolsPage.qml" line="65"/>
+        <source>Reset VOD fetch marker</source>
+        <translation>Reset VOD fetch marker</translation>
+    </message>
+    <message id="tools-page-reset-last-fetch-timestamp">
+        <location filename="../qml/pages/ToolsPage.qml" line="76"/>
+        <source>Reset last fetch timestamp</source>
+        <translation>Reset last fetch timestamp</translation>
+    </message>
+    <message id="tools-page-delete-sc2links.com-state">
+        <location filename="../qml/pages/ToolsPage.qml" line="86"/>
+        <source>Delete sc2links.com state</source>
+        <translation>Delete sc2links.com state</translation>
+    </message>
+    <message id="tools-page-delete-sc2casts.com-state">
+        <location filename="../qml/pages/ToolsPage.qml" line="96"/>
+        <source>Delete sc2casts.com state</source>
+        <translation>Delete sc2casts.com state</translation>
+    </message>
+    <message id="tools-page-data-section-header">
+        <location filename="../qml/pages/ToolsPage.qml" line="108"/>
+        <source>Data</source>
+        <translation>Data</translation>
+    </message>
+    <message id="tools-page-data-clear">
+        <location filename="../qml/pages/ToolsPage.qml" line="115"/>
+        <source>Clear</source>
+        <translation>Clear</translation>
+    </message>
+    <message id="tools-page-seen-section-header">
+        <location filename="../qml/pages/ToolsPage.qml" line="136"/>
+        <source>Seen</source>
+        <translation>Seen</translation>
+    </message>
+    <message id="tools-page-seen-recently-watched-videos">
+        <location filename="../qml/pages/ToolsPage.qml" line="152"/>
+        <source>Reset recent videos</source>
+        <translation>Reset recent videos</translation>
+    </message>
     <message id="tools-ytdl-downloading">
-        <location filename="../qml/pages/ToolsPage.qml" line="206"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="216"/>
         <source>youtube-dl is being downloaded</source>
         <translation>youtube-dl is being downloaded</translation>
     </message>
     <message id="tools-ytdl-unavailable">
-        <location filename="../qml/pages/ToolsPage.qml" line="210"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="220"/>
         <source>youtube-dl is not available</source>
         <translation>youtube-dl is not available</translation>
     </message>
     <message id="tools-ytdl-version">
-        <location filename="../qml/pages/ToolsPage.qml" line="213"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="223"/>
         <source>youtube-dl version %1</source>
         <translation>youtube-dl version %1</translation>
     </message>
     <message id="tools-ytdl-update">
-        <location filename="../qml/pages/ToolsPage.qml" line="225"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="235"/>
         <source>Update youtube-dl</source>
         <translation>Update youtube-dl</translation>
+    </message>
+    <message id="tools-page-cache-section-title">
+        <location filename="../qml/pages/ToolsPage.qml" line="264"/>
+        <source>Cache</source>
+        <translation>Cache</translation>
+    </message>
+    <message id="tools-page-cache-section-clear-meta-data">
+        <location filename="../qml/pages/ToolsPage.qml" line="274"/>
+        <source>Clear meta data</source>
+        <translation>Clear meta data</translation>
+    </message>
+    <message id="tools-page-cache-section-clear-thumbnails">
+        <location filename="../qml/pages/ToolsPage.qml" line="287"/>
+        <source>Clear thumbnails</source>
+        <translation>Clear thumbnails</translation>
+    </message>
+    <message id="tools-page-cache-section-clear-vod-files">
+        <location filename="../qml/pages/ToolsPage.qml" line="299"/>
+        <source>Clear VOD files</source>
+        <translation>Clear VOD files</translation>
+    </message>
+    <message id="tools-page-cache-section-clear-icons">
+        <location filename="../qml/pages/ToolsPage.qml" line="312"/>
+        <source>Clear icons</source>
+        <translation>Clear icons</translation>
+    </message>
+    <message id="tools-page-title">
+        <location filename="../qml/pages/ToolsPage.qml" line="344"/>
+        <source>Tools</source>
+        <translation>Tools</translation>
     </message>
     <message id="cover-label-new-vods-line1" numerus="yes">
         <location filename="../qml/cover/CoverPage.qml" line="100"/>
@@ -241,7 +321,7 @@
     <message id="active-downloads-no-downloads">
         <location filename="../qml/pages/ActiveDownloadPage.qml" line="100"/>
         <source>There are no active downloads.</source>
-        <translation></translation>
+        <translation>There are no active downloads.</translation>
     </message>
     <message id="clear-dialog-title">
         <location filename="../qml/pages/ConfirmClearDialog.qml" line="34"/>
@@ -302,23 +382,33 @@
         <source>Offline available</source>
         <translation>Offline available</translation>
     </message>
+    <message id="entry-page-offline-breadcrump">
+        <location filename="../qml/pages/EntryPage.qml" line="198"/>
+        <source>Offline</source>
+        <translation>Offline</translation>
+    </message>
     <message id="entry-page-active-downloads">
         <location filename="../qml/pages/EntryPage.qml" line="233"/>
         <source>Active downloads</source>
         <translation>Active downloads</translation>
     </message>
+    <message id="entry-page-clear-recently-watched-videos">
+        <location filename="../qml/pages/EntryPage.qml" line="250"/>
+        <source>Clear</source>
+        <translation>Clear</translation>
+    </message>
     <message id="entry-page-clearing-recently-watched-videos">
-        <location filename="../qml/pages/EntryPage.qml" line="252"/>
+        <location filename="../qml/pages/EntryPage.qml" line="253"/>
         <source>Clearing recently watched videos</source>
         <translation>Clearing recently watched videos</translation>
     </message>
     <message id="entry-page-continue-watching">
-        <location filename="../qml/pages/EntryPage.qml" line="266"/>
+        <location filename="../qml/pages/EntryPage.qml" line="267"/>
         <source>Continue watching</source>
         <translation>Continue watching</translation>
     </message>
     <message id="entry-page-title">
-        <location filename="../qml/pages/EntryPage.qml" line="311"/>
+        <location filename="../qml/pages/EntryPage.qml" line="312"/>
         <source>go go go</source>
         <translation>go go go</translation>
     </message>
@@ -578,7 +668,7 @@
     <message id="settings-page-new-no-days-to-keep-vods-label">
         <location filename="../qml/pages/SettingsPage.qml" line="416"/>
         <source>Number of days to keep a VOD in &apos;New&apos;</source>
-        <translation></translation>
+        <translation>Number of days to keep a VOD in &apos;New&apos;</translation>
     </message>
     <message id="settings-page-new-remove-seen-vods-switch">
         <location filename="../qml/pages/SettingsPage.qml" line="439"/>
@@ -590,22 +680,270 @@
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
+    <message id="format-combobox-label">
+        <location filename="../qml/FormatComboBox.qml" line="36"/>
+        <source>Format</source>
+        <translation>Format</translation>
+    </message>
+    <message id="format-combobox-choice-best">
+        <location filename="../qml/FormatComboBox.qml" line="42"/>
+        <source>best quality (largest)</source>
+        <translation>best quality (largest)</translation>
+    </message>
+    <message id="format-combobox-choice-worst">
+        <location filename="../qml/FormatComboBox.qml" line="46"/>
+        <source>worst quality (smallest)</source>
+        <translation>worst quality (smallest)</translation>
+    </message>
+    <message id="format-combobox-choice-ask-every-time">
+        <location filename="../qml/FormatComboBox.qml" line="55"/>
+        <source>ask every time</source>
+        <translation>ask every time</translation>
+    </message>
+    <message id="database-error-network-failure">
+        <location filename="../qml/harbour-starfish.qml" line="86"/>
+        <source>Network down</source>
+        <translation>Network down</translation>
+    </message>
+    <message id="database-error-invalid-data">
+        <location filename="../qml/harbour-starfish.qml" line="91"/>
+        <source>Data downloaded is invalid</source>
+        <translation>Data downloaded is invalid</translation>
+    </message>
+    <message id="database-error-decompression-failed">
+        <location filename="../qml/harbour-starfish.qml" line="96"/>
+        <source>Data decompression failed</source>
+        <translation>Data decompression failed</translation>
+    </message>
+    <message id="database-error-unknown">
+        <location filename="../qml/harbour-starfish.qml" line="101"/>
+        <source>Yikes! An unknown error has occurred</source>
+        <translation>Yikes! An unknown error has occurred :/</translation>
+    </message>
+    <message id="vod-download-failed-notification-summary">
+        <location filename="../qml/harbour-starfish.qml" line="226"/>
+        <location filename="../qml/harbour-starfish.qml" line="227"/>
+        <source>Download failed</source>
+        <translation>Download failed</translation>
+    </message>
+    <message id="new-vods-notification-summary">
+        <location filename="../qml/harbour-starfish.qml" line="239"/>
+        <source>VODs added</source>
+        <translation>VODs added</translation>
+    </message>
+    <message id="seen-vods-deleted-notification-summary">
+        <location filename="../qml/harbour-starfish.qml" line="259"/>
+        <source>Seen VODs deleted</source>
+        <translation>Seen VODs deleted</translation>
+    </message>
+    <message id="vods-added-notification-body" numerus="yes">
+        <location filename="../qml/harbour-starfish.qml" line="438"/>
+        <source>%1 VODs added</source>
+        <translation>
+            <numerusform>1 VOD added</numerusform>
+            <numerusform>%1 VODs added</numerusform>
+        </translation>
+    </message>
+    <message id="vod-details-page-id">
+        <location filename="../qml/pages/VodDetailPage.qml" line="45"/>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message id="vod-details-page-path">
+        <location filename="../qml/pages/VodDetailPage.qml" line="51"/>
+        <source>Path</source>
+        <translation>Path</translation>
+    </message>
+    <message id="vod-details-page-size">
+        <location filename="../qml/pages/VodDetailPage.qml" line="58"/>
+        <source>Size</source>
+        <translation>Size</translation>
+    </message>
+    <message id="vod-details-page-size-gb">
+        <location filename="../qml/pages/VodDetailPage.qml" line="67"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="71"/>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message id="vod-details-page-size-mb">
+        <location filename="../qml/pages/VodDetailPage.qml" line="75"/>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message id="vod-details-page-download-progress">
+        <location filename="../qml/pages/VodDetailPage.qml" line="81"/>
+        <source>Download progress</source>
+        <translation>Download progress</translation>
+    </message>
+    <message id="vod-details-page-resolution">
+        <location filename="../qml/pages/VodDetailPage.qml" line="87"/>
+        <source>Resolution</source>
+        <translation>Resolution</translation>
+    </message>
+    <message id="vod-details-page-title">
+        <location filename="../qml/pages/VodDetailPage.qml" line="114"/>
+        <source>VOD details</source>
+        <translation>VOD details</translation>
+    </message>
+    <message id="strings-no-content">
+        <location filename="../qml/Strings.qml" line="29"/>
+        <source>There seems to be nothing here.</source>
+        <translation>There seems to be nothing here.</translation>
+    </message>
+    <message id="strings-delete-seen-vod-files">
+        <location filename="../qml/Strings.qml" line="31"/>
+        <source>Delete seen VOD files</source>
+        <translation>Delete seen VOD files</translation>
+    </message>
+    <message id="strings-delete-vods">
+        <location filename="../qml/Strings.qml" line="33"/>
+        <source>Delete VODs</source>
+        <translation>Delete VODs</translation>
+    </message>
+    <message id="strings-deleting-seen-vods">
+        <location filename="../qml/Strings.qml" line="37"/>
+        <source>Deleting seen VOD files for %1</source>
+        <translation>Deleting seen VOD files for %1</translation>
+    </message>
+    <message id="strings-deleting-vods">
+        <location filename="../qml/Strings.qml" line="42"/>
+        <source>Deleting VODs for %1</source>
+        <translation>Deleting VODs for %1</translation>
+    </message>
+    <message id="topmenu-about">
+        <location filename="../qml/TopMenu.qml" line="32"/>
+        <source>About %1</source>
+        <translation>About %1</translation>
+    </message>
+    <message id="topmenu-settings">
+        <location filename="../qml/TopMenu.qml" line="38"/>
+        <source>Settings</source>
+        <translation>Settings</translation>
+    </message>
+    <message id="topmenu-tools">
+        <location filename="../qml/TopMenu.qml" line="44"/>
+        <source>Tools</source>
+        <translation>Tools</translation>
+    </message>
+    <message id="topmenu-open-video">
+        <location filename="../qml/TopMenu.qml" line="57"/>
+        <source>Open video</source>
+        <translation>Open video</translation>
+    </message>
+    <message id="topmenu-fetch">
+        <location filename="../qml/TopMenu.qml" line="107"/>
+        <source>Fetch new VODs</source>
+        <translation>Fetch new VODs</translation>
+    </message>
+    <message id="ScVodDatabaseDownloader-fetching-database-metadata">
+        <location filename="../ScVodDatabaseDownloader.cpp" line="90"/>
+        <source>Fetching database metadata</source>
+        <translation>Fetching database meta data</translation>
+    </message>
+    <message id="ScVodDatabaseDownloader-fetching-new-vods">
+        <location filename="../ScVodDatabaseDownloader.cpp" line="118"/>
+        <source>Fetching new VODs</source>
+        <translation>Fetching new VODs</translation>
+    </message>
+    <message id="ScVodDatabaseDownloader-fetching-meta-data">
+        <location filename="../ScVodDatabaseDownloader.cpp" line="593"/>
+        <source>Fetching meta data</source>
+        <translation>Fetching meta data</translation>
+    </message>
+    <message id="ScVodDatabaseDownloader-fetching-year">
+        <location filename="../ScVodDatabaseDownloader.cpp" line="598"/>
+        <source>Fetching VODs for %1</source>
+        <translation>Fetching VODs for %1</translation>
+    </message>
+    <message id="ScVodDatabaseDownloader-adding-vods">
+        <location filename="../ScVodDatabaseDownloader.cpp" line="608"/>
+        <source>Adding VODs</source>
+        <translation>Adding VODs</translation>
+    </message>
+    <message id="fetching-list-of-events">
+        <location filename="../../starfish-lib/Sc2LinksDotCom.cpp" line="222"/>
+        <source>Fetching list of events</source>
+        <translation>Fetching list of events</translation>
+    </message>
+    <message id="Sc2LinksDotCom-fetching-event">
+        <location filename="../../starfish-lib/Sc2LinksDotCom.cpp" line="314"/>
+        <source>Fetching %1</source>
+        <translation>Fetching %1</translation>
+    </message>
+    <message id="ScVodDataManager-misc-label">
+        <location filename="../ScVodDataManager.cpp" line="1060"/>
+        <source>Misc</source>
+        <translation>Misc</translation>
+    </message>
+    <message id="ScVodDataManager-game-label">
+        <location filename="../ScVodDataManager.cpp" line="1069"/>
+        <source>game</source>
+        <translation>game</translation>
+    </message>
+    <message id="ScVodDataManager-year-label">
+        <location filename="../ScVodDataManager.cpp" line="1074"/>
+        <source>year</source>
+        <translation>year</translation>
+    </message>
+    <message id="ScVodDataManager-event-label">
+        <location filename="../ScVodDataManager.cpp" line="1079"/>
+        <source>event</source>
+        <translation>event</translation>
+    </message>
+    <message id="Sc2CastsDotCom-fetching-page">
+        <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="185"/>
+        <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="261"/>
+        <source>Fetching page %1</source>
+        <translation>Fetching page %1</translation>
+    </message>
+    <message id="recently-watched-video-view-remove-from-list">
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="65"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="213"/>
+        <source>Remove from list</source>
+        <translation>Remove from list</translation>
+    </message>
+    <message id="recently-watched-video-view-removing">
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="72"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="220"/>
+        <source>Removing %1</source>
+        <translation>Removing %1</translation>
+    </message>
+    <message id="recently-watched-video-view-no-content">
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="235"/>
+        <source>No recent videos.</source>
+        <translation>No recent videos.</translation>
+    </message>
+    <message id="recently-watched-video-view-no-content-hint">
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="237"/>
+        <source>This list will fill with the videos you have watched.</source>
+        <translation>This list will fill with the videos you have watched.</translation>
+    </message>
 </context>
 <context>
-    <name>TopMenu</name>
+    <name>Sc2LinksDotCom</name>
     <message>
-        <location filename="../qml/TopMenu.qml" line="36"/>
-        <source>Settings</source>
+        <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="160"/>
+        <source>Fetching list of tournaments</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../qml/TopMenu.qml" line="53"/>
-        <source>Open video</source>
+        <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="275"/>
+        <source>Fetching data for </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../qml/TopMenu.qml" line="102"/>
-        <source>Fetch new VODs</source>
+        <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="647"/>
+        <source>network failure</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="649"/>
+        <source>dunno what happened TT</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="711"/>
+        <source>Cancelling VOD fetching</source>
         <translation></translation>
     </message>
 </context>

@@ -67,7 +67,7 @@ Page {
     }
 
     Component.onCompleted: {
-        completed = new Date().getTime()
+        completed = Global.secondsSinceTheEpoch()
     }
 
     SilicaFlickable {
@@ -107,7 +107,7 @@ Page {
         if (PageStatus.Active === status &&
                 VodDataManager.ready &&
                 vodCount > 0) {
-            var secondsElapsed = (new Date().getTime() - completed) / 1000
+            var secondsElapsed = (Global.secondsSinceTheEpoch() - completed)
             pageStack.replace(Qt.resolvedUrl("EntryPage.qml"), null, secondsElapsed < 1 ? PageStackAction.Immediate : PageStackAction.Animated)
         }
     }

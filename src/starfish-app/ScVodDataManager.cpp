@@ -102,6 +102,8 @@ const QString s_RandomIconPath = QStringLiteral(QT_STRINGIFY(SAILFISH_DATADIR) "
 const QString s_SailfishIconPath = QStringLiteral("image://theme/icon-m-sailfish");
 const QString s_GameKey = QStringLiteral("game");
 const QString s_EventNameKey = QStringLiteral("event_name");
+const QString s_YearKey = QStringLiteral("year");
+
 
 } // anon
 
@@ -1054,18 +1056,30 @@ ScVodDataManager::label(const QString& key, const QVariant& value) const {
             case ScRecord::GameOverwatch:
                 return QStringLiteral("Overwatch");
             default:
-                return tr("Misc");
+                //% "Misc"
+                return qtTrId("ScVodDataManager-misc-label");
             }
         }
 
         return value.toString();
     }
 
-    if (s_EventNameKey == key) {
-        return tr("event");
+    if (s_GameKey == key) {
+        //% "game"
+        return qtTrId("ScVodDataManager-game-label");
     }
 
-    return tr(key.toLocal8Bit().data());
+    if (s_YearKey == key) {
+        //% "year"
+        return qtTrId("ScVodDataManager-year-label");
+    }
+
+    if (s_EventNameKey == key) {
+        //% "event"
+        return qtTrId("ScVodDataManager-event-label");
+    }
+
+    return key;
 }
 
 QString

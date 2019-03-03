@@ -218,7 +218,8 @@ Sc2LinksDotCom::_fetch() {
         }
     }
 
-    setProgressDescription(tr("Fetching list of events"));
+    //% "Fetching list of events"
+    setProgressDescription(qtTrId("fetching-list-of-events"));
     updateVodFetchingProgress();
     qDebug("fetch started");
 }
@@ -309,7 +310,8 @@ Sc2LinksDotCom::requestFinished(QNetworkReply* reply) {
                 m_RequestStage.insert(reply, event);
                 m_PendingRequests.insert(reply, 1);
                 ++m_TotalUrlsToFetched;
-                setProgressDescription(tr("Fetching ") + event.fullName());
+                //% "Fetching %1"
+                setProgressDescription(qtTrId("Sc2LinksDotCom-fetching-event").arg(event.fullName()));
 
                 qDebug() << "fetch event" << event.name() << event.year() << event.game() << event.season();
             }

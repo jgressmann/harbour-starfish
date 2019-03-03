@@ -28,17 +28,20 @@ import "."
 
 PullDownMenu {
     MenuItem {
-        text: "About " + App.displayName
+        //% "About %1"
+        text: qsTrId("topmenu-about").arg(App.displayName)
         onClicked: pageStack.push(Qt.resolvedUrl("pages/AboutPage.qml"))
     }
 
     MenuItem {
-        text: qsTr("Settings")
+        //% "Settings"
+        text: qsTrId("topmenu-settings")
         onClicked: pageStack.push(Qt.resolvedUrl("pages/SettingsPage.qml"))
     }
 
     MenuItem {
-        text: "Tools"
+        //% "Tools"
+        text: qsTrId("topmenu-tools")
         onClicked: pageStack.push(Qt.resolvedUrl("pages/ToolsPage.qml"))
     }
 
@@ -50,7 +53,8 @@ PullDownMenu {
 
     MenuItem {
         id: openVideo
-        text: qsTr("Open video")
+        //% "Open video"
+        text: qsTrId("topmenu-open-video")
 
         RecentlyWatchedVideoUpdater {
             id: updater
@@ -99,7 +103,8 @@ PullDownMenu {
     }
 
     MenuItem {
-        text: qsTr("Fetch new VODs")
+        //% "Fetch new VODs"
+        text: qsTrId("topmenu-fetch")
         enabled: window.canFetchVods
         onClicked: window.fetchNewVods()
     }

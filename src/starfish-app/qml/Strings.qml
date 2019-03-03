@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,17 +25,20 @@ pragma Singleton
 import QtQuick 2.0
 
 Item { // Components can't declare functions
-    readonly property string noContent: "There seems to be nothing here."
-    readonly property string deleteSeenVodFiles: "Delete seen VOD files"
-    readonly property string deleteVods: "Delete VODs"
+    //% "There seems to be nothing here."
+    readonly property string noContent: qsTrId("strings-no-content")
+    //% "Delete seen VOD files"
+    readonly property string deleteSeenVodFiles: qsTrId("strings-delete-seen-vod-files")
+    //% "Delete VODs"
+    readonly property string deleteVods: qsTrId("strings-delete-vods")
 
     function deleteSeenVodFileRemorse(name) {
-        return "Deleting seen VOD files for " + name;
+        //% "Deleting seen VOD files for %1"
+        return qsTrId("strings-deleting-seen-vods").arg(name)
     }
 
     function deleteVodsRemorse(name) {
-        return "Deleting VODs for "  + name;
+        //% "Deleting VODs for %1"
+        return qsTrId("strings-deleting-vods").arg(name)
     }
-
-
 }

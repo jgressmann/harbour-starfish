@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,83 +29,33 @@ import ".."
 
 BasePage {
     id: page
-//    property string vodEvent
-//    property string vodStage
-//    property string vodMatch
-//    property string vodTitle
     property string vodFilePath
-//    property int vodYear: -1
-//    property int vodSeason: -1
     property int vodFileSize: -1
     property int vodWidth: -1
     property int vodHeight: -1
     property int vodRowId: -1
     property real vodProgress: 0
 
-//    SqlVodModel {
-//        id: sqlModel
-//        dataManager: VodDataManager
-//        columns: ["side1_name", "side2_name", "side1_race", "side2_race", "match_date", "match_name", "id", "offset", "event_name", "season", "year"]
-//        columnAliases: {
-//            var x = {}
-//            x["id"] = "vod_id"
-//            return x
-//        }
-//        select: "select " + columns.join(",") + " from " + table + where + " order by match_date desc, match_number asc, match_name desc"
-//    }
 
     VisualItemModel {
         id: model
 
-//        DetailItem {
-//            label: "Year"
-//            value: vodYear
-//        }
-
-//        DetailItem {
-//            visible: !!vodEvent
-//            label: "Event"
-//            value: vodEvent
-//        }
-
-//        DetailItem {
-//            label: "Season"
-//            value: vodSeason
-//        }
-
-//        DetailItem {
-//            visible: !!vodStage
-//            label: "Stage"
-//            value: vodStage
-//        }
-
-//        DetailItem {
-//            visible: !!vodMatch
-//            label: "Match"
-//            value: vodMatch
-//        }
-
         DetailItem {
-            label: "ID"
+            //% "ID"
+            label: qsTrId("vod-details-page-id")
             value: vodRowId
         }
 
         DetailItem {
-            label: "Path"
+            //% "Path"
+            label: qsTrId("vod-details-page-path")
             value: vodFilePath
-
-//            BackgroundItem {
-//                anchors.fill: parent
-//                onClicked: {
-
-//                }
-//            }
         }
 
 
-
         DetailItem {
-            label: "Size"
+            //% "Size"
+            label: qsTrId("vod-details-page-size")
             value: makeSizeString(vodFileSize)
 
             function makeSizeString(size) {
@@ -113,24 +63,28 @@ BasePage {
                 var oneMb = 1000000
 
                 if (size >= 10*oneGb) { // 10GB
-                    return (size/oneGb).toFixed(1) + " GB"
+                    //% "%1 GB"
+                    return qsTrId("vod-details-page-size-gb").arg((size/oneGb).toFixed(1))
                 }
 
                 if (size >= oneGb) { // 1GB
-                    return (size/oneGb).toFixed(2) + " GB"
+                    return qsTrId("vod-details-page-size-gb").arg((size/oneGb).toFixed(2))
                 }
 
-                return (size/oneMb).toFixed(0) + " MB"
+                //% "%1 MB"
+                return qsTrId("vod-details-page-size-mb").arg((size/oneMb).toFixed(0))
             }
         }
 
         DetailItem {
-            label: "Download progress"
+            //% "Download progress"
+            label: qsTrId("vod-details-page-download-progress")
             value: (vodProgress * 100).toFixed(0) + " %"
         }
 
         DetailItem {
-            label: "Resolution"
+            //% "Resolution"
+            label: qsTrId("vod-details-page-resolution")
             value: vodWidth + "x" + vodHeight
         }
 
@@ -156,7 +110,8 @@ BasePage {
             anchors.fill: parent
             model: model
             header: PageHeader {
-                title: "VOD details"
+                //% "VOD details"
+                title: qsTrId("vod-details-page-title")
             }
         }
     }
