@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -90,29 +90,21 @@ CoverBackground {
                 width: Theme.paddingSmall
             }
 
-//            Label {
-//                font.pixelSize: Theme.fontSizeTiny
-//                font.bold: true
-//                text: "New VODs"
-//                width: 100
-//                height: parent.height
-//                wrapMode: Text.Wrap
-//                verticalAlignment: Text.AlignVCenter
-//            }
-
             Column {
                 anchors.verticalCenter: parent.verticalCenter
 
                 Label {
                     font.pixelSize: Theme.fontSizeTiny
                     font.bold: true
-                    text: "New"
+                    //% "New"
+                    text: qsTrId("cover-label-new-vods-line1", _newVodCount)
                 }
 
                 Label {
                     font.pixelSize: Theme.fontSizeTiny
                     font.bold: true
-                    text: "VODs"
+                    //% "VODs"
+                    text: qsTrId("cover-label-new-vods-line2", _newVodCount)
 
                 }
             }
@@ -169,7 +161,7 @@ CoverBackground {
     }
 
     onStatusChanged: {
-        console.debug("cover page status=" + status)
+//        console.debug("cover page status=" + status)
         switch (status) {
         case PageStatus.Activating:
             // NOTE: the cover page will be active if the app menu is open
@@ -187,7 +179,7 @@ CoverBackground {
 //                Global.addPlaybackPause()
 
                 // FIX ME this is actually buggy b/c it doesn't
-                // handle he 'out of device lock' case correctly
+                // handle the 'returning from device lock' case correctly
                 if (Global.videoPlayerPage &&
                     Global.videoPlayerPage.isPlaying) {
                     Global.videoPlayerPage.pause()
@@ -240,26 +232,30 @@ CoverBackground {
 
     function _updatingLabelText() {
         if (vodDatabaseDownloader.status === VodDatabaseDownloader.Status_Downloading) {
-            return "Updating"
+            //% "Updating"
+            return qsTrId("cover-update-status-updating")
         }
 
-        var timeStr = ""
         var n = Global.secondsSinceTheEpoch()
         console.debug("now=" + n + " update=" + settingLastUpdateTimestamp.value)
         var diff = n - settingLastUpdateTimestamp.value
         if (diff <= 10) {
-            timeStr = "just now"
+            //% "Updated just now"
+            return qsTrId("cover-update-status-just-now")
         } else if (diff < 60) {
-            timeStr = "seconds ago"
+            //% "Updated seconds ago"
+            return  qsTrId("cover-update-status-just-seconds-ago")
         } else if (diff < 60 * 60) {
-            timeStr = "minutes ago"
+            //% "Updated minutes ago"
+            return  qsTrId("cover-update-status-minutes-ago")
         } else if (diff < 24 * 60 * 60) {
-            timeStr = "hours ago"
+            //% "Updated hours ago"
+            return  qsTrId("cover-update-status-hours-ago")
         } else {
             timeStr = "a really long time ago"
+            //% "Updated a really long time ago"
+            return qsTrId("cover-update-status-more")
         }
-
-        return "Updated " + timeStr
     }
 }
 

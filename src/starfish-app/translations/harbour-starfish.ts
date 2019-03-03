@@ -187,6 +187,52 @@
         <source>Update youtube-dl</source>
         <translation>Update youtube-dl</translation>
     </message>
+    <message id="cover-label-new-vods-line1" numerus="yes">
+        <location filename="../qml/cover/CoverPage.qml" line="100"/>
+        <source>New</source>
+        <translation type="unfinished">
+            <numerusform>New</numerusform>
+            <numerusform>New</numerusform>
+        </translation>
+    </message>
+    <message id="cover-label-new-vods-line2" numerus="yes">
+        <location filename="../qml/cover/CoverPage.qml" line="107"/>
+        <source>VODs</source>
+        <translation type="unfinished">
+            <numerusform>VODs</numerusform>
+            <numerusform>VODs</numerusform>
+        </translation>
+    </message>
+    <message id="cover-update-status-updating">
+        <location filename="../qml/cover/CoverPage.qml" line="236"/>
+        <source>Updating</source>
+        <translation>Updating</translation>
+    </message>
+    <message id="cover-update-status-just-now">
+        <location filename="../qml/cover/CoverPage.qml" line="244"/>
+        <source>Updated just now</source>
+        <translation>Updated just now</translation>
+    </message>
+    <message id="cover-update-status-just-seconds-ago">
+        <location filename="../qml/cover/CoverPage.qml" line="247"/>
+        <source>Updated seconds ago</source>
+        <translation>Updated seconds ago</translation>
+    </message>
+    <message id="cover-update-status-minutes-ago">
+        <location filename="../qml/cover/CoverPage.qml" line="250"/>
+        <source>Updated minutes ago</source>
+        <translation type="unfinished">Updated minutes ago</translation>
+    </message>
+    <message id="cover-update-status-hours-ago">
+        <location filename="../qml/cover/CoverPage.qml" line="253"/>
+        <source>Updated hours ago</source>
+        <translation>Updated hours ago</translation>
+    </message>
+    <message id="cover-update-status-more">
+        <location filename="../qml/cover/CoverPage.qml" line="257"/>
+        <source>Updated a really long time ago</source>
+        <translation>Updated a really long time ago</translation>
+    </message>
 </context>
 <context>
     <name>ActiveDownloadPage</name>
@@ -211,7 +257,7 @@
     <message>
         <location filename="../qml/pages/EntryPage.qml" line="45"/>
         <source>New</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">New</translation>
     </message>
     <message>
         <location filename="../qml/pages/EntryPage.qml" line="151"/>
@@ -234,7 +280,7 @@
     <message>
         <location filename="../qml/pages/NewPage.qml" line="80"/>
         <source>New</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">New</translation>
     </message>
 </context>
 <context>
