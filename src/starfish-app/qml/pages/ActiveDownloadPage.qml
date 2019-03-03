@@ -70,7 +70,8 @@ ContentPage {
             anchors.fill: parent
             model: sqlModel
             header: ContentPageHeader {
-                title: qsTr("Active downloads")
+                //% "Active downloads"
+                title: qsTrId("active-downloads-title")
             }
 
 
@@ -95,7 +96,8 @@ ContentPage {
 
             ViewPlaceholder {
                 enabled: listView.count === 0
-                text: "There are no active downloads."
+                //% "There are no active downloads."
+                text: qsTrId("active-downloads-no-downloads")
             }
         }
     }

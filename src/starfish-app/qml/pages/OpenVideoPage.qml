@@ -50,7 +50,8 @@ Page {
             width: parent.width
 
             Button {
-                text: "From clipboard"
+                //% "From clipboard"
+                text: qsTrId("open-video-page-open-from-clipboard")
                 enabled: Clipboard.hasText && App.isUrl(Clipboard.text)
                 onClicked: {
                     videoSelected(
@@ -61,7 +62,8 @@ Page {
                 }
             }
             Button {
-                text: "From file"
+                //% "From file"
+                text: qsTrId("open-video-page-open-from-file")
 
                 onClicked: {
                     pageStack.push(filePickerPage)
@@ -83,7 +85,8 @@ Page {
         }
 
         SectionHeader {
-            text: "Recently watched"
+            //% "Recently watched"
+            text: qsTrId("open-video-page-recently-watched-section-header")
         }
     }
 

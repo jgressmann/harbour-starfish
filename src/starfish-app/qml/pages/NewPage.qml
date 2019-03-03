@@ -77,7 +77,8 @@ ContentPage {
             anchors.fill: parent
             model: sqlModel
             header: ContentPageHeader {
-                title: qsTr("New")
+                //% "New"
+                title: qsTrId("new-page-title")
             }
 
 
@@ -102,8 +103,10 @@ ContentPage {
 
             ViewPlaceholder {
                 enabled: listView.count === 0
-                text: "There are no new VODs available."
-                hintText: "Pull down to fetch new VODs."
+                //% "There are no new VODs available."
+                text: qsTrId("new-page-no-content-text")
+                //% "Pull down to fetch new VODs."
+                hintText: qsTrId("new-page-no-content-hint-text")
             }
         }
     }

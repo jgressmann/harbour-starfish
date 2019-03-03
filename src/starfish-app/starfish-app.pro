@@ -44,7 +44,7 @@ HEADERS += \
 #../../rpm/harbour-starfish.yaml \
 #    ../../rpm/harbour-starfish.changes.in \
 #    ../../rpm/harbour-starfish.spec \
-#translations/*.ts \
+
 
 
 DISTFILES += qml/harbour-starfish.qml \
@@ -93,7 +93,9 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/pages/VodDetailPage.qml \
     qml/pages/MoveDataDirectoryPage.qml \
     qml/MatchItemMemory.qml \
-    qml/Strings.qml
+    qml/Strings.qml \
+    translations/harbour-starfish.ts \
+    translations/harbour-starfish-de.ts
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 
@@ -143,10 +145,5 @@ TRANSLATIONS += translations/harbour-starfish-de.ts
 
 QT *= network sql qml xml
 
-
 LIBS += -lz
-
-
-
-
 

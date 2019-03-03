@@ -41,8 +41,8 @@ BasePage {
             Label {
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
-
-                text: qsTr("New")
+                //% "New"
+                text: qsTrId("entry-page-new")
 
                 font.pixelSize: Global.labelFontSize
                 anchors.verticalCenter: parent.verticalCenter
@@ -98,7 +98,8 @@ BasePage {
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
 
-                text: qsTr("Not yet watched")
+                //% "Not yet watched"
+                text: qsTrId("entry-page-unwatched")
 
                 font.pixelSize: Global.labelFontSize
                 anchors.verticalCenter: parent.verticalCenter
@@ -113,7 +114,8 @@ BasePage {
                                 where: " where seen=0",
                                 key: "game",
                                 grid: true,
-                                breadCrumbs: ["Unwatched"]
+                                //% "Unwatched"
+                                breadCrumbs: [qsTrId("entry-page-unwatched-breadcrumb")]
                             })
             }
 
@@ -148,7 +150,8 @@ BasePage {
                 id: browseVodsTitleLabel
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
-                text: qsTr("Browse")
+                //% "Browse"
+                text: qsTrId("entry-page-browse")
 
                 font.pixelSize: Global.labelFontSize
                 anchors.verticalCenter: parent.verticalCenter
@@ -175,7 +178,8 @@ BasePage {
                 id: offlineVodsTitleLabel
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
-                text: qsTr("Offline available")
+                //% "Offline available"
+                text: qsTrId("entry-page-offline-available")
 
                 font.pixelSize: Global.labelFontSize
                 anchors.verticalCenter: parent.verticalCenter
@@ -190,7 +194,8 @@ BasePage {
                                 where: " where progress>0",
                                 key: "game",
                                 grid: true,
-                                breadCrumbs: ["Offline"]
+                                //% "Offline"
+                                breadCrumbs: [qsTrId("entry-page-offline-available")]
                             })
             }
 
@@ -224,7 +229,8 @@ BasePage {
             Label {
                 x: Theme.horizontalPageMargin
                 width: page.width - 2*x
-                text: qsTr("Active downloads")
+                //% "Active downloads"
+                text: qsTrId("entry-page-active-downloads")
 
                 font.pixelSize: Global.labelFontSize
                 anchors.verticalCenter: parent.verticalCenter
@@ -242,7 +248,8 @@ BasePage {
                 MenuItem {
                     text: "Clear"
                     onClicked: recentlyWatchedVideosItem.remorseAction(
-                                   "Clearing recently watched videos",
+                                   //% "Clearing recently watched videos"
+                                   qsTrId("entry-page-clearing-recently-watched-videos"),
                                    function () { recentlyWatchedVideoView.clear() })
                 }
             }
@@ -255,7 +262,8 @@ BasePage {
                     visible: recentlyWatchedVideoView.height > 0
                     x: Theme.horizontalPageMargin
                     width: page.width - 2*x
-                    text: qsTr("Continue watching")
+                    //% "Continue watching"
+                    text: qsTrId("entry-page-continue-watching")
                     color: Theme.highlightColor
                     font.pixelSize: Global.labelFontSize
                 }
@@ -299,7 +307,8 @@ BasePage {
             anchors.fill: parent
             model: visualModel
             header: PageHeader {
-                title: "go go go"
+                //% "go go go"
+                title: qsTrId("entry-page-title")
 
                 VodDataManagerBusyIndicator {}
             }

@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,16 +30,20 @@ Dialog {
 
     DialogHeader {
         id: header
-        title: "Clear VOD data?"
-        acceptText: "Clear"
+        //% "Clear VOD data?"
+        title: qsTrId("clear-dialog-title")
+        //% "Clear"
+        acceptText: qsTrId("clear-dialog-accept-text")
     }
 
     Label {
         anchors.top: header.bottom
         x: Theme.horizontalPageMargin
         width: parent.width - 2*x
-        text: "You are about to delete all VOD entries from the data base and all VOD download related files from your device.\n\nDo you want to continue?"
+        //% "You are about to delete all VOD entries from the data base and all VOD download related files from your device.<br/><br/>Do you want to continue?"
+        text: qsTrId("clear-dialog-text")
         color: Theme.highlightColor
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
+        textFormat: Text.StyledText
     }
 }

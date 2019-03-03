@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,8 +58,10 @@ BasePage {
 
             DialogHeader {
                 id: dialogHeader
-                title: "Confirm data directory move"
-                acceptText: "Move"
+                //% "Confirm data directory move"
+                title: qsTrId("settings-page-confirm-data-dir-move-dialog-title")
+                //% "Move"
+                acceptText: qsTrId("settings-page-confirm-data-dir-move-dialog-accept-text")
             }
 
             Label {
@@ -69,12 +71,8 @@ BasePage {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2*x
                 wrapMode: Text.Wrap
-                text:
-"The application's data will be moved to " + _targetdataDirectory + ".
-
-This operation could take a good long while. During this time you will not be able to use the application.
-
-Do you want to continue?"
+                //% "The application's data will be moved to %1.<br/><br/>This operation could take a good long while. During this time you will not be able to use the application.<br/><br/>Do you want to continue?"
+                text: qsTrId("settings-page-confirm-data-dir-move-dialog-text").arg(_targetdataDirectory)
             }
 
             // page is created prior to onAccepted, see api reference doc
@@ -113,18 +111,26 @@ Do you want to continue?"
         id: model
 
         SectionHeader {
-            text: "Data"
+            //% "Data"
+            text: qsTrId("settings-page-data-dir-section-header")
         }
 
 
         ComboBox {
             id: saveDirectoryComboBox
             width: root.width
-            label: "Directory"
+            //% "Directory"
+            label: qsTrId("settings-page-data-dir-move-combobox-label")
             enabled: _toolEnabled
             menu: ContextMenu {
-                MenuItem { text: "Cache" }
-                MenuItem { text: "Custom" }
+                MenuItem {
+                    //% "Cache"
+                    text: qsTrId("settings-page-data-dir-move-choice-cache")
+                }
+                MenuItem {
+                    //% "Custom"
+                    text: qsTrId("settings-page-data-dir-move-choice-custom")
+                }
             }
         }
 
@@ -132,8 +138,10 @@ Do you want to continue?"
             id: saveDirectoryTextField
             width: root.width
             text: _currentdataDirectory
-            label: "Directory for VOD and meta data"
-            placeholderText: "Data directory"
+            //% "Directory for VOD and meta data"
+            label: qsTrId("settings-page-data-dir-text-field-label")
+            //% "Data directory"
+            placeholderText: qsTrId("settings-page-data-dir-text-field-placeholder")
             EnterKey.iconSource: "image://theme/icon-m-enter-close"
             EnterKey.onClicked: focus = false
             enabled: _toolEnabled
@@ -146,11 +154,10 @@ Do you want to continue?"
 
         ButtonLayout {
             width: root.width
-//            spacing: Theme.paddingSmall
 
             Button {
-//                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Pick directory"
+                //% "Pick directory"
+                text: qsTrId("settings-page-data-dir-pick-directory")
                 enabled: _toolEnabled
                 onClicked: pageStack.push(filePickerPage)
             }
@@ -158,24 +165,35 @@ Do you want to continue?"
             Button {
                 enabled: _toolEnabled && !!_targetdataDirectory &&
                          _currentdataDirectory !== _targetdataDirectory
-//                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Apply change"
+                //% "Apply change"
+                text: qsTrId("settings-page-data-dir-apply-change")
                 onClicked: pageStack.push(confirmMovePage)
             }
         }
 
         SectionHeader {
-            text: "Network"
+            //% "Network"
+            text: qsTrId("settings-page-network-section-header")
         }
 
         ComboBox {
             id: bearerModeComboBox
             width: root.width
-            label: "Network connection type"
+            //% "Network connection type"
+            label: qsTrId("settings-page-network-connection-type-label")
             menu: ContextMenu {
-                MenuItem { text: "Autodetect" }
-                MenuItem { text: "Broadband" }
-                MenuItem { text: "Mobile" }
+                MenuItem {
+                    //% "Autodetect"
+                    text: qsTrId("settings-page-network-connection-choice-autodetect")
+                }
+                MenuItem {
+                    //% "Broadband"
+                    text: qsTrId("settings-page-network-connection-choice-broadband")
+                }
+                MenuItem {
+                    //% "Mobile"
+                    text: qsTrId("settings-page-network-connection-choice-mobile")
+                }
             }
 
             Component.onCompleted: currentIndex = settingBearerMode.value
@@ -189,7 +207,8 @@ Do you want to continue?"
         TextField {
             width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
-            label: "Max concurrent meta data downloads"
+            //% "Max concurrent meta data downloads"
+            label: qsTrId("settings-page-network-max-meta-data-downloads")
             text: settingNetworkMaxConcurrentMetaDataDownloads.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
@@ -212,8 +231,10 @@ Do you want to continue?"
 
         ComboBox {
             width: root.width
-            label: "VOD site"
-            description: "This site is used to check for new VODs."
+            //% "VOD site"
+            label: qsTrId("settings-page-network-vod-site-label")
+            //% "This site is used to check for new VODs."
+            description: qsTrId("settings-page-network-vod-site-desc")
             enabled: _toolEnabled
             menu: ContextMenu {
                 id: menu
@@ -242,8 +263,8 @@ Do you want to continue?"
         }
 
         TextSwitch {
-
-            text: "Periodically check for new VODs"
+            //% "Periodically check for new VODs"
+            text: qsTrId("settings-page-network-periodically-check-for-vods-switch")
             checked: settingNetworkAutoUpdate.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -256,7 +277,8 @@ Do you want to continue?"
             enabled: _toolEnabled && settingNetworkAutoUpdate.value
             width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
-            label: "Minutes between checks"
+            //% "Minutes between checks"
+            label: qsTrId("settings-page-network-check-interval-label")
             text: settingNetworkAutoUpdateIntervalM.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
@@ -277,7 +299,8 @@ Do you want to continue?"
         }
 
         TextSwitch {
-            text: "Continue VOD file download when page closes"
+            //% "Continue VOD file download when page closes"
+            text: qsTrId("settings-page-network-continue-download-on-page-destruction")
             checked: settingNetworkContinueDownload.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -288,12 +311,14 @@ Do you want to continue?"
 
 
         SectionHeader {
-            text: "Format"
+            //% "Format"
+            text: qsTrId("settings-page-format-section-header")
         }
 
         FormatComboBox {
             width: root.width
-            label: "Broadband"
+            //% "Broadband"
+            label: qsTrId("settings-page-format-broadband-label")
             excludeAskEveryTime: false
             format: settingBroadbandDefaultFormat.value
             enabled: _toolEnabled
@@ -305,7 +330,8 @@ Do you want to continue?"
 
         FormatComboBox {
             width: root.width
-            label: "Mobile"
+            //% "Mobile"
+            label: qsTrId("settings-page-format-mobile-label")
             excludeAskEveryTime: false
             format: settingMobileDefaultFormat.value
             enabled: _toolEnabled
@@ -316,11 +342,13 @@ Do you want to continue?"
         }
 
         SectionHeader {
-            text: "Playback"
+            //% "Playback"
+            text: qsTrId("settings-page-playback-section-header")
         }
 
         TextSwitch {
-            text: "Use external media player"
+            //% "Use external media player"
+            text: qsTrId("settings-page-playback-external-media-player-switch")
             checked: settingExternalMediaPlayer.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -332,7 +360,8 @@ Do you want to continue?"
         TextField {
             width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
-            label: "Number of recently watched videos to keep"
+            //% "Number of recently watched videos to keep"
+            label: qsTrId("settings-page-playback-no-videos-in-recently-watched")
             text: settingPlaybackRecentVideosToKeep.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
@@ -354,7 +383,8 @@ Do you want to continue?"
         }
 
         TextSwitch {
-            text: "Pause playback on device lock"
+            //% "Pause playback on device lock"
+            text: qsTrId("settings-page-playback-pause-on-device-lock-switch")
             checked: settingPlaybackPauseOnDeviceLock.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -364,7 +394,8 @@ Do you want to continue?"
         }
 
         TextSwitch {
-            text: "Pause playback when the cover page is shown"
+            //% "Pause playback when the cover page is shown"
+            text: qsTrId("settings-page-playback-pause-if-cover-page-switch")
             checked: settingPlaybackPauseInCoverMode.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -374,13 +405,15 @@ Do you want to continue?"
         }
 
         SectionHeader {
-            text: "New"
+            //% "New"
+            text: qsTrId("settings-page-new-section-header")
         }
 
         TextField {
             width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
-            label: "Number of days to keep a VOD in 'New'"
+            //% "Number of days to keep a VOD in 'New'"
+            label: qsTrId("settings-page-new-no-days-to-keep-vods-label")
             text: settingNewWindowDays.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
@@ -402,7 +435,8 @@ Do you want to continue?"
         }
 
         TextSwitch {
-            text: "Remove watched VODs from 'New'"
+            //% "Remove watched VODs from 'New'"
+            text: qsTrId("settings-page-new-remove-seen-vods-switch")
             checked: settingNewRemoveSeen.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -424,7 +458,8 @@ Do you want to continue?"
             anchors.fill: parent
             model: model
             header: PageHeader {
-                title: "Settings"
+                //% "Settings"
+                title: qsTrId("settings-page-title")
                 VodDataManagerBusyIndicator {}
             }
         }
