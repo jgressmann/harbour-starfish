@@ -302,7 +302,7 @@
     <message id="cover-update-status-minutes-ago">
         <location filename="../qml/cover/CoverPage.qml" line="250"/>
         <source>Updated minutes ago</source>
-        <translation>VorMinuten aktualisiert</translation>
+        <translation>Vor Minuten aktualisiert</translation>
     </message>
     <message id="cover-update-status-hours-ago">
         <location filename="../qml/cover/CoverPage.qml" line="253"/>
