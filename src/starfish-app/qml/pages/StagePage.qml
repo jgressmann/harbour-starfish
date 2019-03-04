@@ -33,6 +33,7 @@ ContentPage {
     property alias stage: pageHeader.title
     property bool _sameDate: false
     property bool _sameSides: false
+    property bool _hasTwoSides: false
     property date _matchDate
     property string _side1
     property string _side2
@@ -65,7 +66,7 @@ ContentPage {
         id: sidesModel
         database: VodDataManager.database
         columns: ["side1_name", "side2_name"]
-        select: "select distinct " + columns.join(",") + " from " + table + where
+        select: "select distinct " + columns.join(",") + " from " + table + where + " and side2_name is not null"
 
         onModelReset: _updateSameSides()
         Component.onCompleted: _updateSameSides()
@@ -144,7 +145,7 @@ ContentPage {
                 width: listView.width
                 rowId: vod_id
                 showDate: !_sameDate
-                showSides: !_sameSides
+                showSides: _hasTwoSides && !_sameSides
                 memory: matchItemConnections
 
                 onPlayRequest: function (self) {
@@ -169,7 +170,9 @@ ContentPage {
 
 
     function _updateSameSides() {
-        _sameSides = sidesModel.rowCount() === 1
+        var count = sidesModel.rowCount()
+        _hasTwoSides = count > 0
+        _sameSides = count === 1
         if (_sameSides) {
             _side1 = sidesModel.data(sidesModel.index(0, 0))
             _side2 = sidesModel.data(sidesModel.index(0, 1))
