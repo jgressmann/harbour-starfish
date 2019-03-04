@@ -43,7 +43,7 @@ BasePage {
             spacing: Theme.paddingLarge
 
             SectionHeader {
-                //% "Fetch"
+                //% "Data fetching"
                 text: qsTrId("tools-page-fetch-section-header")
             }
 

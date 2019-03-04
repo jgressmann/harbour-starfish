@@ -170,8 +170,9 @@
     </message>
     <message id="tools-page-fetch-section-header">
         <location filename="../qml/pages/ToolsPage.qml" line="47"/>
-        <source>Fetch</source>
-        <translation>Herunterladen</translation>
+        <source>Data fetching</source>
+        <oldsource>Fetch</oldsource>
+        <translation type="unfinished">Herunterladen</translation>
     </message>
     <message id="tools-page-vod-fetch-marker">
         <location filename="../qml/pages/ToolsPage.qml" line="53"/>
