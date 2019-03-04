@@ -7,7 +7,7 @@
         <location filename="../qml/pages/YTDLPage.qml" line="54"/>
         <source>You seem to be missing a working youtube-dl</source>
         <oldsource>youtube-dl is unavailable</oldsource>
-        <translation>You seem to be missing a working youtube-dl</translation>
+        <translation>You seem to be missing a working youtube-dl application</translation>
     </message>
     <message id="ytdl-error">
         <location filename="../qml/pages/YTDLPage.qml" line="57"/>
@@ -337,7 +337,7 @@
         <location filename="../qml/pages/ConfirmClearDialog.qml" line="44"/>
         <source>You are about to delete all VOD entries from the data base and all VOD download related files from your device.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</source>
         <oldsource>You are about to delete all VOD entries from the data base and all VOD download related files from your device.&lt;/br&gt;&lt;/br&gt;Do you want to continue?</oldsource>
-        <translation>You are about to delete all VOD entries from the data base and all VOD download related files from your device..&lt;br/&gt;&lt;br/&gt;Do you want to continue?</translation>
+        <translation>You are about to delete all VOD entries from the database and all VOD download related files from your device.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</translation>
     </message>
     <message id="delete-vod-file-dialog-title">
         <location filename="../qml/pages/ConfirmDeleteVodFile.qml" line="34"/>

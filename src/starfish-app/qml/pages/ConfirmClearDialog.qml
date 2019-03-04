@@ -40,7 +40,7 @@ Dialog {
         anchors.top: header.bottom
         x: Theme.horizontalPageMargin
         width: parent.width - 2*x
-        //% "You are about to delete all VOD entries from the data base and all VOD download related files from your device.<br/><br/>Do you want to continue?"
+        //% "You are about to delete all VOD entries from the database and all VOD download related files from your device.<br/><br/>Do you want to continue?"
         text: qsTrId("clear-dialog-text")
         color: Theme.highlightColor
         wrapMode: Text.Wrap
