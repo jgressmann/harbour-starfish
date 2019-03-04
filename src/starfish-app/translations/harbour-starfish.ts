@@ -335,9 +335,9 @@
     </message>
     <message id="clear-dialog-text">
         <location filename="../qml/pages/ConfirmClearDialog.qml" line="44"/>
-        <source>You are about to delete all VOD entries from the data base and all VOD download related files from your device.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</source>
-        <oldsource>You are about to delete all VOD entries from the data base and all VOD download related files from your device.&lt;/br&gt;&lt;/br&gt;Do you want to continue?</oldsource>
-        <translation>You are about to delete all VOD entries from the database and all VOD download related files from your device.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</translation>
+        <source>You are about to delete all VOD entries from the database and all VOD download related files from your device.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</source>
+        <oldsource>You are about to delete all VOD entries from the data base and all VOD download related files from your device.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</oldsource>
+        <translation type="unfinished">You are about to delete all VOD entries from the database and all VOD download related files from your device.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</translation>
     </message>
     <message id="delete-vod-file-dialog-title">
         <location filename="../qml/pages/ConfirmDeleteVodFile.qml" line="34"/>
@@ -496,7 +496,7 @@
         <translation>From file</translation>
     </message>
     <message id="open-video-page-recently-watched-section-header">
-        <location filename="../qml/pages/OpenVideoPage.qml" line="89"/>
+        <location filename="../qml/pages/OpenVideoPage.qml" line="90"/>
         <source>Recently watched</source>
         <translation>Recently watched</translation>
     </message>

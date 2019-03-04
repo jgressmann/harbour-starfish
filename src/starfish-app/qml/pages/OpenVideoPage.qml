@@ -85,6 +85,7 @@ Page {
         }
 
         SectionHeader {
+            visible: recentlyWatchedVideoView.count > 0
             //% "Recently watched"
             text: qsTrId("open-video-page-recently-watched-section-header")
         }
@@ -100,6 +101,7 @@ Page {
         VerticalScrollDecorator {}
 
         RecentlyWatchedVideoView {
+            id: recentlyWatchedVideoView
             anchors.fill: parent
             clip: true
             onClicked: function (a, b, c) {
