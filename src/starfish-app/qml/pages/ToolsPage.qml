@@ -264,60 +264,67 @@ BasePage {
                     title: qsTrId("tools-page-cache-section-title")
                     id: cacheSection
                     width: parent.width
-                    content.sourceComponent: ButtonLayout {
+                    content.sourceComponent: Column {
                         width: cacheSection.width
+                        ButtonLayout {
+                            width: parent.width
 
 
+                            Button {
+                                //% "Clear meta data"
+                                text: qsTrId("tools-page-cache-section-clear-meta-data")
+                                enabled: _toolEnabled
+                                onClicked: {
+                                    console.debug("clear meta data")
+                                    remorse.execute(text, function() {
+                                        VodDataManager.clearCache(VodDataManager.CF_MetaData)
+                                    })
 
-                        Button {
-                            //% "Clear meta data"
-                            text: qsTrId("tools-page-cache-section-clear-meta-data")
-                            enabled: _toolEnabled
-                            onClicked: {
-                                console.debug("clear meta data")
-                                remorse.execute(text, function() {
-                                    VodDataManager.clearCache(VodDataManager.CF_MetaData)
-                                })
+                                }
+                            }
 
+                            Button {
+                                //% "Clear thumbnails"
+                                text: qsTrId("tools-page-cache-section-clear-thumbnails")
+                                enabled: _toolEnabled
+                                onClicked: {
+                                    console.debug("clear thumbnails")
+                                    remorse.execute(text, function() {
+                                        VodDataManager.clearCache(VodDataManager.CF_Thumbnails)
+                                    })
+                                }
+                            }
+
+                            Button {
+                                //% "Clear VOD files"
+                                text: qsTrId("tools-page-cache-section-clear-vod-files")
+                                enabled: _toolEnabled
+                                onClicked: {
+                                    console.debug("clear vods")
+                                    remorse.execute(text, function() {
+                                        VodDataManager.clearCache(VodDataManager.CF_Vods)
+                                    })
+
+                                }
+                            }
+
+                            Button {
+                                //% "Clear icons"
+                                text: qsTrId("tools-page-cache-section-clear-icons")
+                                enabled: _toolEnabled
+                                onClicked: {
+                                    console.debug("clear icons")
+                                    remorse.execute(text, function() {
+                                        VodDataManager.clearCache(VodDataManager.CF_Icons)
+                                        VodDataManager.fetchIcons()
+                                    })
+                                }
                             }
                         }
 
-                        Button {
-                            //% "Clear thumbnails"
-                            text: qsTrId("tools-page-cache-section-clear-thumbnails")
-                            enabled: _toolEnabled
-                            onClicked: {
-                                console.debug("clear thumbnails")
-                                remorse.execute(text, function() {
-                                    VodDataManager.clearCache(VodDataManager.CF_Thumbnails)
-                                })
-                            }
-                        }
-
-                        Button {
-                            //% "Clear VOD files"
-                            text: qsTrId("tools-page-cache-section-clear-vod-files")
-                            enabled: _toolEnabled
-                            onClicked: {
-                                console.debug("clear vods")
-                                remorse.execute(text, function() {
-                                    VodDataManager.clearCache(VodDataManager.CF_Vods)
-                                })
-
-                            }
-                        }
-
-                        Button {
-                            //% "Clear icons"
-                            text: qsTrId("tools-page-cache-section-clear-icons")
-                            enabled: _toolEnabled
-                            onClicked: {
-                                console.debug("clear icons")
-                                remorse.execute(text, function() {
-                                    VodDataManager.clearCache(VodDataManager.CF_Icons)
-                                    VodDataManager.fetchIcons()
-                                })
-                            }
+                        Item {
+                            width: parent.width
+                            height: Theme.paddingLarge
                         }
                     }
                 }

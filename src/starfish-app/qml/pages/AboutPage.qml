@@ -188,6 +188,11 @@ Page {
                         //% "names of translators"
                         value: qsTrId("about-translations-german-value")
                     }
+
+                    Item {
+                        width: parent.width
+                        height: Theme.paddingLarge
+                    }
                 }
             }
         }

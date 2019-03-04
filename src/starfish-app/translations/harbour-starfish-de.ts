@@ -244,27 +244,27 @@
         <translation>Cache</translation>
     </message>
     <message id="tools-page-cache-section-clear-meta-data">
-        <location filename="../qml/pages/ToolsPage.qml" line="274"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="275"/>
         <source>Clear meta data</source>
         <translation>Metadaten löschen</translation>
     </message>
     <message id="tools-page-cache-section-clear-thumbnails">
-        <location filename="../qml/pages/ToolsPage.qml" line="287"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="288"/>
         <source>Clear thumbnails</source>
         <translation>Thumbnails löschen</translation>
     </message>
     <message id="tools-page-cache-section-clear-vod-files">
-        <location filename="../qml/pages/ToolsPage.qml" line="299"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="300"/>
         <source>Clear VOD files</source>
         <translation>Videodateien löschen</translation>
     </message>
     <message id="tools-page-cache-section-clear-icons">
-        <location filename="../qml/pages/ToolsPage.qml" line="312"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="313"/>
         <source>Clear icons</source>
         <translation>Icons löschen</translation>
     </message>
     <message id="tools-page-title">
-        <location filename="../qml/pages/ToolsPage.qml" line="344"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="351"/>
         <source>Tools</source>
         <translation>Werkzeuge</translation>
     </message>
@@ -678,7 +678,7 @@
         <translation>Gesehene Videos aus &apos;Neu&apos; entfernen</translation>
     </message>
     <message id="settings-page-title">
-        <location filename="../qml/pages/SettingsPage.qml" line="462"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="466"/>
         <source>Settings</source>
         <translation>Einstellungen</translation>
     </message>
