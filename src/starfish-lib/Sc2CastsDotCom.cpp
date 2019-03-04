@@ -180,7 +180,7 @@ Sc2CastsDotCom::_fetch() {
     m_PendingRequests.insert(reply, 0);
     m_UrlsToFetch = 1;
     m_UrlsFetched = 0;
-    m_CurrentPage = 0;
+    m_CurrentPage = 1;
     //% "Fetching page %1"
     setProgressDescription(qtTrId("Sc2CastsDotCom-fetching-page").arg(1));
     updateVodFetchingProgress();
@@ -312,7 +312,7 @@ Sc2CastsDotCom::parseLevel0(QNetworkReply* reply) {
 
 
 
-    auto any = false;
+    auto continueScraping = false;
 
     for (int start = 0, found = dateGroupRegex.indexIn(soup, start);
          found != -1;
@@ -329,7 +329,6 @@ Sc2CastsDotCom::parseLevel0(QNetworkReply* reply) {
         auto date = getDate(dateSoup);
         dates << date;
 
-        any = true;
     }
 
     dateGroupIndices << soup.size();
@@ -343,6 +342,8 @@ Sc2CastsDotCom::parseLevel0(QNetworkReply* reply) {
         if (!date.isValid()) {
             continue;
         }
+
+        continueScraping = continueScraping || (yearToFetch() <= 0 || yearToFetch() <= date.year()); // sorted by date
 
         if (yearToFetch() <= 0 || yearToFetch() == date.year()) {
 
@@ -389,13 +390,12 @@ Sc2CastsDotCom::parseLevel0(QNetworkReply* reply) {
 
 
 
-    if (any) {
-        if (m_CurrentPage >= 1) {
-            ++m_CurrentPage;
-        }
-
+    if (continueScraping) {
+        ++m_CurrentPage;
     } else {
-        qDebug("%s\n", qPrintable(soup));
+        if (yearToFetch() <= 0) {
+            qDebug("%s\n", qPrintable(soup));
+        }
         m_CurrentPage = -1;
     }
 
