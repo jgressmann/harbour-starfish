@@ -95,6 +95,7 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/pages/MoveDataDirectoryPage.qml \
     qml/MatchItemMemory.qml \
     qml/Strings.qml \
+    qml/SidesBar.qml \
     translations/harbour-starfish.ts \
     translations/harbour-starfish-de.ts
 

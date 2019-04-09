@@ -206,55 +206,68 @@ ListItem {
                         }
                     } // title/vs label
 
-                    Item {
+                    SidesBar {
                         id: sidesWithRaceLogosGroup
-                        width: parent.width
-                        height: Math.max(race1Icon.height, side1Name.height)
                         visible: showSides && _hasValidRaces
-                        property real labelWidth: (width - 2 * race1Icon.width) * 0.5
+                        imageHeight: Theme.iconSizeSmall
+                        imageWidth: Theme.iconSizeSmall
+                        side1IconSource: VodDataManager.raceIcon(_c.race1)
+                        side2IconSource: VodDataManager.raceIcon(_c.race2)
+                        side1Label: _c.side1
+                        side2Label: _c.side2
+                        fontSize: Theme.fontSizeMedium
+                        spacing: Theme.paddingSmall * 0.68
+                    }
 
-                        Image {
-                            id: race1Icon
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: Theme.iconSizeSmall
-                            height: Theme.iconSizeSmall
-                            sourceSize.width: width
-                            sourceSize.height: height
-                            source: VodDataManager.raceIcon(_c.race1)
-                        }
+//                    Item {
+//                        id: sidesWithRaceLogosGroup
+//                        width: parent.width
+//                        height: Math.max(race1Icon.height, side1Name.height)
+//                        visible: showSides && _hasValidRaces
+//                        property real labelWidth: (width - 2 * race1Icon.width) * 0.5
 
-                        Label {
-                            id: side1Name
-                            anchors.left: race1Icon.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: parent.labelWidth
-                            truncationMode: TruncationMode.Fade
-                            text: " " + _c.side1
-                            horizontalAlignment: Text.AlignLeft
-                        }
+//                        Image {
+//                            id: race1Icon
+//                            anchors.left: parent.left
+//                            anchors.verticalCenter: parent.verticalCenter
+//                            width: Theme.iconSizeSmall
+//                            height: Theme.iconSizeSmall
+//                            sourceSize.width: width
+//                            sourceSize.height: height
+//                            source: VodDataManager.raceIcon(_c.race1)
+//                        }
 
-                        Label {
-                            id: side2Name
-                            anchors.right: race2Icon.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: parent.labelWidth
-                            truncationMode: TruncationMode.Fade
-                            text: _c.side2 + " "
-                            horizontalAlignment: Text.AlignRight
-                        }
+//                        Label {
+//                            id: side1Name
+//                            anchors.left: race1Icon.right
+//                            anchors.verticalCenter: parent.verticalCenter
+//                            width: parent.labelWidth
+//                            truncationMode: TruncationMode.Fade
+//                            text: " " + _c.side1
+//                            horizontalAlignment: Text.AlignLeft
+//                        }
 
-                        Image {
-                            id: race2Icon
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: Theme.iconSizeSmall
-                            height: Theme.iconSizeSmall
-                            sourceSize.width: width
-                            sourceSize.height: height
-                            source: VodDataManager.raceIcon(_c.race2)
-                        }
-                    } // vs label with race icons
+//                        Label {
+//                            id: side2Name
+//                            anchors.right: race2Icon.left
+//                            anchors.verticalCenter: parent.verticalCenter
+//                            width: parent.labelWidth
+//                            truncationMode: TruncationMode.Fade
+//                            text: _c.side2 + " "
+//                            horizontalAlignment: Text.AlignRight
+//                        }
+
+//                        Image {
+//                            id: race2Icon
+//                            anchors.right: parent.right
+//                            anchors.verticalCenter: parent.verticalCenter
+//                            width: Theme.iconSizeSmall
+//                            height: Theme.iconSizeSmall
+//                            sourceSize.width: width
+//                            sourceSize.height: height
+//                            source: VodDataManager.raceIcon(_c.race2)
+//                        }
+//                    } // vs label with race icons
 
                     Item {
                         height: dateLabel2.height

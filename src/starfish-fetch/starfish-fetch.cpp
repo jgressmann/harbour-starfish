@@ -27,6 +27,7 @@
 #include <QFile>
 #include <QDomDocument>
 #include <QTextStream>
+#include <QTranslator>
 #include <stdio.h>
 
 #include "Sc2LinksDotCom.h"
@@ -45,6 +46,11 @@ int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName("starfish-fetch");
     QCoreApplication::setApplicationVersion(QString::asprintf("%d.%d.%d", STARFISH_VERSION_MAJOR, STARFISH_VERSION_MINOR, STARFISH_VERSION_PATCH));
+
+    QTranslator translator;
+    if (translator.load("starfish-fetch")) {
+        app.installTranslator(&translator);
+    }
 
     QCommandLineOption yearOption(
                 QStringList() << "y" << "year",
