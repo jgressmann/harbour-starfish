@@ -125,7 +125,7 @@ void ScDatabaseStoreQueue::processStatement(int transactionId, const QString& sq
             m_LastTransactionId = transactionId;
 
             if (m_Query.exec(s_Begin)) {
-#ifndef QT_NO_DEBUG
+#if !defined(QT_NO_DEBUG) && defined(STARFISH_DEBUG_DB)
                 qDebug("%s\n", qPrintable(s_Begin));
 #endif
             } else {
@@ -146,7 +146,7 @@ void ScDatabaseStoreQueue::processStatement(int transactionId, const QString& sq
         if (sql.isEmpty()) { // end transaction guard
             if (m_Query.exec(s_Commit)) {
                 emit completed(m_LastTransactionId, getInsertIdOrAffectedRows(), 0, QString());
-#ifndef QT_NO_DEBUG
+#if !defined(QT_NO_DEBUG) && defined(STARFISH_DEBUG_DB)
                 qDebug("%s\n", qPrintable(s_Commit));
 #endif
             } else {
@@ -164,7 +164,7 @@ void ScDatabaseStoreQueue::processStatement(int transactionId, const QString& sq
                     m_Query.addBindValue(*it);
                 }
                 if (m_Query.exec()) {
-#ifndef QT_NO_DEBUG
+#if !defined(QT_NO_DEBUG) && defined(STARFISH_DEBUG_DB)
                     qDebug("%s\n", qPrintable(m_Query.executedQuery()));
                     for (auto i = 0; i < args.size(); ++i) {
                         qDebug("%d. %s\n", i, qPrintable(args[i].toString()));
