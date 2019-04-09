@@ -28,8 +28,6 @@ import Sailfish.Silica 1.0
 Item {
     height: Math.max(imageHeight, label1.height)
     width: parent ? parent.width : Screen.width
-    readonly property real labelSpace: width - 2 * (imageWidth + spacing)
-    readonly property real evenlabelWidth: labelSpace * 0.5
     property real imageHeight: Theme.iconSizeSmall
     property real imageWidth: Theme.iconSizeSmall
     property alias side1IconSource: icon1.source
@@ -38,7 +36,11 @@ Item {
     property alias side2Label: label2.text
     property real fontSize: Theme.fontSizeMedium
     property real spacing: Theme.paddingSmall
-    readonly property bool _labelSpaceExceeded: label1.contentWidth + label2.contentWidth > labelSpace
+    property alias color: label1.color
+
+    readonly property real _labelSpace: width - 2 * (imageWidth + spacing)
+    readonly property real _evenlabelWidth: _labelSpace * 0.5
+    readonly property bool _labelSpaceExceeded: label1.contentWidth + label2.contentWidth > _labelSpace
 
     Image {
         id: icon1
@@ -61,7 +63,7 @@ Item {
         id: label1
         anchors.left: spacer1.right
         anchors.verticalCenter: parent.verticalCenter
-        width: _labelSpaceExceeded ? Math.min(contentWidth, evenlabelWidth) : contentWidth
+        width: _labelSpaceExceeded ? Math.min(contentWidth, _evenlabelWidth) : contentWidth
         truncationMode: TruncationMode.Fade
         horizontalAlignment: Text.AlignLeft
         font.pixelSize: fontSize
@@ -71,10 +73,11 @@ Item {
         id: label2
         anchors.right: spacer2.left
         anchors.verticalCenter: parent.verticalCenter
-        width: _labelSpaceExceeded ? Math.min(contentWidth, evenlabelWidth) : contentWidth
+        width: _labelSpaceExceeded ? Math.min(contentWidth, _evenlabelWidth) : contentWidth
         truncationMode: TruncationMode.Fade
         horizontalAlignment: Text.AlignRight
         font.pixelSize: fontSize
+        color: label1.color
     }
 
     Item {

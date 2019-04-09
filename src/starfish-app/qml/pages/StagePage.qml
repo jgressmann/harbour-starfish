@@ -37,19 +37,25 @@ ContentPage {
     property date _matchDate
     property string _side1
     property string _side2
-    property var itemPlaying: null
+    property int _side1Race
+    property int _side2Race
     property int _videoId: -1
+    readonly property bool _hasValidRaces: _side1Race >= 1 && _side2Race >= 1
 
     SqlVodModel {
         id: sqlModel
         database: VodDataManager.database
-        columns: ["id"]
+        columns: ["id", "side1_race", "side2_race"]
         columnAliases: {
             var x = {}
             x["id"] = "vod_id"
             return x
         }
         select: "select " + columns.join(",") + " from " + table + where + " order by match_date desc, match_number asc, match_name desc"
+        Component.onCompleted: {
+            _side1Race = data(index(0, 1))
+            _side2Race = data(index(0, 2))
+        }
     }
 
     SqlVodModel {
@@ -104,9 +110,23 @@ ContentPage {
             width: parent.width - 2*x
             anchors.top: pageHeader.bottom
 
+            SidesBar {
+                id: sidesBar
+                visible: _hasValidRaces && _sameSides && !!_side2
+                side1Label: _side1
+                side2Label: _side2
+                side1IconSource: VodDataManager.raceIcon(_side1Race)
+                side2IconSource: VodDataManager.raceIcon(_side2Race)
+                fontSize: Theme.fontSizeExtraLarge
+                imageHeight: Theme.iconSizeMedium
+                imageWidth: Theme.iconSizeMedium
+                spacing: Theme.paddingSmall
+                color: Theme.highlightColor
+            }
+
             Label {
                 id: sidesLabel
-                visible: _sameSides && !!_side2
+                visible: !_hasValidRaces && _sameSides && !!_side2
                 width: parent.width
                 text: _side1 + " - " + _side2
                 truncationMode: TruncationMode.Fade
@@ -125,7 +145,7 @@ ContentPage {
 
             Item { // spacer to move list view down a little
                 width: parent.width
-                height: sidesLabel.visible || dateLabel.visible ? Theme.paddingSmall : 0
+                height: sidesBar.visible || sidesLabel.visible || dateLabel.visible ? Theme.paddingSmall : 0
             }
         }
 
@@ -183,10 +203,6 @@ ContentPage {
         switch (status) {
         case PageStatus.Activating:
             matchItemConnections.cancelImplicitVodFileFetch(_videoId)
-//            if (itemPlaying) {
-//                itemPlaying.cancelImplicitVodFileFetch()
-//                itemPlaying = null
-//            }
             break
         }
     }
