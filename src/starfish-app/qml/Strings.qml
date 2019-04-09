@@ -25,7 +25,7 @@ pragma Singleton
 import QtQuick 2.0
 
 Item { // Components can't declare functions
-    //% "There seems to be nothing here."
+    //% "There seems to be nothing here"
     readonly property string noContent: qsTrId("strings-no-content")
     //% "Delete seen VOD files"
     readonly property string deleteSeenVodFiles: qsTrId("strings-delete-seen-vod-files")
