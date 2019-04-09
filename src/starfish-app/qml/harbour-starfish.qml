@@ -46,8 +46,6 @@ ApplicationWindow {
         App.isOnline &&
         vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
 
-    property bool _triggeringYtdlPage: false
-
     Sc2LinksDotComScraper {
         id: sc2LinksDotComScraper
         stateFilePath: App.dataDir + "/sc2links.com.state"
