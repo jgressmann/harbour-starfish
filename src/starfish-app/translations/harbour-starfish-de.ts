@@ -172,7 +172,7 @@
         <location filename="../qml/pages/ToolsPage.qml" line="47"/>
         <source>Data fetching</source>
         <oldsource>Fetch</oldsource>
-        <translation type="unfinished">Herunterladen</translation>
+        <translation>Herunterladen</translation>
     </message>
     <message id="tools-page-vod-fetch-marker">
         <location filename="../qml/pages/ToolsPage.qml" line="53"/>
@@ -339,7 +339,7 @@
         <location filename="../qml/pages/ConfirmClearDialog.qml" line="44"/>
         <source>You are about to delete all VOD entries from the database and all VOD download related files from your device.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</source>
         <oldsource>You are about to delete all VOD entries from the data base and all VOD download related files from your device.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</oldsource>
-        <translation type="unfinished">Du bist im Begriff alle Video Datenbankeinträge und alle dazugehörigen Dateien zu löschen.&lt;br/&gt;&lt;br/&gt;Möchtest du fortfahren?</translation>
+        <translation>Du bist im Begriff alle Video Datenbankeinträge und alle dazugehörigen Dateien zu löschen.&lt;br/&gt;&lt;br/&gt;Möchtest du fortfahren?</translation>
     </message>
     <message id="delete-vod-file-dialog-title">
         <location filename="../qml/pages/ConfirmDeleteVodFile.qml" line="34"/>
@@ -704,38 +704,38 @@
         <translation>jedes Mal nachfragen</translation>
     </message>
     <message id="database-error-network-failure">
-        <location filename="../qml/harbour-starfish.qml" line="86"/>
+        <location filename="../qml/harbour-starfish.qml" line="84"/>
         <source>Network down</source>
         <translation>Keine Netzwerkverbindung</translation>
     </message>
     <message id="database-error-invalid-data">
-        <location filename="../qml/harbour-starfish.qml" line="91"/>
+        <location filename="../qml/harbour-starfish.qml" line="89"/>
         <source>Data downloaded is invalid</source>
         <translation>Die heruntergeladene Daten sind ungültig</translation>
     </message>
     <message id="database-error-decompression-failed">
-        <location filename="../qml/harbour-starfish.qml" line="96"/>
+        <location filename="../qml/harbour-starfish.qml" line="94"/>
         <source>Data decompression failed</source>
         <translation>Das Extrahieren der Daten ist fehlgeschlagen</translation>
     </message>
     <message id="database-error-unknown">
-        <location filename="../qml/harbour-starfish.qml" line="101"/>
+        <location filename="../qml/harbour-starfish.qml" line="99"/>
         <source>Yikes! An unknown error has occurred</source>
         <translation>O_o! Ein ungekannter Fehler ist aufgetreten :/</translation>
     </message>
     <message id="vod-download-failed-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="226"/>
-        <location filename="../qml/harbour-starfish.qml" line="227"/>
+        <location filename="../qml/harbour-starfish.qml" line="224"/>
+        <location filename="../qml/harbour-starfish.qml" line="225"/>
         <source>Download failed</source>
         <translation>Download fehlgeschlagen</translation>
     </message>
     <message id="new-vods-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="239"/>
+        <location filename="../qml/harbour-starfish.qml" line="237"/>
         <source>VODs added</source>
         <translation>Videos hinzugefügt</translation>
     </message>
     <message id="seen-vods-deleted-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="259"/>
+        <location filename="../qml/harbour-starfish.qml" line="257"/>
         <source>Seen VODs deleted</source>
         <translation>Gesehene Videos gelöscht</translation>
     </message>
@@ -790,8 +790,9 @@
     </message>
     <message id="strings-no-content">
         <location filename="../qml/Strings.qml" line="29"/>
-        <source>There seems to be nothing here.</source>
-        <translation>Es scheint nichts hier zu sein.</translation>
+        <source>There seems to be nothing here</source>
+        <oldsource>There seems to be nothing here.</oldsource>
+        <translation type="unfinished">Es scheint nichts hier zu sein</translation>
     </message>
     <message id="strings-delete-seen-vod-files">
         <location filename="../qml/Strings.qml" line="31"/>
@@ -921,33 +922,58 @@
         <source>This list will fill with the videos you have watched.</source>
         <translation>Diese List füllt sich mit den zuletzt gesehenen Videos.</translation>
     </message>
+    <message id="start-page-no-content-hint-pull-down-online">
+        <location filename="../qml/pages/StartPage.qml" line="87"/>
+        <source>Pull down to fetch new VODs</source>
+        <translation>Ziehe nach unten um Videos herunterzuladen</translation>
+    </message>
+    <message id="start-page-no-content-hint-pull-down-offline">
+        <location filename="../qml/pages/StartPage.qml" line="91"/>
+        <source>Connect to the internet to fetch new VODs</source>
+        <translation>Verbinde dein Gerät mit dem Internet um Videos herunterzuladen</translation>
+    </message>
+    <message id="start-page-no-content-text-vod-download-in-progress">
+        <location filename="../qml/pages/StartPage.qml" line="98"/>
+        <source>VODs are being downloaded. It won&apos;t be long now.</source>
+        <translation>Videos werden heruntergeladen. Jetzt dauert es nicht mehr lange.</translation>
+    </message>
+    <message id="start-page-startup-error-text">
+        <location filename="../qml/pages/StartPage.qml" line="104"/>
+        <source>%1 failed to start</source>
+        <translation>Fehler beim Start von %1</translation>
+    </message>
+    <message id="start-page-startup-error-hint">
+        <location filename="../qml/pages/StartPage.qml" line="106"/>
+        <source>For details check the log file located in %1</source>
+        <translation>Details findest du in der Logdatei im Verzeichnis %1</translation>
+    </message>
 </context>
 <context>
     <name>Sc2LinksDotCom</name>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="160"/>
         <source>Fetching list of tournaments</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="275"/>
         <source>Fetching data for </source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="647"/>
         <source>network failure</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="649"/>
         <source>dunno what happened TT</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="711"/>
         <source>Cancelling VOD fetching</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>
