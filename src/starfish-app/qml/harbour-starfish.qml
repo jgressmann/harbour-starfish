@@ -364,8 +364,10 @@ ApplicationWindow {
 
     Connections {
         target: YTDLDownloader
-        onStatusChanged: _switchContentPage()
-        onYtdlPathChanged: _setYtdlPath()
+        onStatusChanged: {
+            _setYtdlPath()
+            _switchContentPage()
+        }
     }
 
     Connections {
