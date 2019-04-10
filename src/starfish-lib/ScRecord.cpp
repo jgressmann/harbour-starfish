@@ -85,7 +85,8 @@ const QString EnglishWordSeasons[] = {
 
 
 
-const QRegExp eventNameCrudRegex(QStringLiteral("[\\[\\]\\-/,:]|\\(\\)"));
+const QRegExp eventNameReplaceWithSpaces(QStringLiteral("\\s+-\\s+"));
+const QRegExp eventNameCrudRegex(QStringLiteral("[\\[\\]/,:]|\\(\\)"));
 const QRegExp dateRegex(QStringLiteral("\\d{4}-\\d{2}-\\d{2}"));
 const QRegExp yearRegex(QStringLiteral("^\\d{4} | \\d{4}"));
 const QRegExp yearRangeRegex(QStringLiteral("\\(?(\\d{4})-\\d{4}\\)?"));
@@ -96,6 +97,7 @@ const QRegExp sidesRegex(QStringLiteral("(.*)\\s+(?:-|vs)\\s+(.*)"), Qt::CaseIns
 const QRegExp matchNumberRegex(QStringLiteral("^\\s*(?:match|episode)\\s+(\\d+)\\s*$"), Qt::CaseInsensitive);
 
 int InitializeStatics() {
+    Q_ASSERT(eventNameReplaceWithSpaces.isValid());
     Q_ASSERT(eventNameCrudRegex.isValid());
     Q_ASSERT(dateRegex.isValid());
     Q_ASSERT(yearRegex.isValid());
@@ -239,6 +241,7 @@ bool tryGetMatchNumber(const QString& str, qint8* matchNumber) {
 
 void removeCrud(QString& inoutSrc) {
     inoutSrc.remove(yearRegex);
+    inoutSrc.replace(eventNameReplaceWithSpaces, QStringLiteral(" "));
     inoutSrc.remove(eventNameCrudRegex);
     inoutSrc = inoutSrc.split(' ', QString::SkipEmptyParts).join(' ');
 }

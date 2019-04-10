@@ -362,6 +362,11 @@ TestParser::autocompleteFromEvent_data() {
     record.game = ScRecord::GameBroodWar;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 #endif
+    record.valid = ScRecord::ValidEventName;
+    record.eventName = "IN-DEPTH";
+    record.eventFullName = "IN-DEPTH";
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
 }
 
 
@@ -427,11 +432,11 @@ TestParser::autocompleteFromStage() {
 
 
     ScRecord completed;
-    completed.valid = ScRecord::ValidStage;
+    completed.valid = ScRecord::ValidStageName;
     completed.stage = record.stage;
     completed.autoComplete(classifier);
 
-    QVERIFY(completed.valid & ScRecord::ValidStage);
+    QVERIFY(completed.valid & ScRecord::ValidStageName);
     QCOMPARE(completed.stage, record.stage);
 
     if (record.valid & ScRecord::ValidYear) {
@@ -553,7 +558,7 @@ TestParser::autocomplete_data() {
 
 #if 1
     record.valid = ScRecord::ValidGame | ScRecord::ValidEventFullName |
-            ScRecord::ValidStage | ScRecord::ValidYear |
+            ScRecord::ValidStageName | ScRecord::ValidYear |
             ScRecord::ValidMatchDate | ScRecord::ValidMatchName |
             ScRecord::ValidEventName | ScRecord::ValidSides;
     record.matchName = "Stats - CoCa";
@@ -568,7 +573,7 @@ TestParser::autocomplete_data() {
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 
     record.valid = ScRecord::ValidGame | ScRecord::ValidEventFullName |
-            ScRecord::ValidStage | ScRecord::ValidYear |
+            ScRecord::ValidStageName | ScRecord::ValidYear |
             ScRecord::ValidMatchDate | ScRecord::ValidMatchName |
             ScRecord::ValidEventName | ScRecord::ValidSides | ScRecord::ValidSeason;
     record.matchName = "Soulkey vs free";
@@ -592,7 +597,7 @@ TestParser::autocomplete() {
 
 
     ScRecord completed;
-    completed.valid = ScRecord::ValidMatchName | ScRecord::ValidStage | ScRecord::ValidEventFullName | ScRecord::ValidMatchDate;
+    completed.valid = ScRecord::ValidMatchName | ScRecord::ValidStageName | ScRecord::ValidEventFullName | ScRecord::ValidMatchDate;
     completed.matchName = record.matchName;
     completed.matchDate = record.matchDate;
     completed.stage = record.stage;
@@ -601,7 +606,7 @@ TestParser::autocomplete() {
 
     QVERIFY(completed.valid & ScRecord::ValidMatchName);
     QVERIFY(completed.valid & ScRecord::ValidMatchDate);
-    QVERIFY(completed.valid & ScRecord::ValidStage);
+    QVERIFY(completed.valid & ScRecord::ValidStageName);
     QVERIFY(completed.valid & ScRecord::ValidEventFullName);
     QVERIFY(completed.valid & ScRecord::ValidEventName);
     QCOMPARE(completed.matchName, record.matchName);
