@@ -213,6 +213,11 @@
             "extension": ".jpg"
         },
         {
+            "regex": "^(indepth|in-depth)",
+            "url": "https://www.dropbox.com/s/hl4m629f3umpbze/indepth.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "^intel$",
             "url": "https://www.dropbox.com/s/d85s0i9ftaws28h/intel.png?dl=1",
             "extension": ".png"
