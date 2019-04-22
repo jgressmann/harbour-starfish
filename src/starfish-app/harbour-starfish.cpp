@@ -41,6 +41,7 @@
 #include "ScRecentlyWatchedVideos.h"
 #include "VMQuickYTDLDownloader.h"
 #include "ScMatchItem.h"
+#include "ScVodPlaylist.h"
 
 #include <sailfishapp.h>
 
@@ -81,6 +82,11 @@ main(int argc, char *argv[]) {
         QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
         setupLogging(); // need to have the app paths
 
+        // Vodman
+        qmlRegisterUncreatableType<VMVodEnums>(VODMAN_LIB_NAMESPACE, VODMAN_LIB_VERSION_MAJOR, VODMAN_LIB_VERSION_MINOR, "VM", QStringLiteral("wrapper around C++ enums"));
+        qmlRegisterSingletonType<VMQuickYTDLDownloader>(VODMAN_LIB_NAMESPACE, VODMAN_LIB_VERSION_MAJOR, VODMAN_LIB_VERSION_MINOR, "YTDLDownloader", vmQuickYTDLDownloader);
+
+        // Starfish
         qRegisterMetaType<VMVodEnums::Error>("VMVodEnums::Error");
         qRegisterMetaType<VMVodEnums::Format>("VMVodEnums::Format");
         qRegisterMetaType<ScVodDataManagerWorker::ThumbnailError>("ScVodDataManagerWorker::ThumbnailError");
@@ -89,19 +95,18 @@ main(int argc, char *argv[]) {
         qmlRegisterType<ScVodDatabaseDownloader>(STARFISH_NAMESPACE, 1, 0, "VodDatabaseDownloader");
         qmlRegisterType<Sc2LinksDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2LinksDotComScraper");
         qmlRegisterType<Sc2CastsDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2CastsDotComScraper");
+        qmlRegisterType<ScVodPlaylist>(STARFISH_NAMESPACE, 1, 0, "VodPlaylist");
 
         qmlRegisterSingletonType<ScApp>(STARFISH_NAMESPACE, 1, 0, "App", appProvider);
         qmlRegisterUncreatableType<ScVodScraper>(STARFISH_NAMESPACE, 1, 0, "VodScraper", "VodScraper");
         qmlRegisterUncreatableType<ScVodman>(STARFISH_NAMESPACE, 1, 0, "Vodman", "Vodman");
-        qmlRegisterUncreatableType<VMVodEnums>(STARFISH_NAMESPACE, 1, 0, "VM", QStringLiteral("wrapper around C++ enums"));
+
         qmlRegisterUncreatableType<ScEnums>(STARFISH_NAMESPACE, 1, 0, "Sc", QStringLiteral("wrapper around C++ enums"));
         qmlRegisterUncreatableType<ScRecentlyWatchedVideos>(STARFISH_NAMESPACE, 1, 0, "RecentlyWatchedVideos", "RecentlyWatchedVideos");
         qmlRegisterUncreatableType<ScMatchItem>(STARFISH_NAMESPACE, 1, 0, "MatchItemData", "MatchItemData");
         qmlRegisterUncreatableType<ScMatchItem>(STARFISH_NAMESPACE, 1, 0, "Match", "Match");
         qmlRegisterUncreatableType<ScUrlShareItem>(STARFISH_NAMESPACE, 1, 0, "UrlShare", "UrlShare");
-
         qmlRegisterSingletonType<ScVodDataManager>(STARFISH_NAMESPACE, 1, 0, "VodDataManager", dataManagerProvider);
-        qmlRegisterSingletonType<VMQuickYTDLDownloader>(STARFISH_NAMESPACE, 1, 0, "YTDLDownloader", vmQuickYTDLDownloader);
 
         {
             QScopedPointer<QQuickView> view(SailfishApp::createView());

@@ -23,6 +23,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Vodman 2.0
 import org.duckdns.jgressmann 1.0
 import ".."
 
@@ -36,8 +37,10 @@ ListItem {
     property bool menuEnabled: true
     property int rowId: -1
     property bool _playWhenTransitionDone: false
-    readonly property string vodUrl: _vodUrl
-    property string _vodUrl
+//    readonly property string vodUrl: _vodUrl
+//    property string _vodUrl
+    readonly property VodPlaylist playlist: _playlist
+    property VodPlaylist _playlist
     property int startOffset: 0
     readonly property int baseOffset: _c ? _c.videoStartOffset : 0
     property bool _validRange: _c && baseOffset >= 0 && baseOffset < _c.videoEndOffset
@@ -574,14 +577,14 @@ ListItem {
                         dialog.accepted.connect(function () {
                             r.execute("Deleting %1 VOD files".arg(item._c.urlShare.shareCount), function () {
                                 item._cancelDownload()
-                                item._c.urlShare.deleteVodFile()
+                                item._c.urlShare.deleteVodFiles()
                             })
                         })
                     } else {
 
                         item.remorseAction("Deleting VOD file for " + title, function() {
                             item._cancelDownload()
-                            item._c.urlShare.deleteVodFile()
+                            item._c.urlShare.deleteVodFiles()
                         })
                     }
                 }
@@ -631,7 +634,8 @@ ListItem {
     }
 
     function _play() {
-        console.debug("play " + _vodUrl)
+        playlist.fromUrlShareItem(_c)
+        playlist.startOffset = startOffset
         playRequest(root)
     }
 
@@ -665,55 +669,94 @@ ListItem {
         return formatId
     }
 
-    function _findBestFormat(vod, formatId) {
-        var formatIndex = -1
+    function _findBestFormat(playlist, formatId) {
         if (VM.VM_Smallest === formatId) {
-            var best = vod.format(0)
-            formatIndex = 0
-            for (var i = 1; i < vod.formats; ++i) {
-                var f = vod.format(i)
-                if (f.height < best.height) {
-                    best = f;
-                    formatIndex = i;
-                }
-            }
-        } else if (VM.VM_Largest === formatId) {
-            var best = vod.format(0)
-            formatIndex = 0
-            for (var i = 1; i < vod.formats; ++i) {
-                var f = vod.format(i)
-                if (f.height > best.height) {
-                    best = f;
-                    formatIndex = i;
-                }
-            }
-        } else {
-            // try to find exact match
-            for (var i = 0; i < vod.formats; ++i) {
-                var f = vod.format(i)
-                if (f.format === formatId) {
-                    formatIndex = i
-                    break
-                }
-            }
-
-            if (formatIndex === -1) {
-                var target = _targetWidth(formatId)
-                var bestdelta = Math.abs(vod.format(0).height - target)
-                formatIndex = 0
-                for (var i = 1; i < vod.formats; ++i) {
-                    var f = vod.format(i)
-                    var delta = Math.abs(f.width - target)
-                    if (delta < bestdelta) {
-                        bestdelta = delta;
-                        formatIndex = i;
-                    }
-                }
-            }
+            var f = playlist.avFormat(0)
+            return ["worst", _makeDisplayString(f)]
+            //return "worstvideo+worstaudio/worst"
         }
 
-        return formatIndex
+        if (VM.VM_Largest === formatId) {
+            var f = playlist.avFormat(playlist.avFormats-1)
+            return ["best", _makeDisplayString(f)]
+//            return "best"
+            //return "bestvideo+bestaudio/best"
+        }
+
+        var height
+        var width
+        switch (formatId) {
+        case VM.VM_240p:
+            height = 240
+            width = 426
+            break
+        case VM.VM_360p:
+            height = 360
+            width = 640
+            break
+        case VM.VM_720p:
+            height = 720
+            width = 1280
+            break
+        default:
+            height = 1080
+            width = 1920
+            break
+        }
+
+        return ["best[height=" + height + "]/best[height<=" + height + "]/best", "~" + width + "x" + height]
+        //return "bestvideo[height=" + height + "]+bestaudio/bestvideo[height<=" + height + "]+bestaudio/best"
     }
+
+//    function _findBestFormat(vod, formatId) {
+//        var formatIndex = -1
+//        if (VM.VM_Smallest === formatId) {
+//            var best = vod.format(0)
+//            formatIndex = 0
+//            for (var i = 1; i < vod.formats; ++i) {
+//                var f = vod.format(i)
+//                if (f.height < best.height) {
+//                    best = f;
+//                    formatIndex = i;
+//                }
+//            }
+//        } else if (VM.VM_Largest === formatId) {
+//            var best = vod.format(0)
+//            formatIndex = 0
+//            for (var i = 1; i < vod.formats; ++i) {
+//                var f = vod.format(i)
+//                if (f.height > best.height) {
+//                    best = f;
+//                    formatIndex = i;
+//                }
+//            }
+//        } else {
+//            // try to find exact match
+//            for (var i = 0; i < vod.formats; ++i) {
+//                var f = vod.format(i)
+//                if (f.format === formatId) {
+//                    formatIndex = i
+//                    break
+//                }
+//            }
+
+//            if (formatIndex === -1) {
+//                var target = _targetWidth(formatId)
+//                var bestdelta = Math.abs(vod.format(0).height - target)
+//                formatIndex = 0
+//                for (var i = 1; i < vod.formats; ++i) {
+//                    var f = vod.format(i)
+//                    var delta = Math.abs(f.width - target)
+//                    if (delta < bestdelta) {
+//                        bestdelta = delta;
+//                        formatIndex = i;
+//                    }
+//                }
+//            }
+//        }
+
+//        return formatIndex
+//    }
 
     function _selectFormat(callback) {
         var labels = []
@@ -740,7 +783,6 @@ ListItem {
 
     function _tryPlay() {
         if (_c.urlShare.vodFetchStatus === UrlShare.Fetching) {
-            _vodUrl = _c.urlShare.vodFilePath
             _play()
         } else if (_c.urlShare.vodFetchStatus === UrlShare.Available) {
             // try download rest if incomplete and format matches
@@ -756,7 +798,6 @@ ListItem {
             }
 
             // at any rate, play the file
-            _vodUrl = _c.urlShare.vodFilePath
             _play()
         } else if (_c.urlShare.metaDataFetchStatus === UrlShare.Available) {
             _playStream()
@@ -770,22 +811,22 @@ ListItem {
         _playStreamWithFormat(format)
     }
 
-    function _playStreamWithFormat(format) {
-        var vod = _c.urlShare.metaData
-        if (VM.VM_Any === format) {
-            _selectFormat(function(index) {
-                _vodUrl = vod.format(index).fileUrl
+    function _playStreamWithFormat(formatId) {
+        var playlist = _c.urlShare.metaData
+        if (VM.VM_Any === formatId) {
+            _selectAvFormat(playlist, function(index) {
                 _playWhenTransitionDone = true
             })
         } else {
-            var formatIndex = _findBestFormat(vod, format)
-            _vodUrl = vod.format(formatIndex).fileUrl
+            var res = _findBestFormat(vod, formatId)
+            var format = res[0]
+            var displayFormat = res[1]
             _play()
         }
     }
 
     function _downloadFormat(formatIndex, autoStarted) {
-        _c.urlShare.fetchVodFile(formatIndex)
+        _c.urlShare.fetchVodFiles(formatIndex)
         switch (_vodDownloadExplicitlyStarted) {
         case -1:
         case 0:
@@ -794,19 +835,20 @@ ListItem {
         }
     }
 
-    function _download(autoStarted, format) {
+    function _download(autoStarted, formatId) {
+        var playlist = _c.urlShare.metaData
         if (VM.VM_Any === format) {
-            _selectFormat(function(index) {
+            _selectAvFormat(playlist, function(index) {
                 _downloadFormat(index, autoStarted)
             })
         } else {
-            var formatIndex = _findBestFormat(_c.urlShare.metaData, format)
+            var formatIndex = _findBestFormat(playlist, formatId)
             _downloadFormat(formatIndex, autoStarted)
         }
     }
 
     function _cancelDownload() {
-        _c.urlShare.cancelFetchVodFile()
+        _c.urlShare.cancelFetchVodFiles()
         _vodDownloadExplicitlyStarted = -1
     }
 
@@ -847,6 +889,47 @@ ListItem {
             startOffset = offset
         } else {
             startOffset = baseOffset // base offset into multi match video
+        }
+    }
+
+    function _makeDisplayString(format) {
+        var str = ""
+        if (format.width > 0 || format.height > 0) {
+            str += format.width + "x" + format.height
+        }
+
+        if (format.tbr > 0) {
+            if (str.length > 0) {
+                str += ", "
+            }
+            str += format.tbr.toFixed(0) + " [tbr]"
+        }
+
+        return str
+    }
+
+    function _selectAvFormat(playlist, more) {
+        if (playlist.avFormats > 1) {
+            var labels = []
+            var values = []
+            for (var i = 0; i < playlist.avFormats; ++i) {
+                var f = playlist.avFormat(i)
+                labels.push(f.displayName + " / " + f.tbr.toFixed(0) + " [tbr] " + f.extension)
+                values.push(f.id)
+            }
+
+            var dialog = pageStack.push(
+                Qt.resolvedUrl("SelectFormatDialog.qml"), {
+                            //% "Select a format"
+                            "title": qsTrId("select-av-format-dialog-title"),
+                            "labels" : labels,
+                            "values": values
+                        })
+            dialog.accepted.connect(function() {
+                more(dialog.formatIndex)
+            })
+        } else {
+            more(0)
         }
     }
 }

@@ -31,8 +31,9 @@ import ".."
 Page {
     id: page
     readonly property int startOffset: Math.floor(_startOffsetMs * 1000)
-    property int _startOffsetMs: 0
+    property VodPlaylist _playList
     property int _seekFixup: 0
+    property int _currentUrlIndex: 0
     property bool _startSeek: false
     property string title
 
@@ -626,21 +627,23 @@ Page {
         }
     }
 
-    function play(url, offset, saveScreenShot) {
-        console.debug("play offset=" + offset + " url=" + url + " save screen shot=" + saveScreenShot)
-        mediaplayer.source = url
-        mediaplayer.play()
-        controlPanel.open = false
-        _startOffsetMs = offset * 1000
-        _grabFrameWhenReady = !!saveScreenShot
-        _startSeek = false
-        _seekFixup = 0
-        _pauseCount = 0;
-        _paused = false
-        if (_showVideo && _startOffsetMs > 0) {
-            console.debug("seek to " + _startOffsetMs)
-            _startSeek = true
-            _seek(_startOffsetMs)
+    function play(playlist, saveScreenShot) {
+        console.debug("valid playlist=" + playlist.isValid + ", offset=" + playlist.startOffset + " urls=" + playlist.parts + " save screen shot=" + saveScreenShot)
+        if (playlist.isValid) {
+            _currentUrlIndex = 0;
+            mediaplayer.source = playlist.url(_currentUrlIndex)
+            mediaplayer.play()
+            controlPanel.open = false
+            _grabFrameWhenReady = !!saveScreenShot
+            _startSeek = false
+            _seekFixup = 0
+            _pauseCount = 0;
+            _paused = false
+            if (_showVideo && playlist.startOffset > 0) {
+                console.debug("seek to " + playlist.startOffset)
+                _startSeek = true
+                _seek(playlist.startOffset * 1000)
+            }
         }
     }
 

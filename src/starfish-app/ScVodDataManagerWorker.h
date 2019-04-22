@@ -26,7 +26,7 @@
 
 #include <QSqlDatabase>
 #include <QSharedPointer>
-#include "VMVod.h"
+#include "VMPlaylist.h"
 #include "ScVodman.h"
 #include "conq.h"
 #include <functional>
@@ -38,6 +38,22 @@ class VMVodFileDownload;
 class ScVodDataManagerState;
 
 using ScVodIdList = QList<qint64>;
+
+struct ScVodFileFetchProgress
+{
+    QString filePath;
+    QString formatId;
+    qint64 urlShareId;
+    quint64 fileSize;
+    qreal progress;
+    int width;
+    int height;
+    int fileIndex;
+
+    ScVodFileFetchProgress() = default;
+};
+
+Q_DECLARE_METATYPE(ScVodFileFetchProgress)
 
 class ScVodDataManagerWorker : public QObject
 {
@@ -63,7 +79,7 @@ public:
     bool cancel(int ticket);
     void fetchMetaData(qint64 urlShareId, const QString& url, bool download);
     void fetchThumbnail(qint64 urlShareId, bool download);
-    void fetchVod(qint64 urlShareId, int formatIndex);
+    void fetchVod(qint64 urlShareId, const QString& format);
     void queryVodFiles(qint64 urlShareId);
     void cancelFetchVod(qint64 urlShareId);
     void cancelFetchMetaData(qint64 urlShareId);
@@ -77,26 +93,12 @@ public:
 signals:
     void fetchingMetaData(qint64 urlShareId);
     void fetchingThumbnail(qint64 urlShareId);
-    void metaDataAvailable(qint64 urlShareId, VMVod vod);
+    void metaDataAvailable(qint64 urlShareId, VMPlaylist playlist);
     void metaDataUnavailable(qint64 urlShareId);
     void metaDataDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
-    void vodAvailable(
-            qint64 urlShareId,
-            QString filePath,
-            qreal progress,
-            quint64 fileSize,
-            int width,
-            int height,
-            QString formatId);
+    void vodAvailable(ScVodFileFetchProgress progress);
     void vodUnavailable(qint64 urlShareId);
-    void fetchingVod(
-            qint64 urlShareId,
-            QString filePath,
-            qreal progress,
-            quint64 fileSize,
-            int width,
-            int height,
-            QString formatId);
+    void fetchingVod(ScVodFileFetchProgress progress);
     void thumbnailAvailable(qint64 urlShareId, QString filePath);
     void thumbnailUnavailable(qint64 urlShareId, ScVodDataManagerWorker::ThumbnailError error);
     void thumbnailDownloadFailed(qint64 urlShareId, int error, QString url);
@@ -121,8 +123,9 @@ private:
 
     struct VodmanFileRequest {
         qint64 token;
+        VMPlaylistDownloadRequest r;
         qint64 vod_url_share_id;
-        int formatIndex;
+//        int formatIndex;
         int refCount;
     };
 
@@ -133,16 +136,16 @@ private:
     };
 
 private slots:
-    void onMetaDataDownloadCompleted(qint64 token, const VMVod& vod);
-    void onFileDownloadChanged(qint64 token, const VMVodFileDownload& download);
-    void onFileDownloadCompleted(qint64 token, const VMVodFileDownload& download);
+    void onMetaDataDownloadCompleted(qint64 token, const VMPlaylist& playlist);
+    void onFileDownloadChanged(qint64 token, const VMPlaylistDownload& download);
+    void onFileDownloadCompleted(qint64 token, const VMPlaylistDownload& download);
     void onDownloadFailed(qint64 token, VMVodEnums::Error serviceErrorCode);
     void requestFinished(QNetworkReply* reply);
     void databaseStoreCompleted(int ticket, qint64 insertId, int error, QString errorDescription);
 
 private:
     void fetchMetaData(qint64 urlShareId, const QString& url);
-    void updateVodDownloadStatus(qint64 urlShareId, const VMVodFileDownload& download);
+    void updateVodDownloadStatus(qint64 urlShareId, const VMPlaylistDownload& download);
     void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
     void fetchThumbnailFromUrl(qint64 urlShareId, qint64 thumbnailId, const QString& url);
     void addThumbnail(ThumbnailRequest& r, const QByteArray& bytes);

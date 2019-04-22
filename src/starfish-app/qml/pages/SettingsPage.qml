@@ -24,6 +24,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Pickers 1.0
+import Vodman 2.0
 import org.duckdns.jgressmann 1.0
 import ".."
 
@@ -446,7 +447,7 @@ BasePage {
         }
 
         Item {
-            width: parent.width
+            width: root.width
             height: Theme.paddingLarge
         }
     }

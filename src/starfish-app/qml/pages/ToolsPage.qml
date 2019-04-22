@@ -24,6 +24,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Pickers 1.0
+import Vodman 2.0
 import org.duckdns.jgressmann 1.0
 import ".."
 
@@ -210,7 +211,7 @@ BasePage {
                     width: parent.width - 2*x
                     color: Theme.highlightColor
                     text: {
-                        switch (YTDLDownloader.status) {
+                        switch (YTDLDownloader.downloadStatus) {
                         case YTDLDownloader.StatusDownloading:
                             //% "youtube-dl is being downloaded"
                             return qsTrId("tools-ytdl-downloading")
@@ -229,7 +230,7 @@ BasePage {
                     width: parent.width
                     Button {
                         enabled: YTDLDownloader.isOnline &&
-                                 YTDLDownloader.status !== YTDLDownloader.StatusDownloading &&
+                                 YTDLDownloader.downloadStatus !== YTDLDownloader.StatusDownloading &&
                                  !VodDataManager.busy
                         //% "Update youtube-dl"
                         text: qsTrId("tools-ytdl-update")

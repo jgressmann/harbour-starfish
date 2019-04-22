@@ -25,7 +25,7 @@
 #include "ScVodDataManagerState.h"
 #include "Sc.h"
 #include "ScDatabaseStoreQueue.h"
-#include "VMVodFileDownload.h"
+#include "VMDownload.h"
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QNetworkAccessManager>
@@ -107,7 +107,7 @@ ScVodDataManagerWorker::ScVodDataManagerWorker(const QSharedPointer<ScVodDataMan
 {
     // needed else: QObject::connect: Cannot queue arguments of type
     // at runtime
-    qRegisterMetaType<VMVod>("VMVod");
+    qRegisterMetaType<VMPlaylist>("VMPlaylist");
     qRegisterMetaType<ScVodIdList>("ScVodIdList");
 
     m_Manager = new QNetworkAccessManager(this);
@@ -177,14 +177,14 @@ ScVodDataManagerWorker::fetchMetaData(qint64 urlShareId, const QString& url, boo
         QFile file(metaDataFilePath);
         if (fi.created().addSecs(3600) >= QDateTime::currentDateTime()) {
             if (file.open(QIODevice::ReadOnly)) {
-                VMVod vod;
+                VMPlaylist playlist;
                 {
                     QDataStream s(&file);
-                    s >> vod;
+                    s >> playlist;
                 }
 
-                if (vod.isValid()) {
-                    emit metaDataAvailable(urlShareId, vod);
+                if (playlist.isValid()) {
+                    emit metaDataAvailable(urlShareId, playlist);
                 } else {
                     // read invalid vod, try again
                     file.close();
@@ -301,14 +301,14 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 urlShareId, bool download)
             if (QFileInfo::exists(metaDataFilePath)) {
                 QFile file(metaDataFilePath);
                 if (file.open(QIODevice::ReadOnly)) {
-                    VMVod vod;
+                    VMPlaylist playlist;
                     {
                         QDataStream s(&file);
-                        s >> vod;
+                        s >> playlist;
                     }
 
-                    if (vod.isValid()) {
-                        auto thumnailUrl = vod.description().thumbnailUrl();
+                    if (playlist.isValid()) {
+                        auto thumnailUrl = playlist.data().vods[0].thumbnailUrl();
                         if (thumnailUrl.isEmpty()) {
                             emit thumbnailUnavailable(urlShareId, TE_Other);
                             return;
@@ -408,7 +408,7 @@ ScVodDataManagerWorker::fetchThumbnail(qint64 urlShareId, bool download)
 }
 
 void
-ScVodDataManagerWorker::fetchVod(qint64 urlShareId, int formatIndex)
+ScVodDataManagerWorker::fetchVod(qint64 urlShareId, const QString& _targetFormat)
 {
     for (auto& value : m_VodmanFileRequests) {
         if (value.vod_url_share_id == urlShareId) {
@@ -416,6 +416,8 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, int formatIndex)
             return; // already underway
         }
     }
+
+    QString targetFormat = _targetFormat;
 
     QSqlQuery q(m_Database);
 
@@ -451,7 +453,7 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, int formatIndex)
 
     auto vodFileName = q.value(0).toString();
     auto progress = q.value(1).toFloat();
-    auto formatId = q.value(2).toString();
+    auto previousFormat = q.value(2).toString();
     auto width = q.value(3).toInt();
     auto height = q.value(4).toInt();
     QString vodFilePath;
@@ -461,14 +463,16 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, int formatIndex)
         QFileInfo fi(vodFilePath);
         if (fi.exists() && fi.size() > 0) {
             if (progress >= 1) {
-                emit vodAvailable(
-                            urlShareId,
-                            vodFilePath,
-                            progress,
-                            fi.size(),
-                            width,
-                            height,
-                            formatId);
+                ScVodFileFetchProgress fetchProgress;
+                fetchProgress.urlShareId = urlShareId;
+                fetchProgress.filePath = vodFilePath;
+                fetchProgress.progress = progress;
+                fetchProgress.fileSize = fi.size();
+                fetchProgress.width = width;
+                fetchProgress.height = height;
+                fetchProgress.formatId = previousFormat;
+                fetchProgress.fileIndex = 0;
+                emit vodAvailable(fetchProgress);
             }
         }
     }
@@ -477,35 +481,45 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, int formatIndex)
     if (QFileInfo::exists(metaDataFilePath)) {
         QFile file(metaDataFilePath);
         if (file.open(QIODevice::ReadOnly)) {
-            VMVod vod;
+            VMPlaylist playlist;
             {
                 QDataStream s(&file);
-                s >> vod;
+                s >> playlist;
             }
 
-            if (vod.isValid()) {
-                if (!formatId.isEmpty()) {
-                    auto formats = vod._formats();
+            if (playlist.isValid()) {
+                auto formats = playlist._avFormats();
+                int formatIndex = -1;
+                if (previousFormat.isEmpty()) {
                     for (auto i = 0; i < formats.size(); ++i) {
                         const auto& format = formats[i];
-                        if (format.id() == formatId) {
-                            qDebug() << "using previous selected format at index" << i << "id" << formatId;
+                        if (format.id() == targetFormat) {
+                            formatIndex = i;
+                            break;
+                        }
+                    }
+                } else {
+                    for (auto i = 0; i < formats.size(); ++i) {
+                        const auto& format = formats[i];
+                        if (format.id() == previousFormat) {
+                            qDebug() << "using previous selected format at index" << i << "id" << previousFormat;
+                            targetFormat = previousFormat;
                             formatIndex = i;
                             break;
                         }
                     }
                 }
 
-                if (formatIndex >= vod._formats().size()) {
-                    qWarning() << "invalid format index (>=), not fetching vod" << formatIndex;
+                if (-1 == formatIndex) {
+                    qWarning() << "format" << targetFormat << "not available, not fetching vod";
                     emit vodDownloadFailed(urlShareId, VMVodEnums::VM_ErrorFormatNotAvailable);
                     return;
                 }
 
-                auto format = vod._formats()[formatIndex];
+                const auto& format = formats[formatIndex];
 
                 if (vodFilePath.isEmpty()) {
-                    QTemporaryFile tempFile(m_SharedState->m_VodDir + QStringLiteral("XXXXXX.") + format.fileExtension());
+                    QTemporaryFile tempFile(m_SharedState->m_VodDir + QStringLiteral("XXXXXX.") + format.extension());
                     tempFile.setAutoRemove(false);
                     if (tempFile.open()) {
                         vodFilePath = tempFile.fileName();
@@ -547,8 +561,11 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, int formatIndex)
                 r.token = m_Vodman->newToken();
                 r.vod_url_share_id = urlShareId;
                 r.refCount = 1;
+                r.r.filePath = vodFilePath;
+                r.r.format = format.id();
+                r.r.playlist = playlist;
                 m_VodmanFileRequests.insert(r.token, r);
-                m_Vodman->startFetchFile(r.token, vod, formatIndex, vodFilePath);
+                m_Vodman->startFetchFile(r.token, r.r);
                 notifyVodDownloadsChanged();
             } else {
                 // don't help, will mess up meta data fetch logic
@@ -603,7 +620,16 @@ ScVodDataManagerWorker::queryVodFiles(qint64 urlShareId)
             auto height = q.value(3).toInt();
             auto format = q.value(4).toString();
 
-            emit vodAvailable(urlShareId, filePath, progress, fi.size(), width, height, format);
+            ScVodFileFetchProgress fetchProgress;
+            fetchProgress.urlShareId = urlShareId;
+            fetchProgress.filePath = filePath;
+            fetchProgress.progress = progress;
+            fetchProgress.fileSize = fi.size();
+            fetchProgress.width = width;
+            fetchProgress.height = height;
+            fetchProgress.formatId = format;
+            fetchProgress.fileIndex = 0;
+            emit vodAvailable(fetchProgress);
         } else {
             emit vodUnavailable(urlShareId);
         }
@@ -632,19 +658,19 @@ ScVodDataManagerWorker::fetchMetaData(qint64 urlShareId, const QString& url) {
 }
 
 
-void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMVod& vod) {
+void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMPlaylist& playlist) {
     auto it = m_VodmanMetaDataRequests.find(token);
     if (it != m_VodmanMetaDataRequests.end()) {
         VodmanMetaDataRequest r = it.value();
         m_VodmanMetaDataRequests.erase(it);
 
-        if (vod.isValid()) {
+        if (playlist.isValid()) {
             // save vod meta data
             auto metaDataFilePath = m_SharedState->m_MetaDataDir + QString::number(r.vod_url_share_id);
             QFile file(metaDataFilePath);
             if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
                 QDataStream s(&file);
-                s << vod;
+                s << playlist;
                 if (s.status() == QDataStream::Ok && file.flush()) {
                     file.close();
 
@@ -660,11 +686,11 @@ void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMV
                         if (error) {
                             emit metaDataDownloadFailed(vodUrlShareId, VMVodEnums::VM_ErrorUnknown);
                         } else {
-                            emit metaDataAvailable(vodUrlShareId, vod);
+                            emit metaDataAvailable(vodUrlShareId, playlist);
                         }
                     };
                     m_PendingDatabaseStores.insert(tid, postUpdate);
-                    emit startProcessDatabaseStoreQueue(tid, UpdateSql, { vod.description().title(), vod.description().duration(), vodUrlShareId });
+                    emit startProcessDatabaseStoreQueue(tid, UpdateSql, { playlist.title(), playlist.duration(), vodUrlShareId });
                     emit startProcessDatabaseStoreQueue(tid, {}, {});
                 } else {
                     qDebug() << "failed to write meta data file" << metaDataFilePath;
@@ -676,32 +702,35 @@ void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMV
                 emit metaDataDownloadFailed(r.vod_url_share_id, VMVodEnums::VM_ErrorAccess);
             }
         } else {
-            qDebug() << "token" << token << "invalid vod" << vod;
+            qDebug() << "token" << token << "invalid vod" << playlist;
             emit metaDataDownloadFailed(r.vod_url_share_id, VMVodEnums::VM_ErrorNoVideo);
         }
     }
 }
 
-void ScVodDataManagerWorker::onFileDownloadCompleted(qint64 token, const VMVodFileDownload& download) {
+void ScVodDataManagerWorker::onFileDownloadCompleted(qint64 token, const VMPlaylistDownload& download) {
     auto it = m_VodmanFileRequests.find(token);
     if (it != m_VodmanFileRequests.end()) {
         const VodmanFileRequest r = it.value();
         m_VodmanFileRequests.erase(it);
 
-        emit vodAvailable(
-                    r.vod_url_share_id,
-                    download.filePath(),
-                    download.progress(),
-                    download.fileSize(),
-                    download.format().width(),
-                    download.format().height(),
-                    download.format().id());
+        ScVodFileFetchProgress fetchProgress;
+        fetchProgress.urlShareId = r.vod_url_share_id;
+        fetchProgress.filePath = download.data().files[0].filePath();
+        fetchProgress.progress = download.data().files[0].progress();
+        fetchProgress.fileSize = download.data().files[0].fileSize();
+        fetchProgress.width = 0;
+        fetchProgress.height = 0;
+        fetchProgress.formatId = download.format();
+        fetchProgress.fileIndex = 0;
+
+        emit vodAvailable(fetchProgress);
 
         notifyVodDownloadsChanged();
     }
 }
 
-void ScVodDataManagerWorker::onFileDownloadChanged(qint64 token, const VMVodFileDownload& download) {
+void ScVodDataManagerWorker::onFileDownloadChanged(qint64 token, const VMPlaylistDownload& download) {
     auto it = m_VodmanFileRequests.find(token);
     if (it != m_VodmanFileRequests.end()) {
         const VodmanFileRequest& r = it.value();
@@ -712,7 +741,7 @@ void ScVodDataManagerWorker::onFileDownloadChanged(qint64 token, const VMVodFile
 
 void ScVodDataManagerWorker::updateVodDownloadStatus(
         qint64 urlShareId,
-        const VMVodFileDownload& download) {
+        const VMPlaylistDownload& download) {
 
     static const QString UpdateSql = QStringLiteral(
                 "UPDATE vod_files\n"
@@ -726,14 +755,17 @@ void ScVodDataManagerWorker::updateVodDownloadStatus(
         if (!error) {
             // guard against reset to zero at restart of canceled download
             if (download.progress() > 0) {
-                emit fetchingVod(
-                            urlShareId,
-                            download.filePath(),
-                            download.progress(),
-                            download.fileSize(),
-                            download.format().width(),
-                            download.format().height(),
-                            download.format().id());
+                ScVodFileFetchProgress fetchProgress;
+                fetchProgress.urlShareId = urlShareId;
+                fetchProgress.filePath = download.data().files[0].filePath();
+                fetchProgress.progress = download.data().files[0].progress();
+                fetchProgress.fileSize = download.data().files[0].fileSize();
+                fetchProgress.width = 0;
+                fetchProgress.height = 0;
+                fetchProgress.formatId = download.format();
+                fetchProgress.fileIndex = 0;
+
+                emit vodAvailable(fetchProgress);
             }
         }
     };

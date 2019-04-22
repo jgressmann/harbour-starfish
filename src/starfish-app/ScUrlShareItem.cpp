@@ -1,5 +1,6 @@
 #include "ScUrlShareItem.h"
 #include "ScVodDataManager.h"
+#include "ScVodFileItem.h"
 
 #include <QSqlQuery>
 #include <QSqlError>
@@ -14,9 +15,9 @@ ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
     : QObject(parent)
     , m_UrlShareId(urlShareId)
 {
-    m_FileSize = -1;
+//    m_FileSize = -1;
     m_Length = -1;
-    m_Progress = -1;
+//    m_Progress = -1;
     m_FormatIndex = -1;
     m_ShareCount = -1;
     m_ThumbnailFetchStatus = Unknown;
@@ -152,13 +153,13 @@ ScUrlShareItem::setVodFetchStatus(FetchStatus value)
 }
 
 void
-ScUrlShareItem::onMetaDataAvailable(const VMVod& vod)
+ScUrlShareItem::onMetaDataAvailable(const VMPlaylist& playlist)
 {
     switch (m_MetaDataFetchStatus) {
     case Gone:
         break;
     default:
-        setMetaData(vod);
+        setMetaData(playlist);
         setMetaDataFetchStatus(Available);
         updateUrlShareData(); // now that meta data is available try again for title, length, ...
         if (m_ThumbnailIsWaitingForMetaData) {
@@ -274,37 +275,38 @@ ScUrlShareItem::onThumbnailDownloadFailed(int error, const QString& url)
 
 
 void
-ScUrlShareItem::onVodAvailable(
-        const QString& filePath,
-        qreal progress,
-        quint64 fileSize,
-        int width,
-        int height,
-        const QString& formatId) {
-
-    setVodFilePath(filePath);
-    setDownloadProgress(progress);
-    setFilesize(fileSize);
-    setSize(QSize(width, height));
-    setFormatId(formatId);
-    setVodFetchStatus(Available);
+ScUrlShareItem::onVodAvailable(const ScVodFileFetchProgress& progress)
+{
+    onVodAvailable(progress, Available);
 }
 
 void
-ScUrlShareItem::onFetchingVod(
-        const QString& filePath,
-        qreal progress,
-        quint64 fileSize,
-        int width,
-        int height,
-        const QString& formatId) {
+ScUrlShareItem::onFetchingVod(const ScVodFileFetchProgress& progress)
+{
+    onVodAvailable(progress, Fetching);
+}
 
-    setVodFilePath(filePath);
-    setDownloadProgress(progress);
-    setFilesize(fileSize);
-    setSize(QSize(width, height));
-    setFormatId(formatId);
-    setVodFetchStatus(Fetching);
+void
+ScUrlShareItem::onVodAvailable(const ScVodFileFetchProgress& progress, FetchStatus status)
+{
+    if (progress.fileIndex < 0) {
+        qWarning() << "invalid file index" << progress.fileIndex;
+        return;
+    }
+
+    if (progress.fileIndex > m_Files.size() + 1) {
+        qWarning() << "intermitten files missing" << progress.fileIndex;
+        return;
+    }
+
+    if (progress.fileIndex == m_Files.size()) {
+        m_Files.append(new ScVodFileItem(this));
+    }
+
+    m_Files[progress.fileIndex]->onVodAvailable(progress);
+    setSize(QSize(progress.width, progress.height));
+    setFormatId(progress.formatId);
+    setVodFetchStatus(status);
 }
 
 void
@@ -317,10 +319,12 @@ ScUrlShareItem::onVodUnavailable()
 void
 ScUrlShareItem::onVodDownloadCanceled()
 {
-    if (m_FilePath.isEmpty() || m_FileSize == 0) {
-        setVodFetchStatus(Unavailable);
-    } else {
+    if (m_Files.size() >= 1 &&
+            m_Files[0]->vodFileSize() > 0 &&
+            !m_Files[0]->vodFilePath().isEmpty()) {
         setVodFetchStatus(Available);
+    } else {
+        setVodFetchStatus(Unavailable);
     }
 }
 
@@ -339,112 +343,6 @@ ScUrlShareItem::onTitleAvailable(const QString& title)
 }
 
 
-//void ScUrlShareItem::onTitleAvailable(qint64 urlShareId, QString title)
-//{
-//    if (urlShareId == m_UrlShareId) {
-//        if (m_Title != title) {
-//            m_Title = title;
-//            emit titleChanged();
-//        }
-//    }
-//}
-
-
-//void
-//ScUrlShareItem::onMetaDataAvailable(qint64 urlShareId, VMVod vod)
-//{
-//    if (urlShareId == m_UrlShareId) {
-//        setMetaData(std::move(vod));
-//        setMetaDataFetchStatus(Available);
-//    }
-//}
-
-//void
-//ScUrlShareItem::onFetchingMetaData(qint64 urlShareId) {
-//    if (urlShareId == m_UrlShareId) {
-//        setMetaDataFetchStatus(Fetching);
-//    }
-//}
-
-//void
-//ScUrlShareItem::onMetaDataUnavailable(qint64 urlShareId)
-//{
-//    if (urlShareId == m_UrlShareId) {
-//        setMetaDataFetchStatus(Unavailable);
-//    }
-//}
-
-//void
-//ScUrlShareItem::onMetaDataDownloadFailed(qint64 urlShareId, int error)
-//{
-//    Q_UNUSED(error);
-//    if (urlShareId == m_UrlShareId) {
-//        setMetaDataFetchStatus(Failed);
-//    }
-//}
-
-//void
-//ScUrlShareItem::onThumbnailAvailable(qint64 urlShareId, QString filePath)
-//{
-//    if (urlShareId == m_UrlShareId) {
-//        setThumbnailPath(std::move(filePath));
-//        setThumbnailFetchStatus(Available);
-//    }
-//}
-
-//void
-//ScUrlShareItem::onFetchingThumbnail(qint64 urlShareId) {
-//    if (urlShareId == m_UrlShareId) {
-//        setThumbnailFetchStatus(Fetching);
-//    }
-//}
-
-//void
-//ScUrlShareItem::onThumbnailUnavailable(qint64 urlShareId)
-//{
-//    if (urlShareId == m_UrlShareId) {
-//        setThumbnailFetchStatus(Unavailable);
-//    }
-//}
-
-//void
-//ScUrlShareItem::onThumbnailFailed(qint64 urlShareId, int error, QString url)
-//{
-//    Q_UNUSED(error);
-//    Q_UNUSED(url);
-//    if (urlShareId == m_UrlShareId) {
-//        setThumbnailFetchStatus(Failed);
-//    }
-//}
-
-
-//void
-//ScUrlShareItem::onVodAvailable(
-//        qint64 urlShareId,
-//        QString filePath,
-//        qreal progress,
-//        quint64 fileSize,
-//        int width,
-//        int height,
-//        QString formatId) {
-//    if (urlShareId == m_UrlShareId) {
-//        setVodFilePath(std::move(filePath));
-//        setDownloadProgress(progress);
-//        setFilesize(fileSize);
-//        setSize(QSize(width, height));
-//        setFormatId(std::move(formatId));
-//        setVodFetchStatus(Available);
-//    }
-//}
-
-//void
-//ScUrlShareItem::onVodUnavailable(qint64 urlShareId) {
-//    if (urlShareId == m_UrlShareId) {
-//        setVodFetchStatus(Unavailable);
-//    }
-//}
-
-
 void
 ScUrlShareItem::setThumbnailPath(const QString& value)
 {
@@ -455,7 +353,7 @@ ScUrlShareItem::setThumbnailPath(const QString& value)
 }
 
 void
-ScUrlShareItem::setMetaData(const VMVod& value)
+ScUrlShareItem::setMetaData(const VMPlaylist& value)
 {
     m_MetaData = value;
     emit metaDataChanged();
@@ -465,30 +363,6 @@ ScUrlShareItem::setMetaData(const VMVod& value)
 //    fetchThumbnail();
 }
 
-void
-ScUrlShareItem::setVodFilePath(const QString& value)
-{
-    if (value != m_FilePath) {
-        m_FilePath = value;
-        emit vodFilePathChanged();
-    }
-}
-
-void
-ScUrlShareItem::setDownloadProgress(float value)
-{
-    m_Progress = value;
-    emit downloadProgressChanged();
-}
-
-void
-ScUrlShareItem::setFilesize(qint64 value)
-{
-    if (value != m_FileSize) {
-        m_FileSize = value;
-        emit vodFileSizeChanged();
-    }
-}
 
 void
 ScUrlShareItem::setFormatIndex(int value)
@@ -532,11 +406,25 @@ ScUrlShareItem::setFormatId(const QString& value)
 }
 
 void
-ScUrlShareItem::fetchVodFile(int formatIndex)
+ScUrlShareItem::fetchVodFiles(int formatIndex)
 {
+    if (!m_MetaData.isValid()) {
+        qWarning() << "no meta data";
+        return;
+    }
+
+    if (formatIndex < 0 ||
+            formatIndex >= m_MetaData.avFormats()) {
+        qWarning() << "invalid format index" << formatIndex;
+        return;
+    }
+
+    const auto& format = m_MetaData._avFormats()[formatIndex];
+
+
     switch (m_VodFetchStatus) {
     case Available:
-        if (m_FormatIndex == formatIndex && m_Progress >= 1) {
+        if (m_FormatIndex == formatIndex && downloadProgress() >= 1) {
             qDebug() << "fully downloaded";
             return;
         }
@@ -546,7 +434,7 @@ ScUrlShareItem::fetchVodFile(int formatIndex)
         if (manager()->isOnline()) {
             auto last = m_VodFetchStatus;
             setVodFetchStatus(Fetching);
-            auto result = manager()->fetchVod(m_UrlShareId, formatIndex);
+            auto result = manager()->fetchVod(m_UrlShareId, format.id());
             if (-1 == result) {
                 setVodFetchStatus(last);
             }
@@ -640,15 +528,22 @@ ScUrlShareItem::deleteMetaData()
 }
 
 void
-ScUrlShareItem::deleteVodFile()
+ScUrlShareItem::deleteVodFiles()
 {
     switch (m_VodFetchStatus) {
     case Available:
         manager()->deleteVodFiles(m_UrlShareId);
         // set all of these to give QML a better chance to show/hide menu items
-        setVodFilePath(QString());
-        setDownloadProgress(0);
-        setFilesize(0);
+//        setVodFilePath(QString());
+//        setDownloadProgress(0);
+//        setFilesize(0);
+        for (auto file : m_Files) {
+            delete file;
+        }
+        m_Files.clear();
+        emit filesChanged();
+        emit downloadProgressChanged();
+
         setSize(QSize());
         setFormatId(QString());
         setFormatIndex(-1);
@@ -660,7 +555,7 @@ ScUrlShareItem::deleteVodFile()
 }
 
 void
-ScUrlShareItem::cancelFetchVodFile()
+ScUrlShareItem::cancelFetchVodFiles()
 {
     switch (m_VodFetchStatus) {
     case Fetching:
@@ -690,7 +585,7 @@ ScUrlShareItem::updateFormatIndex()
 {
     if (m_MetaData.isValid() && !m_FormatId.isEmpty()) {
         auto result = -1;
-        const auto& fs = m_MetaData.data()._formats;
+        const auto& fs = m_MetaData.data().avFormats;
         for (auto i = 0; i < fs.size(); ++i) {
             if (fs[i].id() == m_FormatId) {
                 result = i;
@@ -701,4 +596,31 @@ ScUrlShareItem::updateFormatIndex()
     } else {
         setFormatIndex(-1);
     }
+}
+
+qreal
+ScUrlShareItem::downloadProgress() const
+{
+    qreal progress = 0;
+
+    if (m_Files.size()) {
+        for (const auto& file : m_Files) {
+            progress += file->downloadProgress();
+        }
+
+        progress /= m_Files.size();
+    }
+
+    return progress;
+}
+
+ScVodFileItem*
+ScUrlShareItem::file(int index) const
+{
+    if (index >= 0 && index < m_Files.size()) {
+        return m_Files[index];
+    }
+
+    qCritical() << "index out of range" << index;
+    return nullptr;
 }

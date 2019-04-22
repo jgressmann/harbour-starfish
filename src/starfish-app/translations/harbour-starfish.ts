@@ -97,174 +97,174 @@
         <translation>Click the button below to try again</translation>
     </message>
     <message id="about-page-header">
-        <location filename="../qml/pages/AboutPage.qml" line="45"/>
+        <location filename="../qml/pages/AboutPage.qml" line="46"/>
         <source>About %1</source>
         <translation>About %1</translation>
     </message>
     <message id="about-version-text">
-        <location filename="../qml/pages/AboutPage.qml" line="96"/>
+        <location filename="../qml/pages/AboutPage.qml" line="97"/>
         <source>%1 %2</source>
         <translation>%1 %2</translation>
     </message>
     <message id="about-description-header">
-        <location filename="../qml/pages/AboutPage.qml" line="123"/>
+        <location filename="../qml/pages/AboutPage.qml" line="124"/>
         <source>Description</source>
         <translation>Description</translation>
     </message>
     <message id="about-description-text">
-        <location filename="../qml/pages/AboutPage.qml" line="130"/>
+        <location filename="../qml/pages/AboutPage.qml" line="131"/>
         <source>%1 lets you download and stream StarCraft Brood War and StarCraft II VODs from the internet.</source>
         <translation>%1 lets you download and stream StarCraft Brood War and StarCraft II VODs from the internet.</translation>
     </message>
     <message id="about-licensing-header">
-        <location filename="../qml/pages/AboutPage.qml" line="138"/>
+        <location filename="../qml/pages/AboutPage.qml" line="139"/>
         <source>Licensing</source>
         <translation>Licensing</translation>
     </message>
     <message id="about-licensing-text">
-        <location filename="../qml/pages/AboutPage.qml" line="146"/>
+        <location filename="../qml/pages/AboutPage.qml" line="147"/>
         <source>Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 is available under the &lt;a href=&apos;https://opensource.org/licenses/MIT&apos;&gt;MIT&lt;/a&gt; license.&lt;br/&gt;&lt;br/&gt;This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I&apos;ll remove the offending data.&lt;br/&gt;&lt;br/&gt;%1 uses icons downloaded from &lt;a href=&apos;https://www.flaticon.com&apos;&gt;flaticon&lt;/a&gt; created by &lt;a href=&apos;https://www.flaticon.com/authors/gregor-cresnar&apos;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&apos;https://www.flaticon.com/authors/freepik&apos;&gt;Freepik&lt;/a&gt;, and &lt;a href=&apos;https://www.flaticon.com/authors/smashicons&apos;&gt;Smashicons&lt;/a&gt;.</source>
         <oldsource>Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 is available under the &lt;a href=&apos;https://opensource.org/licenses/MIT&apos;&gt;MIT&lt;/a&gt; license.&lt;br/&gt;&lt;br/&gt;This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I&apos;ll remove the offending data.&lt;br/&gt;&lt;br/&gt;%1 uses icons downloaded from &lt;a href=&apos;https://www.flaticon.com&apos;&gt;flaticon&lt;/a&gt; created by &lt;a href=&apos;https://www.flaticon.com/authors/gregor-cresnar&apos;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&apos;https://www.flaticon.com/authors/freepik&apos;&gt;Freepik&lt;/a&gt;, and &lt;a href=&apos;https://www.flaticon.com/authors/smashicons</oldsource>
         <translation>Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 is available under the &lt;a href=&quot;https://opensource.org/licenses/MIT&quot;&gt;MIT&lt;/a&gt; license.&lt;br/&gt;&lt;br/&gt;This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I&apos;ll remove the offending data.&lt;br/&gt;&lt;br/&gt;%1 uses icons downloaded from &lt;a href=&quot;https://www.flaticon.com&quot;&gt;flaticon&lt;/a&gt; created by &lt;a href=&quot;https://www.flaticon.com/authors/gregor-cresnar&quot;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&quot;https://www.flaticon.com/authors/freepik&quot;&gt;Freepik&lt;/a&gt;, and &lt;a href=&quot;https://www.flaticon.com/authors/smashicons&quot;&gt;Smashicons&lt;/a&gt;.</translation>
     </message>
     <message id="about-sources-header">
-        <location filename="../qml/pages/AboutPage.qml" line="154"/>
+        <location filename="../qml/pages/AboutPage.qml" line="155"/>
         <source>Sources</source>
         <translation>Sources</translation>
     </message>
     <message id="about-sources-text">
-        <location filename="../qml/pages/AboutPage.qml" line="161"/>
+        <location filename="../qml/pages/AboutPage.qml" line="162"/>
         <source>The sources are available on &lt;a href=&apos;https://github.com/jgressmann/harbour-starfish&apos;&gt;GitHub&lt;/a&gt;.</source>
         <oldsource>The sources are available on &lt;a href=&quot;https://github.com/jgressmann/harbour-starfish&quot;&gt;GitHub&lt;/a&gt;.</oldsource>
         <translation>The sources are available on &lt;a href=&quot;https://github.com/jgressmann/harbour-starfish&quot;&gt;GitHub&lt;/a&gt;.</translation>
     </message>
     <message id="about-translations-header">
-        <location filename="../qml/pages/AboutPage.qml" line="170"/>
+        <location filename="../qml/pages/AboutPage.qml" line="171"/>
         <source>Translations</source>
         <translation>Translations</translation>
     </message>
     <message id="about-translations-english-label">
-        <location filename="../qml/pages/AboutPage.qml" line="180"/>
+        <location filename="../qml/pages/AboutPage.qml" line="181"/>
         <source>English</source>
         <oldsource>names of translators</oldsource>
         <translation>English</translation>
     </message>
     <message id="about-translations-english-value">
-        <location filename="../qml/pages/AboutPage.qml" line="182"/>
+        <location filename="../qml/pages/AboutPage.qml" line="183"/>
         <source>names of translators</source>
         <oldsource>English</oldsource>
         <translation>Jean Gressmann</translation>
     </message>
     <message id="about-translations-german-label">
-        <location filename="../qml/pages/AboutPage.qml" line="187"/>
+        <location filename="../qml/pages/AboutPage.qml" line="188"/>
         <source>German</source>
         <oldsource>names of translators</oldsource>
         <translation>German</translation>
     </message>
     <message id="about-translations-german-value">
-        <location filename="../qml/pages/AboutPage.qml" line="189"/>
+        <location filename="../qml/pages/AboutPage.qml" line="190"/>
         <source>names of translators</source>
         <oldsource>German</oldsource>
         <translation>Jean Gressmann</translation>
     </message>
     <message id="tools-page-fetch-section-header">
-        <location filename="../qml/pages/ToolsPage.qml" line="47"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="48"/>
         <source>Data fetching</source>
         <oldsource>Fetch</oldsource>
         <translation>Fetch</translation>
     </message>
     <message id="tools-page-vod-fetch-marker">
-        <location filename="../qml/pages/ToolsPage.qml" line="53"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="54"/>
         <source>VOD fetch marker</source>
         <translation>VOD fetch marker</translation>
     </message>
     <message id="tools-page-reset-vod-fetch-marker">
-        <location filename="../qml/pages/ToolsPage.qml" line="65"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="66"/>
         <source>Reset VOD fetch marker</source>
         <translation>Reset VOD fetch marker</translation>
     </message>
     <message id="tools-page-reset-last-fetch-timestamp">
-        <location filename="../qml/pages/ToolsPage.qml" line="76"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="77"/>
         <source>Reset last fetch timestamp</source>
         <translation>Reset last fetch timestamp</translation>
     </message>
     <message id="tools-page-delete-sc2links.com-state">
-        <location filename="../qml/pages/ToolsPage.qml" line="86"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="87"/>
         <source>Delete sc2links.com state</source>
         <translation>Delete sc2links.com state</translation>
     </message>
     <message id="tools-page-delete-sc2casts.com-state">
-        <location filename="../qml/pages/ToolsPage.qml" line="96"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="97"/>
         <source>Delete sc2casts.com state</source>
         <translation>Delete sc2casts.com state</translation>
     </message>
     <message id="tools-page-data-section-header">
-        <location filename="../qml/pages/ToolsPage.qml" line="108"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="109"/>
         <source>Data</source>
         <translation>Data</translation>
     </message>
     <message id="tools-page-data-clear">
-        <location filename="../qml/pages/ToolsPage.qml" line="115"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="116"/>
         <source>Clear</source>
         <translation>Clear</translation>
     </message>
     <message id="tools-page-seen-section-header">
-        <location filename="../qml/pages/ToolsPage.qml" line="136"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="137"/>
         <source>Seen</source>
         <translation>Seen</translation>
     </message>
     <message id="tools-page-seen-recently-watched-videos">
-        <location filename="../qml/pages/ToolsPage.qml" line="152"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="153"/>
         <source>Reset recent videos</source>
         <translation>Reset recent videos</translation>
     </message>
     <message id="tools-ytdl-downloading">
-        <location filename="../qml/pages/ToolsPage.qml" line="216"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="217"/>
         <source>youtube-dl is being downloaded</source>
         <translation>youtube-dl is being downloaded</translation>
     </message>
     <message id="tools-ytdl-unavailable">
-        <location filename="../qml/pages/ToolsPage.qml" line="220"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="221"/>
         <source>youtube-dl is not available</source>
         <translation>youtube-dl is not available</translation>
     </message>
     <message id="tools-ytdl-version">
-        <location filename="../qml/pages/ToolsPage.qml" line="223"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="224"/>
         <source>youtube-dl version %1</source>
         <translation>youtube-dl version %1</translation>
     </message>
     <message id="tools-ytdl-update">
-        <location filename="../qml/pages/ToolsPage.qml" line="235"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="236"/>
         <source>Update youtube-dl</source>
         <translation>Update youtube-dl</translation>
     </message>
     <message id="tools-page-cache-section-title">
-        <location filename="../qml/pages/ToolsPage.qml" line="264"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="265"/>
         <source>Cache</source>
         <translation>Cache</translation>
     </message>
     <message id="tools-page-cache-section-clear-meta-data">
-        <location filename="../qml/pages/ToolsPage.qml" line="275"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="276"/>
         <source>Clear meta data</source>
         <translation>Clear meta data</translation>
     </message>
     <message id="tools-page-cache-section-clear-thumbnails">
-        <location filename="../qml/pages/ToolsPage.qml" line="288"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="289"/>
         <source>Clear thumbnails</source>
         <translation>Clear thumbnails</translation>
     </message>
     <message id="tools-page-cache-section-clear-vod-files">
-        <location filename="../qml/pages/ToolsPage.qml" line="300"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="301"/>
         <source>Clear VOD files</source>
         <translation>Clear VOD files</translation>
     </message>
     <message id="tools-page-cache-section-clear-icons">
-        <location filename="../qml/pages/ToolsPage.qml" line="313"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="314"/>
         <source>Clear icons</source>
         <translation>Clear icons</translation>
     </message>
     <message id="tools-page-title">
-        <location filename="../qml/pages/ToolsPage.qml" line="351"/>
+        <location filename="../qml/pages/ToolsPage.qml" line="352"/>
         <source>Tools</source>
         <translation>Tools</translation>
     </message>
@@ -512,172 +512,172 @@
         <translation>Format</translation>
     </message>
     <message id="settings-page-confirm-data-dir-move-dialog-title">
-        <location filename="../qml/pages/SettingsPage.qml" line="62"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="63"/>
         <source>Confirm data directory move</source>
         <translation>Confirm data directory move</translation>
     </message>
     <message id="settings-page-confirm-data-dir-move-dialog-accept-text">
-        <location filename="../qml/pages/SettingsPage.qml" line="64"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="65"/>
         <source>Move</source>
         <translation>Move</translation>
     </message>
     <message id="settings-page-confirm-data-dir-move-dialog-text">
-        <location filename="../qml/pages/SettingsPage.qml" line="75"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="76"/>
         <source>The application&apos;s data will be moved to %1.&lt;br/&gt;&lt;br/&gt;This operation could take a good long while. During this time you will not be able to use the application.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</source>
         <translation>The application&apos;s data will be moved to %1.&lt;br/&gt;&lt;br/&gt;This operation could take a good long while. During this time you will not be able to use the application.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</translation>
     </message>
     <message id="settings-page-data-dir-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="115"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="116"/>
         <source>Data</source>
         <translation>Data</translation>
     </message>
     <message id="settings-page-data-dir-move-combobox-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="123"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="124"/>
         <source>Directory</source>
         <translation>Directory</translation>
     </message>
     <message id="settings-page-data-dir-move-choice-cache">
-        <location filename="../qml/pages/SettingsPage.qml" line="128"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="129"/>
         <source>Cache</source>
         <translation>Cache</translation>
     </message>
     <message id="settings-page-data-dir-move-choice-custom">
-        <location filename="../qml/pages/SettingsPage.qml" line="132"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="133"/>
         <source>Custom</source>
         <translation>Custom</translation>
     </message>
     <message id="settings-page-data-dir-text-field-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="142"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="143"/>
         <source>Directory for VOD and meta data</source>
         <translation>Directory for VOD and meta data</translation>
     </message>
     <message id="settings-page-data-dir-text-field-placeholder">
-        <location filename="../qml/pages/SettingsPage.qml" line="144"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="145"/>
         <source>Data directory</source>
         <translation>Data directory</translation>
     </message>
     <message id="settings-page-data-dir-pick-directory">
-        <location filename="../qml/pages/SettingsPage.qml" line="160"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="161"/>
         <source>Pick directory</source>
         <translation>Pick directory</translation>
     </message>
     <message id="settings-page-data-dir-apply-change">
-        <location filename="../qml/pages/SettingsPage.qml" line="169"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="170"/>
         <source>Apply change</source>
         <translation>Apply change</translation>
     </message>
     <message id="settings-page-network-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="176"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="177"/>
         <source>Network</source>
         <translation>Network</translation>
     </message>
     <message id="settings-page-network-connection-type-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="183"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="184"/>
         <source>Network connection type</source>
         <translation>Network connection type</translation>
     </message>
     <message id="settings-page-network-connection-choice-autodetect">
-        <location filename="../qml/pages/SettingsPage.qml" line="187"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="188"/>
         <source>Autodetect</source>
         <translation>Autodetect</translation>
     </message>
     <message id="settings-page-network-connection-choice-broadband">
-        <location filename="../qml/pages/SettingsPage.qml" line="191"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="192"/>
         <source>Broadband</source>
         <translation>Broadband</translation>
     </message>
     <message id="settings-page-network-connection-choice-mobile">
-        <location filename="../qml/pages/SettingsPage.qml" line="195"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="196"/>
         <source>Mobile</source>
         <translation>Mobile</translation>
     </message>
     <message id="settings-page-network-max-meta-data-downloads">
-        <location filename="../qml/pages/SettingsPage.qml" line="211"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="212"/>
         <source>Max concurrent meta data downloads</source>
         <translation>Max. concurrent meta data downloads</translation>
     </message>
     <message id="settings-page-network-vod-site-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="235"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="236"/>
         <source>VOD site</source>
         <translation>VOD site</translation>
     </message>
     <message id="settings-page-network-vod-site-desc">
-        <location filename="../qml/pages/SettingsPage.qml" line="237"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="238"/>
         <source>This site is used to check for new VODs.</source>
         <translation>This site is used to check for new VODs.</translation>
     </message>
     <message id="settings-page-network-periodically-check-for-vods-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="267"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="268"/>
         <source>Periodically check for new VODs</source>
         <translation>Periodically check for new VODs</translation>
     </message>
     <message id="settings-page-network-check-interval-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="281"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="282"/>
         <source>Minutes between checks</source>
         <translation>Minutes between checks</translation>
     </message>
     <message id="settings-page-network-continue-download-on-page-destruction">
-        <location filename="../qml/pages/SettingsPage.qml" line="303"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="304"/>
         <source>Continue VOD file download when page closes</source>
         <translation>Continue VOD file download when page closes</translation>
     </message>
     <message id="settings-page-format-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="315"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="316"/>
         <source>Format</source>
         <translation>Format</translation>
     </message>
     <message id="settings-page-format-broadband-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="321"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="322"/>
         <source>Broadband</source>
         <translation>Broadband</translation>
     </message>
     <message id="settings-page-format-mobile-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="334"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="335"/>
         <source>Mobile</source>
         <translation>Mobile</translation>
     </message>
     <message id="settings-page-playback-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="346"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="347"/>
         <source>Playback</source>
         <translation>Playback</translation>
     </message>
     <message id="settings-page-playback-external-media-player-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="351"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="352"/>
         <source>Use external media player</source>
         <translation>Use external media player</translation>
     </message>
     <message id="settings-page-playback-no-videos-in-recently-watched">
-        <location filename="../qml/pages/SettingsPage.qml" line="364"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="365"/>
         <source>Number of recently watched videos to keep</source>
         <translation>Number of recently watched videos to keep</translation>
     </message>
     <message id="settings-page-playback-pause-on-device-lock-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="387"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="388"/>
         <source>Pause playback on device lock</source>
         <translation>Pause playback on device lock</translation>
     </message>
     <message id="settings-page-playback-pause-if-cover-page-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="398"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="399"/>
         <source>Pause playback when the cover page is shown</source>
         <translation>Pause playback when the cover page is shown</translation>
     </message>
     <message id="settings-page-new-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="409"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="410"/>
         <source>New</source>
         <translation>New</translation>
     </message>
     <message id="settings-page-new-no-days-to-keep-vods-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="416"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="417"/>
         <source>Number of days to keep a VOD in &apos;New&apos;</source>
         <translation>Number of days to keep a VOD in &apos;New&apos;</translation>
     </message>
     <message id="settings-page-new-remove-seen-vods-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="439"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="440"/>
         <source>Remove watched VODs from &apos;New&apos;</source>
         <translation>Remove watched VODs from &apos;New&apos;</translation>
     </message>
     <message id="settings-page-title">
-        <location filename="../qml/pages/SettingsPage.qml" line="466"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="467"/>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
@@ -702,43 +702,63 @@
         <translation>ask every time</translation>
     </message>
     <message id="database-error-network-failure">
-        <location filename="../qml/harbour-starfish.qml" line="84"/>
+        <location filename="../qml/harbour-starfish.qml" line="86"/>
         <source>Network down</source>
         <translation>Network down</translation>
     </message>
     <message id="database-error-invalid-data">
-        <location filename="../qml/harbour-starfish.qml" line="89"/>
+        <location filename="../qml/harbour-starfish.qml" line="91"/>
         <source>Data downloaded is invalid</source>
         <translation>Data downloaded is invalid</translation>
     </message>
     <message id="database-error-decompression-failed">
-        <location filename="../qml/harbour-starfish.qml" line="94"/>
+        <location filename="../qml/harbour-starfish.qml" line="96"/>
         <source>Data decompression failed</source>
         <translation>Data decompression failed</translation>
     </message>
     <message id="database-error-unknown">
-        <location filename="../qml/harbour-starfish.qml" line="99"/>
+        <location filename="../qml/harbour-starfish.qml" line="101"/>
         <source>Yikes! An unknown error has occurred</source>
         <translation>Yikes! An unknown error has occurred :/</translation>
     </message>
     <message id="vod-download-failed-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="224"/>
-        <location filename="../qml/harbour-starfish.qml" line="225"/>
+        <location filename="../qml/harbour-starfish.qml" line="226"/>
+        <location filename="../qml/harbour-starfish.qml" line="227"/>
         <source>Download failed</source>
         <translation>Download failed</translation>
     </message>
     <message id="new-vods-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="237"/>
+        <location filename="../qml/harbour-starfish.qml" line="239"/>
         <source>VODs added</source>
         <translation>VODs added</translation>
     </message>
     <message id="seen-vods-deleted-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="257"/>
+        <location filename="../qml/harbour-starfish.qml" line="259"/>
         <source>Seen VODs deleted</source>
         <translation>Seen VODs deleted</translation>
     </message>
+    <message id="nofification-download-ytdl-update-available-summary">
+        <location filename="../qml/harbour-starfish.qml" line="271"/>
+        <source>youtube-dl update available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="nofification-ytdl-update-available-body">
+        <location filename="../qml/harbour-starfish.qml" line="274"/>
+        <source>youtube-dl version %1 available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="nofification-ytdl-update-available-action">
+        <location filename="../qml/harbour-starfish.qml" line="279"/>
+        <source>Update youtube-dl</source>
+        <translation type="unfinished">Update youtube-dl</translation>
+    </message>
+    <message id="notification-busy">
+        <location filename="../qml/harbour-starfish.qml" line="306"/>
+        <source>%1 is busy. Try again later.</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message id="vods-added-notification-body" numerus="yes">
-        <location filename="../qml/harbour-starfish.qml" line="438"/>
+        <location filename="../qml/harbour-starfish.qml" line="480"/>
         <source>%1 VODs added</source>
         <translation>
             <numerusform>1 VOD added</numerusform>
@@ -944,6 +964,11 @@
         <location filename="../qml/pages/StartPage.qml" line="106"/>
         <source>For details check the log file located in %1</source>
         <translation>For details check the log file located in %1</translation>
+    </message>
+    <message id="select-av-format-dialog-title">
+        <location filename="../qml/pages/MatchItem.qml" line="925"/>
+        <source>Select a format</source>
+        <translation type="unfinished">Select a format</translation>
     </message>
 </context>
 <context>

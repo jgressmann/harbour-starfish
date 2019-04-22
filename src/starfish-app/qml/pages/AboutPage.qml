@@ -23,6 +23,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Vodman 2.0
 import org.duckdns.jgressmann 1.0
 
 Page {
@@ -101,7 +102,7 @@ Page {
                     }
 
                     Label {
-                        visible: YTDLDownloader.status === YTDLDownloader.StatusReady
+                        visible: YTDLDownloader.downloadStatus === YTDLDownloader.StatusReady
                         text: "youtube-dl " + YTDLDownloader.ytdlVersion
                         anchors.horizontalCenter: parent.horizontalCenter
                         font.pixelSize: Theme.fontSizeMedium

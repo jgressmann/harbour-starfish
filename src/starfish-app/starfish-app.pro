@@ -20,7 +20,9 @@ SOURCES += harbour-starfish.cpp \
     ScDatabase.cpp \
     ScRecentlyWatchedVideos.cpp \
     ScMatchItem.cpp \
-    ScUrlShareItem.cpp
+    ScUrlShareItem.cpp \
+    ScVodFileItem.cpp \
+    ScVodPlaylist.cpp
 
 
 
@@ -38,7 +40,9 @@ HEADERS += \
     ScDatabase.h \
     ScRecentlyWatchedVideos.h \
     ScMatchItem.h \
-    ScUrlShareItem.h
+    ScUrlShareItem.h \
+    ScVodFileItem.h \
+    ScVodPlaylist.h
 
 #../../rpm/harbour-starfish.changes.run.in \
 #../../rpm/harbour-starfish.yaml \

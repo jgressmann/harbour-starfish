@@ -26,6 +26,7 @@ import Sailfish.Silica 1.0
 import Nemo.Configuration 1.0
 import Nemo.DBus 2.0
 import Nemo.Notifications 1.0
+import Vodman 2.0
 import org.duckdns.jgressmann 1.0
 import "."
 
@@ -34,17 +35,18 @@ ApplicationWindow {
     id: window
 
     //    initialPage: Qt.resolvedUrl("pages/SettingsPage.qml")
-    initialPage: YTDLDownloader.status === YTDLDownloader.StatusReady
+    initialPage: YTDLDownloader.downloadStatus === YTDLDownloader.StatusReady
                  ? Qt.resolvedUrl("pages/StartPage.qml")
                  : Qt.resolvedUrl("pages/YTDLPage.qml")
     cover: Qt.resolvedUrl("cover/CoverPage.qml")
     allowedOrientations: defaultAllowedOrientations
     property int _vodsAdded: 0
     readonly property bool canFetchVods:
-        YTDLDownloader.status === YTDLDownloader.StatusReady &&
+        YTDLDownloader.downloadStatus === YTDLDownloader.StatusReady &&
         !VodDataManager.busy &&
         App.isOnline &&
         vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
+    property bool _hasCheckedForYtdlUpdate: false
 
     Sc2LinksDotComScraper {
         id: sc2LinksDotComScraper
@@ -260,6 +262,28 @@ ApplicationWindow {
         icon: appIcon
     }
 
+    Notification {
+        id: updateNotification
+        appName: App.displayName
+        appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+        icon: appIcon
+        //% "youtube-dl update available"
+        summary: qsTrId("nofification-download-ytdl-update-available-summary")
+        previewSummary: summary
+        //% "youtube-dl version %1 available"
+        body: qsTrId("nofification-ytdl-update-available-body").arg(YTDLDownloader.updateVersion)
+        previewBody: body
+        remoteActions: [ {
+             "name": "default",
+             //% "Update youtube-dl"
+             "displayName": qsTrId("nofification-ytdl-update-available-action"),
+             "service": "org.duckdns.jgressmann.starfish.app",
+             "path": "/instance",
+             "iface": "org.duckdns.jgressmann.starfish.app",
+             "method": "updateYtdl",
+         } ]
+    }
+
     DBusAdaptor {
         bus: DBus.SessionBus
         service: 'org.duckdns.jgressmann.starfish.app'
@@ -273,6 +297,17 @@ ApplicationWindow {
             }
 
             window.activate()
+        }
+
+        function updateYtdl() {
+            if (!canStartDownload || vodDownloadModel.busy) {
+                errorNotification.body = errorNotification.previewBody =
+                        //% "%1 is busy. Try again later."
+                        qsTrId("notification-busy").arg(App.displayName)
+                errorNotification.publish()
+            } else {
+                YTDLDownloader.download()
+            }
         }
     }
 
@@ -364,10 +399,12 @@ ApplicationWindow {
 
     Connections {
         target: YTDLDownloader
-        onStatusChanged: {
-            _setYtdlPath()
+        onYtdlPathChanged: _setYtdlPath()
+        onDownloadStatusChanged: {
             _switchContentPage()
+            _checkForYtdlUpate()
         }
+        onIsOnlineChanged: _checkForYtdlUpate()
     }
 
     Connections {
@@ -381,6 +418,7 @@ ApplicationWindow {
         VodDataManager.vodsAdded.connect(_onVodsAdded)
         VodDataManager.busyChanged.connect(_busyChanged)
         VodDataManager.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
+        YTDLDownloader.isUpdateAvailableChanged.connect(_ytdlUpdateAvailableChanged)
         _setMode()
         _setYtdlPath()
         _setScraper()
@@ -407,6 +445,10 @@ ApplicationWindow {
         }
 
 
+    }
+
+    Component.onDestruction: {
+        YTDLDownloader.isUpdateAvailableChanged.disconnect(_ytdlUpdateAvailableChanged)
     }
 
     function _setScraper() {
@@ -451,7 +493,7 @@ ApplicationWindow {
     }
 
     function _setYtdlPath() {
-        if (YTDLDownloader.status === YTDLDownloader.StatusReady) {
+        if (YTDLDownloader.downloadStatus === YTDLDownloader.StatusReady) {
             VodDataManager.setYtdlPath(YTDLDownloader.ytdlPath)
         } else {
             VodDataManager.setYtdlPath("")
@@ -482,6 +524,22 @@ ApplicationWindow {
                 break;
             }
 
+        }
+    }
+
+    function _ytdlUpdateAvailableChanged() {
+        if (YTDLDownloader.isUpdateAvailable) {
+            updateNotification.publish()
+        }
+    }
+
+    function _checkForYtdlUpate() {
+        if (!_hasCheckedForYtdlUpdate &&
+            YTDLDownloader.isOnline &&
+            YTDLDownloader.downloadStatus === YTDLDownloader.StatusReady &&
+            YTDLDownloader.updateStatus === YTDLDownloader.StatusUnavailable) {
+            _hasCheckedForYtdlUpdate = true
+            YTDLDownloader.checkForUpdate()
         }
     }
 }

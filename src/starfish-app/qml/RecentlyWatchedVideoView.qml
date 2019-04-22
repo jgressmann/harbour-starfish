@@ -203,7 +203,8 @@ SilicaListView {
                     memory: matchItemConnections
 
                     onPlayRequest: function (self) {
-                        listView.clicked(VodDataManager.recentlyWatched.vodKey(self.rowId), self.vodUrl, self.startOffset, self)
+                        listView.clicked(
+                                    VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.playlist.startOffset, self)
                     }
 
                     menu: Component {

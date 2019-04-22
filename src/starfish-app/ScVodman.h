@@ -24,10 +24,10 @@
 #pragma once
 
 #include "VMYTDL.h"
+#include "VMDownload.h"
 
-class VMVod;
-class VMVodFileDownload;
-class VMVodMetaDataDownload;
+class VMPlaylistDownload;
+class VMMetaDataDownload;
 
 class ScVodman : public QObject
 {
@@ -39,7 +39,7 @@ public:
 
     qint64 newToken();
     void startFetchMetaData(qint64 token, const QString& url);
-    void startFetchFile(qint64 token, const VMVod& vod, int formatIndex, const QString& filePath);
+    void startFetchFile(qint64 token, const VMPlaylistDownloadRequest& request);
     void cancel(qint64 token);
     int maxConcurrentMetaDataDownloads() const { return m_MaxMeta; }
     void setMaxConcurrentMetaDataDownloads(int value);
@@ -48,42 +48,26 @@ public:
 
 
 signals:
-    void metaDataDownloadCompleted(qint64 token, const VMVod& vod);
-    void fileDownloadChanged(qint64 token, const VMVodFileDownload& download);
-    void fileDownloadCompleted(qint64 token, const VMVodFileDownload& download);
+    void metaDataDownloadCompleted(qint64 token, const VMPlaylist& playlist);
+    void fileDownloadChanged(qint64 token, const VMPlaylistDownload& download);
+    void fileDownloadCompleted(qint64 token, const VMPlaylistDownload& download);
     void downloadFailed(qint64 token, VMVodEnums::Error serviceErrorCode);
     void maxConcurrentMetaDataDownloadsChanged();
 
 private slots:
-    void onVodFileDownloadRemoved(qint64 handle, const VMVodFileDownload& download);
-    void onVodFileDownloadChanged(qint64 handle, const VMVodFileDownload& download);
-    void onVodFileMetaDataDownloadCompleted(qint64 handle, const VMVodMetaDataDownload& download);
-
-private:
-    enum RequestType {
-        RT_Unknown, // this value will be used for default constructed Request objects
-        RT_MetaData,
-        RT_File,
-    };
-
-    struct Request {
-        RequestType type;
-        QString url;
-        QString filePath;
-        VMVod vod;
-        int formatIndex;
-    };
+    void onPlaylistDownloadCompleted(qint64 handle, const VMPlaylistDownload& download);
+    void onPlaylistDownloadChanged(qint64 handle, const VMPlaylistDownload& download);
+    void onMetaDataDownloadCompleted(qint64 handle, const VMMetaDataDownload& download);
 
 private:
     void scheduleNextFileRequest();
     void scheduleNextMetaDataRequest();
-    void issueRequest(qint64 token, const Request& request);
 
 private:
     VMYTDL m_Ytdl;
-    QList<QPair<qint64, Request>> m_PendingFileRequests;
-    QList<QPair<qint64, Request>> m_PendingMetaDataRequests;
-    QHash<qint64, Request> m_ActiveRequests;
+    QList<QPair<qint64, VMPlaylistDownloadRequest>> m_PendingFileRequests;
+    QList<QPair<qint64, QString>> m_PendingMetaDataRequests;
+    QHash<qint64, VMPlaylistDownloadRequest> m_ActiveFileRequests;
     qint64 m_TokenGenerator;
     int m_MaxFile, m_CurrentFile, m_MaxMeta, m_CurrentMeta;
 };

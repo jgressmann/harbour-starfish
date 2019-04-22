@@ -1588,16 +1588,16 @@ ScVodDataManager::fetchThumbnail(qint64 urlShareId, bool download) {
 
 
 
-int ScVodDataManager::fetchVod(qint64 urlShareId, int formatIndex) {
+int ScVodDataManager::fetchVod(qint64 urlShareId, const QString& format) {
     RETURN_MINUS_ON_ERROR;
 
-    if (formatIndex < 0) {
-        qWarning() << "invalid format index, not fetching vod" << formatIndex;
+    if (format.isEmpty()) {
+        qWarning() << "invalid format index, not fetching vod";
         return -1;
     }
 
     ScVodDataManagerWorker::Task t = [=]() {
-        m_WorkerInterface->fetchVod(urlShareId, formatIndex);
+        m_WorkerInterface->fetchVod(urlShareId, format);
     };
     auto result = m_WorkerInterface->enqueue(std::move(t));
     if (result != -1) {
@@ -2341,7 +2341,7 @@ ScVodDataManager::updateSql3(QSqlQuery& q) {
         if (QFileInfo::exists(metaDataFilePath)) {
             QFile file(metaDataFilePath);
             if (file.open(QIODevice::ReadOnly)) {
-                VMVod vod;
+                VMPlaylist vod;
                 {
                     QDataStream s(&file);
                     s >> vod;
@@ -2354,7 +2354,7 @@ ScVodDataManager::updateSql3(QSqlQuery& q) {
                         goto Error;
                     }
 
-                    q2.addBindValue(vod.description().duration());
+                    q2.addBindValue(vod.duration());
                     q2.addBindValue(urlShareId);
 
                     if (!q2.exec()) {
@@ -2362,7 +2362,7 @@ ScVodDataManager::updateSql3(QSqlQuery& q) {
                         goto Error;
                     }
 
-                    qDebug() << "updated id" << urlShareId << "length" << vod.description().duration();
+                    qDebug() << "updated id" << urlShareId << "length" << vod.duration();
                 } else {
                     qDebug() << "removing bad meta data file" << metaDataFilePath;
                     file.close();
@@ -3278,11 +3278,11 @@ ScVodDataManager::onFetchingThumbnail(qint64 urlShareId)
     }
 }
 void
-ScVodDataManager::onMetaDataAvailable(qint64 urlShareId, VMVod vod)
+ScVodDataManager::onMetaDataAvailable(qint64 urlShareId, VMPlaylist playlist)
 {
     auto it = m_UrlShareItems.find(urlShareId);
     if (it != m_UrlShareItems.end()) {
-        it.value().toStrongRef()->onMetaDataAvailable(vod);
+        it.value().toStrongRef()->onMetaDataAvailable(playlist);
     }
 }
 void
@@ -3302,34 +3302,20 @@ ScVodDataManager::onMetaDataDownloadFailed(qint64 urlShareId, VMVodEnums::Error 
     }
 }
 void
-ScVodDataManager::onVodAvailable(
-        qint64 urlShareId,
-        QString filePath,
-        qreal progress,
-        quint64 fileSize,
-        int width,
-        int height,
-        QString formatId)
+ScVodDataManager::onVodAvailable(const ScVodFileFetchProgress& progress)
 {
-    auto it = m_UrlShareItems.find(urlShareId);
+    auto it = m_UrlShareItems.find(progress.urlShareId);
     if (it != m_UrlShareItems.end()) {
-        it.value().toStrongRef()->onVodAvailable(filePath, progress, fileSize, width, height, formatId);
+        it.value().toStrongRef()->onVodAvailable(progress);
     }
 }
 
 void
-ScVodDataManager::onFetchingVod(
-        qint64 urlShareId,
-        QString filePath,
-        qreal progress,
-        quint64 fileSize,
-        int width,
-        int height,
-        QString formatId)
+ScVodDataManager::onFetchingVod(const ScVodFileFetchProgress& progress)
 {
-    auto it = m_UrlShareItems.find(urlShareId);
+    auto it = m_UrlShareItems.find(progress.urlShareId);
     if (it != m_UrlShareItems.end()) {
-        it.value().toStrongRef()->onFetchingVod(filePath, progress, fileSize, width, height, formatId);
+        it.value().toStrongRef()->onFetchingVod(progress);
     }
 }
 

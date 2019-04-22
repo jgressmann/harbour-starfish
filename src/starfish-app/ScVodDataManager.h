@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "VMVod.h"
+#include "VMPlaylist.h"
 #include "ScRecord.h"
 #include "ScIcons.h"
 #include "ScClassifier.h"
@@ -158,7 +158,7 @@ public: //
     int fetchThumbnail(qint64 urlShareId, bool download);
     int fetchMetaData(qint64 urlShareId, const QString& url, bool download);
     int fetchTitle(qint64 urlShareId);
-    int fetchVod(qint64 urlShareId, int formatIndex);
+    int fetchVod(qint64 urlShareId, const QString& format);
     int cancelFetchVod(qint64 urlShareId);
     void cancelFetchMetaData(int ticket, qint64 urlShareId);
     void cancelFetchThumbnail(int ticket, qint64 urlShareId);
@@ -279,25 +279,11 @@ private slots:
     void onUrlShareItemDestroyed(QObject* obj);
     void onFetchingMetaData(qint64 urlShareId);
     void onFetchingThumbnail(qint64 urlShareId);
-    void onMetaDataAvailable(qint64 urlShareId, VMVod vod);
+    void onMetaDataAvailable(qint64 urlShareId, VMPlaylist playlist);
     void onMetaDataUnavailable(qint64 urlShareId);
     void onMetaDataDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
-    void onVodAvailable(
-            qint64 urlShareId,
-            QString filePath,
-            qreal progress,
-            quint64 fileSize,
-            int width,
-            int height,
-            QString formatId);
-    void onFetchingVod(
-            qint64 urlShareId,
-            QString filePath,
-            qreal progress,
-            quint64 fileSize,
-            int width,
-            int height,
-            QString formatId);
+    void onVodAvailable(const ScVodFileFetchProgress& progress);
+    void onFetchingVod(const ScVodFileFetchProgress& progress);
     void onVodUnavailable(qint64 urlShareId);
     void onVodDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
     void onVodDownloadCanceled(qint64 urlShareId);
