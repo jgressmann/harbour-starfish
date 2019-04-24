@@ -24,7 +24,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Pickers 1.0
-import Vodman 2.0
+import Vodman 2.1
 import org.duckdns.jgressmann 1.0
 import ".."
 

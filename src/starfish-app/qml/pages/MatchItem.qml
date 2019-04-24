@@ -23,7 +23,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import Vodman 2.0
+import Vodman 2.1
 import org.duckdns.jgressmann 1.0
 import ".."
 
@@ -36,12 +36,9 @@ ListItem {
     property bool showTitle: _c && !_c.side2
     property bool menuEnabled: true
     property int rowId: -1
-    property bool _playWhenTransitionDone: false
-//    readonly property string vodUrl: _vodUrl
-//    property string _vodUrl
-    readonly property VodPlaylist playlist: _playlist
-    property VodPlaylist _playlist
-    property int startOffset: 0
+    property var _playWhenPageTransitionIsDoneCallback: null
+    property alias playlist: _playlist
+    property alias startOffset: _playlist.startOffset
     readonly property int baseOffset: _c ? _c.videoStartOffset : 0
     property bool _validRange: _c && baseOffset >= 0 && baseOffset < _c.videoEndOffset
     readonly property bool _hasValidRaces: _c && _c.race1 >= 1 && _c.race2 >= 1
@@ -61,6 +58,10 @@ ListItem {
 
     menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
+
+    VodPlaylist {
+        id: _playlist
+    }
 
     RemorsePopup { id: remorse }
 
@@ -468,9 +469,10 @@ ListItem {
     Connections {
         target: pageStack
         onBusyChanged: {
-            if (!pageStack.busy && _playWhenTransitionDone) {
-                _playWhenTransitionDone = false
-                _play()
+            if (!pageStack.busy && _playWhenPageTransitionIsDoneCallback) {
+                var c = _playWhenPageTransitionIsDoneCallback;
+                _playWhenPageTransitionIsDoneCallback = null
+                c()
             }
         }
     }
@@ -633,7 +635,7 @@ ListItem {
         }
     }
 
-    function _play() {
+    function _play(formatIndex) {
         playlist.fromUrlShareItem(_c)
         playlist.startOffset = startOffset
         playRequest(root)
@@ -669,94 +671,55 @@ ListItem {
         return formatId
     }
 
-    function _findBestFormat(playlist, formatId) {
+    function _findBestFormat(vod, formatId) {
+        var formatIndex = -1
         if (VM.VM_Smallest === formatId) {
-            var f = playlist.avFormat(0)
-            return ["worst", _makeDisplayString(f)]
-            //return "worstvideo+worstaudio/worst"
+            var best = vod.avFormat(0)
+            formatIndex = 0
+            for (var i = 1; i < vod.avFormats; ++i) {
+                var f = vod.avFormat(i)
+                if (f.height < best.height) {
+                    best = f;
+                    formatIndex = i;
+                }
+            }
+        } else if (VM.VM_Largest === formatId) {
+            var best = vod.avFormat(0)
+            formatIndex = 0
+            for (var i = 1; i < vod.avFormats; ++i) {
+                var f = vod.avFormat(i)
+                if (f.height > best.height) {
+                    best = f;
+                    formatIndex = i;
+                }
+            }
+        } else {
+            // try to find exact match
+            for (var i = 0; i < vod.avFormats; ++i) {
+                var f = vod.avFormat(i)
+                if (f.format === formatId) {
+                    formatIndex = i
+                    break
+                }
+            }
+
+            if (formatIndex === -1) {
+                var target = _targetHeight(formatId)
+                var bestdelta = Math.abs(vod.avFormat(0).height - target)
+                formatIndex = 0
+                for (var i = 1; i < vod.avFormats; ++i) {
+                    var f = vod.avFormat(i)
+                    var delta = Math.abs(f.width - target)
+                    if (delta < bestdelta) {
+                        bestdelta = delta;
+                        formatIndex = i;
+                    }
+                }
+            }
         }
 
-        if (VM.VM_Largest === formatId) {
-            var f = playlist.avFormat(playlist.avFormats-1)
-            return ["best", _makeDisplayString(f)]
-//            return "best"
-            //return "bestvideo+bestaudio/best"
-        }
-
-        var height
-        var width
-        switch (formatId) {
-        case VM.VM_240p:
-            height = 240
-            width = 426
-            break
-        case VM.VM_360p:
-            height = 360
-            width = 640
-            break
-        case VM.VM_720p:
-            height = 720
-            width = 1280
-            break
-        default:
-            height = 1080
-            width = 1920
-            break
-        }
-
-        return ["best[height=" + height + "]/best[height<=" + height + "]/best", "~" + width + "x" + height]
-        //return "bestvideo[height=" + height + "]+bestaudio/bestvideo[height<=" + height + "]+bestaudio/best"
+        return formatIndex
     }
-
-//    function _findBestFormat(vod, formatId) {
-//        var formatIndex = -1
-//        if (VM.VM_Smallest === formatId) {
-//            var best = vod.format(0)
-//            formatIndex = 0
-//            for (var i = 1; i < vod.formats; ++i) {
-//                var f = vod.format(i)
-//                if (f.height < best.height) {
-//                    best = f;
-//                    formatIndex = i;
-//                }
-//            }
-//        } else if (VM.VM_Largest === formatId) {
-//            var best = vod.format(0)
-//            formatIndex = 0
-//            for (var i = 1; i < vod.formats; ++i) {
-//                var f = vod.format(i)
-//                if (f.height > best.height) {
-//                    best = f;
-//                    formatIndex = i;
-//                }
-//            }
-//        } else {
-//            // try to find exact match
-//            for (var i = 0; i < vod.formats; ++i) {
-//                var f = vod.format(i)
-//                if (f.format === formatId) {
-//                    formatIndex = i
-//                    break
-//                }
-//            }
-
-//            if (formatIndex === -1) {
-//                var target = _targetWidth(formatId)
-//                var bestdelta = Math.abs(vod.format(0).height - target)
-//                formatIndex = 0
-//                for (var i = 1; i < vod.formats; ++i) {
-//                    var f = vod.format(i)
-//                    var delta = Math.abs(f.width - target)
-//                    if (delta < bestdelta) {
-//                        bestdelta = delta;
-//                        formatIndex = i;
-//                    }
-//                }
-//            }
-//        }
-
-//        return formatIndex
-//    }
 
     function _selectFormat(callback) {
         var labels = []
@@ -807,21 +770,45 @@ ListItem {
     }
 
     function _playStream() {
-        var format = _getVideoFormatFromBearerMode()
-        _playStreamWithFormat(format)
+        var vmFormatId = _getVideoFormatFromBearerMode()
+        _playStreamWithFormat(vmFormatId)
     }
 
-    function _playStreamWithFormat(formatId) {
-        var playlist = _c.urlShare.metaData
-        if (VM.VM_Any === formatId) {
-            _selectAvFormat(playlist, function(index) {
-                _playWhenTransitionDone = true
+    function _playStreamWithFormat(vmFormatId) {
+        var metaData = _c.urlShare.metaData
+
+        playlist.startOffset = startOffset
+        playlist.parts = metaData.vods
+
+        if (VM.VM_Any === vmFormatId) {
+            _selectAvFormat(metaData, function(formatIndex) {
+
+                for (var i = 0; i < metaData.vods; ++i) {
+                    var vod = metaData.vod(i)
+                    var format = vod.avFormat(formatIndex)
+
+                    playlist.setDuration(i, vod.duration)
+                    playlist.setUrl(i, format.streamUrl)
+                }
+
+                console.debug("playlist=" + playlist)
+                _playWhenPageTransitionIsDoneCallback = function () {
+                    playRequest(root)
+                }
             })
         } else {
-            var res = _findBestFormat(vod, formatId)
-            var format = res[0]
-            var displayFormat = res[1]
-            _play()
+
+            for (var i = 0; i < metaData.vods; ++i) {
+                var vod = metaData.vod(i)
+                var formatIndex = _findBestFormat(vod, vmFormatId)
+                var format = vod.avFormat(formatIndex)
+
+                playlist.setDuration(i, vod.duration)
+                playlist.setUrl(i, format.streamUrl)
+            }
+
+            console.debug("playlist=" + playlist)
+            playRequest(root)
         }
     }
 
@@ -835,14 +822,14 @@ ListItem {
         }
     }
 
-    function _download(autoStarted, formatId) {
+    function _download(autoStarted, vmFormatId) {
         var playlist = _c.urlShare.metaData
-        if (VM.VM_Any === format) {
+        if (VM.VM_Any === vmFormatId) {
             _selectAvFormat(playlist, function(index) {
                 _downloadFormat(index, autoStarted)
             })
         } else {
-            var formatIndex = _findBestFormat(playlist, formatId)
+            var formatIndex = _findBestFormat(playlist, vmFormatId)
             _downloadFormat(formatIndex, autoStarted)
         }
     }
@@ -869,8 +856,8 @@ ListItem {
         }
     }
 
-    function _targetWidth(format) {
-        switch (format) {
+    function _targetHeight(vmFormatId) {
+        switch (vmFormatId) {
         case VM.VM_240p:
             return 240
         case VM.VM_360p:
@@ -890,22 +877,6 @@ ListItem {
         } else {
             startOffset = baseOffset // base offset into multi match video
         }
-    }
-
-    function _makeDisplayString(format) {
-        var str = ""
-        if (format.width > 0 || format.height > 0) {
-            str += format.width + "x" + format.height
-        }
-
-        if (format.tbr > 0) {
-            if (str.length > 0) {
-                str += ", "
-            }
-            str += format.tbr.toFixed(0) + " [tbr]"
-        }
-
-        return str
     }
 
     function _selectAvFormat(playlist, more) {

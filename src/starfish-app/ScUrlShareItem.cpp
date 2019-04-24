@@ -414,12 +414,12 @@ ScUrlShareItem::fetchVodFiles(int formatIndex)
     }
 
     if (formatIndex < 0 ||
-            formatIndex >= m_MetaData.avFormats()) {
+            formatIndex >= m_MetaData._vods()[0].avFormats()) {
         qWarning() << "invalid format index" << formatIndex;
         return;
     }
 
-    const auto& format = m_MetaData._avFormats()[formatIndex];
+    const auto& format = m_MetaData._vods()[0]._avFormats()[formatIndex];
 
 
     switch (m_VodFetchStatus) {
@@ -585,7 +585,7 @@ ScUrlShareItem::updateFormatIndex()
 {
     if (m_MetaData.isValid() && !m_FormatId.isEmpty()) {
         auto result = -1;
-        const auto& fs = m_MetaData.data().avFormats;
+        const auto& fs = m_MetaData._vods()[0]._avFormats();
         for (auto i = 0; i < fs.size(); ++i) {
             if (fs[i].id() == m_FormatId) {
                 result = i;

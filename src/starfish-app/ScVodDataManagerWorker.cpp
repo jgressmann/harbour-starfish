@@ -109,6 +109,7 @@ ScVodDataManagerWorker::ScVodDataManagerWorker(const QSharedPointer<ScVodDataMan
     // at runtime
     qRegisterMetaType<VMPlaylist>("VMPlaylist");
     qRegisterMetaType<ScVodIdList>("ScVodIdList");
+    qRegisterMetaType<ScVodFileFetchProgress>("ScVodFileFetchProgress");
 
     m_Manager = new QNetworkAccessManager(this);
     connect(m_Manager, &QNetworkAccessManager::finished, this,
@@ -488,7 +489,7 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, const QString& _targetFormat
             }
 
             if (playlist.isValid()) {
-                auto formats = playlist._avFormats();
+                auto formats = playlist._vods()[0]._avFormats();
                 int formatIndex = -1;
                 if (previousFormat.isEmpty()) {
                     for (auto i = 0; i < formats.size(); ++i) {
@@ -673,6 +674,13 @@ void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMP
                 s << playlist;
                 if (s.status() == QDataStream::Ok && file.flush()) {
                     file.close();
+
+                    if (file.open(QIODevice::ReadOnly)) {
+                        QDataStream s(&file);
+                        VMPlaylist again;
+                        s >> again;
+                        qDebug() << again << again.isValid();
+                    }
 
                     // send event so that the match page can try to get the thumbnails again
                     auto vodUrlShareId = r.vod_url_share_id;

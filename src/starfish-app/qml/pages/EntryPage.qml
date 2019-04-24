@@ -280,6 +280,7 @@ BasePage {
 
                     onClicked: function (key, url, offset, matchItem, seen) {
                         console.debug("clicked match item " + matchItem + " " + typeof(matchItem))
+                        // FIX ME
                         Global.playVideoHandler(updater, key, url, offset, seen)
                     }
 

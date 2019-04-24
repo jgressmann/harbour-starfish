@@ -409,7 +409,7 @@
         <translation>Continue watching</translation>
     </message>
     <message id="entry-page-title">
-        <location filename="../qml/pages/EntryPage.qml" line="312"/>
+        <location filename="../qml/pages/EntryPage.qml" line="313"/>
         <source>go go go</source>
         <translation>go go go</translation>
     </message>
@@ -758,7 +758,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message id="vods-added-notification-body" numerus="yes">
-        <location filename="../qml/harbour-starfish.qml" line="480"/>
+        <location filename="../qml/harbour-starfish.qml" line="482"/>
         <source>%1 VODs added</source>
         <translation>
             <numerusform>1 VOD added</numerusform>
@@ -920,23 +920,23 @@
     </message>
     <message id="recently-watched-video-view-remove-from-list">
         <location filename="../qml/RecentlyWatchedVideoView.qml" line="65"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="213"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="214"/>
         <source>Remove from list</source>
         <translation>Remove from list</translation>
     </message>
     <message id="recently-watched-video-view-removing">
         <location filename="../qml/RecentlyWatchedVideoView.qml" line="72"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="220"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="221"/>
         <source>Removing %1</source>
         <translation>Removing %1</translation>
     </message>
     <message id="recently-watched-video-view-no-content">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="235"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="236"/>
         <source>No recent videos.</source>
         <translation>No recent videos.</translation>
     </message>
     <message id="recently-watched-video-view-no-content-hint">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="237"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="238"/>
         <source>This list will fill with the videos you have watched.</source>
         <translation>This list will fill with the videos you have watched.</translation>
     </message>
@@ -966,7 +966,7 @@
         <translation>For details check the log file located in %1</translation>
     </message>
     <message id="select-av-format-dialog-title">
-        <location filename="../qml/pages/MatchItem.qml" line="925"/>
+        <location filename="../qml/pages/MatchItem.qml" line="880"/>
         <source>Select a format</source>
         <translation type="unfinished">Select a format</translation>
     </message>

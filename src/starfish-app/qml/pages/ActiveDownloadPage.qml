@@ -89,7 +89,7 @@ ContentPage {
                     onPlayRequest: function (self, callback) {
 //                        itemPlaying = self
                         _videoId = vod_id
-                        Global.playVideoHandler(updater, VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.playlist.startOffset, self.seen)
+                        Global.playVideoHandler(updater, VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.seen)
                     }
                 }
             }

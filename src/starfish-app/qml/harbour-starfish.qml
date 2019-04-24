@@ -26,7 +26,7 @@ import Sailfish.Silica 1.0
 import Nemo.Configuration 1.0
 import Nemo.DBus 2.0
 import Nemo.Notifications 1.0
-import Vodman 2.0
+import Vodman 2.1
 import org.duckdns.jgressmann 1.0
 import "."
 
@@ -424,17 +424,19 @@ ApplicationWindow {
         _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
 
-        Global.playVideoHandler = function (updater, key, url, offset, seen) {
-            VodDataManager.recentlyWatched.add(key, seen)
-            VodDataManager.recentlyWatched.setOffset(key, offset)
-            if (settingExternalMediaPlayer.value && self.url.indexOf("http") !== 0) {
-                Qt.openUrlExternally(url)
-            } else {
-                console.debug("offset=" + offset)
-                var playerPage = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
-                playerPage.play(Global.completeFileUrl(url), offset)
-                updater.playerPage = playerPage
-                updater.setKey(key)
+        Global.playVideoHandler = function (updater, key, playlist, seen) {
+            if (playlist && playlist.isValid) {
+                VodDataManager.recentlyWatched.add(key, seen)
+                VodDataManager.recentlyWatched.setOffset(key, playlist.startOffset)
+                if (settingExternalMediaPlayer.value && playlist.url(0).indexOf("http") !== 0) {
+                    Qt.openUrlExternally(playlist.url(0))
+                } else {
+                    console.debug("offset=" + playlist.startOffset)
+                    var playerPage = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
+                    playerPage.play(playlist)
+                    updater.playerPage = playerPage
+                    updater.setKey(key)
+                }
             }
         }
 

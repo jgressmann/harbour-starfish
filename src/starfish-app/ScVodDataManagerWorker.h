@@ -53,8 +53,6 @@ struct ScVodFileFetchProgress
     ScVodFileFetchProgress() = default;
 };
 
-Q_DECLARE_METATYPE(ScVodFileFetchProgress)
-
 class ScVodDataManagerWorker : public QObject
 {
     Q_OBJECT
