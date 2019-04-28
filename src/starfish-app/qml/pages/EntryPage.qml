@@ -278,16 +278,14 @@ BasePage {
                         id: updater
                     }
 
-                    onClicked: function (key, url, offset, matchItem, seen) {
-                        console.debug("clicked match item " + matchItem + " " + typeof(matchItem))
-                        // FIX ME
-                        Global.playVideoHandler(updater, key, url, offset, seen)
+                    onClicked: function (key, playlist, seen) {
+                        Global.playVideoHandler(updater, key, playlist, seen)
                     }
 
                     onCountChanged: {
                         continueWatching.visible = count > 0
                         /* overestimate, so that view is long enough */
-                        height = (Global.itemHeight + Theme.fontSizeHuge)  * count
+                        height = (Global.itemHeight + Theme.fontSizeLarge)  * count
                     }
                 }
             }

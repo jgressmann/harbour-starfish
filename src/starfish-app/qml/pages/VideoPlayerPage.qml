@@ -31,7 +31,6 @@ import ".."
 Page {
     id: page
     readonly property int startOffset: _playlist ? _playlist.startOffset : 0
-    property QtObject _playlist
     property int _seekFixup: 0
     property int _seekPositionMs: 0
     property int _currentUrlIndex: -1
@@ -39,35 +38,22 @@ Page {
     property bool _startSeek: false
     property bool _reseekOnDurationChange: false
     property string title
+    property real _volume
 
     property int playbackAllowedOrientations: Orientation.Landscape | Orientation.LandscapeInverted
     backNavigation: controlPanel.open || !_hasSource
 
 
 
-    readonly property int playbackOffset: streamPositionS
-    readonly property int streamPositionS: {
-        var position = Math.floor(mediaplayer.position * 1e-3);
-        if (_playlist && _playlist.isValid && _currentUrlIndex > 0) {
-            for (var i = _currentUrlIndex - 1; i >= 0; --i) {
-                position += _playlist.duration(i);
-            }
-        }
+    readonly property int playbackOffset: _streamPositionS
+    readonly property int _streamPositionMs: _streamBasePositionS + mediaplayer.position
+    readonly property int _streamPositionS: Math.floor(_streamPositionMs * 1e-3)
+    property int _streamBasePositionS: 0
+    property int _streamDurationS: 0
 
-        return position
-    }
 
-    readonly property int streamDurationS: {
-        var duration = 0;
-        if (_playlist && _playlist.isValid) {
-            for (var i = 0; i < _playlist.parts; ++i) {
-                duration += _playlist.duration(i);
-            }
-        }
-        return duration;
-    }
     property bool _forceBusyIndicator: false
-    property bool _hasSource: _playlist && _playlist.isValid
+    property bool _hasSource: _playlist ? _playlist.isValid : false
     property bool _paused: false
     property int _pauseCount: 0
     property var openHandler
@@ -84,7 +70,9 @@ Page {
 //        console.debug("playback offset="+ playbackOffset)
 //    }
 
-
+    VodPlaylist {
+        id: _playlist
+    }
 
     Timer {
         id: stallTimer
@@ -93,6 +81,16 @@ Page {
             console.debug("stall timer expired")
             pause()
             controlPanel.open = true
+        }
+    }
+
+    Timer {
+        id: reseekOnDurationChangeTimer
+        interval: 1
+        repeat: false
+        onTriggered: {
+            console.debug("reseek timer expired")
+            _seek(_seekPositionMs)
         }
     }
 
@@ -126,9 +124,6 @@ Page {
                 break
             case MediaPlayer.Loaded:
                 console.debug("loaded")
-                if (metaData && metaData.title) {
-                    page.title = metaData.title
-                }
                 break
             case MediaPlayer.InvalidMedia:
                 console.debug("invalid media")
@@ -165,25 +160,27 @@ Page {
 //            console.debug("media player volume=" + volume)
 //        }
 
-        // FIX ME
 //        onPositionChanged: {
 //            // If the start offset seek ended up short of the target position,
 //            // correct iteratively
-//            if (_startSeek && position - _startOffsetMs < -1000) {
+//            var startOffsetMs = _playlist.startOffset * 1000
+//            if (_startSeek && _streamPositionMs - startOffsetMs < -1000) {
 //                _seekFixup += 1000
-//                console.debug("reseek from " + position + " to start offset " + _startOffsetMs + " + " + _seekFixup)
-//                if (_startOffsetMs + _seekFixup < duration) {
-//                    _seek(_startOffsetMs + _seekFixup)
+//                console.debug("reseek from " + _streamPositionMs + " to start offset " + startOffsetMs + " + " + _seekFixup)
+//                if (startOffsetMs + _seekFixup < _streamDurationS * 1000) {
+//                    _seek(startOffsetMs + _seekFixup)
 //                }
 //            }
 //        }
 
+
+
         onDurationChanged: {
             if (duration > 0) {
-                _trySetDuration();
-                if (_reseekOnDurationChange) {
+                if (_trySetDuration() && _reseekOnDurationChange) {
+                    console.debug("reseek")
                     _reseekOnDurationChange = false
-                    _seek(_seekPositionMs)
+                    reseekOnDurationChangeTimer.start()
                 }
             }
         }
@@ -307,7 +304,7 @@ Page {
                     switch (seekType) {
                     case 0: { // position
                         var skipSeconds = computePositionSeek(dx)
-                        var streamPosition = Math.max(0, Math.min(streamPositionS + skipSeconds, streamDurationS))
+                        var streamPosition = Math.max(0, Math.min(_streamPositionS + skipSeconds, _streamDurationS))
                         seekLabel.text = (dx >= 0 ? "+" : "-") + _toTime(Math.abs(skipSeconds)) + " (" + _toTime(streamPosition) + ")"
                     } break
                     case 1: { // volume
@@ -340,8 +337,8 @@ Page {
 
                         var skipSeconds = computePositionSeek(dx)
                         if (Math.abs(skipSeconds) >= 3) { // prevent small skips
-                            var streamPosition = Math.floor(Math.max(0, Math.min(streamPositionS + skipSeconds, streamDurationS)))
-                            if (streamPosition !== streamPositionS) {
+                            var streamPosition = Math.floor(Math.max(0, Math.min(_streamPositionS + skipSeconds, _streamDurationS)))
+                            if (streamPosition !== _streamPositionS) {
                                 console.debug("skip to=" + streamPosition)
                                 _startSeek = false
                                 _seek(streamPosition * 1000)
@@ -426,14 +423,14 @@ Page {
                     Slider {
                         id: positionSlider
                         width: parent.width
-                        maximumValue: Math.max(1, mediaplayer.duration)
+                        maximumValue: Math.max(1, _streamDurationS * 1000)
 
                         Connections {
                             target: mediaplayer
                             onPositionChanged: {
                                 if (!positionSlider.down && !seekTimer.running) {
                                     positionSliderConnections.target = null
-                                    positionSlider.value = Math.max(0, mediaplayer.position)
+                                    positionSlider.value = Math.max(0, _streamPositionMs)
                                     positionSliderConnections.target = positionSlider
                                 }
                             }
@@ -481,13 +478,13 @@ Page {
                         Label {
                             id: first
                             anchors.left: leftMargin.right
-                            text: _toTime(streamPositionS)
+                            text: _toTime(_streamPositionS)
                             font.pixelSize: Theme.fontSizeExtraSmall
                         }
 
                         Label {
                             anchors.right: rightMargin.left
-                            text: _toTime(streamDurationS)
+                            text: _toTime(_streamDurationS)
                             font.pixelSize: Theme.fontSizeExtraSmall
                             color: Theme.highlightColor
                         }
@@ -534,7 +531,7 @@ Page {
                                         case MediaPlayer.EndOfMedia:
                                             controlPanel.open = false
                                             _startSeek = true
-                                            _seek(_startOffsetMs)
+                                            _seek(_playlist.startOffset * 1000)
                                             mediaplayer.play()
                                             break
                                         }
@@ -660,32 +657,46 @@ Page {
         }
     }
 
-//    on_CurrentUrlIndexChanged: _trySetDuration()
-//    on_PlaylistChanged:
-
-    function play(playlistArg, saveScreenShot) {
-        console.debug("save screen shot=" + saveScreenShot)
+    function playPlaylist(playlistArg) {
         if (playlistArg.isValid) {
-            _playlist = playlistArg
-            console.debug("valid playlist offset=" + _playlist.startOffset + " parts=" + _playlist.parts)
-            _reseekOnDurationChange = false
-            _seekPositionMs = 0
-            _currentUrlIndex = 0;
-            mediaplayer.source = _playlist.url(_currentUrlIndex)
-            mediaplayer.play()
-            controlPanel.open = false
-            _grabFrameWhenReady = !!saveScreenShot
-            _startSeek = false
-            _seekFixup = 0
-            _pauseCount = 0;
-            _paused = false
-            if (_playlist.startOffset > 0) {
-                console.debug("seek to " + _playlist.startOffset)
-                _startSeek = true
-                _seek(_playlist.startOffset * 1000)
-            }
+            _playlist.copyFrom(playlistArg)
+            _play(false)
         } else {
             console.debug("invalid playlist")
+        }
+    }
+
+    function playUrl(url, startOffset, saveScreenShot) {
+        _playlist.startOffset = (startOffset && startOffset > 0) ? startOffset : 0
+        _playlist.parts = 1
+        _playlist.setDuration(0, -1)
+        _playlist.setUrl(0, url)
+
+        if (_playlist.isValid) {
+            _play(saveScreenShot)
+        }
+    }
+
+    function _play(saveScreenShot) {
+        console.debug("playlist offset=" + _playlist.startOffset + " parts=" + _playlist.parts + " save screen shot=" + saveScreenShot)
+        _reseekOnDurationChange = false
+        _seekPositionMs = 0
+        _currentUrlIndex = 0;
+        controlPanel.open = false
+        _grabFrameWhenReady = !!saveScreenShot
+        _startSeek = false
+        _seekFixup = 0
+        _pauseCount = 0;
+        _paused = false
+        _streamDurationS = _computeStreamDuration()
+        _streamBasePositionS = _computeStreamBasePosition()
+        _volume = mediaplayer.volume
+        if (_playlist.startOffset > 0) {
+            console.debug("seek to " + _playlist.startOffset)
+            _startSeek = true
+            _seek(_playlist.startOffset * 1000)
+        } else {
+            mediaplayer.source = _playlist.url(_currentUrlIndex)
         }
     }
 
@@ -749,23 +760,34 @@ Page {
                 mediaplayer.source = _playlist.url(i)
                 _currentUrlIndex = i;
                 _reseekOnDurationChange = true
+                videoOutput.visible = false
+                mediaplayer.volume = 0
                 return
             }
 
             var dMs = dS * 1000
 
             if (positionMs <= dMs) {
-                _currentUrlIndex = i;
-                mediaplayer.source = _playlist.url(i)
-                _forceBusyIndicator = true
-                console.debug("_forceBusyIndicator=true")
-                busyTimer.restart()
-                mediaplayer.seek(positionMs)
+                _seekToIndex(i, positionMs)
+                videoOutput.visible = true
+                mediaplayer.volume = _volume
                 return
             }
 
             positionMs -= dMs;
         }
+
+        _seekToIndex(_playlist.parts-1, (_playlist.duration(_playlist.parts-1) - 1) * 1000)
+    }
+
+    function _seekToIndex(index, positionMs) {
+        _currentUrlIndex = index;
+        mediaplayer.source = _playlist.url(index)
+        _forceBusyIndicator = true
+        console.debug("_forceBusyIndicator=true")
+        busyTimer.restart()
+        console.debug("media player seek to " + positionMs)
+        mediaplayer.seek(positionMs)
     }
 
     function _grabFrame() {
@@ -790,13 +812,46 @@ Page {
     }
 
     function _trySetDuration() {
-        if (_playlist.isValid &&
+        if (_playlist &&
+                _playlist.isValid &&
                 mediaplayer.duration > 0 &&
                 _currentUrlIndex >= 0 &&
                 _currentUrlIndex < _playlist.parts &&
                 _playlist.duration(_currentUrlIndex) <= 0) {
-            _playlist.setDuration(_currentUrlIndex, Math.floor(mediaplayer.position * 1e-3))
+            _playlist.setDuration(_currentUrlIndex, Math.floor(mediaplayer.duration * 1e-3))
+            _streamDurationS = _computeStreamDuration()
+            _streamBasePositionS = _computeStreamBasePosition()
+            return true
         }
+
+        return false
+    }
+
+    function _computeStreamBasePosition() {
+        var position = 0;
+        if (_playlist && _playlist.isValid && _currentUrlIndex > 0) {
+            for (var i = _currentUrlIndex - 1; i >= 0; --i) {
+                position += _playlist.duration(i);
+            }
+        }
+
+        return position
+    }
+
+
+    function _computeStreamDuration() {
+        var duration = 0;
+        if (_playlist && _playlist.isValid) {
+            for (var i = 0; i < _playlist.parts; ++i) {
+                var seconds = _playlist.duration(i);
+                if (seconds <= 0) {
+                    break;
+                }
+
+                duration += seconds;
+            }
+        }
+        return duration;
     }
 }
 

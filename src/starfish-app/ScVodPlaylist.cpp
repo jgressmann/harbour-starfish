@@ -1,6 +1,4 @@
 #include "ScVodPlaylist.h"
-//#include "ScUrlShareItem.h"
-//#include "ScVodFileItem.h"
 
 #include <QDebug>
 
@@ -16,51 +14,9 @@ ScVodPlaylist::setStartOffset(int value)
     if (value != m_StartOffset) {
         m_StartOffset = value;
         emit startOffsetChanged();
+        emit isValidChanged();
     }
 }
-
-//void
-//ScVodPlaylist::fromUrl(const QString& url)
-//{
-//    m_Urls.clear();
-//    m_Urls.append(url);
-//    m_Durations.clear();
-//    m_Durations.append(-1);
-//    setStartOffset(0);
-//    emit partsChanged();
-//    emit isValidChanged();
-//}
-
-//void
-//ScVodPlaylist::fromUrlShareItem(const ScUrlShareItem* item)
-//{
-//    if (!item) {
-//        qCritical() << "item is null";
-//        return;
-//    }
-
-//    auto playlist = item->metaData();
-//    if (!playlist.isValid()) {
-//        qWarning() << "url share item playlist not valid";
-//        return;
-//    }
-
-//    const auto& vods = playlist._vods();
-
-//    m_Urls.clear();
-//    m_Urls.reserve(item->files());
-//    m_Durations.clear();
-//    m_Durations.reserve(item->files());
-//    for (auto i = 0; i < m_Urls.size(); ++i) {
-//        m_Urls.append(item->file(i)->vodFilePath());
-//        m_Durations.append(vods[i].duration());
-//    }
-
-//    setStartOffset(0);
-
-//    emit partsChanged();
-//    emit isValidChanged();
-//}
 
 QString
 ScVodPlaylist::url(int index) const
@@ -78,6 +34,7 @@ ScVodPlaylist::setUrl(int index, const QString& value)
 {
     if (index >= 0 && index < m_Urls.size()) {
         m_Urls[index] = value;
+        emit isValidChanged();
     } else {
         qCritical() << "index out of range" << index;
     }
@@ -99,6 +56,7 @@ ScVodPlaylist::setDuration(int index, int value)
 {
     if (index >= 0 && index < m_Urls.size()) {
         m_Durations[index] = value;
+        emit isValidChanged();
     } else {
         qCritical() << "index out of range" << index;
     }
@@ -122,7 +80,42 @@ ScVodPlaylist::setParts(int value)
 bool
 ScVodPlaylist::isValid() const
 {
-    return m_Urls.size() > 0;
+    if (m_StartOffset < 0) {
+        return false;
+    }
+
+    if (m_Urls.isEmpty()) {
+        return false;
+    }
+
+    for (const auto& url : m_Urls) {
+        if (url.isEmpty()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void
+ScVodPlaylist::copyFrom(const QVariant& value)
+{
+    const auto h = qvariant_cast<ScVodPlaylistHandle>(value);
+    if (h) {
+        copyFrom(*h);
+    } else {
+        qWarning() << "non playlist arg";
+    }
+}
+
+void
+ScVodPlaylist::copyFrom(const ScVodPlaylist& other)
+{
+    m_Urls = other.m_Urls;
+    m_Durations = other.m_Durations;
+    m_StartOffset = other.m_StartOffset;
+    emit startOffsetChanged();
+    emit isValidChanged();
 }
 
 QDebug operator<<(QDebug debug, const ScVodPlaylist& value)

@@ -81,7 +81,7 @@ PullDownMenu {
                     }
                     playerPage.openHandler = callback
 
-                    playerPage.play(url, offset, saveScreenShot)
+                    playerPage.playUrl(url, offset, saveScreenShot)
 
                     updater.playerPage = playerPage
 

@@ -675,13 +675,6 @@ void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMP
                 if (s.status() == QDataStream::Ok && file.flush()) {
                     file.close();
 
-                    if (file.open(QIODevice::ReadOnly)) {
-                        QDataStream s(&file);
-                        VMPlaylist again;
-                        s >> again;
-                        qDebug() << again << again.isValid();
-                    }
-
                     // send event so that the match page can try to get the thumbnails again
                     auto vodUrlShareId = r.vod_url_share_id;
 

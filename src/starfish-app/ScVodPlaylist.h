@@ -3,7 +3,6 @@
 #include <QObject>
 #include <QVector>
 
-//class ScUrlShareItem;
 class ScVodPlaylist : public QObject
 {
     Q_OBJECT
@@ -22,8 +21,8 @@ public:
     Q_INVOKABLE void setUrl(int index, const QString& url);
     Q_INVOKABLE int duration(int index) const;
     Q_INVOKABLE void setDuration(int index, int value);
-//    Q_INVOKABLE void fromUrl(const QString& value);
-//    Q_INVOKABLE void fromUrlShareItem(const ScUrlShareItem* item);
+    Q_INVOKABLE void copyFrom(const QVariant& other);
+
 
 signals:
     void partsChanged();
@@ -31,9 +30,16 @@ signals:
     void isValidChanged();
 
 private:
+    void copyFrom(const ScVodPlaylist& other);
+
+private:
     QVector<QString> m_Urls;
     QVector<int> m_Durations;
     int m_StartOffset;
 };
+
+using ScVodPlaylistHandle = ScVodPlaylist*;
+
+Q_DECLARE_METATYPE(ScVodPlaylistHandle)
 
 QDebug operator<<(QDebug debug, const ScVodPlaylist& value);

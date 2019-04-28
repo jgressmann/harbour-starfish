@@ -746,7 +746,7 @@ ListItem {
 
     function _tryPlay() {
         if (_c.urlShare.vodFetchStatus === UrlShare.Fetching) {
-            _play()
+            _playFiles()
         } else if (_c.urlShare.vodFetchStatus === UrlShare.Available) {
             // try download rest if incomplete and format matches
             if (_c.urlShare.downloadProgress < 1) {
@@ -761,12 +761,30 @@ ListItem {
             }
 
             // at any rate, play the file
-            _play()
+            _playFiles()
         } else if (_c.urlShare.metaDataFetchStatus === UrlShare.Available) {
             _playStream()
         } else if (_c.urlShare.metaDataFetchStatus !== UrlShare.Fetching) {
             _c.urlShare.fetchMetaData()
         }
+    }
+
+    function _playFiles() {
+        playlist.startOffset = startOffset
+        playlist.parts = _c.urlShare.files
+        for (var i = 0; i < _c.urlShare.files; ++i) {
+            var file = _c.urlShare.file(i)
+            if (_c.urlShare.metaDataFetchStatus === UrlShare.Available) {
+                playlist.setDuration(i, _c.urlShare.metaData.vod(i).duration)
+            } else {
+                playlist.setDuration(i, -1)
+            }
+
+            playlist.setUrl(i, file.vodFilePath)
+        }
+
+        console.debug("playlist=" + playlist)
+        playRequest(root)
     }
 
     function _playStream() {

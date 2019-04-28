@@ -300,7 +300,7 @@ ApplicationWindow {
         }
 
         function updateYtdl() {
-            if (!canStartDownload || vodDownloadModel.busy) {
+            if (false) {
                 errorNotification.body = errorNotification.previewBody =
                         //% "%1 is busy. Try again later."
                         qsTrId("notification-busy").arg(App.displayName)
@@ -421,11 +421,13 @@ ApplicationWindow {
         YTDLDownloader.isUpdateAvailableChanged.connect(_ytdlUpdateAvailableChanged)
         _setMode()
         _setYtdlPath()
+        _checkForYtdlUpate()
         _setScraper()
         console.debug("last fetch=" + settingLastUpdateTimestamp.value)
 
         Global.playVideoHandler = function (updater, key, playlist, seen) {
             if (playlist && playlist.isValid) {
+                console.debug("playlist=" + playlist)
                 VodDataManager.recentlyWatched.add(key, seen)
                 VodDataManager.recentlyWatched.setOffset(key, playlist.startOffset)
                 if (settingExternalMediaPlayer.value && playlist.url(0).indexOf("http") !== 0) {
@@ -433,7 +435,7 @@ ApplicationWindow {
                 } else {
                     console.debug("offset=" + playlist.startOffset)
                     var playerPage = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
-                    playerPage.play(playlist)
+                    playerPage.playPlaylist(playlist)
                     updater.playerPage = playerPage
                     updater.setKey(key)
                 }
@@ -445,8 +447,6 @@ ApplicationWindow {
             return "match_date>=date('now', '-" + settingNewWindowDays.value.toFixed(0) + " days')" +
                                     (settingNewRemoveSeen.value ? " and seen=0" : "")
         }
-
-
     }
 
     Component.onDestruction: {
@@ -507,25 +507,16 @@ ApplicationWindow {
     }
 
     function _switchContentPage() {
-        if (!pageStack.busy) {
-            switch (YTDLDownloader.status) {
-            case YTDLDownloader.StatusReady:
-                if (pageStack.depth === 1 && pageStack.currentPage.isYTDLPage) {
+        if (pageStack.currentPage && !pageStack.busy) {
+            if (YTDLDownloader.downloadStatus === YTDLDownloader.StatusReady) {
+                if (pageStack.currentPage.isYTDLPage) {
                     pageStack.replace(Qt.resolvedUrl("pages/StartPage.qml"))
                 }
-                break;
-            case YTDLDownloader.StatusUnavailable:
-                if (pageStack.depth > 1) {
-                    // sucks, after the next line will enter again to end up here once more
-                    pageStack.pop(null, PageStackAction.Immediate)
-//                        pageStack.completeAnimation()
-                }
+            } else {
                 if (!pageStack.currentPage.isYTDLPage) {
-                    pageStack.replace(Qt.resolvedUrl("pages/YTDLPage.qml"), {backNavigation: false})
+                    pageStack.replace(Qt.resolvedUrl("pages/YTDLPage.qml"))
                 }
-                break;
             }
-
         }
     }
 

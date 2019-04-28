@@ -41,6 +41,7 @@
 #include "ScRecentlyWatchedVideos.h"
 #include "VMQuickYTDLDownloader.h"
 #include "ScMatchItem.h"
+#include "ScVodFileItem.h"
 #include "ScVodPlaylist.h"
 
 #include <sailfishapp.h>
@@ -97,7 +98,6 @@ main(int argc, char *argv[]) {
         qmlRegisterType<Sc2CastsDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2CastsDotComScraper");
         qmlRegisterType<ScVodPlaylist>(STARFISH_NAMESPACE, 1, 0, "VodPlaylist");
 
-        qmlRegisterSingletonType<ScApp>(STARFISH_NAMESPACE, 1, 0, "App", appProvider);
         qmlRegisterUncreatableType<ScVodScraper>(STARFISH_NAMESPACE, 1, 0, "VodScraper", "VodScraper");
         qmlRegisterUncreatableType<ScVodman>(STARFISH_NAMESPACE, 1, 0, "Vodman", "Vodman");
 
@@ -106,6 +106,9 @@ main(int argc, char *argv[]) {
         qmlRegisterUncreatableType<ScMatchItem>(STARFISH_NAMESPACE, 1, 0, "MatchItemData", "MatchItemData");
         qmlRegisterUncreatableType<ScMatchItem>(STARFISH_NAMESPACE, 1, 0, "Match", "Match");
         qmlRegisterUncreatableType<ScUrlShareItem>(STARFISH_NAMESPACE, 1, 0, "UrlShare", "UrlShare");
+        qmlRegisterUncreatableType<ScVodFileItem>(STARFISH_NAMESPACE, 1, 0, "VodFile", "VodFile");
+
+        qmlRegisterSingletonType<ScApp>(STARFISH_NAMESPACE, 1, 0, "App", appProvider);
         qmlRegisterSingletonType<ScVodDataManager>(STARFISH_NAMESPACE, 1, 0, "VodDataManager", dataManagerProvider);
 
         {

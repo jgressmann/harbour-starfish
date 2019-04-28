@@ -409,7 +409,7 @@
         <translation>Continue watching</translation>
     </message>
     <message id="entry-page-title">
-        <location filename="../qml/pages/EntryPage.qml" line="313"/>
+        <location filename="../qml/pages/EntryPage.qml" line="311"/>
         <source>go go go</source>
         <translation>go go go</translation>
     </message>
@@ -920,23 +920,23 @@
     </message>
     <message id="recently-watched-video-view-remove-from-list">
         <location filename="../qml/RecentlyWatchedVideoView.qml" line="65"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="214"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="220"/>
         <source>Remove from list</source>
         <translation>Remove from list</translation>
     </message>
     <message id="recently-watched-video-view-removing">
         <location filename="../qml/RecentlyWatchedVideoView.qml" line="72"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="221"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="228"/>
         <source>Removing %1</source>
         <translation>Removing %1</translation>
     </message>
     <message id="recently-watched-video-view-no-content">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="236"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="243"/>
         <source>No recent videos.</source>
         <translation>No recent videos.</translation>
     </message>
     <message id="recently-watched-video-view-no-content-hint">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="238"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="245"/>
         <source>This list will fill with the videos you have watched.</source>
         <translation>This list will fill with the videos you have watched.</translation>
     </message>
@@ -966,7 +966,7 @@
         <translation>For details check the log file located in %1</translation>
     </message>
     <message id="select-av-format-dialog-title">
-        <location filename="../qml/pages/MatchItem.qml" line="880"/>
+        <location filename="../qml/pages/MatchItem.qml" line="913"/>
         <source>Select a format</source>
         <translation type="unfinished">Select a format</translation>
     </message>

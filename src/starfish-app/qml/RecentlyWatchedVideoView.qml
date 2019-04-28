@@ -31,10 +31,11 @@ import "pages"
 SilicaListView {
     id: listView
     readonly property string _table: Global.defaultTable
+    quickScrollEnabled: false
 
     model: VodDataManager.recentlyWatched
 
-    signal clicked(var key, string playbackUrl, int offset, var matchItem)
+    signal clicked(var key, var playlist, bool seen)
 
     MatchItemMemory {
         id: matchItemConnections
@@ -46,11 +47,10 @@ SilicaListView {
                 console.debug("loaded video_id="+video_id+" url="+url)
             }
 
-            sourceComponent: url ? fileComponent : vodComponent
+            sourceComponent: url ? urlComponent : vodComponent
 
             Component {
-                id: fileComponent
-
+                id: urlComponent
 
                 ListItem {
                     id: listItem
@@ -76,6 +76,11 @@ SilicaListView {
                                 }
                             }
                         }
+                    }
+
+                    VodPlaylist {
+                        id: playlist
+                        parts: 1
                     }
 
                     Column {
@@ -170,11 +175,10 @@ SilicaListView {
 
 
                     onClicked: {
-                        console.debug("url=" + url)
+                        console.debug("playlist=" + playlist)
                         listView.clicked(VodDataManager.recentlyWatched.urlKey(url),
-                                         url,
-                                         offset,
-                                         null)
+                                         playlist,
+                                         false)
                     }
 
 
@@ -187,6 +191,9 @@ SilicaListView {
 
                     Component.onCompleted: {
                         console.debug("index=" + index + " offset=" + offset + " url=" + url)
+                        playlist.setUrl(0, url)
+                        playlist.setDuration(0, -1)
+                        playlist.startOffset = offset
                     }
                 }
             }
@@ -203,8 +210,7 @@ SilicaListView {
                     memory: matchItemConnections
 
                     onPlayRequest: function (self) {
-                        listView.clicked(
-                                    VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.playlist.startOffset, self)
+                        listView.clicked(VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.seen)
                     }
 
                     menu: Component {
@@ -213,6 +219,7 @@ SilicaListView {
                                 //% "Remove from list"
                                 text: qsTrId("recently-watched-video-view-remove-from-list")
                                 onClicked: {
+                                    console.debug("click clack")
                                     // not sure why I need locals here
                                     var removeArgs = VodDataManager.recentlyWatched.vodKey(matchItem.rowId)
                                     var model = VodDataManager.recentlyWatched //
