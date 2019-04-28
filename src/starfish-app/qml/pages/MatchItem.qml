@@ -34,7 +34,6 @@ ListItem {
     property bool showDate: true
     property bool showSides: _c && ((_c.side1 && _c.side2) || (_c.side1 && !_c.urlShare.title))
     property bool showTitle: _c && !_c.side2
-    property bool menuEnabled: true
     property int rowId: -1
     property var _playWhenPageTransitionIsDoneCallback: null
     property alias playlist: _playlist
@@ -44,7 +43,6 @@ ListItem {
     readonly property bool _hasValidRaces: _c && _c.race1 >= 1 && _c.race2 >= 1
     readonly property int requiredHeight: content.height + watchProgress.height
     readonly property string title: titleLabel.text
-    readonly property string thumbnailSource: thumbnail.source
     property int _vodDownloadExplicitlyStarted: -1
     property MatchItemMemory memory
     readonly property bool _toolEnabled: !VodDataManager.busy
@@ -56,8 +54,9 @@ ListItem {
         (_c.urlShare.vodFetchStatus === UrlShare.Available ||
         (_c.urlShare.vodFetchStatus === UrlShare.Fetching && _c.urlShare.downloadProgress > 0))
 
-    menu: menuEnabled ? contextMenu : null
     signal playRequest(var self)
+
+    menu: contextMenu
 
     VodPlaylist {
         id: _playlist
@@ -721,29 +720,6 @@ ListItem {
         return formatIndex
     }
 
-    function _selectFormat(callback) {
-        var labels = []
-        var values = []
-        var _vod = _c.urlShare.metaData
-        for (var i = 0; i < _vod.formats; ++i) {
-            var f = _vod.format(i)
-            labels.push(f.displayName)
-            values.push(f.id)
-        }
-
-        var dialog = pageStack.push(
-            Qt.resolvedUrl("SelectFormatDialog.qml"), {
-                        "autoUpdateMenu": false,
-                        "labels" : labels,
-                        "values": values
-                                    })
-        dialog.accepted.connect(function () {
-            callback(dialog.formatIndex)
-        })
-        // instantiate the menu
-        dialog.updateMenu()
-    }
-
     function _tryPlay() {
         if (_c.urlShare.vodFetchStatus === UrlShare.Fetching) {
             _playFiles()
@@ -898,11 +874,12 @@ ListItem {
     }
 
     function _selectAvFormat(playlist, more) {
-        if (playlist.avFormats > 1) {
+        var vod = playlist.vod(0)
+        if (vod.avFormats > 1) {
             var labels = []
             var values = []
-            for (var i = 0; i < playlist.avFormats; ++i) {
-                var f = playlist.avFormat(i)
+            for (var i = 0; i < vod.avFormats; ++i) {
+                var f = vod.avFormat(i)
                 labels.push(f.displayName + " / " + f.tbr.toFixed(0) + " [tbr] " + f.extension)
                 values.push(f.id)
             }

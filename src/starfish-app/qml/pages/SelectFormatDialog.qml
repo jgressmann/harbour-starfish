@@ -29,7 +29,7 @@ Dialog {
     id: root
 
     property alias formatIndex: comboBox.currentIndex
-    canAccept: formatIndex !== -1
+    canAccept: values && values.length > 0 && formatIndex >= 0 && formatIndex < values.length
     property var values: []
     property var labels: []
     property bool autoUpdateMenu: true

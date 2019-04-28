@@ -919,24 +919,24 @@
         <translation>Fetching page %1</translation>
     </message>
     <message id="recently-watched-video-view-remove-from-list">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="65"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="220"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="66"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="221"/>
         <source>Remove from list</source>
         <translation>Remove from list</translation>
     </message>
     <message id="recently-watched-video-view-removing">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="72"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="228"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="73"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="229"/>
         <source>Removing %1</source>
         <translation>Removing %1</translation>
     </message>
     <message id="recently-watched-video-view-no-content">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="243"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="244"/>
         <source>No recent videos.</source>
         <translation>No recent videos.</translation>
     </message>
     <message id="recently-watched-video-view-no-content-hint">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="245"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="246"/>
         <source>This list will fill with the videos you have watched.</source>
         <translation>This list will fill with the videos you have watched.</translation>
     </message>
