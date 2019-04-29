@@ -32,8 +32,10 @@ SilicaListView {
     id: listView
     readonly property string _table: Global.defaultTable
     quickScrollEnabled: false
+    clip: true
 
     model: VodDataManager.recentlyWatched
+    property real _matchItemContentHeight: 0
 
     signal clicked(var key, var playlist, bool seen)
 
@@ -56,7 +58,7 @@ SilicaListView {
                     id: listItem
 
                     width: listView.width
-                    contentHeight: Global.itemHeight + Theme.fontSizeMedium
+                    contentHeight: _matchItemContentHeight ? _matchItemContentHeight : (Global.itemHeight + Theme.fontSizeMedium)
 
                     menu: Component {
                         ContextMenu {
@@ -87,6 +89,7 @@ SilicaListView {
                         id: heading
                         x: Theme.horizontalPageMargin
                         width: parent.width - 2*x
+                        anchors.verticalCenter: parent.verticalCenter
 
                         Label {
                             id: directoryLabel
@@ -195,6 +198,8 @@ SilicaListView {
                         playlist.setDuration(0, -1)
                         playlist.startOffset = offset
                     }
+
+
                 }
             }
 
@@ -205,9 +210,9 @@ SilicaListView {
                 MatchItem {
                     id: matchItem
                     width: listView.width
-
                     rowId: video_id
                     memory: matchItemConnections
+
 
                     onPlayRequest: function (self) {
                         listView.clicked(VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.seen)
