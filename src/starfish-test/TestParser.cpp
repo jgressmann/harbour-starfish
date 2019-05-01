@@ -361,12 +361,20 @@ TestParser::autocompleteFromEvent_data() {
     record.eventFullName = "Have at you!";
     record.game = ScRecord::GameBroodWar;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
-#endif
+
     record.valid = ScRecord::ValidEventName;
     record.eventName = "IN-DEPTH";
     record.eventFullName = "IN-DEPTH";
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+#endif
 
+    record.valid = ScRecord::ValidGame | ScRecord::ValidYear | ScRecord::ValidSeason;
+    record.eventName = "Korea StarCraft 1 League";
+    record.eventFullName = "2019 Korea StarCraft 1 League S3";
+    record.game = ScRecord::GameBroodWar;
+    record.year = 2019;
+    record.season = 3;
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 }
 
 

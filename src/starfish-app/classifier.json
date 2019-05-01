@@ -15,7 +15,7 @@
             ],
             "remove": [
                 {
-                    "regex": "\\(bw\\)|brood\\s*war|starcraft 1"
+                    "regex": "\\(bw\\)|brood\\s*war|korea\\s+(?!starcraft\\s+1)\\s+league"
                 }
             ]
         },
