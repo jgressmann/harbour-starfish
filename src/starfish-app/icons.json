@@ -263,7 +263,7 @@
             "extension": ".jpg"
         },
         {
-            "regex": "^ksl",
+            "regex": "^ksl|^korea\\s+starcraft\\s+1\\s+league",
             "url": "https://www.dropbox.com/s/03h0295mfi0nc2g/ksl.png?dl=1",
             "extension": ".png"
         },
