@@ -49,6 +49,7 @@ struct ScVodFileFetchProgress
     int width;
     int height;
     int fileIndex;
+    int fileCount;
 
     ScVodFileFetchProgress() = default;
 };
@@ -123,13 +124,15 @@ private:
         qint64 token;
         VMPlaylistDownloadRequest r;
         qint64 vod_url_share_id;
-//        int formatIndex;
+        int playlistIndex;
+        int playlistCount;
+        int width;
+        int height;
         int refCount;
     };
 
     struct ThumbnailRequest {
         qint64 url_share_id;
-        qint64 thumbnail_id;
         int refCount;
     };
 
@@ -143,11 +146,9 @@ private slots:
 
 private:
     void fetchMetaData(qint64 urlShareId, const QString& url);
-    void updateVodDownloadStatus(qint64 urlShareId, const VMPlaylistDownload& download);
     void thumbnailRequestFinished(QNetworkReply* reply, ThumbnailRequest& r);
-    void fetchThumbnailFromUrl(qint64 urlShareId, qint64 thumbnailId, const QString& url);
+    void fetchThumbnailFromUrl(qint64 urlShareId, const QString& url);
     void addThumbnail(ThumbnailRequest& r, const QByteArray& bytes);
-    void removeThumbnail(ThumbnailRequest& r);
     void notifyVodDownloadsChanged();
 
 private:

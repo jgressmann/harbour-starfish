@@ -289,19 +289,18 @@ ScUrlShareItem::onFetchingVod(const ScVodFileFetchProgress& progress)
 void
 ScUrlShareItem::onVodAvailable(const ScVodFileFetchProgress& progress, FetchStatus status)
 {
-    if (progress.fileIndex < 0) {
+    if (progress.fileCount < 0) {
+        qWarning() << "invalid file count" << progress.fileCount;
+        return;
+    }
+
+    if (progress.fileCount > 0 &&
+            (progress.fileIndex < 0 || progress.fileIndex >= progress.fileCount)) {
         qWarning() << "invalid file index" << progress.fileIndex;
         return;
     }
 
-    if (progress.fileIndex > m_Files.size() + 1) {
-        qWarning() << "intermitten files missing" << progress.fileIndex;
-        return;
-    }
-
-    if (progress.fileIndex == m_Files.size()) {
-        m_Files.append(new ScVodFileItem(this));
-    }
+    setFileCount(progress.fileCount);
 
     m_Files[progress.fileIndex]->onVodAvailable(progress);
     setSize(QSize(progress.width, progress.height));
@@ -537,11 +536,7 @@ ScUrlShareItem::deleteVodFiles()
 //        setVodFilePath(QString());
 //        setDownloadProgress(0);
 //        setFilesize(0);
-        for (auto file : m_Files) {
-            delete file;
-        }
-        m_Files.clear();
-        emit filesChanged();
+        setFileCount(0);
         emit downloadProgressChanged();
 
         setSize(QSize());
@@ -623,4 +618,23 @@ ScUrlShareItem::file(int index) const
 
     qCritical() << "index out of range" << index;
     return nullptr;
+}
+
+void
+ScUrlShareItem::setFileCount(int count)
+{
+    if (m_Files.size() != count) {
+        while (m_Files.size() > count) {
+            delete m_Files.last();
+            m_Files.pop_back();
+        }
+
+        m_Files.reserve(count);
+
+        while (m_Files.size() < count) {
+            m_Files << new ScVodFileItem(this);
+        }
+
+        emit filesChanged();
+    }
 }

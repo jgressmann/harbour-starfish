@@ -162,9 +162,10 @@ private:
     void fetchMetaData(bool download);
     void updateUrlShareData();
     void onVodAvailable(const ScVodFileFetchProgress& progress, FetchStatus status);
+    void setFileCount(int count);
 
 private:
-    QList<ScVodFileItem*> m_Files;
+    QVector<ScVodFileItem*> m_Files;
     VMPlaylist m_MetaData;
     QString m_ThumbnailPath;
 //    QString m_FilePath;

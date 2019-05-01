@@ -58,6 +58,10 @@ ListItem {
 
     menu: contextMenu
 
+    onMenuOpenChanged: {
+        console.debug("menu open=" + menuOpen)
+    }
+
     VodPlaylist {
         id: _playlist
     }
@@ -591,21 +595,22 @@ ListItem {
                 }
             }
 
-            MenuItem {
-                text: "VOD details"
-                visible: tangibleDownloadProgress
-                onClicked: pageStack.push(
-                               Qt.resolvedUrl("VodDetailPage.qml"),
-                               {
-                                   vodTitle: titleLabel.text,
-                                   vodFilePath: _c.urlShare.vodFilePath,
-                                   vodFileSize: _c.urlShare.vodFileSize,
-                                   vodWidth: _c.urlShare.vodResolution.width,
-                                   vodHeight: _c.urlShare.vodResolution.height,
-                                   vodRowId: rowId,
-                                   vodProgress: _c.urlShare.downloadProgress
-                               })
-            }
+            // FIX ME
+//            MenuItem {
+//                text: "VOD details"
+//                visible: tangibleDownloadProgress
+//                onClicked: pageStack.push(
+//                               Qt.resolvedUrl("VodDetailPage.qml"),
+//                               {
+//                                   vodTitle: titleLabel.text,
+//                                   vodFilePath: _c.urlShare.vodFilePath,
+//                                   vodFileSize: _c.urlShare.vodFileSize,
+//                                   vodWidth: _c.urlShare.vodResolution.width,
+//                                   vodHeight: _c.urlShare.vodResolution.height,
+//                                   vodRowId: rowId,
+//                                   vodProgress: _c.urlShare.downloadProgress
+//                               })
+//            }
 
             MenuItem {
                 text: "Copy VOD file path to clipboard"
@@ -632,12 +637,6 @@ ListItem {
                 }
             }
         }
-    }
-
-    function _play(formatIndex) {
-        playlist.fromUrlShareItem(_c)
-        playlist.startOffset = startOffset
-        playRequest(root)
     }
 
     function _getVideoFormatFromBearerMode() {

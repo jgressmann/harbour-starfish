@@ -360,61 +360,6 @@
             <numerusform>Das Löschen der Datei für %1 wird auch die Datei für %2 weitere Videos entfernen.&lt;br/&gt;&lt;br/&gt;Möchtest du fortfahren?</numerusform>
         </translation>
     </message>
-    <message id="entry-page-new">
-        <location filename="../qml/pages/EntryPage.qml" line="45"/>
-        <source>New</source>
-        <translation>Neu</translation>
-    </message>
-    <message id="entry-page-unwatched">
-        <location filename="../qml/pages/EntryPage.qml" line="102"/>
-        <source>Not yet watched</source>
-        <translation>Noch nicht gesehen</translation>
-    </message>
-    <message id="entry-page-unwatched-breadcrumb">
-        <location filename="../qml/pages/EntryPage.qml" line="118"/>
-        <source>Unwatched</source>
-        <translation>Ungesehen</translation>
-    </message>
-    <message id="entry-page-browse">
-        <location filename="../qml/pages/EntryPage.qml" line="154"/>
-        <source>Browse</source>
-        <translation>Stöbern</translation>
-    </message>
-    <message id="entry-page-offline-available">
-        <location filename="../qml/pages/EntryPage.qml" line="182"/>
-        <source>Offline available</source>
-        <translation>Offline verfügbar</translation>
-    </message>
-    <message id="entry-page-offline-breadcrump">
-        <location filename="../qml/pages/EntryPage.qml" line="198"/>
-        <source>Offline</source>
-        <translation>Offline</translation>
-    </message>
-    <message id="entry-page-active-downloads">
-        <location filename="../qml/pages/EntryPage.qml" line="233"/>
-        <source>Active downloads</source>
-        <translation>Laufende Downloads</translation>
-    </message>
-    <message id="entry-page-clear-recently-watched-videos">
-        <location filename="../qml/pages/EntryPage.qml" line="250"/>
-        <source>Clear</source>
-        <translation>Liste löschen</translation>
-    </message>
-    <message id="entry-page-clearing-recently-watched-videos">
-        <location filename="../qml/pages/EntryPage.qml" line="253"/>
-        <source>Clearing recently watched videos</source>
-        <translation>Lösche zuletzt gesehenen Videos</translation>
-    </message>
-    <message id="entry-page-continue-watching">
-        <location filename="../qml/pages/EntryPage.qml" line="267"/>
-        <source>Continue watching</source>
-        <translation>Weitersehen</translation>
-    </message>
-    <message id="entry-page-title">
-        <location filename="../qml/pages/EntryPage.qml" line="311"/>
-        <source>go go go</source>
-        <translation>Los Los Los</translation>
-    </message>
     <message id="data-dir-move-dialog-title">
         <location filename="../qml/pages/MoveDataDirectoryPage.qml" line="39"/>
         <source>Data directory move</source>
@@ -895,22 +840,22 @@
         <translation>Lade %1</translation>
     </message>
     <message id="ScVodDataManager-misc-label">
-        <location filename="../ScVodDataManager.cpp" line="1060"/>
+        <location filename="../ScVodDataManager.cpp" line="1061"/>
         <source>Misc</source>
         <translation>Verschiedene</translation>
     </message>
     <message id="ScVodDataManager-game-label">
-        <location filename="../ScVodDataManager.cpp" line="1069"/>
+        <location filename="../ScVodDataManager.cpp" line="1070"/>
         <source>game</source>
         <translation>Spiel</translation>
     </message>
     <message id="ScVodDataManager-year-label">
-        <location filename="../ScVodDataManager.cpp" line="1074"/>
+        <location filename="../ScVodDataManager.cpp" line="1075"/>
         <source>year</source>
         <translation>Jahr</translation>
     </message>
     <message id="ScVodDataManager-event-label">
-        <location filename="../ScVodDataManager.cpp" line="1079"/>
+        <location filename="../ScVodDataManager.cpp" line="1080"/>
         <source>event</source>
         <translation>Event</translation>
     </message>
@@ -919,28 +864,6 @@
         <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="261"/>
         <source>Fetching page %1</source>
         <translation>Lade Seite %1</translation>
-    </message>
-    <message id="recently-watched-video-view-remove-from-list">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="66"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="221"/>
-        <source>Remove from list</source>
-        <translation>Entfernen</translation>
-    </message>
-    <message id="recently-watched-video-view-removing">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="73"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="229"/>
-        <source>Removing %1</source>
-        <translation>Entferne %1</translation>
-    </message>
-    <message id="recently-watched-video-view-no-content">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="244"/>
-        <source>No recent videos.</source>
-        <translation>Keine zuletzt gesehenen Videos.</translation>
-    </message>
-    <message id="recently-watched-video-view-no-content-hint">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="246"/>
-        <source>This list will fill with the videos you have watched.</source>
-        <translation>Diese List füllt sich mit den zuletzt gesehenen Videos.</translation>
     </message>
     <message id="start-page-no-content-hint-pull-down-online">
         <location filename="../qml/pages/StartPage.qml" line="87"/>
@@ -968,9 +891,86 @@
         <translation>Details findest du in der Logdatei im Verzeichnis %1</translation>
     </message>
     <message id="select-av-format-dialog-title">
-        <location filename="../qml/pages/MatchItem.qml" line="913"/>
+        <location filename="../qml/pages/MatchItem.qml" line="889"/>
         <source>Select a format</source>
         <translation type="unfinished">Wähle ein Format aus</translation>
+    </message>
+    <message id="recently-watched-video-view-remove-from-list">
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="67"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="225"/>
+        <source>Remove from list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="recently-watched-video-view-removing">
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="74"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="233"/>
+        <source>Removing %1</source>
+        <translation type="unfinished">Entferne %1</translation>
+    </message>
+    <message id="recently-watched-video-view-no-content">
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="248"/>
+        <source>No recent videos.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="recently-watched-video-view-no-content-hint">
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="250"/>
+        <source>This list will fill with the videos you have watched.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="entry-page-new">
+        <location filename="../qml/pages/EntryPage.qml" line="45"/>
+        <source>New</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="entry-page-unwatched">
+        <location filename="../qml/pages/EntryPage.qml" line="102"/>
+        <source>Not yet watched</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="entry-page-unwatched-breadcrumb">
+        <location filename="../qml/pages/EntryPage.qml" line="118"/>
+        <source>Unwatched</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="entry-page-browse">
+        <location filename="../qml/pages/EntryPage.qml" line="154"/>
+        <source>Browse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="entry-page-offline-available">
+        <location filename="../qml/pages/EntryPage.qml" line="182"/>
+        <source>Offline available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="entry-page-offline-breadcrump">
+        <location filename="../qml/pages/EntryPage.qml" line="198"/>
+        <source>Offline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="entry-page-active-downloads">
+        <location filename="../qml/pages/EntryPage.qml" line="233"/>
+        <source>Active downloads</source>
+        <translation type="unfinished">Laufende Downloads</translation>
+    </message>
+    <message id="entry-page-clear-recently-watched-videos">
+        <location filename="../qml/pages/EntryPage.qml" line="250"/>
+        <source>Clear</source>
+        <translation type="unfinished">Löschen</translation>
+    </message>
+    <message id="entry-page-clearing-recently-watched-videos">
+        <location filename="../qml/pages/EntryPage.qml" line="253"/>
+        <source>Clearing recently watched videos</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="entry-page-continue-watching">
+        <location filename="../qml/pages/EntryPage.qml" line="267"/>
+        <source>Continue watching</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="entry-page-title">
+        <location filename="../qml/pages/EntryPage.qml" line="311"/>
+        <source>go go go</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
