@@ -17,7 +17,7 @@ ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
 {
 //    m_FileSize = -1;
     m_Length = -1;
-//    m_Progress = -1;
+    m_Progress = 0;
     m_FormatIndex = -1;
     m_ShareCount = -1;
     m_ThumbnailFetchStatus = Unknown;
@@ -302,10 +302,13 @@ ScUrlShareItem::onVodAvailable(const ScVodFileFetchProgress& progress, FetchStat
 
     setFileCount(progress.fileCount);
 
-    m_Files[progress.fileIndex]->onVodAvailable(progress);
     setSize(QSize(progress.width, progress.height));
     setFormatId(progress.formatId);
     setVodFetchStatus(status);
+
+    if (progress.fileCount) {
+        m_Files[progress.fileIndex]->onVodAvailable(progress);
+    }
 }
 
 void
@@ -533,12 +536,7 @@ ScUrlShareItem::deleteVodFiles()
     case Available:
         manager()->deleteVodFiles(m_UrlShareId);
         // set all of these to give QML a better chance to show/hide menu items
-//        setVodFilePath(QString());
-//        setDownloadProgress(0);
-//        setFilesize(0);
         setFileCount(0);
-        emit downloadProgressChanged();
-
         setSize(QSize());
         setFormatId(QString());
         setFormatIndex(-1);
@@ -593,22 +591,6 @@ ScUrlShareItem::updateFormatIndex()
     }
 }
 
-qreal
-ScUrlShareItem::downloadProgress() const
-{
-    qreal progress = 0;
-
-    if (m_Files.size()) {
-        for (const auto& file : m_Files) {
-            progress += file->downloadProgress();
-        }
-
-        progress /= m_Files.size();
-    }
-
-    return progress;
-}
-
 ScVodFileItem*
 ScUrlShareItem::file(int index) const
 {
@@ -624,6 +606,8 @@ void
 ScUrlShareItem::setFileCount(int count)
 {
     if (m_Files.size() != count) {
+        qDebug() << m_UrlShareId << "change file count to" << count;
+
         while (m_Files.size() > count) {
             delete m_Files.last();
             m_Files.pop_back();
@@ -632,9 +616,38 @@ ScUrlShareItem::setFileCount(int count)
         m_Files.reserve(count);
 
         while (m_Files.size() < count) {
-            m_Files << new ScVodFileItem(this);
+            auto file = new ScVodFileItem(this);
+            connect(file, &ScVodFileItem::downloadProgressChanged, this, &ScUrlShareItem::updateDownloadProgress);
+            connect(file, &ScVodFileItem::durationChanged, this, &ScUrlShareItem::updateDownloadProgress);
+            m_Files << file;
         }
 
         emit filesChanged();
+        updateDownloadProgress();
+    }
+}
+
+void
+ScUrlShareItem::updateDownloadProgress()
+{
+    qreal progress = 0;
+    if (m_Length > 0) {
+        for (auto file : m_Files) {
+            progress += file->downloadProgress() * file->duration();
+        }
+
+        progress /= m_Length;
+        progress = qMax(qreal{0}, qMin(progress, qreal{1}));
+    }
+
+    setDownloadProgress(progress);
+}
+
+void
+ScUrlShareItem::setDownloadProgress(qreal value)
+{
+    if (value == value && value != m_Progress) {
+        m_Progress = value;
+        emit downloadProgressChanged();
     }
 }

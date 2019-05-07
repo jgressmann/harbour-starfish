@@ -48,10 +48,11 @@ struct ScVodFileFetchProgress
     qreal progress;
     int width;
     int height;
+    int duration;
     int fileIndex;
     int fileCount;
 
-    ScVodFileFetchProgress() = default;
+    ScVodFileFetchProgress();
 };
 
 class ScVodDataManagerWorker : public QObject
@@ -124,10 +125,7 @@ private:
         qint64 token;
         VMPlaylistDownloadRequest r;
         qint64 vod_url_share_id;
-        int playlistIndex;
-        int playlistCount;
-        int width;
-        int height;
+        ScVodFileFetchProgress progress;
         int refCount;
     };
 

@@ -18,9 +18,4 @@ DISTFILES += \
     $$PWD/setup-build-engine.sh
 
 
-CONFIG(debug, debug|release) {
-
-    QMAKE_CXXFLAGS += -O0
-}
-
-!CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
+#!CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT

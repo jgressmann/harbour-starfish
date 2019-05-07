@@ -840,22 +840,22 @@
         <translation>Lade %1</translation>
     </message>
     <message id="ScVodDataManager-misc-label">
-        <location filename="../ScVodDataManager.cpp" line="1061"/>
+        <location filename="../ScVodDataManager.cpp" line="1063"/>
         <source>Misc</source>
         <translation>Verschiedene</translation>
     </message>
     <message id="ScVodDataManager-game-label">
-        <location filename="../ScVodDataManager.cpp" line="1070"/>
+        <location filename="../ScVodDataManager.cpp" line="1072"/>
         <source>game</source>
         <translation>Spiel</translation>
     </message>
     <message id="ScVodDataManager-year-label">
-        <location filename="../ScVodDataManager.cpp" line="1075"/>
+        <location filename="../ScVodDataManager.cpp" line="1077"/>
         <source>year</source>
         <translation>Jahr</translation>
     </message>
     <message id="ScVodDataManager-event-label">
-        <location filename="../ScVodDataManager.cpp" line="1080"/>
+        <location filename="../ScVodDataManager.cpp" line="1082"/>
         <source>event</source>
         <translation>Event</translation>
     </message>
@@ -891,7 +891,7 @@
         <translation>Details findest du in der Logdatei im Verzeichnis %1</translation>
     </message>
     <message id="select-av-format-dialog-title">
-        <location filename="../qml/pages/MatchItem.qml" line="889"/>
+        <location filename="../qml/pages/MatchItem.qml" line="931"/>
         <source>Select a format</source>
         <translation type="unfinished">Wähle ein Format aus</translation>
     </message>

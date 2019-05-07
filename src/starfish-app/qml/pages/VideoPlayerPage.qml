@@ -46,7 +46,7 @@ Page {
 
 
     readonly property int playbackOffset: _streamPositionS
-    readonly property int _streamPositionMs: _streamBasePositionS + mediaplayer.position
+    readonly property int _streamPositionMs: _streamBasePositionS * 1000 + mediaplayer.position
     readonly property int _streamPositionS: Math.floor(_streamPositionMs * 1e-3)
     property int _streamBasePositionS: 0
     property int _streamDurationS: 0
@@ -66,9 +66,18 @@ Page {
     signal videoCoverCaptured(string filepath)
     signal videoThumbnailCaptured(string filepath)
 
-//    onPlaybackOffsetChanged: {
-//        console.debug("playback offset="+ playbackOffset)
-//    }
+    on_StreamPositionMsChanged: {
+        console.debug("stream position ms=" + _streamPositionMs)
+        positionSlider.setPosition(_streamPositionMs)
+    }
+
+    on_CurrentUrlIndexChanged: {
+        console.debug("current url index=" + _currentUrlIndex)
+    }
+
+    on_StreamBasePositionSChanged: {
+        console.debug("stream base position=" + _streamBasePositionS)
+    }
 
     VodPlaylist {
         id: _playlist
@@ -120,7 +129,13 @@ Page {
                 break
             case MediaPlayer.EndOfMedia:
                 console.debug("end of media")
-                controlPanel.open = true
+                if (_playlist.isValid && _currentUrlIndex >= 0 && _currentUrlIndex + 1 < _playlist.parts) {
+                    ++_currentUrlIndex;
+                    _streamBasePositionS = _computeStreamBasePosition()
+                    mediaplayer.source = _playlist.url(_currentUrlIndex)
+                } else {
+                    controlPanel.open = true
+                }
                 break
             case MediaPlayer.Loaded:
                 console.debug("loaded")
@@ -423,27 +438,40 @@ Page {
                     Slider {
                         id: positionSlider
                         width: parent.width
+                        animateValue: false
                         maximumValue: Math.max(1, _streamDurationS * 1000)
 
-                        Connections {
-                            target: mediaplayer
-                            onPositionChanged: {
-                                if (!positionSlider.down && !seekTimer.running) {
-                                    positionSliderConnections.target = null
-                                    positionSlider.value = Math.max(0, _streamPositionMs)
-                                    positionSliderConnections.target = positionSlider
+                        property int _downPositionMs: 0
+                        property int _targetPositionMs: 0
+
+                        onMaximumValueChanged: {
+                            console.debug("position slider max=" + maximumValue)
+                        }
+
+                        onValueChanged: {
+                            console.debug("position value=" + value)
+                        }
+
+                        onDownChanged: {
+                            console.debug("slider down=" + down)
+                            if (down) {
+                                seekTimer.stop()
+                                _downPositionMs = _streamPositionMs
+                            } else {
+                                if (Math.abs(sliderValue - _downPositionMs) > 1000) {
+                                    _targetPositionMs = sliderValue
+                                    seekTimer.start()
                                 }
                             }
                         }
 
-                        Connections {
-                            id: positionSliderConnections
-                            target: positionSlider
-                            onValueChanged: {
-                                console.debug("onValueChanged " + positionSlider.value + " down=" + positionSlider.down)
-                                seekTimer.restart()
+                        function setPosition(newValue) {
+                            console.debug("target position=" + newValue)
+                            if (!positionSlider.down && !seekTimer.running) {
+                                value = newValue
                             }
                         }
+
 
                         Timer {
                             id: seekTimer
@@ -451,8 +479,9 @@ Page {
                             interval: 500
                             repeat: false
                             onTriggered: {
+                                console.debug("seek from down=" + parent._downPositionMs + " to=" + parent._targetPositionMs)
                                 _startSeek = false
-                                _seek(positionSlider.sliderValue)
+                                _seek(parent._targetPositionMs)
                             }
                         }
                     }
@@ -529,10 +558,12 @@ Page {
                                             page.resume()
                                             break
                                         case MediaPlayer.EndOfMedia:
-                                            controlPanel.open = false
-                                            _startSeek = true
-                                            _seek(_playlist.startOffset * 1000)
-                                            mediaplayer.play()
+                                            if (_playlist.isValid && _currentUrlIndex >= 0 && _currentUrlIndex + 1 == _playlist.parts) {
+                                                controlPanel.open = false
+                                                _startSeek = true
+                                                _seek(_playlist.startOffset * 1000)
+                                                mediaplayer.play()
+                                            }
                                             break
                                         }
                                         break
@@ -782,6 +813,7 @@ Page {
 
     function _seekToIndex(index, positionMs) {
         _currentUrlIndex = index;
+        _streamBasePositionS = _computeStreamBasePosition()
         mediaplayer.source = _playlist.url(index)
         _forceBusyIndicator = true
         console.debug("_forceBusyIndicator=true")

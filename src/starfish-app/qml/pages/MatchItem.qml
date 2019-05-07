@@ -671,48 +671,75 @@ ListItem {
 
     function _findBestFormat(vod, formatId) {
         var formatIndex = -1
-        if (VM.VM_Smallest === formatId) {
-            var best = vod.avFormat(0)
-            formatIndex = 0
-            for (var i = 1; i < vod.avFormats; ++i) {
-                var f = vod.avFormat(i)
-                if (f.height < best.height) {
-                    best = f;
-                    formatIndex = i;
-                }
+        var anyProperFormat = false
+        for (var i = 0; i < vod.avFormats; ++i) {
+            var f = vod.avFormat(i)
+            if (f.height > 0 && f.width > 0) {
+                anyProperFormat = true
+                break
             }
-        } else if (VM.VM_Largest === formatId) {
-            var best = vod.avFormat(0)
-            formatIndex = 0
-            for (var i = 1; i < vod.avFormats; ++i) {
-                var f = vod.avFormat(i)
-                if (f.height > best.height) {
-                    best = f;
-                    formatIndex = i;
-                }
-            }
-        } else {
-            // try to find exact match
-            for (var i = 0; i < vod.avFormats; ++i) {
-                var f = vod.avFormat(i)
-                if (f.format === formatId) {
-                    formatIndex = i
-                    break
-                }
-            }
+        }
 
-            if (formatIndex === -1) {
-                var target = _targetHeight(formatId)
-                var bestdelta = Math.abs(vod.avFormat(0).height - target)
+        if (VM.VM_Smallest === formatId) {
+            if (anyProperFormat) {
+                var best = vod.avFormat(0)
                 formatIndex = 0
                 for (var i = 1; i < vod.avFormats; ++i) {
                     var f = vod.avFormat(i)
-                    var delta = Math.abs(f.width - target)
-                    if (delta < bestdelta) {
-                        bestdelta = delta;
+                    if (f.height > 0 && f.height < best.height) {
+                        best = f;
                         formatIndex = i;
                     }
                 }
+            } else {
+                formatIndex = 0 // typically the smallest
+            }
+        } else if (VM.VM_Largest === formatId) {
+            if (anyProperFormat) {
+                var best = vod.avFormat(0)
+                formatIndex = 0
+                for (var i = 1; i < vod.avFormats; ++i) {
+                    var f = vod.avFormat(i)
+                    if (f.height > 0 && f.height > best.height) {
+                        best = f;
+                        formatIndex = i;
+                    }
+                }
+            } else {
+                formatIndex = vod.avFormats - 1 // typically the largest
+            }
+        } else {
+            // try to find exact match
+            if (anyProperFormat) {
+                for (var i = 0; i < vod.avFormats; ++i) {
+                    var f = vod.avFormat(i)
+                    if (f.format === formatId) {
+                        formatIndex = i
+                        break
+                    }
+                }
+
+                if (formatIndex === -1) {
+                    var target = _targetHeight(formatId)
+                    var bestdelta = Math.abs(vod.avFormat(0).height - target)
+                    formatIndex = 0
+                    for (var i = 1; i < vod.avFormats; ++i) {
+                        var f = vod.avFormat(i)
+                        var delta = Math.abs(f.width - target)
+                        if (delta < bestdelta) {
+                            bestdelta = delta;
+                            formatIndex = i;
+                        }
+                    }
+                }
+            } else {
+                // try to match the selected format onto the range of formats
+                var qualityTarget = Math.max(0, Math.min((formatId - VM.VM_240p) / (VM.VM_1080p - VM.VM_240p), 1))
+                var availableQualityStep = 1 / vod.avFormats
+                var div = Math.floor(qualityTarget / availableQualityStep)
+                var rem = qualityTarget - div * availableQualityStep
+                formatIndex = Math.min(vod.avFormats - 1, div + (rem >= 0.5 * availableQualityStep ? 1 : 0))
+                console.debug("format id=" + formatId + " quality target=" + qualityTarget + " step=" + availableQualityStep + " format index=" + formatIndex)
             }
         }
 
@@ -752,13 +779,19 @@ ListItem {
             if (_c.urlShare.metaDataFetchStatus === UrlShare.Available) {
                 playlist.setDuration(i, _c.urlShare.metaData.vod(i).duration)
             } else {
-                playlist.setDuration(i, -1)
+                var duration = file.duration;
+                if (duration > 0) {
+                    playlist.setDuration(i, duration)
+                } else {
+                    playlist.setDuration(i, -1)
+                }
             }
 
             playlist.setUrl(i, file.vodFilePath)
+            console.debug("index=" + i + " duration=" + playlist.duration(i) + " file=" + playlist.url(i))
         }
 
-        console.debug("playlist=" + playlist)
+        console.debug("playlist parts=" + playlist.parts)
         playRequest(root)
     }
 
@@ -774,7 +807,7 @@ ListItem {
         playlist.parts = metaData.vods
 
         if (VM.VM_Any === vmFormatId) {
-            _selectAvFormat(metaData, function(formatIndex) {
+            _selectAvFormat(metaData.vod(0), function(formatIndex) {
 
                 for (var i = 0; i < metaData.vods; ++i) {
                     var vod = metaData.vod(i)
@@ -790,9 +823,9 @@ ListItem {
                 }
             })
         } else {
-
             for (var i = 0; i < metaData.vods; ++i) {
                 var vod = metaData.vod(i)
+                console.debug("index=" + i + " vod formats=" + vod.avFormats)
                 var formatIndex = _findBestFormat(vod, vmFormatId)
                 var format = vod.avFormat(formatIndex)
 
@@ -816,14 +849,18 @@ ListItem {
     }
 
     function _download(autoStarted, vmFormatId) {
-        var playlist = _c.urlShare.metaData
-        if (VM.VM_Any === vmFormatId) {
-            _selectAvFormat(playlist, function(index) {
-                _downloadFormat(index, autoStarted)
-            })
+        if (_c.urlShare.vodFormatIndex >= 0) {
+            _downloadFormat(_c.urlShare.vodFormatIndex, autoStarted)
         } else {
-            var formatIndex = _findBestFormat(playlist, vmFormatId)
-            _downloadFormat(formatIndex, autoStarted)
+            var vod = _c.urlShare.metaData.vod(0)
+            if (VM.VM_Any === vmFormatId) {
+                _selectAvFormat(vod, function(index) {
+                    _downloadFormat(index, autoStarted)
+                })
+            } else {
+                var formatIndex = _findBestFormat(vod, vmFormatId)
+                _downloadFormat(formatIndex, autoStarted)
+            }
         }
     }
 
@@ -857,8 +894,14 @@ ListItem {
             return 360
         case VM.VM_720p:
             return 720
-        default:
+        case VM.VM_1080p:
             return 1080
+        case VM.VM_1440p:
+            return 1440
+        case VM.VM_2160p:
+            return 2160
+        default:
+            return 2160
         }
     }
 
@@ -872,8 +915,7 @@ ListItem {
         }
     }
 
-    function _selectAvFormat(playlist, more) {
-        var vod = playlist.vod(0)
+    function _selectAvFormat(vod, more) {
         if (vod.avFormats > 1) {
             var labels = []
             var values = []

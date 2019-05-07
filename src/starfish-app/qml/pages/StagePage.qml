@@ -51,7 +51,7 @@ ContentPage {
             x["id"] = "vod_id"
             return x
         }
-        select: "select " + columns.join(",") + " from " + table + where + " order by match_date desc, match_number asc, match_name desc"
+        select: "select distinct " + columns.join(",") + " from " + table + where + " order by match_date desc, match_number asc, match_name desc"
         Component.onCompleted: {
             _side1Race = data(index(0, 1))
             _side2Race = data(index(0, 2))

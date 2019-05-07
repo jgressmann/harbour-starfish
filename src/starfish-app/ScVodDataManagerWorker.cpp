@@ -75,6 +75,18 @@ bool selectUrlShareIdFromVodsWhereIdEquals(QSqlQuery& q, qint64 vodId) {
 
 } // anon
 
+ScVodFileFetchProgress::ScVodFileFetchProgress()
+{
+    urlShareId = -1;
+    fileSize = 0;
+    progress = 0;
+    width = 0;
+    height = 0;
+    duration = 0;
+    fileIndex = 0;
+    fileCount = 0;
+}
+
 ScVodDataManagerWorker::~ScVodDataManagerWorker()
 {
     qDebug() << "dtor entry";
@@ -347,11 +359,12 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, const QString& _targetFormat
                 "    format,\n"
                 "    width,\n"
                 "    height,\n"
-                "    playlist_index,\n"
-                "    count(*)\n"
+                "    file_index,\n"
+                "    (SELECT count(*) FROM vod_files WHERE vod_url_share_id=?) files,\n"
+                "   duration\n"
                 "FROM vod_files\n"
                 "WHERE vod_url_share_id=?\n"
-                "ORDER BY playlist_index ASC\n"
+                "ORDER BY file_index ASC\n"
                 );
 
     if (!q.prepare(sql)) {
@@ -359,6 +372,7 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, const QString& _targetFormat
         return;
     }
 
+    q.addBindValue(urlShareId);
     q.addBindValue(urlShareId);
 
     if (!q.exec()) {
@@ -373,36 +387,33 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, const QString& _targetFormat
 
     if (q.next()) {
         vodFileCount = q.value(6).toInt();
-        if (vodFileCount > 0) {
-            do {
-                const auto fileName = q.value(0).toString();
+        do {
+            const auto fileName = q.value(0).toString();
 
-                ScVodFileFetchProgress fetchProgress;
-                fetchProgress.urlShareId = urlShareId;
-                fetchProgress.filePath = m_SharedState->m_VodDir + fileName;
-                fetchProgress.progress = q.value(1).toFloat();
-                fetchProgress.width = q.value(3).toInt();
-                fetchProgress.height = q.value(4).toInt();
-                fetchProgress.formatId = q.value(2).toString();
-                fetchProgress.fileIndex = q.value(5).toInt();
-                fetchProgress.fileCount = vodFileCount;
+            ScVodFileFetchProgress fetchProgress;
+            fetchProgress.urlShareId = urlShareId;
+            fetchProgress.filePath = m_SharedState->m_VodDir + fileName;
+            fetchProgress.progress = q.value(1).toFloat();
+            fetchProgress.width = q.value(3).toInt();
+            fetchProgress.height = q.value(4).toInt();
+            fetchProgress.formatId = q.value(2).toString();
+            fetchProgress.fileIndex = q.value(5).toInt();
+            fetchProgress.fileCount = vodFileCount;
+            fetchProgress.duration = q.value(7).toInt();
 
+            QFileInfo fi(fetchProgress.filePath);
+            if (fi.exists() && fi.size() > 0) {
+                fetchProgress.fileSize = fi.size();
+                fullyDownloaded = fullyDownloaded && fetchProgress.progress >= 1;
                 previousFormat = fetchProgress.formatId;
+            } else {
+                fullyDownloaded = false;
+            }
 
-                QFileInfo fi(fetchProgress.filePath);
-                if (fi.exists() && fi.size() > 0) {
-                    fetchProgress.fileSize = fi.size();
-                    fullyDownloaded = fullyDownloaded && fetchProgress.progress >= 1;
-                } else {
-                    fullyDownloaded = false;
-                }
+            vodFileProgress << fetchProgress;
+        } while (q.next());
 
-                vodFileProgress << fetchProgress;
-            } while (q.next());
-        } else {
-            createFiles = true;
-            fullyDownloaded = false;
-        }
+
     } else { // no entries
         createFiles = true;
         fullyDownloaded = false;
@@ -481,8 +492,8 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, const QString& _targetFormat
 
                             auto tempFileName = QFileInfo(vodFilePath).fileName();
                             static const QString InsertSql = QStringLiteral(
-                                        "INSERT INTO vod_files (vod_file_name, format, width, height, progress, vod_url_share_id, playlist_index) "
-                                        "VALUES (?, ?, ?, ?, ?, ?, ?)");
+                                        "INSERT INTO vod_files (vod_file_name, format, width, height, progress, vod_url_share_id, file_index, duration) "
+                                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
                             auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
                             DatabaseCallback postInsert = [=](qint64 /*vodFileId*/, bool error)
@@ -493,12 +504,14 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, const QString& _targetFormat
                             };
                             m_PendingDatabaseStores.insert(tid, postInsert);
 
-                            emit startProcessDatabaseStoreQueue(tid, InsertSql, { tempFileName, format.id(), format.width(), format.height(), 0, urlShareId, i });
+                            emit startProcessDatabaseStoreQueue(tid, InsertSql, { tempFileName, format.id(), format.width(), format.height(), 0, urlShareId, i, playlist._vods()[i].duration() });
                             emit startProcessDatabaseStoreQueue(tid, {}, {});
 
                             // all good, keep file
 
                             fetchProgress.fileIndex = i;
+                            fetchProgress.duration = playlist._vods()[i].duration();
+                            fetchProgress.filePath = m_SharedState->m_VodDir + tempFileName;
                             vodFileProgress << fetchProgress;
                         } else {
                             qWarning() << "failed to create temporary file for url share id" << urlShareId;
@@ -510,29 +523,26 @@ ScVodDataManagerWorker::fetchVod(qint64 urlShareId, const QString& _targetFormat
 
                 // create downloads for all files in playlist
                 const VMPlaylistData& playlistData = playlist.data();
-                for (const auto& fileProgress : vodFileProgress) {
-                    const VMVod& vod = playlistData.vods[fileProgress.fileIndex];
+                for (int i = 0; i < vodFileProgress.size(); ++i) {
+                    const auto& fileProgress  =  vodFileProgress[i];
+                    if (fileProgress.progress < 1) {
+                        const VMVod& vod = playlistData.vods[fileProgress.fileIndex];
 
-                    VMPlaylist filePlaylist;
-                    auto& data = filePlaylist.data();
-                    data.id = vod.id();
-                    data.title = vod.title();
-                    data.webPageUrl = vod.webPageUrl();
-                    data.vods << vod;
+                        qDebug() << "start fetch vod file index" << i << "playlist index" << vod.playlistIndex();
 
-                    VodmanFileRequest r;
-                    r.token = m_Vodman->newToken();
-                    r.vod_url_share_id = urlShareId;
-                    r.refCount = 1;
-                    r.playlistIndex = fileProgress.fileIndex;
-                    r.playlistCount = vodFileProgress.size();
-                    r.width = fileProgress.width;
-                    r.height = fileProgress.height;
-                    r.r.filePath = fileProgress.filePath;
-                    r.r.format = format.id();
-                    r.r.playlist = filePlaylist;
-                    m_VodmanFileRequests.insert(r.token, r);
-                    m_Vodman->startFetchFile(r.token, r.r);
+                        VodmanFileRequest r;
+                        r.token = m_Vodman->newToken();
+                        r.vod_url_share_id = urlShareId;
+                        r.refCount = 1;
+                        r.progress = fileProgress;
+                        r.r.filePath = fileProgress.filePath;
+                        r.r.format = format.id();
+                        r.r.playlist = playlist;
+                        r.r.indices << vod.playlistIndex();
+                        m_VodmanFileRequests.insert(r.token, r);
+                        m_Vodman->startFetchFile(r.token, r.r);
+                    }
+
                     emit vodAvailable(fileProgress);
                 }
                 notifyVodDownloadsChanged();
@@ -562,11 +572,12 @@ ScVodDataManagerWorker::queryVodFiles(qint64 urlShareId)
                 "    format,\n"
                 "    width,\n"
                 "    height,\n"
-                "    playlist_index,\n"
-                "    count(*)\n"
+                "    file_index,\n"
+                "    (SELECT count(*) FROM vod_files WHERE vod_url_share_id=?) files,\n"
+                "    duration\n"
                 "FROM vod_files\n"
                 "WHERE vod_url_share_id=?\n"
-                "ORDER BY playlist_index ASC\n"
+                "ORDER BY file_index ASC\n"
                 );
 
     if (!q.prepare(sql)) {
@@ -575,6 +586,7 @@ ScVodDataManagerWorker::queryVodFiles(qint64 urlShareId)
     }
 
     q.addBindValue(urlShareId);
+    q.addBindValue(urlShareId);
 
     if (!q.exec()) {
         qCritical() << "failed to exec query" << q.lastError();
@@ -582,31 +594,27 @@ ScVodDataManagerWorker::queryVodFiles(qint64 urlShareId)
     }
 
     if (q.next()) {
-        auto vodFileCount = q.value(6).toInt();
-        if (vodFileCount > 0) {
-            do {
-                const auto fileName = q.value(0).toString();
+        do {
+            const auto fileName = q.value(0).toString();
 
-                ScVodFileFetchProgress fetchProgress;
-                fetchProgress.urlShareId = urlShareId;
-                fetchProgress.filePath = m_SharedState->m_VodDir + fileName;
-                fetchProgress.progress = q.value(1).toFloat();
-                fetchProgress.width = q.value(3).toInt();
-                fetchProgress.height = q.value(4).toInt();
-                fetchProgress.formatId = q.value(2).toString();
-                fetchProgress.fileIndex = q.value(5).toInt();
-                fetchProgress.fileCount = vodFileCount;
+            ScVodFileFetchProgress fetchProgress;
+            fetchProgress.urlShareId = urlShareId;
+            fetchProgress.filePath = m_SharedState->m_VodDir + fileName;
+            fetchProgress.progress = q.value(1).toFloat();
+            fetchProgress.width = q.value(3).toInt();
+            fetchProgress.height = q.value(4).toInt();
+            fetchProgress.formatId = q.value(2).toString();
+            fetchProgress.fileIndex = q.value(5).toInt();
+            fetchProgress.fileCount = q.value(6).toInt();
+            fetchProgress.duration = q.value(7).toInt();
 
-                QFileInfo fi(fetchProgress.filePath);
-                if (fi.exists() && fi.size() > 0) {
-                    fetchProgress.fileSize = fi.size();
-                }
+            QFileInfo fi(fetchProgress.filePath);
+            if (fi.exists() && fi.size() > 0) {
+                fetchProgress.fileSize = fi.size();
+            }
 
-                emit vodAvailable(fetchProgress);
-            } while (q.next());
-        } else {
-            emit vodUnavailable(urlShareId);
-        }
+            emit vodAvailable(fetchProgress);
+        } while (q.next());
     } else { // no entries
         emit vodUnavailable(urlShareId);
     }
@@ -648,11 +656,15 @@ void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMP
                 if (s.status() == QDataStream::Ok && file.flush()) {
                     file.close();
 
+                    qDebug() << "update title, duration for url share id" << r.vod_url_share_id << "to" << playlist.title() << playlist.duration();
+
                     // send event so that the match page can try to get the thumbnails again
                     auto vodUrlShareId = r.vod_url_share_id;
 
-                    static const QString UpdateSql = QStringLiteral(
+                    static const QString UpdateUrlShareSql = QStringLiteral(
                                 "UPDATE vod_url_share SET title=?, length=? WHERE id=?");
+                    static const QString UpdateVodFileSql = QStringLiteral(
+                                "UPDATE vod_files SET duration=? WHERE vod_url_share_id=? AND file_index=?");
                     auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
                     DatabaseCallback postUpdate = [=](qint64 vodFileId, bool error)
                     {
@@ -664,7 +676,11 @@ void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMP
                         }
                     };
                     m_PendingDatabaseStores.insert(tid, postUpdate);
-                    emit startProcessDatabaseStoreQueue(tid, UpdateSql, { playlist.title(), playlist.duration(), vodUrlShareId });
+                    emit startProcessDatabaseStoreQueue(tid, UpdateUrlShareSql, { playlist.title(), playlist.duration(), vodUrlShareId });
+                    for (int i = 0; i < playlist.vods(); ++i) {
+                        const auto& vod = playlist._vods()[i];
+                        emit startProcessDatabaseStoreQueue(tid, UpdateVodFileSql, { vod.duration(), vodUrlShareId, i });
+                    }
                     emit startProcessDatabaseStoreQueue(tid, {}, {});
                 } else {
                     qDebug() << "failed to write meta data file" << metaDataFilePath;
@@ -685,61 +701,46 @@ void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMP
 void ScVodDataManagerWorker::onFileDownloadCompleted(qint64 token, const VMPlaylistDownload& download) {
     auto it = m_VodmanFileRequests.find(token);
     if (it != m_VodmanFileRequests.end()) {
-        const VodmanFileRequest r = it.value();
+        VodmanFileRequest r = it.value();
         m_VodmanFileRequests.erase(it);
 
-        ScVodFileFetchProgress fetchProgress;
-        fetchProgress.urlShareId = r.vod_url_share_id;
-        fetchProgress.filePath = download.data().files[0].filePath();
-        fetchProgress.progress = download.data().files[0].progress();
-        fetchProgress.fileSize = download.data().files[0].fileSize();
-        fetchProgress.width = r.width;
-        fetchProgress.height = r.height;
-        fetchProgress.formatId = download.format();
-        fetchProgress.fileIndex = r.playlistIndex;
-        fetchProgress.fileCount = r.playlistCount;
+        r.progress.progress = download.data().files[0].progress();
+        r.progress.fileSize = download.data().files[0].fileSize();
 
-        emit vodAvailable(fetchProgress);
+        emit vodAvailable(r.progress);
 
         notifyVodDownloadsChanged();
     }
 }
 
 void ScVodDataManagerWorker::onFileDownloadChanged(qint64 token, const VMPlaylistDownload& download) {
-    auto it = m_VodmanFileRequests.find(token);
+    decltype(m_VodmanFileRequests)::iterator it = m_VodmanFileRequests.find(token);
     if (it != m_VodmanFileRequests.end()) {
         const VodmanFileRequest& r = it.value();
 
         static const QString UpdateSql = QStringLiteral(
                     "UPDATE vod_files\n"
                     "SET progress=?\n"
-                    "WHERE vod_url_share_id=? and playlist_index=?\n");
+                    "WHERE vod_url_share_id=? and file_index=?\n");
 
         DatabaseCallback postUpdate = [=](qint64 insertId, bool error)
         {
             (void)insertId;
             if (!error) {
                 // guard against reset to zero at restart of canceled download
-                if (download.progress() > 0) {
-                    ScVodFileFetchProgress fetchProgress;
-                    fetchProgress.urlShareId = r.vod_url_share_id;
-                    fetchProgress.filePath = download.data().files[0].filePath();
-                    fetchProgress.progress = download.data().files[0].progress();
-                    fetchProgress.fileSize = download.data().files[0].fileSize();
-                    fetchProgress.width = r.width;
-                    fetchProgress.height = r.height;
-                    fetchProgress.formatId = download.format();
-                    fetchProgress.fileIndex = r.playlistIndex;
-                    fetchProgress.fileCount = r.playlistCount;
+                if (download.data().files[0].progress() > 0) {
+                    VodmanFileRequest& r = it.value();
+                    r.progress.progress = download.data().files[0].progress();
+                    r.progress.fileSize = download.data().files[0].fileSize();
 
-                    emit vodAvailable(fetchProgress);
+                    emit fetchingVod(r.progress);
                 }
             }
         };
 
         auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
         m_PendingDatabaseStores.insert(tid, postUpdate);
-        emit startProcessDatabaseStoreQueue(tid, UpdateSql, { download.progress(), r.vod_url_share_id, r.playlistIndex });
+        emit startProcessDatabaseStoreQueue(tid, UpdateSql, { download.data().files[0].progress(), r.vod_url_share_id, r.progress.fileIndex });
         emit startProcessDatabaseStoreQueue(tid, {}, {});
     }
 }
@@ -747,7 +748,6 @@ void ScVodDataManagerWorker::onFileDownloadChanged(qint64 token, const VMPlaylis
 void
 ScVodDataManagerWorker::onDownloadFailed(qint64 token, VMVodEnums::Error serviceErrorCode) {
 
-    QSqlQuery q(m_Database);
     qint64 urlShareId = -1;
     auto metaData = false;
 
@@ -755,6 +755,8 @@ ScVodDataManagerWorker::onDownloadFailed(qint64 token, VMVodEnums::Error service
     if (it != m_VodmanFileRequests.end()) {
         VodmanFileRequest r = it.value();
         m_VodmanFileRequests.erase(it);
+
+        cancelFetchVod(r.vod_url_share_id); // cancel any remaining file downloads belonging to same url
 
         urlShareId = r.vod_url_share_id;
         metaData = false;
@@ -783,17 +785,18 @@ void
 ScVodDataManagerWorker::cancelFetchVod(qint64 urlShareId)
 {
     auto canceled = false;
-    auto beg = m_VodmanFileRequests.begin();
-    auto end = m_VodmanFileRequests.end();
-    for (auto it = beg; it != end; ++it) {
+    for (auto it = m_VodmanFileRequests.begin(); it != m_VodmanFileRequests.end(); ) {
         if (it.value().vod_url_share_id == urlShareId) {
             if (--it.value().refCount == 0) {
-                qDebug() << "cancel vod file download for url share id" << urlShareId;
+                qDebug() << "cancel vod file download token" << it.key() << "for url share id" << urlShareId;
                 m_Vodman->cancel(it.key());
-                m_VodmanFileRequests.erase(it);
+                m_VodmanFileRequests.erase(it++);
                 canceled = true;
-                break;
+            } else {
+                ++it;
             }
+        } else {
+            ++it;
         }
     }
 

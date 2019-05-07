@@ -22,11 +22,14 @@
  */
 
 #include "ScVodFileItem.h"
+#include <QDebug>
 
 ScVodFileItem::ScVodFileItem(ScUrlShareItem* parent)
     : QObject(parent)
 {
-
+    m_FileSize = 0;
+    m_Progress = 0;
+    m_Duration = 0;
 }
 
 void
@@ -41,8 +44,10 @@ ScVodFileItem::setVodFilePath(const QString& value)
 void
 ScVodFileItem::setDownloadProgress(float value)
 {
-    m_Progress = value;
-    emit downloadProgressChanged();
+    if (value == value && value != m_Progress) {
+        m_Progress = value;
+        emit downloadProgressChanged();
+    }
 }
 
 void
@@ -54,11 +59,24 @@ ScVodFileItem::setFileSize(qint64 value)
     }
 }
 
+void
+ScVodFileItem::setDuration(int value)
+{
+    if (value != m_Duration) {
+        m_Duration = value;
+        emit durationChanged();
+    }
+}
 
 void
 ScVodFileItem::onVodAvailable(const ScVodFileFetchProgress& progress)
 {
     setVodFilePath(progress.filePath);
-    setDownloadProgress(progress.progress);
     setFileSize(progress.fileSize);
+    setDuration(progress.duration);
+    if (progress.progress >= 0 && progress.progress <= 1) {
+        setDownloadProgress(progress.progress);
+    } else {
+        qWarning() << "out of range download progress" << progress.progress;
+    }
 }

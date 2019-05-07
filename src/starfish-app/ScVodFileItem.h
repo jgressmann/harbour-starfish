@@ -32,6 +32,7 @@ class ScVodFileItem : public QObject
     Q_PROPERTY(QString vodFilePath READ vodFilePath NOTIFY vodFilePathChanged)
     Q_PROPERTY(quint64 vodFileSize READ vodFileSize NOTIFY vodFileSizeChanged)
     Q_PROPERTY(qreal downloadProgress READ downloadProgress NOTIFY downloadProgressChanged)
+    Q_PROPERTY(int duration READ duration NOTIFY durationChanged)
 public:
     explicit ScVodFileItem(ScUrlShareItem* parent);
 
@@ -39,22 +40,26 @@ public:
     QString vodFilePath() const { return m_FilePath; }
     qreal downloadProgress() const { return m_Progress; }
     qint64 vodFileSize() const { return m_FileSize; }
+    int duration() const { return m_Duration; }
     void onVodAvailable(const ScVodFileFetchProgress& progress);
 
 signals:
     void vodFilePathChanged();
     void vodFileSizeChanged();
     void downloadProgressChanged();
+    void durationChanged();
 
 private:
     void setVodFilePath(const QString& value);
     void setDownloadProgress(float value);
     void setFileSize(qint64 value);
+    void setDuration(int value);
 
 private:
     QString m_FilePath;
     qint64 m_FileSize;
     qreal m_Progress;
+    int m_Duration;
 };
 
 

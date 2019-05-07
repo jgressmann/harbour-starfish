@@ -36,8 +36,6 @@ class ScUrlShareItem : public QObject
     Q_OBJECT
     Q_PROPERTY(qint64 urlShareId READ urlShareId CONSTANT)
     Q_PROPERTY(QString thumbnailFilePath READ thumbnailFilePath NOTIFY thumbnailPathChanged)
-//    Q_PROPERTY(QString vodFilePath READ vodFilePath NOTIFY vodFilePathChanged)
-//    Q_PROPERTY(quint64 vodFileSize READ vodFileSize NOTIFY vodFileSizeChanged)
     Q_PROPERTY(qreal downloadProgress READ downloadProgress NOTIFY downloadProgressChanged)
     Q_PROPERTY(QSize vodResolution READ vodResolution NOTIFY vodResolutionChanged)
     Q_PROPERTY(int vodLength READ vodLength NOTIFY vodLengthChanged)
@@ -71,8 +69,7 @@ public:
     QString title() const { return m_Title; }
     qint64 urlShareId() const { return m_UrlShareId; }
     QString thumbnailFilePath() const { return m_ThumbnailPath; }
-//    QStringList vodFilePaths() const { return m_FilePaths; }
-    qreal downloadProgress() const;
+    qreal downloadProgress() const { return m_Progress; }
     QSize vodResolution() const { return m_Size; }
     int vodLength() const { return m_Length; }
     QString url() const { return m_Url; }
@@ -80,7 +77,6 @@ public:
     FetchStatus thumbnailFetchStatus() const { return m_ThumbnailFetchStatus; }
     FetchStatus vodFetchStatus() const { return m_VodFetchStatus; }
     VMPlaylist metaData() const { return m_MetaData; }
-    //    qint64 vodFileSize() const { return m_FileSize; }
     int vodFormatIndex() const { return m_FormatIndex; }
 //    QString vodFormatId() const { return m_FormatId; }
     int shareCount() const { return m_ShareCount; }
@@ -98,8 +94,6 @@ public:
 signals:
     void metaDataChanged();
     void thumbnailPathChanged();
-//    void vodFilePathChanged();
-//    void vodFileSizeChanged();
     void videoEndOffsetChanged();
     void downloadProgressChanged();
     void titleChanged();
@@ -151,9 +145,6 @@ private:
     void setMetaDataFetchStatus(FetchStatus value);
     void setThumbnailFetchStatus(FetchStatus value);
     void setVodFetchStatus(FetchStatus value);
-//    void setVodFilePath(const QString& value);
-//    void setDownloadProgress(float value);
-//    void setFilesize(qint64 value);
     void setFormatId(const QString& value);
     void setSize(const QSize& value);
     void setTitle(const QString& value);
@@ -163,19 +154,19 @@ private:
     void updateUrlShareData();
     void onVodAvailable(const ScVodFileFetchProgress& progress, FetchStatus status);
     void setFileCount(int count);
+    void updateDownloadProgress();
+    void setDownloadProgress(qreal value);
 
 private:
     QVector<ScVodFileItem*> m_Files;
     VMPlaylist m_MetaData;
     QString m_ThumbnailPath;
-//    QString m_FilePath;
     QString m_Title;
     QString m_Url;
     QString m_FormatId;
     qint64 m_UrlShareId;
-//    qint64 m_FileSize;
-//    qreal m_Progress;
     QSize m_Size;
+    qreal m_Progress;
     int m_FormatIndex;
     int m_Length;
     int m_ShareCount;

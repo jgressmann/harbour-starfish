@@ -56,6 +56,8 @@ ScVodman::ScVodman(QObject *parent)
     m_CurrentFile = 0;
     m_CurrentMeta = 0;
 
+    m_Ytdl.setYtdlVerbose(true);
+
     connect(&m_Ytdl, &VMYTDL::playlistDownloadCompleted, this, &ScVodman::onPlaylistDownloadCompleted);
     connect(&m_Ytdl, &VMYTDL::playlistDownloadChanged, this, &ScVodman::onPlaylistDownloadChanged);
     connect(&m_Ytdl, &VMYTDL::metaDataDownloadCompleted, this, &ScVodman::onMetaDataDownloadCompleted);
@@ -73,12 +75,8 @@ ScVodman::startFetchMetaData(qint64 token, const QString& url) {
         return;
     }
 
-    if (m_MaxMeta > 0 && m_CurrentMeta == m_MaxMeta) {
-        m_PendingMetaDataRequests << qMakePair(token, url);
-    } else {
-        ++m_CurrentMeta;
-        m_Ytdl.startFetchMetaData(token, url);
-    }
+    m_PendingMetaDataRequests << qMakePair(token, url);
+    scheduleNextMetaDataRequest();
 }
 
 void
@@ -95,26 +93,18 @@ ScVodman::startFetchFile(
         return;
     }
 
-    if (m_MaxMeta > 0 && m_CurrentMeta == m_MaxMeta) {
-        m_PendingFileRequests << qMakePair(token, request);
-    } else {
-        ++m_CurrentFile;
-        m_Ytdl.startFetchPlaylist(token, request);
-    }
+    m_PendingFileRequests << qMakePair(token, request);
+    scheduleNextFileRequest();
 }
 
 void
 ScVodman::onMetaDataDownloadCompleted(qint64 token, const VMMetaDataDownload& download) {
 
     if (download.isValid()) {
-        if (download.playlist().vods() == 1) {
-            if (download.error() == VMVodEnums::VM_ErrorNone) {
-                emit metaDataDownloadCompleted(token, download.playlist());
-            } else {
-                emit downloadFailed(token, download.error());
-            }
+        if (download.error() == VMVodEnums::VM_ErrorNone) {
+            emit metaDataDownloadCompleted(token, download.playlist());
         } else {
-            emit downloadFailed(token, VMVodEnums::VM_ErrorInvalidUrl);
+            emit downloadFailed(token, download.error());
         }
     } else {
         if (download.error() != VMVodEnums::VM_ErrorNone) {
@@ -190,6 +180,7 @@ ScVodman::scheduleNextFileRequest() {
         (m_MaxFile <= 0 || m_CurrentFile < m_MaxFile)) {
         auto pair = m_PendingFileRequests.front();
         m_PendingFileRequests.pop_front();
+        m_ActiveFileRequests.insert(pair.first, pair.second);
         ++m_CurrentFile;
         m_Ytdl.startFetchPlaylist(pair.first, pair.second);
     }

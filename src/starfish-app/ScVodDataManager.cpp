@@ -809,9 +809,10 @@ ScVodDataManager::setupDatabase() {
         "    progress REAL NOT NULL,\n"
         "    format TEXT NOT NULL,\n"
         "    vod_file_name TEXT NOT NULL,\n"
-        "    playlist_index INTEGER NOT NULL,\n"
+        "    file_index INTEGER NOT NULL,\n"
+        "    duration INTEGER NOT NULL,\n"
         "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
-        "    UNIQUE(vod_url_share_id, playlist_index)\n"
+        "    UNIQUE(vod_url_share_id, file_index)\n"
         ")\n",
 
         "CREATE TABLE IF NOT EXISTS vod_url_share (\n"
@@ -915,7 +916,8 @@ ScVodDataManager::setupDatabase() {
         "       seen,\n"
         "       match_number,\n"
         "       thumbnail_file_name,\n"
-        "       playlist_index,\n"
+        "       file_index,\n"
+        "       duration,\n"
         "       stage_rank\n"
         "   FROM vods v\n"
         "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
@@ -2691,6 +2693,9 @@ ScVodDataManager::updateSql7(QSqlQuery& q, const char*const* createSql, size_t c
 
         "SAVEPOINT url_share",
 
+        // Somehow this table is still around
+        "DROP TABLE IF EXISTS vod_file_ref",
+
         "CREATE TABLE vod_files2 (\n"
         "    vod_url_share_id INTEGER,\n"
         "    width INTEGER NOT NULL,\n"
@@ -2698,9 +2703,10 @@ ScVodDataManager::updateSql7(QSqlQuery& q, const char*const* createSql, size_t c
         "    progress REAL NOT NULL,\n"
         "    format TEXT NOT NULL,\n"
         "    vod_file_name TEXT NOT NULL,\n"
-        "    playlist_index INTEGER NOT NULL,\n"
+        "    file_index INTEGER NOT NULL,\n"
+        "    duration INTEGER NOT NULL,\n"
         "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
-        "    UNIQUE(vod_url_share_id, playlist_index)\n"
+        "    UNIQUE(vod_url_share_id, file_index)\n"
         ")\n",
         "INSERT INTO vod_files2 (\n"
         "   vod_url_share_id,\n"
@@ -2709,18 +2715,21 @@ ScVodDataManager::updateSql7(QSqlQuery& q, const char*const* createSql, size_t c
         "   progress,\n"
         "   format,\n"
         "   vod_file_name,\n"
-        "   playlist_index\n"
+        "   file_index,\n"
+        "   duration\n"
         ")\n"
         "SELECT\n"
-        "   vod_url_share_id,\n"
-        "   width,\n"
-        "   height,\n"
-        "   progress,\n"
-        "   format,\n"
-        "   file_name,\n"
-        "   0\n"
+        "   u.id,\n"
+        "   f.width,\n"
+        "   f.height,\n"
+        "   f.progress,\n"
+        "   f.format,\n"
+        "   f.file_name,\n"
+        "   0,\n"
+        "   1\n" // to have a non-zero value
         "FROM\n"
-        "   offline_vods\n",
+        "   vod_url_share u "
+        "INNER JOIN vod_files f on u.vod_file_id=f.id\n",
         "DROP TABLE vod_files\n",
         "ALTER TABLE vod_files2 RENAME TO vod_files\n",
 
