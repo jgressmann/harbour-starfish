@@ -88,7 +88,7 @@ private:
     {
         bool seen;
 
-        Data() = default;
+        Data();
     };
 
     using DatabaseCallback = std::function<void(qint64 insertIdOrNumRows, bool error)>;

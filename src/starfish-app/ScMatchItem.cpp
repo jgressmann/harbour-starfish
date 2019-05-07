@@ -7,6 +7,10 @@
 #include <QSqlQuery>
 #include <QSqlError>
 
+ScMatchItem::Data::Data()
+{
+    seen = false;
+}
 
 ScMatchItem::ScMatchItem(qint64 rowid, ScVodDataManager *parent, QSharedPointer<ScUrlShareItem>&& urlShareItem)
     : QObject(parent)

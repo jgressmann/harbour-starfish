@@ -114,7 +114,7 @@ private:
         int length;
         int shareCount;
 
-        Data() = default;
+        Data();
     };
 
 public:

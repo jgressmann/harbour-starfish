@@ -6,10 +6,11 @@
 #include <QSqlError>
 #include <QDebug>
 
-namespace
+ScUrlShareItem::Data::Data()
 {
-
-} // anon
+    length = 0;
+    shareCount = 0;
+}
 
 ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
     : QObject(parent)
