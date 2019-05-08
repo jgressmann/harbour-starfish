@@ -14,8 +14,6 @@ DEFINES += STARFISH_NAMESPACE=\"\\\"\"$$STARFISH_NAMESPACE\"\\\"\"
 
 INCLUDEPATH += $$PWD/src/starfish-lib
 
-DISTFILES += \
-    $$PWD/setup-build-engine.sh
 
 
 #!CONFIG(debug, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
