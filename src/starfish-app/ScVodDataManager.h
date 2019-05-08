@@ -220,7 +220,6 @@ signals:
     void downloadMarkerChanged();
     void busyChanged();
     void vodsToAdd();
-    void vodsCleared();
     void vodsAdded(int count);
     void vodDownloadsChanged();
     void sqlPatchLevelChanged();

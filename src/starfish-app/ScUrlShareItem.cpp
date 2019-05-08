@@ -16,26 +16,16 @@ ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
     : QObject(parent)
     , m_UrlShareId(urlShareId)
 {
-//    m_FileSize = -1;
-    m_Length = -1;
-    m_Progress = 0;
-    m_FormatIndex = -1;
-    m_ShareCount = -1;
-    m_ThumbnailFetchStatus = Unknown;
-    m_MetaDataFetchStatus = Unknown;
-    m_VodFetchStatus = Unknown;
-    m_ThumbnailIsWaitingForMetaData = false;
-
     connect(parent, &ScVodDataManager::vodsChanged, this, &ScUrlShareItem::reset);
     connect(parent, &ScVodDataManager::ytdlPathChanged, this, &ScUrlShareItem::reset);
     connect(parent, &ScVodDataManager::isOnlineChanged, this, &ScUrlShareItem::onIsOnlineChanged);
 
     QSqlQuery q(manager()->database());
-    auto sql = QStringLiteral("SELECT url FROM vod_url_share WHERE id=?");
-    if (q.prepare(sql)) {
+    static const QString sql = QStringLiteral("SELECT url FROM vod_url_share WHERE id=?");
+    if (Q_LIKELY(q.prepare(sql))) {
         q.addBindValue(m_UrlShareId);
-        if (q.exec()) {
-            if (q.next()) {
+        if (Q_LIKELY(q.exec())) {
+            if (Q_LIKELY(q.next())) {
                 m_Url = q.value(0).toString();
             } else {
                 qDebug() << "no data for url share id" << m_UrlShareId;
@@ -47,13 +37,7 @@ ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
         qDebug() << "failed to prepare, error:" << q.lastError();
     }
 
-    m_VodFetchStatus = Fetching;
-    auto ticket = manager()->queryVodFiles(m_UrlShareId);
-    if (-1 == ticket) {
-        m_VodFetchStatus = Unknown;
-    }
-
-    reset();
+    reload();
 }
 
 ScVodDataManager*
@@ -66,11 +50,11 @@ bool ScUrlShareItem::fetch(Data* data) const
 {
     Q_ASSERT(data);
     QSqlQuery q(manager()->database());
-    auto sql = QStringLiteral("SELECT title, length, count(*) FROM url_share_vods WHERE vod_url_share_id=?");
-    if (q.prepare(sql)) {
+    static const QString sql = QStringLiteral("SELECT title, length, count(*) FROM url_share_vods WHERE vod_url_share_id=?");
+    if (Q_LIKELY(q.prepare(sql))) {
         q.addBindValue(m_UrlShareId);
-        if (q.exec()) {
-            if (q.next()) {
+        if (Q_LIKELY(q.exec())) {
+            if (Q_LIKELY(q.next())) {
                 data->title = q.value(0).toString();
                 data->length = q.value(1).toInt();
                 data->shareCount = q.value(2).toInt();
@@ -88,6 +72,36 @@ bool ScUrlShareItem::fetch(Data* data) const
     return false;
 }
 
+void ScUrlShareItem::reload()
+{
+    setFileCount(0);
+
+    m_Length = -1;
+    emit vodLengthChanged();
+    m_Progress = 0;
+    emit downloadProgressChanged();
+    m_FormatIndex = -1;
+    emit vodFormatIndexChanged();
+    m_ShareCount = -1;
+    emit shareCountChanged();
+    m_ThumbnailFetchStatus = Unknown;
+    emit thumbnailFetchStatusChanged();
+    m_MetaDataFetchStatus = Unknown;
+    emit metaDataFetchStatusChanged();
+    m_VodFetchStatus = Unknown;
+    emit vodFetchStatusChanged();
+    m_ThumbnailIsWaitingForMetaData = false;
+
+    m_VodFetchStatus = Fetching;
+    emit vodFetchStatusChanged();
+    auto ticket = manager()->queryVodFiles(m_UrlShareId);
+    if (-1 == ticket) {
+        m_VodFetchStatus = Unknown;
+        emit vodFetchStatusChanged();
+    }
+
+    reset();
+}
 
 void ScUrlShareItem::reset()
 {

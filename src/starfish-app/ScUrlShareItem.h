@@ -89,6 +89,7 @@ public:
     Q_INVOKABLE void deleteThumbnail();
     Q_INVOKABLE void deleteVodFiles();
     Q_INVOKABLE ScVodFileItem* file(int index) const;
+    void reload();
 
 
 signals:

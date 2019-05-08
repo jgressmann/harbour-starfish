@@ -1172,44 +1172,67 @@ ScVodDataManager::dropTables() {
 }
 
 void
-ScVodDataManager::clearCache(ClearFlags flags) {
-
-
+ScVodDataManager::clearCache(ClearFlags flags)
+{
     RETURN_IF_ERROR;
+
+    if (busy()) {
+        qWarning() << "busy";
+        return;
+    }
+
+    auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
+    auto notifyUrlShareItems = false;
 
     // delete files
     if (flags & CF_MetaData) {
         QDir(m_SharedState->m_MetaDataDir).removeRecursively();
         QDir().mkpath(m_SharedState->m_MetaDataDir);
+
+        notifyUrlShareItems = true;
     }
 
     if (flags & CF_Thumbnails) {
         QDir(m_SharedState->m_ThumbnailDir).removeRecursively();
         QDir().mkpath(m_SharedState->m_ThumbnailDir);
+
+        notifyUrlShareItems = true;
+
+        emit startProcessDatabaseStoreQueue(tid, QStringLiteral("UPDATE vod_url_share SET thumbnail_file_name=''"), {});
     }
 
     if (flags & CF_Vods) {
         QDir(m_SharedState->m_VodDir).removeRecursively();
         QDir().mkpath(m_SharedState->m_VodDir);
 
-        tryRaiseVodsChanged();
+        notifyUrlShareItems = true;
 
-        emit vodsCleared();
+        emit startProcessDatabaseStoreQueue(tid, QStringLiteral("DELETE FROM vod_files"), {});
     }
 
     if (flags & CF_Icons) {
         QDir(m_SharedState->m_IconDir).removeRecursively();
         QDir().mkpath(m_SharedState->m_IconDir);
     }
+
+    if (notifyUrlShareItems) {
+        m_PendingDatabaseStores.insert(tid, [=] (qint64 /*urlShareId*/, bool error) {
+            if (!error) {
+                auto beg = m_UrlShareItems.cbegin();
+                auto end = m_UrlShareItems.cend();
+                for (auto it = beg; it != end; ++it) {
+                    it.value().toStrongRef()->reload();
+                }
+            }
+        });
+    }
+
+    emit startProcessDatabaseStoreQueue(tid, {}, {});
 }
 
 void
-ScVodDataManager::clear() {
-    // FIX ME
-
-
-    RETURN_IF_ERROR;
-
+ScVodDataManager::clear()
+{
     clearCache(CF_Everthing);
 
 
@@ -1218,8 +1241,6 @@ ScVodDataManager::clear() {
 
 
     tryRaiseVodsChanged();
-
-    emit vodsCleared();
 }
 
 void
@@ -2830,7 +2851,7 @@ ScVodDataManager::vodEndOffset(qint64 rowid, int offset, int vodLengthS) const
 "   AND vod_url_share_id IN (SELECT vod_url_share_id FROM offline_vods WHERE id=?)\n");
 
     QSqlQuery q(m_Database);
-    if (!q.prepare(sql)) {
+    if (Q_UNLIKELY(!q.prepare(sql))) {
         qCritical() << "failed to prepare query" << q.lastError();
         return -1;
     }
@@ -2838,7 +2859,7 @@ ScVodDataManager::vodEndOffset(qint64 rowid, int offset, int vodLengthS) const
     q.addBindValue(offset);
     q.addBindValue(rowid);
 
-    if (!q.exec()) {
+    if (Q_UNLIKELY(!q.exec())) {
         qCritical() << "failed to exec query" << q.lastError();
         return -1;
     }
@@ -3194,6 +3215,7 @@ ScVodDataManager::deleteThumbnailsWhere(int transactionId, const QString& where)
 {
     RETURN_IF_ERROR;
 
+    // FIX ME
     QSqlQuery q(m_Database);
     if (!q.exec(QStringLiteral(
             "SELECT thumbnail_file_name FROM url_share_vods %1\n"
@@ -3278,10 +3300,10 @@ ScVodDataManager::acquireMatchItem(qint64 rowid)
         auto it2 = m_ExpiredMatchItems.find(rowid);
         if (it2 == m_ExpiredMatchItems.end()) {
             QSqlQuery q(m_Database);
-            if (q.prepare(QStringLiteral("SELECT vod_url_share_id FROM url_share_vods WHERE id=?"))) {
+            if (Q_LIKELY(q.prepare(QStringLiteral("SELECT vod_url_share_id FROM url_share_vods WHERE id=?")))) {
                 q.addBindValue(rowid);
-                if (q.exec()) {
-                    if (q.next()) {
+                if (Q_LIKELY(q.exec())) {
+                    if (Q_LIKELY(q.next())) {
                         it = m_ActiveMatchItems.insert(rowid, new MatchItemData{});
                         void* raw = it.value()->Raw;
 
