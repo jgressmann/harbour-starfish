@@ -705,7 +705,7 @@
         <translation>%ist beschäftigt. Versuche es später noch einmal.</translation>
     </message>
     <message id="sf-vods-added-notification-body" numerus="yes">
-        <location filename="../qml/harbour-starfish.qml" line="482"/>
+        <location filename="../qml/harbour-starfish.qml" line="483"/>
         <source>%1 VODs added</source>
         <translation>
             <numerusform>Ein Video hinzugefügt</numerusform>

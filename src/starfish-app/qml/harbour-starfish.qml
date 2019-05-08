@@ -401,6 +401,7 @@ ApplicationWindow {
         target: YTDLDownloader
         onYtdlPathChanged: _setYtdlPath()
         onDownloadStatusChanged: {
+            _setYtdlPath()
             _switchContentPage()
             _checkForYtdlUpate()
         }
