@@ -101,17 +101,9 @@ void
 ScVodman::onMetaDataDownloadCompleted(qint64 token, const VMMetaDataDownload& download) {
 
     if (download.isValid()) {
-        if (download.error() == VMVodEnums::VM_ErrorNone) {
-            emit metaDataDownloadCompleted(token, download.playlist());
-        } else {
-            emit downloadFailed(token, download.error());
-        }
+        emit metaDataDownloadCompleted(token, download.playlist());
     } else {
-        if (download.error() != VMVodEnums::VM_ErrorNone) {
-            emit downloadFailed(token, download.error());
-        } else {
-            emit downloadFailed(token, VMVodEnums::VM_ErrorUnknown);
-        }
+        emit downloadFailed(token, download.error());
     }
 
     --m_CurrentMeta;
@@ -152,8 +144,10 @@ ScVodman::cancel(qint64 token)
 {
     auto it = m_ActiveFileRequests.find(token);
     if (it != m_ActiveFileRequests.end()) {
+        --m_CurrentFile;
         m_ActiveFileRequests.erase(it);
         m_Ytdl.cancelFetchPlaylist(token, false);
+        scheduleNextFileRequest();
         return;
     }
 
@@ -161,6 +155,7 @@ ScVodman::cancel(qint64 token)
         const auto& pair = m_PendingFileRequests[i];
         if (pair.first == token) {
             m_PendingFileRequests.removeAt(i);
+            scheduleNextFileRequest();
             return;
         }
     }
@@ -169,6 +164,7 @@ ScVodman::cancel(qint64 token)
         const auto& pair = m_PendingMetaDataRequests[i];
         if (pair.first == token) {
             m_PendingMetaDataRequests.removeAt(i);
+            scheduleNextMetaDataRequest();
             return;
         }
     }
