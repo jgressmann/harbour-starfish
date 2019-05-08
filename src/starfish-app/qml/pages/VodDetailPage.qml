@@ -42,20 +42,20 @@ BasePage {
 
         DetailItem {
             //% "ID"
-            label: qsTrId("vod-details-page-id")
+            label: qsTrId("sf-vod-details-page-id")
             value: vodRowId
         }
 
         DetailItem {
             //% "Path"
-            label: qsTrId("vod-details-page-path")
+            label: qsTrId("sf-vod-details-page-path")
             value: vodFilePath
         }
 
 
         DetailItem {
             //% "Size"
-            label: qsTrId("vod-details-page-size")
+            label: qsTrId("sf-vod-details-page-size")
             value: makeSizeString(vodFileSize)
 
             function makeSizeString(size) {
@@ -64,27 +64,27 @@ BasePage {
 
                 if (size >= 10*oneGb) { // 10GB
                     //% "%1 GB"
-                    return qsTrId("vod-details-page-size-gb").arg((size/oneGb).toFixed(1))
+                    return qsTrId("sf-vod-details-page-size-gb").arg((size/oneGb).toFixed(1))
                 }
 
                 if (size >= oneGb) { // 1GB
-                    return qsTrId("vod-details-page-size-gb").arg((size/oneGb).toFixed(2))
+                    return qsTrId("sf-vod-details-page-size-gb").arg((size/oneGb).toFixed(2))
                 }
 
                 //% "%1 MB"
-                return qsTrId("vod-details-page-size-mb").arg((size/oneMb).toFixed(0))
+                return qsTrId("sf-vod-details-page-size-mb").arg((size/oneMb).toFixed(0))
             }
         }
 
         DetailItem {
             //% "Download progress"
-            label: qsTrId("vod-details-page-download-progress")
+            label: qsTrId("sf-vod-details-page-download-progress")
             value: (vodProgress * 100).toFixed(0) + " %"
         }
 
         DetailItem {
             //% "Resolution"
-            label: qsTrId("vod-details-page-resolution")
+            label: qsTrId("sf-vod-details-page-resolution")
             value: vodWidth + "x" + vodHeight
         }
 
@@ -93,7 +93,8 @@ BasePage {
             width: parent.width
 
             Button {
-                text: "Copy file path to clipboard"
+                //% "Copy file path to clipboard"
+                text: qsTrId("sf-vod-details-page-copy file path to clipboard")
                 onClicked: Clipboard.text = vodFilePath
             }
         }
@@ -111,7 +112,7 @@ BasePage {
             model: model
             header: PageHeader {
                 //% "VOD details"
-                title: qsTrId("vod-details-page-title")
+                title: qsTrId("sf-vod-details-page-title")
             }
         }
     }

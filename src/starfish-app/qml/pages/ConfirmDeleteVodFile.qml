@@ -31,9 +31,9 @@ Dialog {
     DialogHeader {
         id: header
         //% "Delete VOD files?"
-        title: qsTrId("delete-vod-file-dialog-title")
+        title: qsTrId("sf-delete-vod-file-dialog-title")
         //% "Delete"
-        acceptText: qsTrId("delete-vod-file-dialog-accept-text")
+        acceptText: qsTrId("sf-delete-vod-file-dialog-accept-text")
     }
 
     property int count
@@ -44,7 +44,7 @@ Dialog {
         x: Theme.horizontalPageMargin
         width: parent.width - 2*x
         //% "Deleting the file for %1 will also remove the file of %2 more VODs.<br/><br/>Do you want to continue?"
-        text: qsTrId("delete-vod-file-dialog-text", count).arg(name).arg(count)
+        text: qsTrId("sf-delete-vod-file-dialog-text", count).arg(name).arg(count)
         color: Theme.highlightColor
         wrapMode: Text.Wrap
         textFormat: Text.StyledText

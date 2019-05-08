@@ -36,7 +36,7 @@ Page {
 
     PageHeader {
         //% "Data directory move"
-        title: qsTrId("data-dir-move-dialog-title")
+        title: qsTrId("sf-data-dir-move-dialog-title")
     }
 
     Column {
@@ -51,7 +51,7 @@ Page {
             font.pixelSize: Theme.fontSizeLarge
             color: Theme.highlightColor
             //% "The data directory is being moved. Please do not close the application forcefully or you might end up in an inconsistent state.<br/><br/>You can cancel the move at any time using the button below."
-            text: qsTrId("data-dir-move-dialog-text")
+            text: qsTrId("sf-data-dir-move-dialog-text")
         }
 
         ProgressCircle {
@@ -64,7 +64,7 @@ Page {
         Button {
             anchors.horizontalCenter: parent.horizontalCenter
             //% "Cancel"
-            text: qsTrId("data-dir-move-dialog-cancel")
+            text: qsTrId("sf-data-dir-move-dialog-cancel")
             onClicked: {
                 console.debug("cancel move data directory");
                 VodDataManager.cancelMoveDataDirectory()
@@ -103,24 +103,24 @@ Page {
         switch (changeType) {
         case VodDataManager.DDCT_Copy:
             //% "Copying %1"
-            description.text = qsTrId("data-dir-move-dialog-desc-copying-file").arg(path)
+            description.text = qsTrId("sf-data-dir-move-dialog-desc-copying-file").arg(path)
             break
         case VodDataManager.DDCT_Remove:
             //% "Removing %1"
-            description.text = qsTrId("data-dir-move-dialog-desc-removing-file").arg(path)
+            description.text = qsTrId("sf-data-dir-move-dialog-desc-removing-file").arg(path)
             break
         case VodDataManager.DDCT_Move:
             //% "Moving %1"
-            description.text = qsTrId("data-dir-move-dialog-desc-moving-file").arg(path)
+            description.text = qsTrId("sf-data-dir-move-dialog-desc-moving-file").arg(path)
             break
         case VodDataManager.DDCT_Finished:
             _done = true
             switch (error) {
             case VodDataManager.Error_None:
                 //%  "Data directory moved"
-                notification.previewBody = notification.summary = qsTrId("data-dir-move-dialog-move-finished-notification-summary")
+                notification.previewBody = notification.summary = qsTrId("sf-data-dir-move-dialog-move-finished-notification-summary")
                 //%  "Data directory moved to %1.<br/>%2"
-                notification.body = qsTrId("data-dir-move-dialog-move-finished-notification-body").arg(warnings)
+                notification.body = qsTrId("sf-data-dir-move-dialog-move-finished-notification-body").arg(warnings)
                 if (warnings.length > 0) {
                     notification.category = "x-nemo.general.warning"
                 }
@@ -128,25 +128,25 @@ Page {
             case VodDataManager.Error_Warning:
                 //x-nemo.general.warning
                 //notification.icon = "icon-lock-warning"
-                notification.previewBody = notification.summary = qsTrId("data-dir-move-dialog-move-finished-notification-summary")
-                notification.body =  qsTrId("data-dir-move-dialog-move-finished-notification-body").arg(errorDescription)
+                notification.previewBody = notification.summary = qsTrId("sf-data-dir-move-dialog-move-finished-notification-summary")
+                notification.body =  qsTrId("sf-data-dir-move-dialog-move-finished-notification-body").arg(errorDescription)
                 notification.category = "x-nemo.general.warning"
                 break
             case VodDataManager.Error_Canceled:
                 //% "Data directory move canceled"
-                notification.previewBody = notification.summary = qsTrId("data-dir-move-dialog-move-canceled")
+                notification.previewBody = notification.summary = qsTrId("sf-data-dir-move-dialog-move-canceled")
                 break
             case VodDataManager.Error_NoSpaceLeftOnDevice:
                 notification.category = "x-nemo.transfer.error"
                 //% "Data directory moved failed"
-                notification.previewBody = notification.summary = qsTrId("data-dir-move-dialog-move-failed-summary")
+                notification.previewBody = notification.summary = qsTrId("sf-data-dir-move-dialog-move-failed-summary")
                 //% "There is no space left on the device."
-                notification.body = qsTrId("data-dir-move-dialog-move-failed-body-no-space")
+                notification.body = qsTrId("sf-data-dir-move-dialog-move-failed-body-no-space")
                 break;
             default:
                 notification.category = "x-nemo.transfer.error"
                 //notification.icon = "icon-lock-warning"
-                notification.previewBody = notification.summary = qsTrId("data-dir-move-dialog-move-failed-summary")
+                notification.previewBody = notification.summary = qsTrId("sf-data-dir-move-dialog-move-failed-summary")
                 notification.body = errorDescription
                 break;
             }

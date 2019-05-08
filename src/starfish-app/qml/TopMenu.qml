@@ -29,19 +29,19 @@ import "."
 PullDownMenu {
     MenuItem {
         //% "About %1"
-        text: qsTrId("topmenu-about").arg(App.displayName)
+        text: qsTrId("sf-topmenu-about").arg(App.displayName)
         onClicked: pageStack.push(Qt.resolvedUrl("pages/AboutPage.qml"))
     }
 
     MenuItem {
         //% "Settings"
-        text: qsTrId("topmenu-settings")
+        text: qsTrId("sf-topmenu-settings")
         onClicked: pageStack.push(Qt.resolvedUrl("pages/SettingsPage.qml"))
     }
 
     MenuItem {
         //% "Tools"
-        text: qsTrId("topmenu-tools")
+        text: qsTrId("sf-topmenu-tools")
         onClicked: pageStack.push(Qt.resolvedUrl("pages/ToolsPage.qml"))
     }
 
@@ -54,7 +54,7 @@ PullDownMenu {
     MenuItem {
         id: openVideo
         //% "Open video"
-        text: qsTrId("topmenu-open-video")
+        text: qsTrId("sf-topmenu-open-video")
 
         RecentlyWatchedVideoUpdater {
             id: updater
@@ -104,7 +104,7 @@ PullDownMenu {
 
     MenuItem {
         //% "Fetch new VODs"
-        text: qsTrId("topmenu-fetch")
+        text: qsTrId("sf-topmenu-fetch")
         enabled: window.canFetchVods
         onClicked: window.fetchNewVods()
     }

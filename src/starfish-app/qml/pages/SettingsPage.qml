@@ -60,9 +60,9 @@ BasePage {
             DialogHeader {
                 id: dialogHeader
                 //% "Confirm data directory move"
-                title: qsTrId("settings-page-confirm-data-dir-move-dialog-title")
+                title: qsTrId("sf-settings-page-confirm-data-dir-move-dialog-title")
                 //% "Move"
-                acceptText: qsTrId("settings-page-confirm-data-dir-move-dialog-accept-text")
+                acceptText: qsTrId("sf-settings-page-confirm-data-dir-move-dialog-accept-text")
             }
 
             Label {
@@ -73,7 +73,7 @@ BasePage {
                 width: parent.width - 2*x
                 wrapMode: Text.Wrap
                 //% "The application's data will be moved to %1.<br/><br/>This operation could take a good long while. During this time you will not be able to use the application.<br/><br/>Do you want to continue?"
-                text: qsTrId("settings-page-confirm-data-dir-move-dialog-text").arg(_targetdataDirectory)
+                text: qsTrId("sf-settings-page-confirm-data-dir-move-dialog-text").arg(_targetdataDirectory)
             }
 
             // page is created prior to onAccepted, see api reference doc
@@ -113,7 +113,7 @@ BasePage {
 
         SectionHeader {
             //% "Data"
-            text: qsTrId("settings-page-data-dir-section-header")
+            text: qsTrId("sf-settings-page-data-dir-section-header")
         }
 
 
@@ -121,16 +121,16 @@ BasePage {
             id: saveDirectoryComboBox
             width: root.width
             //% "Directory"
-            label: qsTrId("settings-page-data-dir-move-combobox-label")
+            label: qsTrId("sf-settings-page-data-dir-move-combobox-label")
             enabled: _toolEnabled
             menu: ContextMenu {
                 MenuItem {
                     //% "Cache"
-                    text: qsTrId("settings-page-data-dir-move-choice-cache")
+                    text: qsTrId("sf-settings-page-data-dir-move-choice-cache")
                 }
                 MenuItem {
                     //% "Custom"
-                    text: qsTrId("settings-page-data-dir-move-choice-custom")
+                    text: qsTrId("sf-settings-page-data-dir-move-choice-custom")
                 }
             }
         }
@@ -140,9 +140,9 @@ BasePage {
             width: root.width
             text: _currentdataDirectory
             //% "Directory for VOD and meta data"
-            label: qsTrId("settings-page-data-dir-text-field-label")
+            label: qsTrId("sf-settings-page-data-dir-text-field-label")
             //% "Data directory"
-            placeholderText: qsTrId("settings-page-data-dir-text-field-placeholder")
+            placeholderText: qsTrId("sf-settings-page-data-dir-text-field-placeholder")
             EnterKey.iconSource: "image://theme/icon-m-enter-close"
             EnterKey.onClicked: focus = false
             enabled: _toolEnabled
@@ -158,7 +158,7 @@ BasePage {
 
             Button {
                 //% "Pick directory"
-                text: qsTrId("settings-page-data-dir-pick-directory")
+                text: qsTrId("sf-settings-page-data-dir-pick-directory")
                 enabled: _toolEnabled
                 onClicked: pageStack.push(filePickerPage)
             }
@@ -167,33 +167,33 @@ BasePage {
                 enabled: _toolEnabled && !!_targetdataDirectory &&
                          _currentdataDirectory !== _targetdataDirectory
                 //% "Apply change"
-                text: qsTrId("settings-page-data-dir-apply-change")
+                text: qsTrId("sf-settings-page-data-dir-apply-change")
                 onClicked: pageStack.push(confirmMovePage)
             }
         }
 
         SectionHeader {
             //% "Network"
-            text: qsTrId("settings-page-network-section-header")
+            text: qsTrId("sf-settings-page-network-section-header")
         }
 
         ComboBox {
             id: bearerModeComboBox
             width: root.width
             //% "Network connection type"
-            label: qsTrId("settings-page-network-connection-type-label")
+            label: qsTrId("sf-settings-page-network-connection-type-label")
             menu: ContextMenu {
                 MenuItem {
                     //% "Autodetect"
-                    text: qsTrId("settings-page-network-connection-choice-autodetect")
+                    text: qsTrId("sf-settings-page-network-connection-choice-autodetect")
                 }
                 MenuItem {
                     //% "Broadband"
-                    text: qsTrId("settings-page-network-connection-choice-broadband")
+                    text: qsTrId("sf-settings-page-network-connection-choice-broadband")
                 }
                 MenuItem {
                     //% "Mobile"
-                    text: qsTrId("settings-page-network-connection-choice-mobile")
+                    text: qsTrId("sf-settings-page-network-connection-choice-mobile")
                 }
             }
 
@@ -209,7 +209,7 @@ BasePage {
             width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             //% "Max concurrent meta data downloads"
-            label: qsTrId("settings-page-network-max-meta-data-downloads")
+            label: qsTrId("sf-settings-page-network-max-meta-data-downloads")
             text: settingNetworkMaxConcurrentMetaDataDownloads.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
@@ -233,9 +233,9 @@ BasePage {
         ComboBox {
             width: root.width
             //% "VOD site"
-            label: qsTrId("settings-page-network-vod-site-label")
+            label: qsTrId("sf-settings-page-network-vod-site-label")
             //% "This site is used to check for new VODs."
-            description: qsTrId("settings-page-network-vod-site-desc")
+            description: qsTrId("sf-settings-page-network-vod-site-desc")
             enabled: _toolEnabled
             menu: ContextMenu {
                 id: menu
@@ -265,7 +265,7 @@ BasePage {
 
         TextSwitch {
             //% "Periodically check for new VODs"
-            text: qsTrId("settings-page-network-periodically-check-for-vods-switch")
+            text: qsTrId("sf-settings-page-network-periodically-check-for-vods-switch")
             checked: settingNetworkAutoUpdate.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -279,7 +279,7 @@ BasePage {
             width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             //% "Minutes between checks"
-            label: qsTrId("settings-page-network-check-interval-label")
+            label: qsTrId("sf-settings-page-network-check-interval-label")
             text: settingNetworkAutoUpdateIntervalM.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
@@ -301,7 +301,7 @@ BasePage {
 
         TextSwitch {
             //% "Continue VOD file download when page closes"
-            text: qsTrId("settings-page-network-continue-download-on-page-destruction")
+            text: qsTrId("sf-settings-page-network-continue-download-on-page-destruction")
             checked: settingNetworkContinueDownload.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -313,13 +313,13 @@ BasePage {
 
         SectionHeader {
             //% "Format"
-            text: qsTrId("settings-page-format-section-header")
+            text: qsTrId("sf-settings-page-format-section-header")
         }
 
         FormatComboBox {
             width: root.width
             //% "Broadband"
-            label: qsTrId("settings-page-format-broadband-label")
+            label: qsTrId("sf-settings-page-format-broadband-label")
             excludeAskEveryTime: false
             format: settingBroadbandDefaultFormat.value
             enabled: _toolEnabled
@@ -332,7 +332,7 @@ BasePage {
         FormatComboBox {
             width: root.width
             //% "Mobile"
-            label: qsTrId("settings-page-format-mobile-label")
+            label: qsTrId("sf-settings-page-format-mobile-label")
             excludeAskEveryTime: false
             format: settingMobileDefaultFormat.value
             enabled: _toolEnabled
@@ -344,12 +344,12 @@ BasePage {
 
         SectionHeader {
             //% "Playback"
-            text: qsTrId("settings-page-playback-section-header")
+            text: qsTrId("sf-settings-page-playback-section-header")
         }
 
         TextSwitch {
             //% "Use external media player"
-            text: qsTrId("settings-page-playback-external-media-player-switch")
+            text: qsTrId("sf-settings-page-playback-external-media-player-switch")
             checked: settingExternalMediaPlayer.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -362,7 +362,7 @@ BasePage {
             width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             //% "Number of recently watched videos to keep"
-            label: qsTrId("settings-page-playback-no-videos-in-recently-watched")
+            label: qsTrId("sf-settings-page-playback-no-videos-in-recently-watched")
             text: settingPlaybackRecentVideosToKeep.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
@@ -385,7 +385,7 @@ BasePage {
 
         TextSwitch {
             //% "Pause playback on device lock"
-            text: qsTrId("settings-page-playback-pause-on-device-lock-switch")
+            text: qsTrId("sf-settings-page-playback-pause-on-device-lock-switch")
             checked: settingPlaybackPauseOnDeviceLock.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -396,7 +396,7 @@ BasePage {
 
         TextSwitch {
             //% "Pause playback when the cover page is shown"
-            text: qsTrId("settings-page-playback-pause-if-cover-page-switch")
+            text: qsTrId("sf-settings-page-playback-pause-if-cover-page-switch")
             checked: settingPlaybackPauseInCoverMode.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -407,14 +407,14 @@ BasePage {
 
         SectionHeader {
             //% "New"
-            text: qsTrId("settings-page-new-section-header")
+            text: qsTrId("sf-settings-page-new-section-header")
         }
 
         TextField {
             width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             //% "Number of days to keep a VOD in 'New'"
-            label: qsTrId("settings-page-new-no-days-to-keep-vods-label")
+            label: qsTrId("sf-settings-page-new-no-days-to-keep-vods-label")
             text: settingNewWindowDays.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: focus = false
@@ -437,7 +437,7 @@ BasePage {
 
         TextSwitch {
             //% "Remove watched VODs from 'New'"
-            text: qsTrId("settings-page-new-remove-seen-vods-switch")
+            text: qsTrId("sf-settings-page-new-remove-seen-vods-switch")
             checked: settingNewRemoveSeen.value
             enabled: _toolEnabled
             onCheckedChanged: {
@@ -464,7 +464,7 @@ BasePage {
             model: model
             header: PageHeader {
                 //% "Settings"
-                title: qsTrId("settings-page-title")
+                title: qsTrId("sf-settings-page-title")
                 VodDataManagerBusyIndicator {}
             }
         }

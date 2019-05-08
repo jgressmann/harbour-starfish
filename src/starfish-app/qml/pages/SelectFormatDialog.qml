@@ -75,7 +75,7 @@ text: \"" + label + "\"
 
         DialogHeader {
             //% "Select a format"
-            title: qsTrId("select-format-dialog-title")
+            title: qsTrId("sf-select-format-dialog-title")
         }
 
         Flickable {
@@ -87,7 +87,7 @@ text: \"" + label + "\"
             ComboBox {
                 id: comboBox
                 //% "Format"
-                label: qsTrId("select-format-dialog-format")
+                label: qsTrId("sf-select-format-dialog-format")
             }
         }
     }

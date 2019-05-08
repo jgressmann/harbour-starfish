@@ -506,12 +506,14 @@ ListItem {
         id: contextMenu
         ContextMenu {
             MenuItem {
-                text: "Copy URL to clipboard"
+                //% "Copy URL to clipboard"
+                text: qsTrId("sf-match-item-copy-url-to-clipboard")
                 onClicked: Clipboard.text = _c.urlShare.url
             }
 
             MenuItem {
-                text: "Download meta data"
+                //% "Download meta data"
+                text: qsTrId("sf-match-item-download-meta-data")
                 visible: _c.urlShare.metaDataFetchStatus !== UrlShare.Fetching &&
                          _c.urlShare.metaDataFetchStatus !== UrlShare.Available &&
                          App.isOnline
@@ -519,7 +521,8 @@ ListItem {
             }
 
             MenuItem {
-                text: "Download VOD"
+                //% "Download VOD"
+                text: qsTrId("sf-match-item-download-vod")
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available &&
                          _c.urlShare.vodFetchStatus !== UrlShare.Fetching &&
                          _c.urlShare.downloadProgress < 1 &&
@@ -531,7 +534,8 @@ ListItem {
             }
 
             MenuItem {
-                text: "Download VOD with format..."
+                //% "Download VOD with format..."
+                text: qsTrId("sf-match-item-download-vod-with-format")
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available &&
                          _c.urlShare.vodFetchStatus !== UrlShare.Fetching &&
                          _c.urlShare.downloadProgress < 1 &&
@@ -540,31 +544,36 @@ ListItem {
             }
 
             MenuItem {
-                text: "Cancel VOD download"
+                //% "Cancel VOD download"
+                text: qsTrId("sf-match-item-cancel-vod-download")
                 visible: _c.urlShare.vodFetchStatus === UrlShare.Fetching && _c.urlShare.downloadProgress < 1
                 onClicked: _cancelDownload()
             }
 
             MenuItem {
-                text: "Play stream"
+                //% "Play stream"
+                text: qsTrId("sf-match-item-play-stream")
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available && App.isOnline
                 onClicked: _playStream()
             }
 
             MenuItem {
-                text: "Play stream with format..."
+                //% "Play stream with format..."
+                text: qsTrId("sf-match-item-play-stream-with-format")
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available && App.isOnline
                 onClicked: _playStreamWithFormat(VM.VM_Any)
             }
 
             MenuItem {
-                text: "Delete meta data"
+                //% "Delete meta data"
+                text: qsTrId("sf-match-item-delete-meta-data")
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available
                 onClicked: _c.urlShare.deleteMetaData()
             }
 
             MenuItem {
-                text: "Delete VOD file"
+                //% "Delete VOD file"
+                text: qsTrId("sf-match-item-delete-vod-file")
                 enabled: _toolEnabled
                 visible: _c.urlShare.vodFetchStatus === UrlShare.Available
 
@@ -580,14 +589,15 @@ ListItem {
                                    count: _c.urlShare.shareCount - 1
                                })
                         dialog.accepted.connect(function () {
-                            r.execute("Deleting %1 VOD files".arg(item._c.urlShare.shareCount), function () {
+                            //% "Deleting files for %1 VODs"
+                            r.execute(qsTrId("sf-match-item-deleting-shared-vod-files").arg(item._c.urlShare.shareCount), function () {
                                 item._cancelDownload()
                                 item._c.urlShare.deleteVodFiles()
                             })
                         })
                     } else {
-
-                        item.remorseAction("Deleting VOD file for " + title, function() {
+                        //% "Deleting files for %1"
+                        item.remorseAction(qsTrId("sf-match-item-deleting-vod-files-for-title").arg(title), function() {
                             item._cancelDownload()
                             item._c.urlShare.deleteVodFiles()
                         })
@@ -613,18 +623,21 @@ ListItem {
 //            }
 
             MenuItem {
-                text: "Copy VOD file path to clipboard"
+                //% "Copy VOD file path to clipboard"
+                text: qsTrId("sf-match-item-copy-vod-file-path-to-clipboard")
                 visible: tangibleDownloadProgress
                 onClicked: Clipboard.text = _c.urlShare.vodFilePath
             }
 
             MenuItem {
-                text: "Delete thumbnail"
+                //% "Delete thumbnail"
+                text: qsTrId("sf-match-item-delete-thumbnail")
                 onClicked: _c.urlShare.deleteThumbnail()
             }
 
             MenuItem {
-                text: "Delete VOD from database"
+                //% "Delete VOD from database"
+                text: qsTrId("sf-match-item-vod-from-database")
                 enabled: _toolEnabled
                 onClicked: {
                     // still not sure why local vars are needed but they are!!!!
@@ -928,7 +941,7 @@ ListItem {
             var dialog = pageStack.push(
                 Qt.resolvedUrl("SelectFormatDialog.qml"), {
                             //% "Select a format"
-                            "title": qsTrId("select-av-format-dialog-title"),
+                            "title": qsTrId("sf-select-av-format-dialog-title"),
                             "labels" : labels,
                             "values": values
                         })

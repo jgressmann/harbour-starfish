@@ -64,14 +64,14 @@ SilicaListView {
                         ContextMenu {
                             MenuItem {
                                 //% "Remove from list"
-                                text: qsTrId("recently-watched-video-view-remove-from-list")
+                                text: qsTrId("sf-recently-watched-video-view-remove-from-list")
                                 onClicked: {
                                     // not sure why I need locals here
                                     var removeArgs = VodDataManager.recentlyWatched.urlKey(url)
                                     var model = VodDataManager.recentlyWatched
                                     listItem.remorseAction(
                                         //% "Removing %1"
-                                        qsTrId("recently-watched-video-view-removing").arg(labelLabel.text),
+                                        qsTrId("sf-recently-watched-video-view-removing").arg(labelLabel.text),
                                         function() {
                                             model.remove(removeArgs)
                                         })
@@ -222,7 +222,7 @@ SilicaListView {
                         ContextMenu {
                             MenuItem {
                                 //% "Remove from list"
-                                text: qsTrId("recently-watched-video-view-remove-from-list")
+                                text: qsTrId("sf-recently-watched-video-view-remove-from-list")
                                 onClicked: {
                                     console.debug("click clack")
                                     // not sure why I need locals here
@@ -230,7 +230,7 @@ SilicaListView {
                                     var model = VodDataManager.recentlyWatched //
                                     matchItem.remorseAction(
                                         //% "Removing %1"
-                                        qsTrId("recently-watched-video-view-removing").arg(matchItem.title),
+                                        qsTrId("sf-recently-watched-video-view-removing").arg(matchItem.title),
                                         function() {
                                             model.remove(removeArgs)
                                         })
@@ -244,10 +244,10 @@ SilicaListView {
     }
 
     ViewPlaceholder {
-        //% "No recent videos."
-        text: qsTrId("recently-watched-video-view-no-content")
-        //% "This list will fill with the videos you have watched."
-        hintText: qsTrId("recently-watched-video-view-no-content-hint")
+        //% "No recent videos"
+        text: qsTrId("sf-recently-watched-video-view-no-content")
+        //% "This list will fill with the videos you have watched"
+        hintText: qsTrId("sf-recently-watched-video-view-no-content-hint")
     }
 
     function clear() {

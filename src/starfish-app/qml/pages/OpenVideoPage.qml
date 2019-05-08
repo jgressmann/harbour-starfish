@@ -51,7 +51,7 @@ Page {
 
             Button {
                 //% "From clipboard"
-                text: qsTrId("open-video-page-open-from-clipboard")
+                text: qsTrId("sf-open-video-page-open-from-clipboard")
                 enabled: Clipboard.hasText && App.isUrl(Clipboard.text)
                 onClicked: {
                     videoSelected(
@@ -63,7 +63,7 @@ Page {
             }
             Button {
                 //% "From file"
-                text: qsTrId("open-video-page-open-from-file")
+                text: qsTrId("sf-open-video-page-open-from-file")
 
                 onClicked: {
                     pageStack.push(filePickerPage)
@@ -87,7 +87,7 @@ Page {
         SectionHeader {
             visible: recentlyWatchedVideoView.count > 0
             //% "Recently watched"
-            text: qsTrId("open-video-page-recently-watched-section-header")
+            text: qsTrId("sf-open-video-page-recently-watched-section-header")
         }
     }
 

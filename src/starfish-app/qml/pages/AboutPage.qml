@@ -43,7 +43,7 @@ Page {
 
             PageHeader {
                 //% "About %1"
-                title: qsTrId("about-page-header").arg(App.displayName)
+                title: qsTrId("sf-about-page-header").arg(App.displayName)
             }
 
             Column {
@@ -94,7 +94,7 @@ Page {
 
                     Label {
                         //% "%1 %2"
-                        text: qsTrId("about-version-text").arg(App.displayName).arg(App.version)
+                        text: qsTrId("sf-about-version-text").arg(App.displayName).arg(App.version)
                         anchors.horizontalCenter: parent.horizontalCenter
                         font.pixelSize: Theme.fontSizeLarge
                         color: Theme.highlightColor
@@ -121,14 +121,14 @@ Page {
 
                 SectionHeader {
                     //% "Description"
-                    text: qsTrId("about-description-header")
+                    text: qsTrId("sf-about-description-header")
                 }
 
                 LinkedLabel {
                     x: Theme.horizontalPageMargin
                     width: parent.width - 2*x
                     //% "%1 lets you download and stream StarCraft Brood War and StarCraft II VODs from the internet."
-                    text: qsTrId("about-description-text").arg(App.displayName)
+                    text: qsTrId("sf-about-description-text").arg(App.displayName)
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.secondaryHighlightColor
                     linkColor: Theme.secondaryColor
@@ -136,7 +136,7 @@ Page {
 
                 SectionHeader {
                     //% "Licensing"
-                    text: qsTrId("about-licensing-header")
+                    text: qsTrId("sf-about-licensing-header")
                 }
 
                 LinkedLabel {
@@ -144,7 +144,7 @@ Page {
                     width: parent.width - 2*x
 
                     //% "Copyright (c) 2018, 2019 Jean Gressmann.<br/><br/>%1 is available under the <a href='https://opensource.org/licenses/MIT'>MIT</a> license.<br/><br/>This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I'll remove the offending data.<br/><br/>%1 uses icons downloaded from <a href='https://www.flaticon.com'>flaticon</a> created by <a href='https://www.flaticon.com/authors/gregor-cresnar'>Gregor Cresnar</a>, <a href='https://www.flaticon.com/authors/freepik'>Freepik</a>, and <a href='https://www.flaticon.com/authors/smashicons'>Smashicons</a>."
-                    text: qsTrId("about-licensing-text").arg(App.displayName)
+                    text: qsTrId("sf-about-licensing-text").arg(App.displayName)
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.secondaryHighlightColor
                     linkColor: Theme.secondaryColor
@@ -152,23 +152,22 @@ Page {
 
                 SectionHeader {
                     //% "Sources"
-                    text: qsTrId("about-sources-header")
+                    text: qsTrId("sf-about-sources-header")
                 }
 
                 LinkedLabel {
                     x: Theme.horizontalPageMargin
                     width: parent.width - 2*x
                     //% "The sources are available on <a href='https://github.com/jgressmann/harbour-starfish'>GitHub</a>."
-                    text: qsTrId("about-sources-text")
+                    text: qsTrId("sf-about-sources-text")
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.secondaryHighlightColor
                     linkColor: Theme.secondaryColor
-//                    Component.onCompleted: console.debug(text)
                 }
 
                 SectionHeader {
                     //% "Translations"
-                    text: qsTrId("about-translations-header")
+                    text: qsTrId("sf-about-translations-header")
                 }
 
                 Column {
@@ -178,16 +177,16 @@ Page {
 
                     DetailItem {
                         //% "English"
-                        label: qsTrId("about-translations-english-label")
+                        label: qsTrId("sf-about-translations-english-label")
                         //% "names of translators"
-                        value: qsTrId("about-translations-english-value")
+                        value: qsTrId("sf-about-translations-english-value")
                     }
 
                     DetailItem {
                         //% "German"
-                        label: qsTrId("about-translations-german-label")
+                        label: qsTrId("sf-about-translations-german-label")
                         //% "names of translators"
-                        value: qsTrId("about-translations-german-value")
+                        value: qsTrId("sf-about-translations-german-value")
                     }
 
                     Item {

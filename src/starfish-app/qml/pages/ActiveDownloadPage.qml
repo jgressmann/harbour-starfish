@@ -71,7 +71,7 @@ ContentPage {
             model: sqlModel
             header: ContentPageHeader {
                 //% "Active downloads"
-                title: qsTrId("active-downloads-title")
+                title: qsTrId("sf-active-downloads-title")
             }
 
 
@@ -97,7 +97,7 @@ ContentPage {
             ViewPlaceholder {
                 enabled: listView.count === 0
                 //% "There are no active downloads."
-                text: qsTrId("active-downloads-no-downloads")
+                text: qsTrId("sf-active-downloads-no-downloads")
             }
         }
     }

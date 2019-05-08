@@ -31,9 +31,9 @@ Dialog {
     DialogHeader {
         id: header
         //% "Clear VOD data?"
-        title: qsTrId("clear-dialog-title")
+        title: qsTrId("sf-clear-dialog-title")
         //% "Clear"
-        acceptText: qsTrId("clear-dialog-accept-text")
+        acceptText: qsTrId("sf-clear-dialog-accept-text")
     }
 
     Label {
@@ -41,7 +41,7 @@ Dialog {
         x: Theme.horizontalPageMargin
         width: parent.width - 2*x
         //% "You are about to delete all VOD entries from the database and all VOD download related files from your device.<br/><br/>Do you want to continue?"
-        text: qsTrId("clear-dialog-text")
+        text: qsTrId("sf-clear-dialog-text")
         color: Theme.highlightColor
         wrapMode: Text.Wrap
         textFormat: Text.StyledText

@@ -97,14 +97,14 @@ CoverBackground {
                     font.pixelSize: Theme.fontSizeTiny
                     font.bold: true
                     //% "New"
-                    text: qsTrId("cover-label-new-vods-line1", _newVodCount)
+                    text: qsTrId("sf-cover-label-new-vods-line1", _newVodCount)
                 }
 
                 Label {
                     font.pixelSize: Theme.fontSizeTiny
                     font.bold: true
                     //% "VODs"
-                    text: qsTrId("cover-label-new-vods-line2", _newVodCount)
+                    text: qsTrId("sf-cover-label-new-vods-line2", _newVodCount)
 
                 }
             }
@@ -233,7 +233,7 @@ CoverBackground {
     function _updatingLabelText() {
         if (vodDatabaseDownloader.status === VodDatabaseDownloader.Status_Downloading) {
             //% "Updating"
-            return qsTrId("cover-update-status-updating")
+            return qsTrId("sf-cover-update-status-updating")
         }
 
         var n = Global.secondsSinceTheEpoch()
@@ -241,20 +241,19 @@ CoverBackground {
         var diff = n - settingLastUpdateTimestamp.value
         if (diff <= 10) {
             //% "Updated just now"
-            return qsTrId("cover-update-status-just-now")
+            return qsTrId("sf-cover-update-status-just-now")
         } else if (diff < 60) {
             //% "Updated seconds ago"
-            return  qsTrId("cover-update-status-just-seconds-ago")
+            return  qsTrId("sf-cover-update-status-just-seconds-ago")
         } else if (diff < 60 * 60) {
             //% "Updated minutes ago"
-            return  qsTrId("cover-update-status-minutes-ago")
+            return  qsTrId("sf-cover-update-status-minutes-ago")
         } else if (diff < 24 * 60 * 60) {
             //% "Updated hours ago"
-            return  qsTrId("cover-update-status-hours-ago")
+            return  qsTrId("sf-cover-update-status-hours-ago")
         } else {
-            timeStr = "a really long time ago"
             //% "Updated a really long time ago"
-            return qsTrId("cover-update-status-more")
+            return qsTrId("sf-cover-update-status-more")
         }
     }
 }

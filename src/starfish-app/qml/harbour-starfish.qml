@@ -83,22 +83,22 @@ ApplicationWindow {
                 break
             case VodDatabaseDownloader.Error_NetworkFailure:
                 //% "Network down"
-                errorNotification.body = errorNotification.previewBody = qsTrId("database-error-network-failure")
+                errorNotification.body = errorNotification.previewBody = qsTrId("sf-database-error-network-failure")
                 errorNotification.publish()
                 break
             case VodDatabaseDownloader.Error_DataInvalid:
                 //% "Data downloaded is invalid"
-                errorNotification.body = errorNotification.previewBody = qsTrId("database-error-invalid-data")
+                errorNotification.body = errorNotification.previewBody = qsTrId("sf-database-error-invalid-data")
                 errorNotification.publish()
                 break
             case VodDatabaseDownloader.Error_DataDecompressionFailed:
                 //% "Data decompression failed"
-                errorNotification.body = errorNotification.previewBody = qsTrId("database-error-decompression-failed")
+                errorNotification.body = errorNotification.previewBody = qsTrId("sf-database-error-decompression-failed")
                 errorNotification.publish()
                 break
             default:
                 //% "Yikes! An unknown error has occurred"
-                errorNotification.body = errorNotification.previewBody = qsTrId("database-error-unknown")
+                errorNotification.body = errorNotification.previewBody = qsTrId("sf-database-error-unknown")
                 errorNotification.publish()
                 break
             }
@@ -223,8 +223,8 @@ ApplicationWindow {
          id: errorNotification
          category: "x-nemo.transfer.error"
          //% "Download failed"
-         summary: qsTrId("vod-download-failed-notification-summary")
-         previewSummary: qsTrId("vod-download-failed-notification-summary")
+         summary: qsTrId("sf-vod-download-failed-notification-summary")
+         previewSummary: qsTrId("sf-vod-download-failed-notification-summary")
          appName: App.displayName
          appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
 //         icon: "icon-lock-transfer"
@@ -236,7 +236,7 @@ ApplicationWindow {
         appName: App.displayName
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
         //% "VODs added"
-        summary: qsTrId("new-vods-notification-summary")
+        summary: qsTrId("sf-new-vods-notification-summary")
 //        icon: "icon-lock-application-update"
         icon: appIcon
 //        icon: "icon-lock-information"
@@ -256,7 +256,7 @@ ApplicationWindow {
         id: deleteVodNotification
         appName: App.displayName
         //% "Seen VODs deleted"
-        summary: qsTrId("seen-vods-deleted-notification-summary")
+        summary: qsTrId("sf-seen-vods-deleted-notification-summary")
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
 //        icon: "icon-lock-information"
         icon: appIcon
@@ -268,15 +268,15 @@ ApplicationWindow {
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
         icon: appIcon
         //% "youtube-dl update available"
-        summary: qsTrId("nofification-download-ytdl-update-available-summary")
+        summary: qsTrId("sf-nofification-download-ytdl-update-available-summary")
         previewSummary: summary
         //% "youtube-dl version %1 available"
-        body: qsTrId("nofification-ytdl-update-available-body").arg(YTDLDownloader.updateVersion)
+        body: qsTrId("sf-nofification-ytdl-update-available-body").arg(YTDLDownloader.updateVersion)
         previewBody: body
         remoteActions: [ {
              "name": "default",
              //% "Update youtube-dl"
-             "displayName": qsTrId("nofification-ytdl-update-available-action"),
+             "displayName": qsTrId("sf-nofification-ytdl-update-available-action"),
              "service": "org.duckdns.jgressmann.starfish.app",
              "path": "/instance",
              "iface": "org.duckdns.jgressmann.starfish.app",
@@ -303,7 +303,7 @@ ApplicationWindow {
             if (false) {
                 errorNotification.body = errorNotification.previewBody =
                         //% "%1 is busy. Try again later."
-                        qsTrId("notification-busy").arg(App.displayName)
+                        qsTrId("sf-notification-busy").arg(App.displayName)
                 errorNotification.publish()
             } else {
                 YTDLDownloader.download()
@@ -479,7 +479,7 @@ ApplicationWindow {
             if (!VodDataManager.busy && _vodsAdded) {
                 newVodNotification.itemCount = 1
                 //% "%1 VODs added"
-                newVodNotification.body = newVodNotification.previewBody = qsTrId("vods-added-notification-body", _vodsAdded).arg(_vodsAdded)
+                newVodNotification.body = newVodNotification.previewBody = qsTrId("sf-vods-added-notification-body", _vodsAdded).arg(_vodsAdded)
                 newVodNotification.publish()
                 _vodsAdded = 0
             }

@@ -78,7 +78,7 @@ ContentPage {
             model: sqlModel
             header: ContentPageHeader {
                 //% "New"
-                title: qsTrId("new-page-title")
+                title: qsTrId("sf-new-page-title")
             }
 
 
@@ -104,9 +104,9 @@ ContentPage {
             ViewPlaceholder {
                 enabled: listView.count === 0
                 //% "There are no new VODs available."
-                text: qsTrId("new-page-no-content-text")
+                text: qsTrId("sf-new-page-no-content-text")
                 //% "Pull down to fetch new VODs."
-                hintText: qsTrId("new-page-no-content-hint-text")
+                hintText: qsTrId("sf-new-page-no-content-hint-text")
             }
         }
     }

@@ -84,18 +84,18 @@ Page {
             hintText: {
                 if (App.isOnline) {
                     //% "Pull down to fetch new VODs"
-                    return qsTrId("start-page-no-content-hint-pull-down-online")
+                    return qsTrId("sf-start-page-no-content-hint-pull-down-online")
                 }
 
                 //% "Connect to the internet to fetch new VODs"
-                return qsTrId("start-page-no-content-hint-pull-down-offline")
+                return qsTrId("sf-start-page-no-content-hint-pull-down-offline")
             }
         }
 
         ViewPlaceholder {
             enabled: VodDataManager.ready && vodCount === 0 && vodDatabaseDownloader.status === VodDatabaseDownloader.Status_Downloading
             //% "VODs are being downloaded. It won't be long now."
-            text: qsTrId("start-page-no-content-text-vod-download-in-progress")
+            text: qsTrId("sf-start-page-no-content-text-vod-download-in-progress")
         }
 
         ViewPlaceholder {
@@ -103,7 +103,7 @@ Page {
             //% "%1 failed to start"
             text: qsTrId("start-page-startup-error-text").arg(App.displayName)
             //% "For details check the log file located in %1"
-            hintText: qsTrId("start-page-startup-error-hint").arg(App.logDir)
+            hintText: qsTrId("sf-start-page-startup-error-hint").arg(App.logDir)
         }
     }
 

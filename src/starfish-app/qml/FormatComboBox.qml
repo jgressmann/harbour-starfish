@@ -33,13 +33,13 @@ ComboBox {
     property bool excludeAskEveryTime: false
     currentIndex: -1
     //% "Format"
-    label: qsTrId("format-combobox-label")
+    label: qsTrId("sf-format-combobox-label")
 
     menu: ContextMenu {
         id: menu
         MenuItem {
             //% "best quality (largest)"
-            text: qsTrId("format-combobox-choice-best")
+            text: qsTrId("sf-format-combobox-choice-best")
         }
         MenuItem {
             //% "worst quality (smallest)"
@@ -52,7 +52,7 @@ ComboBox {
         MenuItem {
             id: askEveryTime
             //% "ask every time"
-            text: qsTrId("format-combobox-choice-ask-every-time")
+            text: qsTrId("sf-format-combobox-choice-ask-every-time")
         }
     }
 

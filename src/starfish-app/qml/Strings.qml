@@ -26,19 +26,19 @@ import QtQuick 2.0
 
 Item { // Components can't declare functions
     //% "There seems to be nothing here"
-    readonly property string noContent: qsTrId("strings-no-content")
+    readonly property string noContent: qsTrId("sf-strings-no-content")
     //% "Delete seen VOD files"
-    readonly property string deleteSeenVodFiles: qsTrId("strings-delete-seen-vod-files")
+    readonly property string deleteSeenVodFiles: qsTrId("sf-strings-delete-seen-vod-files")
     //% "Delete VODs"
-    readonly property string deleteVods: qsTrId("strings-delete-vods")
+    readonly property string deleteVods: qsTrId("sf-strings-delete-vods")
 
     function deleteSeenVodFileRemorse(name) {
         //% "Deleting seen VOD files for %1"
-        return qsTrId("strings-deleting-seen-vods").arg(name)
+        return qsTrId("sf-strings-deleting-seen-vods").arg(name)
     }
 
     function deleteVodsRemorse(name) {
         //% "Deleting VODs for %1"
-        return qsTrId("strings-deleting-vods").arg(name)
+        return qsTrId("sf-strings-deleting-vods").arg(name)
     }
 }

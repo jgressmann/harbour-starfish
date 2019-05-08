@@ -45,13 +45,13 @@ BasePage {
 
             SectionHeader {
                 //% "Data fetching"
-                text: qsTrId("tools-page-fetch-section-header")
+                text: qsTrId("sf-tools-page-fetch-section-header")
             }
 
             TextField {
                 width: parent.width
                 //% "VOD fetch marker"
-                label: qsTrId("tools-page-vod-fetch-marker")
+                label: qsTrId("sf-tools-page-vod-fetch-marker")
                 text: VodDataManager.downloadMarker
                 readOnly: true
                 placeholderText: label
@@ -63,7 +63,7 @@ BasePage {
 
                 Button {
                     //% "Reset VOD fetch marker"
-                    text: qsTrId("tools-page-reset-vod-fetch-marker")
+                    text: qsTrId("sf-tools-page-reset-vod-fetch-marker")
                     anchors.horizontalCenter: parent.horizontalCenter
                     enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
@@ -74,7 +74,7 @@ BasePage {
                 Button {
                     visible: debugApp.value
                     //% "Reset last fetch timestamp"
-                    text: qsTrId("tools-page-reset-last-fetch-timestamp")
+                    text: qsTrId("sf-tools-page-reset-last-fetch-timestamp")
                     enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         console.debug(text)
@@ -84,7 +84,7 @@ BasePage {
 
                 Button {
                     //% "Delete sc2links.com state"
-                    text: qsTrId("tools-page-delete-sc2links.com-state")
+                    text: qsTrId("sf-tools-page-delete-sc2links.com-state")
                     enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         console.debug(text)
@@ -94,7 +94,7 @@ BasePage {
 
                 Button {
                     //% "Delete sc2casts.com state"
-                    text: qsTrId("tools-page-delete-sc2casts.com-state")
+                    text: qsTrId("sf-tools-page-delete-sc2casts.com-state")
                     enabled: _toolEnabled
                     onClicked: remorse.execute(text, function() {
                         console.debug(text)
@@ -106,14 +106,14 @@ BasePage {
 
             SectionHeader {
                 //% "Data"
-                text: qsTrId("tools-page-data-section-header")
+                text: qsTrId("sf-tools-page-data-section-header")
             }
 
             ButtonLayout {
                 width: parent.width
                 Button {
                     //% "Clear"
-                    text: qsTrId("tools-page-data-clear")
+                    text: qsTrId("sf-tools-page-data-clear")
                     enabled: _toolEnabled
                     onClicked: {
                         var dialog = pageStack.push(
@@ -134,7 +134,7 @@ BasePage {
 
             SectionHeader {
                 //% "Seen"
-                text: qsTrId("tools-page-seen-section-header")
+                text: qsTrId("sf-tools-page-seen-section-header")
             }
 
             ButtonLayout {
@@ -150,7 +150,7 @@ BasePage {
 
                 Button {
                     //% "Reset recent videos"
-                    text: qsTrId("tools-page-seen-recently-watched-videos")
+                    text: qsTrId("sf-tools-page-seen-recently-watched-videos")
                     enabled: _toolEnabled
                     onClicked: VodDataManager.recentlyWatched.clear()
                 }
@@ -214,14 +214,14 @@ BasePage {
                         switch (YTDLDownloader.downloadStatus) {
                         case YTDLDownloader.StatusDownloading:
                             //% "youtube-dl is being downloaded"
-                            return qsTrId("tools-ytdl-downloading")
+                            return qsTrId("sf-tools-ytdl-downloading")
                         case YTDLDownloader.StatusError:
                         case YTDLDownloader.StatusUnavailable:
                             //% "youtube-dl is not available"
-                            return qsTrId("tools-ytdl-unavailable")
+                            return qsTrId("sf-tools-ytdl-unavailable")
                         default:
                             //% "youtube-dl version %1"
-                            return qsTrId("tools-ytdl-version").arg(YTDLDownloader.ytdlVersion)
+                            return qsTrId("sf-tools-ytdl-version").arg(YTDLDownloader.ytdlVersion)
                         }
                     }
                 }
@@ -233,7 +233,7 @@ BasePage {
                                  YTDLDownloader.downloadStatus !== YTDLDownloader.StatusDownloading &&
                                  !VodDataManager.busy
                         //% "Update youtube-dl"
-                        text: qsTrId("tools-ytdl-update")
+                        text: qsTrId("sf-tools-ytdl-update")
                         onClicked: YTDLDownloader.download()
                     }
 
@@ -262,7 +262,7 @@ BasePage {
 
                 ExpandingSection {
                     //% "Cache"
-                    title: qsTrId("tools-page-cache-section-title")
+                    title: qsTrId("sf-tools-page-cache-section-title")
                     id: cacheSection
                     width: parent.width
                     content.sourceComponent: Column {
@@ -273,7 +273,7 @@ BasePage {
 
                             Button {
                                 //% "Clear meta data"
-                                text: qsTrId("tools-page-cache-section-clear-meta-data")
+                                text: qsTrId("sf-tools-page-cache-section-clear-meta-data")
                                 enabled: _toolEnabled
                                 onClicked: {
                                     console.debug("clear meta data")
@@ -286,7 +286,7 @@ BasePage {
 
                             Button {
                                 //% "Clear thumbnails"
-                                text: qsTrId("tools-page-cache-section-clear-thumbnails")
+                                text: qsTrId("sf-tools-page-cache-section-clear-thumbnails")
                                 enabled: _toolEnabled
                                 onClicked: {
                                     console.debug("clear thumbnails")
@@ -298,7 +298,7 @@ BasePage {
 
                             Button {
                                 //% "Clear VOD files"
-                                text: qsTrId("tools-page-cache-section-clear-vod-files")
+                                text: qsTrId("sf-tools-page-cache-section-clear-vod-files")
                                 enabled: _toolEnabled
                                 onClicked: {
                                     console.debug("clear vods")
@@ -311,7 +311,7 @@ BasePage {
 
                             Button {
                                 //% "Clear icons"
-                                text: qsTrId("tools-page-cache-section-clear-icons")
+                                text: qsTrId("sf-tools-page-cache-section-clear-icons")
                                 enabled: _toolEnabled
                                 onClicked: {
                                     console.debug("clear icons")
@@ -349,7 +349,7 @@ BasePage {
             model: model
             header: PageHeader {
                 //% "Tools"
-                title: qsTrId("tools-page-title")
+                title: qsTrId("sf-tools-page-title")
                 VodDataManagerBusyIndicator {}
             }
         }
