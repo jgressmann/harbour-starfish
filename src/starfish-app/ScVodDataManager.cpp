@@ -1359,7 +1359,7 @@ ScVodDataManager::exists(QSqlQuery& q, const ScRecord& record, qint64* id) const
                 "    AND match_name=?\n"
                 "    AND match_date=?\n"
                 "    AND stage_name=?\n");
-    if (!q.prepare(sql)) {
+    if (Q_UNLIKELY(!q.prepare(sql))) {
         qCritical() << "failed to prepare match select" << q.lastError();
         return false;
     }
@@ -1372,7 +1372,7 @@ ScVodDataManager::exists(QSqlQuery& q, const ScRecord& record, qint64* id) const
     q.addBindValue(record.matchDate);
     q.addBindValue(record.stage);
 
-    if (!q.exec()) {
+    if (Q_UNLIKELY(!q.exec())) {
         qCritical() << "failed to exec match select" << q.lastError();
         return false;
     }
@@ -1390,11 +1390,11 @@ ScVodDataManager::excludeMatch(const ScMatch& match, bool* exclude) {
 
     *exclude = false;
 
-    if (match.isValid()) {
+    if (Q_LIKELY(match.isValid())) {
         ScStage stage = match.stage();
-        if (stage.isValid()) {
+        if (Q_LIKELY(stage.isValid())) {
             ScEvent event = stage.event();
-            if (event.isValid()) {
+            if (Q_LIKELY(event.isValid())) {
                 if (!exists(event, stage, match, exclude)) {
                     *exclude = true;
                 }
@@ -1416,13 +1416,13 @@ void
 ScVodDataManager::hasRecord(const ScRecord& record, bool* _exists) {
     Q_ASSERT(_exists);
 
-    if (record.isValid(ScRecord::ValidEventName |
+    if (Q_LIKELY(record.isValid(ScRecord::ValidEventName |
                        ScRecord::ValidYear |
                        ScRecord::ValidGame |
 //                       ScRecord::ValidSeason |
                        ScRecord::ValidStageName |
                        ScRecord::ValidMatchDate |
-                       ScRecord::ValidMatchName)) {
+                       ScRecord::ValidMatchName))) {
         qint64 id = -1;
         QSqlQuery q(m_Database);
         if (!exists(q, record, &id)) {
@@ -1462,7 +1462,7 @@ ScVodDataManager::addVodFromQueue()
     }
 
     auto record = m_AddQueue.takeFirst();
-    if (!record.isValid(ScRecord::ValidUrl)) {
+    if (Q_UNLIKELY(!record.isValid(ScRecord::ValidUrl))) {
         qWarning() << "invalid url" << record;
         --m_AddCounter;
         resumeVodsChangedEvents();
@@ -1477,7 +1477,7 @@ ScVodDataManager::addVodFromQueue()
 
     if (UT_Unknown != urlType) {
         static const QString sql = QStringLiteral("SELECT id FROM vod_url_share WHERE video_id=? AND type=?");
-        if (!q.prepare(sql)) {
+        if (Q_UNLIKELY(!q.prepare(sql))) {
             qCritical() << "failed to prepare query" << q.lastError();
             --m_AddCounter;
             resumeVodsChangedEvents();
@@ -1488,7 +1488,7 @@ ScVodDataManager::addVodFromQueue()
         q.addBindValue(videoId);
         q.addBindValue(urlType);
 
-        if (!q.exec()) {
+        if (Q_UNLIKELY(!q.exec())) {
             qCritical() << "failed to exec" << q.lastError();
             --m_AddCounter;
             resumeVodsChangedEvents();
@@ -1503,7 +1503,7 @@ ScVodDataManager::addVodFromQueue()
             static const QString VodUrlShareInsert = QStringLiteral("INSERT INTO vod_url_share (video_id, url, type) VALUES (?, ?, ?)");
             auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
             m_PendingDatabaseStores.insert(tid, [=] (qint64 urlShareId, bool error) {
-                if (error) {
+                if (Q_UNLIKELY(error)) {
                     --m_AddCounter;
                     resumeVodsChangedEvents();
                     emit processVodsToAdd();
@@ -1518,7 +1518,7 @@ ScVodDataManager::addVodFromQueue()
         static const QString VodUrlShareInsert = QStringLiteral("INSERT INTO vod_url_share (url, type) VALUES (?, ?)");
         auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
         m_PendingDatabaseStores.insert(tid, [=] (qint64 urlShareId, bool error) {
-            if (error) {
+            if (Q_UNLIKELY(error)) {
                 --m_AddCounter;
                 resumeVodsChangedEvents();
                 emit processVodsToAdd();
