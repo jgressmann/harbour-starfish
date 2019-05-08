@@ -56,7 +56,7 @@ ScVodman::ScVodman(QObject *parent)
     m_CurrentFile = 0;
     m_CurrentMeta = 0;
 
-    m_Ytdl.setYtdlVerbose(true);
+//    m_Ytdl.setYtdlVerbose(true);
 
     connect(&m_Ytdl, &VMYTDL::playlistDownloadCompleted, this, &ScVodman::onPlaylistDownloadCompleted);
     connect(&m_Ytdl, &VMYTDL::playlistDownloadChanged, this, &ScVodman::onPlaylistDownloadChanged);
