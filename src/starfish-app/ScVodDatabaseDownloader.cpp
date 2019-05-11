@@ -184,7 +184,8 @@ ScVodDatabaseDownloader::downloadNew() {
 
 
 void
-ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
+ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply)
+{
     reply->deleteLater();
     m_Reply = nullptr;
 
@@ -212,7 +213,7 @@ ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
                 bool ok = false;
                 auto xml = Sc::gzipDecompress(bytes, &ok);
                 if (ok) {
-                    QList<ScRecord> vods;
+                    QVector<ScRecord> vods;
                     if (loadFromXml(xml, &vods)) {
                         m_DataManager->setDownloadMarker(m_TargetMarker);
                         ++m_PendingActions;
@@ -263,32 +264,8 @@ ScVodDatabaseDownloader::onRequestFinished(QNetworkReply* reply) {
 }
 
 bool
-ScVodDatabaseDownloader::loadFromXml(const QByteArray& xml, QList<ScEvent>* events) {
-    events->clear();
-
-    QDomDocument doc;
-    doc.setContent(xml);
-    auto version = doc.documentElement().attribute(QStringLiteral("version")).toInt();
-    auto eventsNode = doc.documentElement().namedItem(QStringLiteral("events")).childNodes();
-    for (int i = 0; i < eventsNode.size(); ++i) {
-        auto eventNode = eventsNode.item(i);
-        ScEvent event = ScEvent::fromXml(eventNode, version);
-        if (!event.isValid()) {
-            qWarning() << "invalid event after xsd validation";
-            setError(Error_DataInvalid);
-            setStatus(Status_Error);
-            return false;
-        }
-
-        *events << event;
-    }
-
-    return true;
-}
-
-
-bool
-ScVodDatabaseDownloader::loadFromXml(const QByteArray& xml, QList<ScRecord>* records) {
+ScVodDatabaseDownloader::loadFromXml(const QByteArray& xml, QVector<ScRecord>* records)
+{
     Q_ASSERT(records);
     records->clear();
 
@@ -296,6 +273,7 @@ ScVodDatabaseDownloader::loadFromXml(const QByteArray& xml, QList<ScRecord>* rec
     doc.setContent(xml);
 //    auto version = doc.documentElement().attribute(QStringLiteral("version")).toInt();
     auto eventsNode = doc.documentElement().namedItem(QStringLiteral("records")).childNodes();
+    records->reserve(eventsNode.size());
     for (int i = 0; i < eventsNode.size(); ++i) {
         auto eventNode = eventsNode.item(i);
         auto record = ScRecord::fromXml(eventNode);

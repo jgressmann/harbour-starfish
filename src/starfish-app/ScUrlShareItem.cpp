@@ -21,12 +21,15 @@ ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
     connect(parent, &ScVodDataManager::isOnlineChanged, this, &ScUrlShareItem::onIsOnlineChanged);
 
     QSqlQuery q(manager()->database());
-    static const QString sql = QStringLiteral("SELECT url FROM vod_url_share WHERE id=?");
+    static const QString sql = QStringLiteral("SELECT url, video_id, type FROM vod_url_share WHERE id=?");
     if (Q_LIKELY(q.prepare(sql))) {
         q.addBindValue(m_UrlShareId);
         if (Q_LIKELY(q.exec())) {
             if (Q_LIKELY(q.next())) {
                 m_Url = q.value(0).toString();
+                if (m_Url.isEmpty()) {
+                    m_Url = manager()->getUrl(q.value(2).toInt(), q.value(1).toString());
+                }
             } else {
                 qDebug() << "no data for url share id" << m_UrlShareId;
             }

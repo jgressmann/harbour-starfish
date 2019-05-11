@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,16 +23,21 @@
 
 #pragma once
 
+#include <QObject>
 #include <QSqlDatabase>
 #include <QSqlQuery>
-#include <QVariantList>
+#include <QHash>
 #include <QAtomicInt>
+
+#include "ScDatabaseStoreQueueTypes.h"
 
 class ScDatabaseStoreQueue : public QObject
 {
     Q_OBJECT
 public:
     static constexpr int InvalidToken = -1;
+
+public:
     ~ScDatabaseStoreQueue();
     ScDatabaseStoreQueue(const QString& databasePath, QObject* parent = nullptr);
 
@@ -42,18 +47,20 @@ signals:
     void completed(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);
 
 public slots:
-    void process(int transactionId, const QString& sql, const QVariantList& args);
+    void process(int transactionId, const QString& sql, const ScSqlParamList& args);
 
 private:
     struct SqlData
     {
         QString sql;
-        QVariantList args;
+        ScSqlParamList args;
         int token;
     };
 
+    using SqlDataBuffer = QVector<SqlData>;
+
     qint64 getInsertIdOrAffectedRows() const;
-    void processStatement(int transactionId, const QString& sql, const QVariantList& args);
+    void processStatement(int transactionId, const QString& sql, const ScSqlParamList& args);
     void abort();
     int getToken();
 
@@ -61,7 +68,7 @@ private:
     QSqlDatabase m_Database;
     QSqlQuery m_Query;
     QAtomicInt m_TokenGenerator;
-    QHash<int, QList<SqlData> > m_IncompleteTransactions;
-    QList< QList<SqlData> > m_CompleteTransactions;
+    QHash<int, SqlDataBuffer> m_IncompleteTransactions;
+    QVector<SqlDataBuffer> m_CompleteTransactions;
     int m_LastTransactionId;
 };

@@ -29,6 +29,7 @@
 #include <QSharedPointer>
 #include <QVariant>
 #include <functional>
+#include "ScDatabaseStoreQueueTypes.h"
 
 class ScVodDataManager;
 class ScUrlShareItem;
@@ -81,7 +82,7 @@ public:
 signals:
     void seenChanged();
     void videoEndOffsetChanged();
-    void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
+    void startProcessDatabaseStoreQueue(int transactionId, QString sql, ScSqlParamList args);
 
 private:
     struct Data

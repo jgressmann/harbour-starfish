@@ -24,6 +24,7 @@
 #pragma once
 
 #include "ScApp.h"
+#include "ScDatabaseStoreQueueTypes.h"
 
 #include <QAbstractListModel>
 
@@ -92,7 +93,7 @@ public slots:
 signals:
     void databaseChanged();
     void countChanged();
-    void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
+    void startProcessDatabaseStoreQueue(int transactionId, QString sql, ScSqlParamList args);
 
 private slots:
     void databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);

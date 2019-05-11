@@ -26,7 +26,7 @@
 #include "Vods.h"
 #include "ScRecord.h"
 
-#include <QMutex>
+#include <QVector>
 #include <QNetworkAccessManager>
 
 class ScClassifier;
@@ -76,7 +76,7 @@ public:
     Error error() const { return m_Error; }
     qreal progress() const { return m_Progress; }
     QString progressDescription() const { return m_ProgressDescription; }
-    virtual QList<ScRecord> vods() const = 0;
+    virtual QVector<ScRecord> vods() const = 0;
     bool canCancelFetch() const;
     bool canStartFetch() const;
     bool canSkip() const;

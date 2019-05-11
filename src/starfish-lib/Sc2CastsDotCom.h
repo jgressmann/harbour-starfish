@@ -40,7 +40,7 @@ public:
     explicit Sc2CastsDotCom(QObject *parent = Q_NULLPTR);
 
 public: //
-    virtual QList<ScRecord> vods() const { return m_Vods; }
+    virtual QVector<ScRecord> vods() const { return m_Vods; }
 
 protected:
     virtual void _fetch() Q_DECL_OVERRIDE;
@@ -60,7 +60,7 @@ private:
     void pruneInvalidVods();
 
 private:
-    QList<ScRecord> m_Vods;
+    QVector<ScRecord> m_Vods;
     QHash<QNetworkReply*, int> m_PendingRequests;
     QHash<QNetworkReply*, int> m_ReplyToRecordTable;
     qreal m_VodFetchingProgress;

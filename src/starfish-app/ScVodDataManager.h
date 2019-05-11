@@ -37,6 +37,7 @@
 #include <QVariant>
 #include <QSharedPointer>
 #include <QTimer>
+#include <deque>
 
 class QNetworkConfigurationManager;
 class QNetworkAccessManager;
@@ -172,7 +173,7 @@ public: //
     QString downloadMarkerString() const;
     void setDownloadMarker(QDate value);
     void suspendVodsChangedEvents(int count = 1);
-    void resumeVodsChangedEvents();
+    void resumeVodsChangedEvents(int count = 1);
     // filter pages
     Q_INVOKABLE qreal seen(const QString& table, const QString& where) const;
     Q_INVOKABLE void setSeen(const QString& table, const QString& where, bool value);
@@ -211,6 +212,7 @@ public: //
     Q_INVOKABLE void releaseMatchItem(ScMatchItem* item);
     bool isOnline() const;
     Q_INVOKABLE void clearYtdlCache();
+    QString getUrl(int type, const QString& videoId);
 
 signals:
     void readyChanged();
@@ -228,7 +230,7 @@ signals:
     void startWorker();
     void stopThread();
     void maxConcurrentMetaDataDownloadsChanged(int value);
-    void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
+    void startProcessDatabaseStoreQueue(int transactionId, QString sql, ScSqlParamList args);
     void processVodsToAdd();
     void ytdlPathChanged(QString path);
     void seenChanged();
@@ -240,17 +242,13 @@ public slots:
     void excludeStage(const ScStage& stage, bool* exclude);
     void excludeMatch(const ScMatch& match, bool* exclude);
     void hasRecord(const ScRecord& record, bool* exclude);
-    void addVods(QList<ScRecord> vods);
+    void addVods(QVector<ScRecord> vods);
 
 private:
     enum UrlType {
         UT_Unknown,
         UT_Youtube,
         UT_Twitch,
-    };
-    enum FetchType {
-        FT_MetaData = 0x1,
-        FT_File = 0x2,
     };
 
     struct IconRequest {
@@ -317,7 +315,6 @@ private:
 
 
     void iconRequestFinished(QNetworkReply* reply, IconRequest& r);
-    void insertVod(const ScRecord& record, qint64 urlShareId, int startOffset);
     void dropTables();
     int deleteVodFilesWhere(int transactionId, const QString& where, bool raiseChanged);
     int deleteThumbnailsWhere(int transactionId, const QString& where);
@@ -341,7 +338,9 @@ private:
 
 private:
     QTimer m_MatchItemTimer;
-    QList<ScRecord> m_AddQueue;
+    std::deque<ScRecord> m_AddQueueRecords;
+    std::deque<qint64> m_AddQueueUrlShareIds;
+    std::deque<int> m_AddQueueStartOffsets;
     QThread m_WorkerThread;
     QThread m_DatabaseStoreQueueThread;
     QNetworkAccessManager* m_Manager;
@@ -359,6 +358,8 @@ private:
     int m_SuspendedVodsChangedEventCount;
     int m_MaxConcurrentMetaDataDownloads;
     int m_AddCounter;
+    unsigned m_AddFront;
+    unsigned m_AddBack;
     QAtomicInt m_State;
     QSharedPointer<ScVodDataManagerState> m_SharedState;
     QVariantList m_VodDownloads;

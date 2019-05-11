@@ -390,6 +390,9 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     , m_State(State_Initializing)
     , m_SharedState(new ScVodDataManagerState)
 {
+    qRegisterMetaType<ScSqlParamList>("ScSqlParamList"); // for queueing
+
+
     m_Manager = new QNetworkAccessManager(this);
     connect(m_Manager, &QNetworkAccessManager::finished, this,
             &ScVodDataManager::requestFinished);
@@ -401,6 +404,8 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     m_SuspendedVodsChangedEventCount = 0;
     m_MaxConcurrentMetaDataDownloads = 4;
     m_AddCounter = 0;
+    m_AddFront = 0;
+    m_AddBack = 0;
 
     const auto databaseDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
 
@@ -819,19 +824,20 @@ ScVodDataManager::setupDatabase() {
         "    id INTEGER PRIMARY KEY,\n"
         "    type INTEGER NOT NULL,\n"
         "    length INTEGER NOT NULL DEFAULT 0,\n" // seconds
-        "    url TEXT NOT NULL,\n"
+        "    url TEXT,\n"
         "    video_id TEXT,\n"
         "    title TEXT,\n"
-        "    thumbnail_file_name TEXT\n"
+        "    thumbnail_file_name TEXT,\n"
+        "    UNIQUE(type, video_id, url)\n"
         ")\n",
 
         "CREATE TABLE IF NOT EXISTS vods (\n"
         "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
         "    side1_name TEXT COLLATE NOCASE,\n"
         "    side2_name TEXT COLLATE NOCASE,\n"
-        "    side1_race INTEGER,\n"
-        "    side2_race INTEGER,\n"
-        "    vod_url_share_id INTEGER,\n"
+        "    side1_race INTEGER NOT NULL,\n"
+        "    side2_race INTEGER NOT NULL,\n"
+        "    vod_url_share_id INTEGER NOT NULL,\n"
         "    event_name TEXT NOT NULL COLLATE NOCASE,\n"
         "    event_full_name TEXT NOT NULL,\n"
         "    season INTEGER NOT NULL,\n"
@@ -845,7 +851,7 @@ ScVodDataManager::setupDatabase() {
         "    match_number INTEGER NOT NULL,\n"
         "    stage_rank INTEGER NOT NULL,\n"
         "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
-        "    UNIQUE (event_name, game, match_date, match_name, match_number, season, stage_name, year) ON CONFLICT REPLACE\n"
+        "    UNIQUE (game, year, event_name, season, stage_name, match_date, match_name, match_number) ON CONFLICT REPLACE\n"
         ")\n",
 
 
@@ -872,18 +878,25 @@ ScVodDataManager::setupDatabase() {
         "    UNIQUE (url) ON CONFLICT IGNORE\n"
         ")\n",
 
-//        "CREATE INDEX IF NOT EXISTS vods_id ON vods (id)\n",
         // must have indices to have decent 'seen' query performance (80+ -> 8 ms)
-        "CREATE INDEX IF NOT EXISTS vods_game ON vods (game)\n",
-        "CREATE INDEX IF NOT EXISTS vods_year ON vods (year)\n",
-        "CREATE INDEX IF NOT EXISTS vods_season ON vods (season)\n",
-        "CREATE INDEX IF NOT EXISTS vods_event_name ON vods (event_name)\n",
-//        "CREATE INDEX IF NOT EXISTS vods_seen ON vods (seen)\n",
+//        "CREATE INDEX IF NOT EXISTS vods_game ON vods (game)\n",
+//        "CREATE INDEX IF NOT EXISTS vods_year ON vods (year)\n",
+//        "CREATE INDEX IF NOT EXISTS vods_season ON vods (season)\n",
+//        "CREATE INDEX IF NOT EXISTS vods_event_name ON vods (event_name)\n",
+        "CREATE INDEX IF NOT EXISTS vods_seen ON vods (seen)\n",
+
         // https://www.sqlite.org/foreignkeys.html#fk_indexes
         // suggested foreign key indices
         "CREATE INDEX IF NOT EXISTS vods_vod_url_share_id ON vods (vod_url_share_id)\n",
-        "CREATE INDEX IF NOT EXISTS vod_files_vod_url_share_id ON vod_files (vod_url_share_id)\n",
 
+
+
+
+
+        // unique performance
+        "CREATE INDEX IF NOT EXISTS vod_files_unique ON vod_files (vod_url_share_id, file_index)\n",
+        "CREATE INDEX IF NOT EXISTS vod_url_share_unique ON vod_url_share (type, video_id, url)\n",
+        "CREATE INDEX IF NOT EXISTS vods_unique ON vods (game, year, event_name, season, stage_name, match_date, match_name, match_number)\n",
 
 
         "CREATE VIEW IF NOT EXISTS offline_vods AS\n"
@@ -1436,9 +1449,9 @@ ScVodDataManager::hasRecord(const ScRecord& record, bool* _exists) {
 }
 
 void
-ScVodDataManager::addVods(QList<ScRecord> vods)
+ScVodDataManager::addVods(QVector<ScRecord> vods)
 {
-    m_AddQueue.append(vods);
+    m_AddQueueRecords.insert(m_AddQueueRecords.end(), vods.cbegin(), vods.cend());
 
     m_AddCounter += vods.size();
 
@@ -1451,90 +1464,8 @@ ScVodDataManager::addVods(QList<ScRecord> vods)
 void
 ScVodDataManager::addVodFromQueue()
 {
-    if (m_AddQueue.isEmpty()) {
-        if (m_AddCounter) {
-            auto value = m_AddCounter;
-            m_AddCounter = 0;
-            emit vodsAdded(value);
-        }
-        emit busyChanged();
-        return;
-    }
-
-    auto record = m_AddQueue.takeFirst();
-    if (Q_UNLIKELY(!record.isValid(ScRecord::ValidUrl))) {
-        qWarning() << "invalid url" << record;
-        --m_AddCounter;
-        resumeVodsChangedEvents();
-        emit processVodsToAdd();
-        return;
-    }
-
-    QSqlQuery q(m_Database);
-    QString cannonicalUrl, videoId;
-    int urlType, startOffset;
-    parseUrl(record.url, &cannonicalUrl, &videoId, &urlType, &startOffset);
-
-    if (UT_Unknown != urlType) {
-        static const QString sql = QStringLiteral("SELECT id FROM vod_url_share WHERE video_id=? AND type=?");
-        if (Q_UNLIKELY(!q.prepare(sql))) {
-            qCritical() << "failed to prepare query" << q.lastError();
-            --m_AddCounter;
-            resumeVodsChangedEvents();
-            emit processVodsToAdd();
-            return;
-        }
-
-        q.addBindValue(videoId);
-        q.addBindValue(urlType);
-
-        if (Q_UNLIKELY(!q.exec())) {
-            qCritical() << "failed to exec" << q.lastError();
-            --m_AddCounter;
-            resumeVodsChangedEvents();
-            emit processVodsToAdd();
-            return;
-        }
-
-        if (q.next()) {
-            auto urlShareId = qvariant_cast<qint64>(q.value(0));
-            insertVod(record, urlShareId, startOffset);
-        } else {
-            static const QString VodUrlShareInsert = QStringLiteral("INSERT INTO vod_url_share (video_id, url, type) VALUES (?, ?, ?)");
-            auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
-            m_PendingDatabaseStores.insert(tid, [=] (qint64 urlShareId, bool error) {
-                if (Q_UNLIKELY(error)) {
-                    --m_AddCounter;
-                    resumeVodsChangedEvents();
-                    emit processVodsToAdd();
-                } else {
-                    insertVod(record, urlShareId, startOffset);
-                }
-            });
-            emit startProcessDatabaseStoreQueue(tid, VodUrlShareInsert, {videoId, cannonicalUrl, urlType});
-            emit startProcessDatabaseStoreQueue(tid, {}, {});
-        }
-    } else {
-        static const QString VodUrlShareInsert = QStringLiteral("INSERT INTO vod_url_share (url, type) VALUES (?, ?)");
-        auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
-        m_PendingDatabaseStores.insert(tid, [=] (qint64 urlShareId, bool error) {
-            if (Q_UNLIKELY(error)) {
-                --m_AddCounter;
-                resumeVodsChangedEvents();
-                emit processVodsToAdd();
-            } else {
-                insertVod(record, urlShareId, startOffset);
-            }
-        });
-        emit startProcessDatabaseStoreQueue(tid, VodUrlShareInsert, { record.url, urlType});
-        emit startProcessDatabaseStoreQueue(tid, {}, {});
-    }
-}
-
-void
-ScVodDataManager::insertVod(const ScRecord& record, qint64 urlShareId, int startOffset)
-{
-    static const QString sql = QStringLiteral(
+    static const QString VodUrlShareInsert = QStringLiteral("INSERT OR IGNORE INTO vod_url_share (video_id, url, type) VALUES (?, ?, ?)");
+    static const QString VodInsert = QStringLiteral(
                 "INSERT INTO vods (\n"
                 "   event_name,\n"
                 "   event_full_name,\n"
@@ -1554,32 +1485,128 @@ ScVodDataManager::insertVod(const ScRecord& record, qint64 urlShareId, int start
                 "   stage_rank\n"
                 ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n");
 
-    auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
-    m_PendingDatabaseStores.insert(tid, [=] (qint64 /*vodId*/, bool error) {
-        m_AddCounter -= error;
-        resumeVodsChangedEvents();
-        emit processVodsToAdd();
-    });
-    emit startProcessDatabaseStoreQueue(tid, sql, {
-                                            record.eventName,
-                                            record.eventFullName,
-                                            record.isValid(ScRecord::ValidSeason) ? record.season : 1,
-                                            record.isValid(ScRecord::ValidGame) ? record.game : -1,
-                                            record.year,
-                                            record.stage,
-                                            record.matchName,
-                                            record.matchDate,
-                                            record.side1Name,
-                                            record.side2Name,
-                                            record.side1Race,
-                                            record.side2Race,
-                                            urlShareId,
-                                            startOffset,
-                                            record.isValid(ScRecord::ValidMatchNumber) ? record.matchNumber : 1,
-                                            record.isValid(ScRecord::ValidStageRank) ? record.stageRank : -1
-                                        });
-    emit startProcessDatabaseStoreQueue(tid, {}, {});
+    auto anyQueued = false;
+    if (m_AddFront < m_AddQueueUrlShareIds.size()) {
+        anyQueued = true;
+
+        // batch add what we can so far
+        const auto itemsToRemove = m_AddQueueUrlShareIds.size() - m_AddFront;
+        const auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
+        qDebug() << "queueing" << itemsToRemove << "vods for insert, transaction id" << tid;
+
+        for (size_t i = 0; i < itemsToRemove; ++i) {
+            auto index = m_AddFront + i;
+            auto urlShareId = m_AddQueueUrlShareIds[index];
+            if (urlShareId > 0) {
+                const auto& record = m_AddQueueRecords[index];
+                emit startProcessDatabaseStoreQueue(
+                            tid,
+                            VodInsert, {
+                                record.eventName,
+                                record.eventFullName,
+                                record.isValid(ScRecord::ValidSeason) ? record.season : 1,
+                                record.isValid(ScRecord::ValidGame) ? record.game : -1,
+                                record.year,
+                                record.stage,
+                                record.matchName,
+                                record.matchDate,
+                                record.side1Name,
+                                record.side2Name,
+                                record.side1Race,
+                                record.side2Race,
+                                urlShareId,
+                                m_AddQueueStartOffsets[index],
+                                record.isValid(ScRecord::ValidMatchNumber) ? record.matchNumber : 1,
+                                record.isValid(ScRecord::ValidStageRank) ? record.stageRank : -1
+                            });
+            }
+        }
+
+        m_AddFront = m_AddQueueUrlShareIds.size();
+
+        m_PendingDatabaseStores.insert(tid, [=] (qint64 /*rows*/, bool error) {
+
+            m_AddQueueRecords.erase(m_AddQueueRecords.begin(), m_AddQueueRecords.begin() + itemsToRemove);
+            m_AddQueueUrlShareIds.erase(m_AddQueueUrlShareIds.begin(), m_AddQueueUrlShareIds.begin() + itemsToRemove);
+            m_AddQueueStartOffsets.erase(m_AddQueueStartOffsets.begin(), m_AddQueueStartOffsets.begin() + itemsToRemove);
+            m_AddFront -= itemsToRemove;
+            m_AddBack -= itemsToRemove;
+
+
+            if (Q_UNLIKELY(error)) {
+                m_AddCounter -= itemsToRemove;
+            } else {
+                qDebug() << itemsToRemove << "vods inserted, transaction id" << tid;
+                emit vodsChanged(); // show some vods
+            }
+
+            emit processVodsToAdd(); // keep going
+        });
+
+        emit startProcessDatabaseStoreQueue(tid, {}, {});
+    }
+
+    if (m_AddQueueRecords.size()) {
+        if (m_AddBack < m_AddQueueRecords.size()) {
+            anyQueued = true;
+
+            QString cannonicalUrl, videoId;
+            int urlType, startOffset;
+
+            for (; m_AddBack < m_AddQueueRecords.size(); ++m_AddBack) {
+                const auto& record = m_AddQueueRecords[m_AddBack];
+
+                if (Q_LIKELY(record.isValid(ScRecord::ValidUrl))) {
+
+                    parseUrl(record.url, &cannonicalUrl, &videoId, &urlType, &startOffset);
+                    m_AddQueueStartOffsets.push_back(startOffset);
+
+                    auto emitEvent = m_AddBack + 1 == m_AddQueueRecords.size();
+
+                    auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
+                    m_PendingDatabaseStores.insert(tid, [=] (qint64 urlShareId, bool error) {
+                        if (Q_UNLIKELY(error)) {
+                            --m_AddCounter;
+                            resumeVodsChangedEvents();
+                            m_AddQueueUrlShareIds.push_back(-1);
+                        } else {
+                            m_AddQueueUrlShareIds.push_back(urlShareId);
+                        }
+
+                        if (emitEvent) {
+                            // kick off new round
+                            emit processVodsToAdd();
+                        }
+                    });
+                    emit startProcessDatabaseStoreQueue(
+                                tid,
+                                VodUrlShareInsert,
+                                {
+                                    (UT_Unknown == urlType ? QVariant() : QVariant::fromValue(videoId)),
+                                    (UT_Unknown == urlType ? record.url : QVariant()),
+                                    urlType
+                                });
+                    emit startProcessDatabaseStoreQueue(tid, {}, {});
+                } else {
+                    qWarning() << "invalid url" << record;
+                    --m_AddCounter;
+                    resumeVodsChangedEvents();
+                    m_AddQueueUrlShareIds.push_back(-1);
+                    m_AddQueueStartOffsets.push_back(0);
+                }
+            }
+        }
+    }
+
+    if (!anyQueued) {
+        auto value = m_AddCounter;
+        m_AddCounter = 0;
+        resumeVodsChangedEvents(value);
+        emit vodsAdded(value);
+        emit busyChanged();
+    }
 }
+
 
 int
 ScVodDataManager::fetchMetaData(qint64 urlShareId, const QString& url, bool download) {
@@ -1826,10 +1853,11 @@ ScVodDataManager::suspendVodsChangedEvents(int count) {
 }
 
 void
-ScVodDataManager::resumeVodsChangedEvents()
+ScVodDataManager::resumeVodsChangedEvents(int count)
 {
+    m_SuspendedVodsChangedEventCount -= count;
 
-    if (--m_SuspendedVodsChangedEventCount == 0) {
+    if (m_SuspendedVodsChangedEventCount == 0) {
         emit vodsChanged();
         emit busyChanged();
     } else if (m_SuspendedVodsChangedEventCount < 0) {
@@ -1975,8 +2003,9 @@ ScVodDataManager::fetchSqlPatches() {
 }
 
 bool
-ScVodDataManager::busy() const {
-    return m_SuspendedVodsChangedEventCount > 0 || !m_AddQueue.isEmpty();
+ScVodDataManager::busy() const
+{
+    return m_SuspendedVodsChangedEventCount > 0 || !m_AddQueueRecords.empty();
 }
 
 QString
@@ -2717,6 +2746,41 @@ ScVodDataManager::updateSql7(QSqlQuery& q, const char*const* createSql, size_t c
         // Somehow this table is still around
         "DROP TABLE IF EXISTS vod_file_ref",
 
+        // drop any old index
+        "DROP INDEX IF EXISTS vods_game\n",
+        "DROP INDEX IF EXISTS vods_year\n",
+        "DROP INDEX IF EXISTS vods_season\n",
+        "DROP INDEX IF EXISTS vods_event_name\n",
+        "DROP INDEX IF EXISTS vods_seen\n",
+        "DROP INDEX IF EXISTS vod_thumbnails_url\n",
+        "DROP INDEX IF EXISTS vod_url_share_video_id\n",
+        "DROP INDEX IF EXISTS vod_url_share_type\n",
+
+
+
+        "CREATE TABLE vods2 (\n"
+        "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+        "    side1_name TEXT COLLATE NOCASE,\n"
+        "    side2_name TEXT COLLATE NOCASE,\n"
+        "    side1_race INTEGER NOT NULL,\n"
+        "    side2_race INTEGER NOT NULL,\n"
+        "    vod_url_share_id INTEGER INTEGER NOT NULL,\n"
+        "    event_name TEXT NOT NULL COLLATE NOCASE,\n"
+        "    event_full_name TEXT NOT NULL,\n"
+        "    season INTEGER NOT NULL,\n"
+        "    stage_name TEXT NOT NULL COLLATE NOCASE,\n"
+        "    match_name TEXT NOT NULL,\n"
+        "    match_date INTEGER NOT NULL,\n"
+        "    game INTEGER NOT NULL,\n"
+        "    year INTEGER NOT NULL,\n"
+        "    offset INTEGER NOT NULL,\n"
+        "    seen INTEGER DEFAULT 0,\n"
+        "    match_number INTEGER NOT NULL,\n"
+        "    stage_rank INTEGER NOT NULL,\n"
+        "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
+        "    UNIQUE (game, year, event_name, season, stage_name, match_date, match_name, match_number) ON CONFLICT REPLACE\n"
+        ")\n",
+
         "CREATE TABLE vod_files2 (\n"
         "    vod_url_share_id INTEGER,\n"
         "    width INTEGER NOT NULL,\n"
@@ -2758,12 +2822,16 @@ ScVodDataManager::updateSql7(QSqlQuery& q, const char*const* createSql, size_t c
         "    id INTEGER PRIMARY KEY,\n"
         "    type INTEGER NOT NULL,\n"
         "    length INTEGER NOT NULL DEFAULT 0,\n" // seconds
-        "    url TEXT NOT NULL,\n"
+        "    url TEXT,\n"
         "    video_id TEXT,\n"
         "    title TEXT,\n"
-        "    thumbnail_file_name TEXT\n"
+        "    thumbnail_file_name TEXT,\n"
+        "    UNIQUE(type, video_id, url)\n"
         ")\n",
-        "INSERT INTO vod_url_share2 (\n"
+
+        "UPDATE vod_url_share SET url='' WHERE type!=0\n",
+
+        "INSERT OR IGNORE INTO vod_url_share2 (\n"
         "   id,\n"
         "   type,\n"
         "   length,\n"
@@ -2784,9 +2852,83 @@ ScVodDataManager::updateSql7(QSqlQuery& q, const char*const* createSql, size_t c
         "   vod_url_share u\n"
         "LEFT JOIN vod_thumbnails t ON u.vod_thumbnail_id=t.id\n",
 
+        // remove rows migrated from source table
+        "DELETE FROM vod_url_share WHERE id IN (SELECT id FROM vod_url_share2)\n",
+
+        // create table to map those ids in source table that don't have a row in
+        // vod_url_share2
+        "CREATE TABLE url_share_id_mapping (\n"
+        "    old INTEGER,\n"
+        "    new INTEGER\n"
+        ")\n",
+
+        // copy all ids from new table
+        "INSERT INTO url_share_id_mapping (old, new)\n"
+        "   SELECT id, id FROM vod_url_share2\n",
+
+        // find ids from old table by matching video_id/url
+        "INSERT INTO url_share_id_mapping (old, new)\n"
+        "   SELECT u.id, u2.id\n"
+        "   FROM vod_url_share2 u2, vod_url_share u\n"
+        "   WHERE u.video_id=u2.video_id OR u.url=u2.url",
+
+        // finally fill in new vods table
+        "   INSERT OR IGNORE INTO vods2 (\n"
+        "       id,\n"
+        "       side1_name,\n"
+        "       side2_name,\n"
+        "       side1_race,\n"
+        "       side2_race,\n"
+        "       vod_url_share_id,\n"
+        "       event_name,\n"
+        "       event_full_name,\n"
+        "       season,\n"
+        "       stage_name,\n"
+        "       match_name,\n"
+        "       match_date,\n"
+        "       game,\n"
+        "       year,\n"
+        "       offset,\n"
+        "       seen,\n"
+        "       match_number,\n"
+        "       stage_rank\n"
+        "   )\n"
+        "   SELECT\n"
+        "       id,\n"
+        "       side1_name,\n"
+        "       side2_name,\n"
+        "       side1_race,\n"
+        "       side2_race,\n"
+        "       url_share_id_mapping.new,\n"
+        "       event_name,\n"
+        "       event_full_name,\n"
+        "       season,\n"
+        "       stage_name,\n"
+        "       match_name,\n"
+        "       match_date,\n"
+        "       game,\n"
+        "       year,\n"
+        "       offset,\n"
+        "       seen,\n"
+        "       match_number,\n"
+        "       stage_rank\n"
+        "   FROM vods INNER JOIN url_share_id_mapping\n"
+        "       ON vods.vod_url_share_id=url_share_id_mapping.old\n",
+
         "DROP TABLE vod_url_share\n",
-        "ALTER TABLE vod_url_share2 RENAME TO vod_url_share\n",
         "DROP TABLE vod_thumbnails\n",
+        "DROP TABLE vods\n",
+        "DROP TABLE url_share_id_mapping\n",
+        "ALTER TABLE vod_url_share2 RENAME TO vod_url_share\n",
+        "ALTER TABLE vods2 RENAME TO vods\n",
+
+        // delete entries from recently watched that have become invalid
+        "DELETE FROM recently_watched\n"
+        "WHERE vod_id IS NOT NULL AND vod_id NOT IN (SELECT id FROM vods)\n",
+
+
+
+
         "DROP VIEW offline_vods",
         "DROP VIEW url_share_vods",
         "PRAGMA foreign_key_check",
@@ -3148,7 +3290,7 @@ ScVodDataManager::deleteVods(const QString& where)
         auto thumbnailsDeleted = deleteThumbnailsWhere(transactionId, whereClause);
         qDebug() << "deleted" << thumbnailsDeleted << "thumbnail entries";
 
-        QVariantList args = { urlShareId };
+        ScSqlParamList args = { urlShareId };
         emit startProcessDatabaseStoreQueue(transactionId, DeleteSql, args);
 //        if (!q.prepare(deleteSql)) {
 //            qCritical() << "failed to prepare query" << q.lastError();
@@ -3172,7 +3314,7 @@ ScVodDataManager::deleteVods(const QString& where)
     }
 
     // in case the url_share_id persists still remove affected vods
-    emit startProcessDatabaseStoreQueue(transactionId, QStringLiteral("DELETE FROM vods %1").arg(where), QVariantList());
+    emit startProcessDatabaseStoreQueue(transactionId, QStringLiteral("DELETE FROM vods %1").arg(where), {});
 
 
     m_PendingDatabaseStores.insert(transactionId, [=] (qint64, bool error) {
@@ -3548,4 +3690,17 @@ ScVodDataManager::sqlEscapeLiteral(QString value)
     value.replace(QChar('\''), QStringLiteral("''"));
     value.replace(QChar(';'), QString());
     return value;
+}
+
+QString
+ScVodDataManager::getUrl(int type, const QString& videoId)
+{
+    switch (type) {
+    case UT_Youtube:
+        return QStringLiteral("https://www.youtube.com/watch?v=") + videoId;
+    case UT_Twitch:
+        return QStringLiteral("https://player.twitch.tv/?video=") + videoId;
+    default:
+        return QString();
+    }
 }

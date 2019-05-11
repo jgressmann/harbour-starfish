@@ -28,8 +28,6 @@
 
 #include <QObject>
 #include <QDate>
-#include <QMutex>
-#include <QRunnable>
 #include <QNetworkAccessManager>
 
 class QNetworkAccessManager;
@@ -96,7 +94,7 @@ signals:
     void progressDescriptionChanged();
     void progressIndeterminateChanged();
     void canDownloadNewChanged();
-    void vodsAvailable(QList<ScRecord> vods);
+    void vodsAvailable(QVector<ScRecord> vods);
 
 private slots:
     void onRequestFinished(QNetworkReply* reply);
@@ -112,8 +110,7 @@ private slots:
 private:
     void setStatus(Status value);
     void setError(Error value);
-    bool loadFromXml(const QByteArray& xml, QList<ScEvent>* events);
-    bool loadFromXml(const QByteArray& xml, QList<ScRecord>* records);
+    bool loadFromXml(const QByteArray& xml, QVector<ScRecord>* records);
     void setProgress(qreal value);
     void setProgressDescription(const QString& value);
     void _downloadNew();
@@ -132,7 +129,7 @@ private:
 
 private:
     QNetworkAccessManager m_NetworkAccessManager;
-    QList<QString> m_YearUrls;
+    QVector<QString> m_YearUrls;
     ScVodScraper* m_Scraper;
     ScVodDataManager* m_DataManager;
     QNetworkReply* m_Reply;

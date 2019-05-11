@@ -40,7 +40,7 @@ public:
     explicit Sc2LinksDotCom(QObject *parent = Q_NULLPTR);
 
 public: //
-    virtual QList<ScRecord> vods() const { return m_Vods; }
+    virtual QVector<ScRecord> vods() const { return m_Vods; }
 
 
 protected:
@@ -68,8 +68,8 @@ private:
 
 
 private:
-    QList<ScRecord> m_Vods;
-    QList<ScEvent> m_Events;
+    QVector<ScRecord> m_Vods;
+    QVector<ScEvent> m_Events;
     QList<ScEvent> m_EventRequestQueue;
 
     QHash<QNetworkReply*, int> m_PendingRequests;

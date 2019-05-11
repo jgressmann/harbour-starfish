@@ -28,10 +28,13 @@
 #include <QSqlError>
 #include <QDebug>
 
-namespace {
-static const QString s_Begin = QStringLiteral("BEGIN");
-static const QString s_Commit = QStringLiteral("COMMIT");
-static const QString s_Rollback = QStringLiteral("ROLLBACK");
+//#define STARFISH_DEBUG_DB
+
+namespace
+{
+const QString s_Begin = QStringLiteral("BEGIN");
+const QString s_Commit = QStringLiteral("COMMIT");
+const QString s_Rollback = QStringLiteral("ROLLBACK");
 } // anon
 
 
@@ -59,23 +62,6 @@ ScDatabaseStoreQueue::ScDatabaseStoreQueue(const QString& databasePath, QObject*
     if (!scSetupWriteableConnection(m_Database)) {
         return;
     }
-
-//    if (!m_Query.exec(QStringLiteral("PRAGMA foreign_keys=ON"))) {
-//        qCritical("Failed to enable foreign_key on database connection: %s\n", qPrintable(m_Database.lastError().text()));
-//        return;
-//    }
-
-//    if (!m_Query.exec(QStringLiteral("PRAGMA foreign_keys"))) {
-//        qCritical("Could not query foreign_key setting: %s\n", qPrintable(m_Database.lastError().text()));
-//        return;
-//    }
-
-//    if (!m_Query.next()) {
-//        qCritical("Could not fetch result for foreign_key query: %s\n", qPrintable(m_Database.lastError().text()));
-//        return;
-//    }
-
-//    qDebug() << "foreign_keys" << m_Query.value(0).toInt();
 }
 
 int ScDatabaseStoreQueue::getToken()
@@ -92,7 +78,7 @@ int ScDatabaseStoreQueue::newTransactionId()
     return getToken();
 }
 
-void ScDatabaseStoreQueue::process(int transactionId, const QString& sql, const QVariantList& args)
+void ScDatabaseStoreQueue::process(int transactionId, const QString& sql, const ScSqlParamList& args)
 {
     processStatement(transactionId, sql, args);
 
@@ -117,14 +103,16 @@ void ScDatabaseStoreQueue::process(int transactionId, const QString& sql, const 
     }
 }
 
-void ScDatabaseStoreQueue::processStatement(int transactionId, const QString& sql, const QVariantList& args)
+void ScDatabaseStoreQueue::processStatement(int transactionId, const QString& sql, const ScSqlParamList& args)
 {
     if (InvalidToken == m_LastTransactionId) { // no active transaction
         auto it = m_IncompleteTransactions.find(transactionId);
         if (it == m_IncompleteTransactions.end()) { // set as active transaction
             m_LastTransactionId = transactionId;
 
-            if (m_Query.exec(s_Begin)) {
+//            qDebug("starting transaction %d\n", transactionId);
+
+            if (Q_LIKELY(m_Query.exec(s_Begin))) {
 #if !defined(QT_NO_DEBUG) && defined(STARFISH_DEBUG_DB)
                 qDebug("%s\n", qPrintable(s_Begin));
 #endif
@@ -144,12 +132,14 @@ void ScDatabaseStoreQueue::processStatement(int transactionId, const QString& sq
 
     if (m_LastTransactionId == transactionId) {
         if (sql.isEmpty()) { // end transaction guard
-            if (m_Query.exec(s_Commit)) {
+//            qDebug("committing transaction %d\n", transactionId);
+            if (Q_LIKELY(m_Query.exec(s_Commit))) {
                 emit completed(m_LastTransactionId, getInsertIdOrAffectedRows(), 0, QString());
 #if !defined(QT_NO_DEBUG) && defined(STARFISH_DEBUG_DB)
                 qDebug("%s\n", qPrintable(s_Commit));
 #endif
             } else {
+                qDebug() << "commit failed" << m_Query.lastError().number() << m_Query.lastError().databaseText();
                 emit completed(m_LastTransactionId, getInsertIdOrAffectedRows(), m_Query.lastError().number(), m_Query.lastError().databaseText());
             }
 
@@ -157,26 +147,27 @@ void ScDatabaseStoreQueue::processStatement(int transactionId, const QString& sq
 
             m_LastTransactionId = InvalidToken;
         } else {
-            if (m_Query.prepare(sql)) {
+            if (Q_LIKELY(m_Query.prepare(sql))) {
                 auto beg = args.cbegin();
                 auto end = args.cend();
                 for (auto it = beg; it != end; ++it) {
                     m_Query.addBindValue(*it);
                 }
-                if (m_Query.exec()) {
+
+                if (Q_LIKELY(m_Query.exec())) {
 #if !defined(QT_NO_DEBUG) && defined(STARFISH_DEBUG_DB)
                     qDebug("%s\n", qPrintable(m_Query.executedQuery()));
                     for (auto i = 0; i < args.size(); ++i) {
                         qDebug("%d. %s\n", i, qPrintable(args[i].toString()));
                     }
 #endif
-                    //emit completed(t.token, getInsertIdOrAffectedRows(), 0, QString());
                 } else {
-                    qDebug() << "failed" << sql;
+                    qDebug() << "exec failed" << sql << m_Query.lastError().number() << m_Query.lastError().databaseText();
                     emit completed(transactionId, getInsertIdOrAffectedRows(), m_Query.lastError().number(), m_Query.lastError().databaseText());
                     abort();
                 }
             } else {
+                qDebug() << "prepare failed" << sql << m_Query.lastError().number() << m_Query.lastError().databaseText();
                 emit completed(transactionId, getInsertIdOrAffectedRows(), m_Query.lastError().number(), m_Query.lastError().databaseText());
                 abort();
             }
@@ -184,14 +175,13 @@ void ScDatabaseStoreQueue::processStatement(int transactionId, const QString& sq
     } else { // transaction interleaving
         auto it = m_IncompleteTransactions.find(transactionId);
         if (it == m_IncompleteTransactions.end()) {
-            it = m_IncompleteTransactions.insert(transactionId, QList<SqlData>());
+            it = m_IncompleteTransactions.insert(transactionId, {});
         }
 
         it.value().append({ sql, args, transactionId });
 
         if (sql.isEmpty()) { // end of transaction
-            m_CompleteTransactions.append(QList<SqlData>());
-            m_CompleteTransactions.last().swap(it.value());
+            m_CompleteTransactions.append(it.value());
             m_IncompleteTransactions.erase(it);
         }
     }

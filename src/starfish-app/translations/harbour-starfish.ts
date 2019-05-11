@@ -1013,37 +1013,37 @@
         <translation>Fetching new VODs</translation>
     </message>
     <message id="ScVodDatabaseDownloader-fetching-meta-data">
-        <location filename="../ScVodDatabaseDownloader.cpp" line="593"/>
+        <location filename="../ScVodDatabaseDownloader.cpp" line="571"/>
         <source>Fetching meta data</source>
         <translation>Fetching meta data</translation>
     </message>
     <message id="ScVodDatabaseDownloader-fetching-year">
-        <location filename="../ScVodDatabaseDownloader.cpp" line="598"/>
+        <location filename="../ScVodDatabaseDownloader.cpp" line="576"/>
         <source>Fetching VODs for %1</source>
         <translation>Fetching VODs for %1</translation>
     </message>
     <message id="ScVodDatabaseDownloader-adding-vods">
-        <location filename="../ScVodDatabaseDownloader.cpp" line="608"/>
+        <location filename="../ScVodDatabaseDownloader.cpp" line="586"/>
         <source>Adding VODs</source>
         <translation>Adding VODs</translation>
     </message>
     <message id="ScVodDataManager-misc-label">
-        <location filename="../ScVodDataManager.cpp" line="1063"/>
+        <location filename="../ScVodDataManager.cpp" line="1076"/>
         <source>Misc</source>
         <translation>Misc</translation>
     </message>
     <message id="ScVodDataManager-game-label">
-        <location filename="../ScVodDataManager.cpp" line="1072"/>
+        <location filename="../ScVodDataManager.cpp" line="1085"/>
         <source>game</source>
         <translation>game</translation>
     </message>
     <message id="ScVodDataManager-year-label">
-        <location filename="../ScVodDataManager.cpp" line="1077"/>
+        <location filename="../ScVodDataManager.cpp" line="1090"/>
         <source>year</source>
         <translation>year</translation>
     </message>
     <message id="ScVodDataManager-event-label">
-        <location filename="../ScVodDataManager.cpp" line="1082"/>
+        <location filename="../ScVodDataManager.cpp" line="1095"/>
         <source>event</source>
         <translation>event</translation>
     </message>

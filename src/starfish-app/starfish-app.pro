@@ -37,6 +37,7 @@ HEADERS += \
     ScSqlVodModel.h \
     ScStopwatch.h \
     ScDatabaseStoreQueue.h \
+    ScDatabaseStoreQueueTypes.h \
     ScDatabase.h \
     ScRecentlyWatchedVideos.h \
     ScMatchItem.h \

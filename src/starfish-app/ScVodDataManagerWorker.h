@@ -28,6 +28,7 @@
 #include <QSharedPointer>
 #include "VMPlaylist.h"
 #include "ScVodman.h"
+#include "ScDatabaseStoreQueueTypes.h"
 #include "conq.h"
 #include <functional>
 
@@ -37,7 +38,7 @@ class QNetworkAccessManager;
 class VMVodFileDownload;
 class ScVodDataManagerState;
 
-using ScVodIdList = QList<qint64>;
+using ScVodIdList = QVector<qint64>;
 
 struct ScVodFileFetchProgress
 {
@@ -108,7 +109,7 @@ signals:
     void seenAvailable(qint64 rowid, qreal seen);
     void vodEndAvailable(qint64 rowid, int endOffsetS);
     void vodDownloadsChanged(ScVodIdList ids);
-    void startProcessDatabaseStoreQueue(int transactionId, QString sql, QVariantList args);
+    void startProcessDatabaseStoreQueue(int transactionId, QString sql, ScSqlParamList args);
 
 public slots:
     void process();
