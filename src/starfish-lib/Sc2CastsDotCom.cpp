@@ -663,11 +663,15 @@ Sc2CastsDotCom::makePageUrl(int page) const {
 void
 Sc2CastsDotCom::pruneInvalidVods() {
     // remove invalid vods
-    for (int i = 0; i < m_Vods.size(); ++i) {
-        if (!m_Vods[i].valid) {
-            m_Vods[i] = m_Vods[m_Vods.size()-1];
+    for (int i = 0; i < m_Vods.size(); ) {
+        // check for url instead of != 0 to remove those
+        // entries that were added during level 0 parsing but never
+        // got to level 1.
+        if (m_Vods[i].isValid(ScRecord::ValidUrl)) {
+            ++i;
+        } else {
+            m_Vods[i] = m_Vods.back();
             m_Vods.pop_back();
-            --i;
         }
     }
 }
