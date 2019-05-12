@@ -47,6 +47,9 @@ Requires:   nemo-qml-plugin-configuration-qt5
 %{_datadir}/%{name}/icons.json.gz
 %{_datadir}/%{name}/classifier.json.gz
 %{_datadir}/%{name}/COPYING
+%{_datadir}/%{name}/COPYING.brotli
+%{_datadir}/%{name}/COPYING.vodman
+%{_datadir}/%{name}/brotli.bin
 %{_datadir}/%{name}/icons/*
 %{_datadir}/%{name}/translations/*
 
