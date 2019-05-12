@@ -398,107 +398,6 @@ Sc2CastsDotCom::parseLevel0(QNetworkReply* reply) {
         }
         m_CurrentPage = -1;
     }
-
-
-//    // Multiple Players vs Multiple Players (Games in 1 Video) - 2018 Starcraft 1 ASL S5 - Round of 16 / cast by: Artosis & tasteless
-//    //<div style="padding-top: 10px;" class="headline_mobile">Yesterday</div>
-//    // <h2><span class="play_series_mobile"><a href="/cast23335-Multiple-Players-vs-Multiple-Players-Games-in-1-Video-2018-Starcraft-1-ASL-S5-Round-of-16"><span style="color:#cccccc;" class="onlymobile inline">&nbsp;</span><b >Multiple Players</b> vs <b >Multiple Players</b><span class="nomobile"> (Games in 1 Video)</span></a></span></h2>
-//    // <h3><a href="/event980-2018-Starcraft-1-ASL-S5"><span class="event_name"  style="color:#brown">2018 Starcraft 1 ASL S5</span></a></h3>&nbsp;-&nbsp;<h3>
-//    // <h3><span class="round_name">Round of 16</span></h3>
-
-//    const QRegExp dateGroupRegex("<div\\s+(?:\\s*[^>]*)*class\\s*=\\s*['\"]headline_mobile['\"](?:\\s*[^>]*)*>([^>]+)</div>");
-//    Q_ASSERT(dateGroupRegex.isValid());
-//    const QRegExp matchHeaderRegex("<div\\s+(?:\\s*[^>]*)*class=['\"]latest_series['\"](?:\\s*[^>]*)*>");
-//    Q_ASSERT(matchHeaderRegex.isValid());
-//    QRegExp playersRegex("<h2>.*<a\\s+href=['\"]([^'\"]+)['\"]\\s*>(.*)</h2>");
-//    playersRegex.setMinimal(true);
-//    Q_ASSERT(playersRegex.isValid());
-
-//    const QRegExp eventNameRegex("<span\\s+class=['\"]event_name['\"](?:\\s*[^>]*)*>([^>]*)</span>");
-//    Q_ASSERT(eventNameRegex.isValid());
-//    const QRegExp stageNameRegex("<span\\s+class=['\"]round_name['\"](?:\\s*[^>]*)*>([^>]*)</span>");
-//    Q_ASSERT(stageNameRegex.isValid());
-
-//    const QRegExp videoFormatRegex("\\([^)]+\\s+\\d+\\s+video\\s*\\)", Qt::CaseInsensitive);
-//    Q_ASSERT(videoFormatRegex.isValid());
-
-//    const QRegExp racesRegex("\\[[^\\]]+\\]");
-//    Q_ASSERT(racesRegex.isValid());
-
-
-
-//    bool any = false;
-//    ScRecord record;
-//    int lastDateGroupIndex = -1;
-//    QString lastDate;
-//    for (int start = 0, found = dateGroupRegex.indexIn(soup, start);
-//         found != -1;
-//         lastDateGroupIndex = found,
-//         start = found + dateGroupRegex.cap(0).length(),
-//         found = dateGroupRegex.indexIn(soup, start)) {
-
-//        any = true;
-
-//        if (lastDateGroupIndex != -1) {
-//            auto matchesSoup = soup.mid(lastDateGroupIndex, found - lastDateGroupIndex);
-
-////            qDebug("%s\n", qPrintable(matchesSoup));
-//            int lastMatchHeaderIndex = -1;
-//            for (int start2 = 0, found2 = matchHeaderRegex.indexIn(matchesSoup, start2);
-//                 found2 != -1;
-//                 lastMatchHeaderIndex = found2,
-//                 start2 = found2 + matchHeaderRegex.cap(0).length(),
-//                 found2 = matchHeaderRegex.indexIn(matchesSoup, start2)) {
-
-//                if (lastMatchHeaderIndex != -1) {
-//                    auto matchSoup = matchesSoup.mid(lastMatchHeaderIndex, found2 - lastMatchHeaderIndex);
-
-////                    qDebug("%s\n", qPrintable(matchSoup));
-//                    QString event;
-//                    QString stage;
-//                    QString side1, side2;
-//                    QString matchUrl;
-
-//                    if (eventNameRegex.indexIn(matchesSoup) >= 0) {
-//                        event = eventNameRegex.cap(1);
-//                    }
-
-//                    if (stageNameRegex.indexIn(matchesSoup) >= 0) {
-//                        stage = stageNameRegex.cap(1);
-//                    }
-
-//                    if (playersRegex.indexIn(matchesSoup) >= 0) {
-//                        matchUrl = playersRegex.cap(1);
-//                        auto junk = playersRegex.cap(2);
-//                        junk.remove(tags);
-//                        junk.remove(videoFormatRegex);
-//                        junk.remove(racesRegex);
-//                        junk.replace(QStringLiteral("&nbsp;"), QString(" "));
-//                        auto sides = junk.split(QStringLiteral(" vs "));
-//                        side1 = sides[0].trimmed();
-//                        if (sides.size() > 1) {
-//                            side2 = sides[1].trimmed();
-//                        }
-//                    }
-
-//                    qDebug() << event << stage << side1 << side2 << matchUrl;
-//                }
-//            }
-//        }
-//    }
-
-//    if (any) {
-//        qDebug("%s\n", qPrintable(soup));
-//    } else {
-//        ++m_CurrentPage;
-//        QNetworkReply* reply = makeRequest(makePageUrl(m_CurrentPage));
-//        m_PendingRequests.insert(reply, 0);
-//        ++m_TotalUrlsToFetched;
-//        ++m_CurrentUrlsToFetched;
-//        m_CurrentPage = 0;
-//        setProgressDescription(QString::asprintf("Fetching page %d", m_CurrentPage));
-//        updateVodFetchingProgress();
-//    }
 }
 
 void
@@ -721,30 +620,6 @@ Sc2CastsDotCom::updateVodFetchingProgress() {
         setProgress(0);
     }
 }
-
-//void
-//Sc2CastsDotCom::_cancel(Cancelation cancelation) {
-//    qDebug() << "canceling level 0 fetches";
-
-//    switch (cancelation) {
-//    case Cancelation_Immediately:
-//        m_CurrentPage = -1;
-
-//        // aparently this causes replies to go to finished within this call, even
-//        // if called from dtor
-//        foreach (const auto& key, m_PendingRequests.keys()) {
-//            key->abort();
-//        }
-
-//        m_PendingRequests.clear();
-//        m_ReplyToRecordTable.clear();
-//        break;
-//    default:
-//        m_CurrentPage = -2; // cancel, but complete whatever is underway
-//        break;
-//    }
-
-//}
 
 void
 Sc2CastsDotCom::_cancel() {
