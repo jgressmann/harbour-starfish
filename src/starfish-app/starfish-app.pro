@@ -105,7 +105,8 @@ DISTFILES += qml/harbour-starfish.qml \
     translations/harbour-starfish-de.ts
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
-
+DEFINES += BROTLI_DIC_PATH="/usr/share/$${TARGET}/brotli.bin"
+DEFINES += BROTLI_EXTERNAL_DICTIONARY_DATA
 
 media.path = /usr/share/$${TARGET}/media
 media.files += media/sc2.png media/bw.png

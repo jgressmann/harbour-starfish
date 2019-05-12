@@ -26,10 +26,34 @@
 #include <QNetworkReply>
 #include <QDebug>
 
+#include <QFile>
+
 
 #include <brotli/decode.h>
+
 #include <zlib.h>
 #include <string.h>
+
+extern "C" BROTLI_COMMON_API void BrotliSetDictionaryData(const uint8_t* data);
+
+namespace
+{
+#ifdef BROTLI_EXTERNAL_DICTIONARY_DATA
+int LoadBrotliDictionary()
+{
+    static QByteArray s_Dictionary;
+    QFile f(QStringLiteral(QT_STRINGIFY(BROTLI_DIC_PATH)));
+    if (f.open(QIODevice::ReadOnly)) {
+        s_Dictionary = f.readAll();
+        BrotliSetDictionaryData(reinterpret_cast<const uint8_t*>(s_Dictionary.data()));
+        return 1;
+    }
+
+    return 0;
+}
+int s_BrotliDictionaryLoaded = LoadBrotliDictionary();
+#endif
+}
 
 QNetworkRequest
 Sc::makeRequest(const QUrl& url)
