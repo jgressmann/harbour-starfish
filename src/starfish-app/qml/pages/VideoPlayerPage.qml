@@ -56,6 +56,9 @@ Page {
     property bool _hasSource: _playlist ? _playlist.isValid : false
     property bool _paused: false
     property int _pauseCount: 0
+    property int _openCount: 0
+    property bool _pauseDueToStall: false
+    property bool _clickedToOpen: false
     property var openHandler
     readonly property bool closed: _closed
     property bool _closed: false
@@ -88,8 +91,9 @@ Page {
         interval: 10000
         onTriggered: {
             console.debug("stall timer expired")
+            _pauseDueToStall = true
             pause()
-            controlPanel.open = true
+            openControlPanel()
         }
     }
 
@@ -126,6 +130,11 @@ Page {
                     _grabFrameWhenReady = false
                     _grabFrame()
                 }
+                if (_pauseDueToStall) {
+                    _pauseDueToStall = false
+                    resume()
+                    closeControlPanel()
+                }
                 break
             case MediaPlayer.EndOfMedia:
                 console.debug("end of media")
@@ -134,7 +143,7 @@ Page {
                     _streamBasePositionS = _computeStreamBasePosition()
                     mediaplayer.source = _playlist.url(_currentUrlIndex)
                 } else {
-                    controlPanel.open = true
+                    openControlPanel()
                 }
                 break
             case MediaPlayer.Loaded:
@@ -142,7 +151,7 @@ Page {
                 break
             case MediaPlayer.InvalidMedia:
                 console.debug("invalid media")
-                controlPanel.open = true
+                openControlPanel()
                 break
             }
         }
@@ -264,16 +273,16 @@ Page {
 
         Rectangle {
             id: seekRectangle
-//            color: Theme.rgba(Theme.secondaryColor, 0.5)
             color: "white"
             width: Theme.horizontalPageMargin * 2 + seekLabel.width
             height: 2*Theme.fontSizeExtraLarge
             visible: false
             anchors.centerIn: parent
+            layer.enabled: true
+            radius: Theme.itemSizeSmall
 
             Label {
                 id: seekLabel
-                //color: Theme.primaryColor
                 color: "black"
                 text: "Sir Skipalot"
                 font.bold: true
@@ -368,11 +377,17 @@ Page {
                 default: {
                     if (!held) {
                         if (controlPanel.open) {
-                            controlPanel.open = false
+                            if (_clickedToOpen) {
+                                _clickedToOpen = false
+                                closeControlPanel()
+                            }
 //                            mediaplayer.play()
                         } else {
 //                            mediaplayer.pause()
-                            controlPanel.open = true
+                            if (!_clickedToOpen) {
+                                _clickedToOpen = true
+                                openControlPanel()
+                            }
                         }
                     }
                 } break
@@ -386,28 +401,11 @@ Page {
                 initialVolume = 0
             }
 
-//            onEntered: {
-//                console.debug("entered")
-//            }
-
-//            onExited: {
-//                console.debug("exited")
-//                e.accepted = true
-//            }
-
             onPressAndHold: function (e) {
                 console.debug("onPressAndHold")
                 e.accepted = true
                 held = true
             }
-
-//            onClicked: function (e) {
-//                console.debug("clicked")
-//                e.accepted = true
-
-//                seekRectangle.visible = false
-//                controlPanel.open = !controlPanel.open
-//            }
 
             function computePositionSeek(dx) {
                 var sign = dx < 0 ? -1 : 1
@@ -559,7 +557,7 @@ Page {
                                             break
                                         case MediaPlayer.EndOfMedia:
                                             if (_playlist.isValid && _currentUrlIndex >= 0 && _currentUrlIndex + 1 == _playlist.parts) {
-                                                controlPanel.open = false
+                                                closeControlPanel()
                                                 _startSeek = true
                                                 _seek(_playlist.startOffset * 1000)
                                                 mediaplayer.play()
@@ -758,6 +756,24 @@ Page {
             // after coming out of device lock
             videoOutputRectangle.visible = false
             videoOutputRectangle.visible = true
+        }
+    }
+
+    function openControlPanel() {
+        _openCount += 1
+        console.debug("open count="+ _openCount)
+        if (!controlPanel.open) {
+            console.debug("opening control pannel")
+            controlPanel.open = true
+        }
+    }
+
+    function closeControlPanel() {
+        _openCount -= 1
+        console.debug("open count="+ _openCount)
+        if (_openCount === 0 && controlPanel.open) {
+            console.debug("closing control panel")
+            controlPanel.open = false
         }
     }
 
