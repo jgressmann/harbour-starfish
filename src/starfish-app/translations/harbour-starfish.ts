@@ -974,8 +974,8 @@
         <translation>go go go</translation>
     </message>
     <message id="Sc2CastsDotCom-fetching-page">
-        <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="191"/>
-        <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="263"/>
+        <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="190"/>
+        <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="262"/>
         <source>Fetching page %1</source>
         <translation>Fetching page %1</translation>
     </message>

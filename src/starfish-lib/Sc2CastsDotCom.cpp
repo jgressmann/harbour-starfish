@@ -24,7 +24,6 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QRegExp>
-#include <QMutexLocker>
 #include <QUrl>
 #include <QUrlQuery>
 #include <QDateTime>
@@ -411,185 +410,199 @@ Sc2CastsDotCom::parseLevel0(QNetworkReply* reply)
 }
 
 void
-Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
-    auto index = m_ReplyToRecordTable.value(reply, -1);
+Sc2CastsDotCom::parseLevel1(QNetworkReply* reply)
+{
+    const auto index = m_ReplyToRecordTable.value(reply, -1);
     m_ReplyToRecordTable.remove(reply);
+    ScRecord* record = &m_Vods[index];
 
     auto response = Sc::decodeContent(reply);
     if (response.isEmpty()) {
+        record->valid = 0;
         return;
     }
 
     QString soup = QString::fromUtf8(response);
 
-//    qDebug() << index;
-    ScRecord& record = m_Vods[index];
-//    qDebug() << record;
+
 
     // <div class="vslabel"><img src="//sc2casts.com/images/races/z_50.png" width="50" height="50" alt="Zerg" title="Zerg" style="padding-left:3px;padding-right:3px;"><h1><a href="/player452-Leenock"><b>Leenock</b></a> vs <a href="/player3246-Elazer"><b>Elazer</b></a></h1><img src="//sc2casts.com/images/races/z_50.png" width="50" height="50" alt="Zerg" title="Zerg" style="padding-left:3px;padding-right:3px;"></div><div class="videomenu"><div class="fn_buttons"><a href="javascript:void(0)" title="Hide YouTube controls to avoid duration spoilers" class="toggle_button_off" onclick="showSignUp()"><img src="/images/controls/duration_off.png" width="16" height="16" style="vertical-align:middle" >Hide duration</a></div></div><span class="games_links2"><div class="video_player_window"><iframe id="yytplayer" type="text/html" width="860" height="453" src="https://www.youtube.com/embed/SbIKVMf-qIM?start=0&showinfo=0" frameborder="0" allowfullscreen class="ytmargin"></iframe></div></span></div><div class="infolabel"><h2>BO3 <span class="nomobile">in 1 video</span></h2> from <h2><a href="/event986-2018-GSL-Season-2-Code-S"><span class="event_name">2018 GSL Season 2 Code S</span></a></h2>&nbsp;<h2><span class="round_name">Group Stage</span></h2><span class="nomobile">&nbsp;- </span><span class="onlymobile"></span>Caster: <h2><a href="/caster60-Artosis-&-tasteless"><span class="caster_name">Artosis & tasteless</span></a></h2><span class="nomobile">&nbsp;- </span><span class="onlymobile"></span>Posted on:&nbsp;<span>Apr 19, 2018</span></div><br/><div id="tt" style="padding-left: 10px;"><table style="font-size: 12px;"><tr><td align="center"><a href="javascript:void(0);" onclick="javascript:setrating('1',23339)"><img src="//sc2casts.com/images/thumbs_up.png" border=0 title="Yea" align="absmiddle"/></a><br/>0</td><td>&nbsp;</td><td align="center"><a href="javascript:void(0);" onclick="javascript:setrating('-1',23339)"><img src="//sc2casts.com/images/thumbs_down.png" border=0 title="Nah" align="absmiddle"/></a><br/>0</td><td valign="middle" style="font-size: 12px;margin-left: 10px;"><span style="display:inline-block; margin-left: 10px;">Enjoyed this series? Please vote and help others discover great <!-- google_ad_section_start -->Starcraft<!-- google_ad_section_end --> casts!</span></td></tr></table></div>
 
     //<span class="event_name">2018 GSL Season 2 Code S</span></a></h2>&nbsp;<h2><span class="round_name">Group Stage</span>
 
+    // <div class="vslabel"><img src="//sc2casts.com/images/races/z_50.png" width="50" height="50" alt="Zerg" title="Zerg" style="padding-left:3px;padding-right:3px;"><h1><a href="/player3552-YoGo"><b>YoGo</b></a> vs <a href="/player3547-Funka"><b>Funka</b></a></h1><img src="//sc2casts.com/images/races/t_50.png" width="50" height="50" alt="Terran" title="Terran"></div><div class="videomenu"><div class="fn_buttons"><a href="javascript:void(0)" title="Turn On Continuous Play" class="toggle_button_off" onclick="showSignUp()"><img src="/images/controls/playlist_off.png" width="16" height="16" style="vertical-align:middle">Play all</a>&nbsp&nbsp;&nbsp;<a href="javascript:void(0)" title="Hide YouTube controls to avoid duration spoilers" class="toggle_button_off" onclick="showSignUp()"><img src="/images/controls/duration_off.png" width="16" height="16" style="vertical-align:middle" >Hide duration</a></div><span class="games_links2"><a href="javascript: void(0)" id="link1" onclick="javascript:toggleLayer2('g1', this)" class="selected">Game 1</a><a href="javascript: void(0)" id="link2" onclick="javascript:toggleLayer2('g2', this)">Game 2</a><a href="javascript: void(0)" id="link3" onclick="javascript:toggleLayer2('g3', this)">Game 3</a></span></div><div id="g1" class="video_player_window"><span class="games_links2"><div class="video_player_window"><iframe id="yytplayer" type="text/html" width="860" height="453" src="https://www.youtube.com/embed/3kGz1SK1mHc?start=0&showinfo=0" frameborder="0" allowfullscreen class="ytmargin"></iframe></div></span></div><div id="g2" style="display:none;" class="video_player_window"><span class="games_links2"><div class="video_player_window"><iframe id="yytplayer" type="text/html" width="860" height="453" src="https://www.youtube.com/embed/JxbwfV9qyW0?start=0&showinfo=0" frameborder="0" allowfullscreen class="ytmargin"></iframe></div></span></div><div id="g3" style="display:none;" class="video_player_window"><span class="games_links2"><div class="video_player_window"><iframe id="yytplayer" type="text/html" width="860" height="453" src="https://www.youtube.com/embed/aO9U4icbDWI?start=0&showinfo=0" frameborder="0" allowfullscreen class="ytmargin"></iframe></div></span></div></div><div class="infolabel"><h2>Best of 3</h2> from <h2><a href="/event1019-QLASH-Casters-Invitational"><span class="event_name">QLASH Casters Invitational</span></a></h2>&nbsp;<h2><span class="round_name">Group Stage</span></h2><span class="nomobile">&nbsp;- </span><span class="onlymobile"></span>Caster: <h2><a href="/caster751-ToD-&-Harstem"><span class="caster_name">ToD & Harstem</span></a></h2><span class="nomobile">&nbsp;- </span><span class="onlymobile"></span>Posted on:&nbsp;<span>Jan 05, 2019</span></div><br/><div id="tt" style="padding-left: 10px;"><table style="font-size: 12px;"><tr><td align="center"><a href="javascript:void(0);" onclick="javascript:setrating('1',24325)"><img src="//sc2casts.com/images/thumbs_up.png" border=0 title="Yea" align="absmiddle"/></a><br/>8</td><td>&nbsp;</td><td align="center"><a href="javascript:void(0);" onclick="javascript:setrating('-1',24325)"><img src="//sc2casts.com/images/thumbs_down.png" border=0 title="Nah" align="absmiddle"/></a><br/>1</td><td valign="middle" style="font-size: 12px;margin-left: 10px;"><span style="display:inline-block; margin-left: 10px;">Enjoyed this series? Please vote and help others discover great <!-- google_ad_section_start -->Starcraft<!-- google_ad_section_end --> casts!</span></td></tr></table></div>
 
 
-    if (vslabelContent.indexIn(soup) >= 0) {
-        auto content = vslabelContent.cap(1);
+    if (-1 == vslabelContent.indexIn(soup)) {
+        record->valid = 0;
+        qDebug("%s\n", qPrintable(soup));
+        return;
+    }
+
+    auto content = vslabelContent.cap(1);
 //        qDebug("%s\n", qPrintable(content));
 
-        QString race1, race2;
-        QString side1, side2;
-        QString event;
-        QString stage;
-//        QDate matchDate;
-        QString url;
+    QString race1, race2;
+    QString side1, side2;
+    QString event;
+    QString stage;
+    QStringList urls;
+    QUrl u;
 
-//        auto index = matchDateRegex.indexIn(content);
-//        if (index >= 0) {
-//            auto junk = matchDateRegex.cap(1);
-//            junk.remove(tags);
-//            junk.replace(QStringLiteral("&nbsp;"), QStringLiteral(" "));
+    auto iFrameMatchIndex = iFrameRegex.indexIn(content);
+    while (iFrameMatchIndex != -1) {
+        auto url = iFrameRegex.cap(1);
+        content.remove(iFrameRegex.cap(0));
+        iFrameMatchIndex = iFrameRegex.indexIn(content);
 
-//            matchDate = getDate(junk);
+        u.setUrl(url);
+        if (u.isValid()) {
+            if (u.isRelative()) {
+                if (u.host() == QStringLiteral("sc2casts.com") &&
+                    u.path() == QStringLiteral("/twitch/embed2")) {
+                    QUrlQuery q(u);
+                    int id;
+                    QString start;
+                    if (q.hasQueryItem(QStringLiteral("id"))) {
+                        id = q.queryItemValue(QStringLiteral("id")).toInt();
+                    }
+                    if (q.hasQueryItem(QStringLiteral("t"))) {
+                        start = q.queryItemValue(QStringLiteral("t"));
+                    }
 
-//            content.resize(index);
-//        }
+                    if (id) {
+                        url = QStringLiteral("https://player.twitch.tv/?video=v%1").arg(id);
 
-        if (iFrameRegex.indexIn(content) >= 0) {
-            url = iFrameRegex.cap(1);
-            content.remove(iFrameRegex.cap(0));
+                        if (!start.isEmpty()) {
+                            url += QStringLiteral("&time=") + start;
+                        }
+
+                        urls << url;
+                    }
+                }
+            } else {
+                urls << url;
+            }
         }
+    }
+
+    if (urls.isEmpty()) {
+        record->valid = 0;
+        qDebug("%s\n", qPrintable(reply->url().toString()));
+        qDebug("%s\n", qPrintable(content));
+        return;
+    }
 
 
-        if (eventNameRegex.indexIn(content) >= 0) {
-            event = eventNameRegex.cap(1);
-            content.remove(eventNameRegex.cap(0));
-        }
+    if (eventNameRegex.indexIn(content) >= 0) {
+        event = eventNameRegex.cap(1);
+        content.remove(eventNameRegex.cap(0));
+    }
 
-        if (stageNameRegex.indexIn(content) >= 0) {
-            stage = stageNameRegex.cap(1);
-            content.remove(stageNameRegex.cap(0));
-        }
+    if (stageNameRegex.indexIn(content) >= 0) {
+        stage = stageNameRegex.cap(1);
+        content.remove(stageNameRegex.cap(0));
+    }
 
-        index = raceRegex.indexIn(content);
-        if (index >= 0) {
-            race1 = raceRegex.cap(1);
+    auto raceMatchIndex = raceRegex.indexIn(content);
+    if (raceMatchIndex >= 0) {
+        race1 = raceRegex.cap(1);
+        content.remove(raceRegex.cap(0));
+        raceMatchIndex = raceRegex.indexIn(content, raceMatchIndex);
+        if (raceMatchIndex >= 0) {
+            race2 = raceRegex.cap(1);
             content.remove(raceRegex.cap(0));
-            index = raceRegex.indexIn(content, index);
-            if (index >= 0) {
-                race2 = raceRegex.cap(1);
-                content.remove(raceRegex.cap(0));
-            }
         }
+    }
 
-        index = playersRegex.indexIn(content);
-        if (index >= 0) {
-            auto playersContent = playersRegex.cap(1);
-            playersContent.remove(tags);
-            playersContent.replace(QStringLiteral("&nbsp;"), QStringLiteral(" "));
-            auto sides = playersContent.split(QStringLiteral(" vs "));
-            side1 = sides[0].trimmed();
-            if (sides.size() > 1) {
-                side2 = sides[1].trimmed();
-            }
+    auto playersMatchIndex = playersRegex.indexIn(content);
+    if (playersMatchIndex >= 0) {
+        auto playersContent = playersRegex.cap(1);
+        playersContent.remove(tags);
+        playersContent.replace(QStringLiteral("&nbsp;"), QStringLiteral(" "));
+        auto sides = playersContent.split(QStringLiteral(" vs "));
+        side1 = sides[0].trimmed();
+        if (sides.size() > 1) {
+            side2 = sides[1].trimmed();
+        }
 
 //            content.remove(playersRegex.cap(0));
-        }
+    }
 
 
 
 //        content.remove(tags);
 
 
-        if (!event.isEmpty()) {
-            record.valid |= ScRecord::ValidEventFullName;
-            record.eventFullName = event;
+    if (!event.isEmpty()) {
+        record->valid |= ScRecord::ValidEventFullName;
+        record->eventFullName = event;
+    }
+
+    if (!stage.isEmpty()) {
+        record->valid |= ScRecord::ValidStageName;
+        record->stage = stage;
+    }
+
+    if (!side1.isEmpty()) {
+        record->valid |= ScRecord::ValidSides;
+        record->side1Name = side1;
+        record->side2Name = side2;
+    }
+
+    if (!race1.isEmpty()) {
+        record->valid |= ScRecord::ValidRaces;
+        record->side1Race = getRace(race1);
+        record->side2Race = getRace(race2);
+    }
+
+
+
+
+    // first bw game in 2012
+    if (record->isValid(ScRecord::ValidYear) &&
+            !record->isValid(ScRecord::ValidGame) &&
+            record->year < 2012) {
+        record->valid |= ScRecord::ValidGame;
+        record->game = ScRecord::GameSc2;
+    }
+
+    // attempt to get the year from the e.g. the event:
+    // 2014 Proleague Preseason -> matches in 2013
+    auto wasYearValid = record->isValid(ScRecord::ValidYear);
+    auto year = record->year;
+    record->valid &= ~ScRecord::ValidYear;
+
+
+    record->autoComplete(*classifier());
+
+    if ((wasYearValid && !record->isValid(ScRecord::ValidYear))) {
+        record->year = year;
+        record->valid |= ScRecord::ValidYear;
+    }
+
+    // focus on detecting brood war correctly
+    if (!record->isValid(ScRecord::ValidGame)) {
+        record->game = ScRecord::GameSc2;
+        record->valid |= ScRecord::ValidGame;
+    }
+
+    for (auto i = 0; i < urls.size(); ++i) {
+
+        if (!record) {
+            m_Vods.push_back(m_Vods[index]);
+            record = &m_Vods.back();
         }
 
-        if (!stage.isEmpty()) {
-            record.valid |= ScRecord::ValidStageName;
-            record.stage = stage;
+        if (urls.size() > 1) {
+            record->valid |= ScRecord::ValidMatchNumber;
+            record->matchNumber = i + 1;
         }
 
-        if (!side1.isEmpty()) {
-            record.valid |= ScRecord::ValidSides;
-            record.side1Name = side1;
-            record.side2Name = side2;
-        }
+        record->valid |= ScRecord::ValidUrl;
+        record->url = urls[i];
 
-        if (!race1.isEmpty()) {
-            record.valid |= ScRecord::ValidRaces;
-            record.side1Race = getRace(race1);
-            record.side2Race = getRace(race2);
-        }
-
-//        if (matchDate.isValid()) {
-//            record.valid |= ScRecord::ValidMatchDate;
-//            record.matchDate = matchDate;
-//        }
-
-        if (url.isEmpty()) {
-            qDebug("%s\n", qPrintable(soup));
-        } else {
-            QUrl u(url);
-            if (u.isValid()) {
-                if (u.isRelative()) {
-                    if (u.host() == QStringLiteral("sc2casts.com") &&
-                        u.path() == QStringLiteral("/twitch/embed2")) {
-                        QUrlQuery q(u);
-                        int id;
-                        QString start;
-                        if (q.hasQueryItem(QStringLiteral("id"))) {
-                            id = q.queryItemValue(QStringLiteral("id")).toInt();
-                        }
-                        if (q.hasQueryItem(QStringLiteral("t"))) {
-                            start = q.queryItemValue(QStringLiteral("t"));
-                        }
-
-                        if (id) {
-                            record.valid |= ScRecord::ValidUrl;
-                            record.url = QStringLiteral("https://player.twitch.tv/?video=v%1").arg(id);
-
-                            if (!start.isEmpty()) {
-                                record.url += QStringLiteral("&time=") + start;
-                            }
-                        }
-                    }
-                } else {
-                    record.valid |= ScRecord::ValidUrl;
-                    record.url = url;
-                }
-            }
-        }
-
-        // first bw game in 2012
-        if (record.isValid(ScRecord::ValidYear) &&
-                !record.isValid(ScRecord::ValidGame) &&
-                record.year < 2012) {
-            record.valid |= ScRecord::ValidGame;
-            record.game = ScRecord::GameSc2;
-        }
-
-        // attempt to get the year from the e.g. the event:
-        // 2014 Proleague Preseason -> matches in 2013
-        auto wasYearValid = record.isValid(ScRecord::ValidYear);
-        auto year = record.year;
-        record.valid &= ~ScRecord::ValidYear;
-
-
-        record.autoComplete(*classifier());
-
-        if ((wasYearValid && !record.isValid(ScRecord::ValidYear))) {
-            record.year = year;
-            record.valid |= ScRecord::ValidYear;
-        }
-
-        // focus on detecting brood war correctly
-        if (!record.isValid(ScRecord::ValidGame)) {
-            record.game = ScRecord::GameSc2;
-            record.valid |= ScRecord::ValidGame;
-        }
-
-        if (record.isValid(
+        if (record->isValid(
                     ScRecord::ValidEventName |
                     ScRecord::ValidEventFullName |
                     ScRecord::ValidStageName |
@@ -598,29 +611,26 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
                     ScRecord::ValidMatchDate |
                     ScRecord::ValidMatchName)) {
             bool exists = false;
-            emit hasRecord(record, &exists);
+            emit hasRecord(*record, &exists);
             if (exists) {
-                record.valid = 0;
-                // done
+                record->valid = 0;
+                // done, sc2casts are newest first, always
                 m_CurrentPage = -1;
             } else {
                 bool exclude = false;
-                emit excludeRecord(record, &exclude);
+                emit excludeRecord(*record, &exclude);
                 if (exclude) {
-//                    qDebug() << "exclude" << record;
-                    record.valid = 0;
+    //                    qDebug() << "exclude" << record;
+                    record->valid = 0;
                 } else {
-
+                    record = nullptr;
                 }
             }
         } else {
             //qDebug() << "invalid" << record;
-            record.valid = 0;
+            record->valid = 0;
             //qDebug("%s\n", qPrintable(content));
         }
-    } else {
-        record.valid = 0;
-        qDebug("%s\n", qPrintable(soup));
     }
 }
 
@@ -656,7 +666,8 @@ Sc2CastsDotCom::_cancel() {
 }
 
 QString
-Sc2CastsDotCom::makePageUrl(int page) const {
+Sc2CastsDotCom::makePageUrl(int page) const
+{
     return baseUrl + QString::asprintf("/all:page=%d", page);
 }
 

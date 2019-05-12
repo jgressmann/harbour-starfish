@@ -87,7 +87,7 @@ public:
     ScRecord& operator=(const ScRecord&) = default;
 
     void autoComplete(const ScClassifier& classifier);
-    inline bool isValid(int flags) const { return (valid & flags) == flags; }
+    inline bool isValid(qint32 flags) const { return (valid & flags) == flags; }
 
 
     QDomNode toXml(QDomDocument& doc) const;
