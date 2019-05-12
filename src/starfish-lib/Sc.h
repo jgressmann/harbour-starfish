@@ -28,9 +28,10 @@
 #include <QByteArray>
 
 class QUrl;
+class QNetworkReply;
 struct Sc
 {
-    static const QByteArray UserAgent;
     static QNetworkRequest makeRequest(const QUrl& url);
     static QByteArray gzipDecompress(const QByteArray& gzipped, bool* ok = Q_NULLPTR);
+    static QByteArray decodeContent(QNetworkReply* reply, bool* ok = Q_NULLPTR);
 };

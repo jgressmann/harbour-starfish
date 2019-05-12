@@ -34,11 +34,12 @@
 #include "Sc.h"
 
 
-namespace  {
+namespace
+{
 
 const QString baseUrl = QStringLiteral("https://sc2casts.com");
 const QRegExp pageNumberRegex(QStringLiteral("<title>[^>]*Page (\\d+)[^>]*</title>"));
-const QRegExp iFrameRegex(QStringLiteral("<iframe\\s+(?:[^>]+\\s+)*src\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>"));
+const QRegExp iFrameRegex(QStringLiteral("<iframe\\s+[^>]*src\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>"));
 const QRegExp tags(QStringLiteral("<[^>]+>"));
 const QRegExp dateConstituentsRegex("(\\w+)\\s+(\\d{1,2})\\s*,?\\s*(\\d{4})");
 const QRegExp eventNameRegex("<span\\s+class\\s*=\\s*['\"]event_name['\"][^>]*>([^>]*)</span>");
@@ -75,7 +76,8 @@ int InitializeStatics() {
 int s_StaticsInitialized = InitializeStatics();
 
 int
-getMonth(const QString& str) {
+getMonth(const QString& str)
+{
     if (str.startsWith(QStringLiteral("jan"), Qt::CaseInsensitive)) {
         return 1;
     }
@@ -129,7 +131,8 @@ getMonth(const QString& str) {
 
 
 QDate
-getDate(const QString& str) {
+getDate(const QString& str)
+{
     if (dateConstituentsRegex.indexIn(str) >= 0) {
         int day = dateConstituentsRegex.cap(2).toInt();
         int month = getMonth(dateConstituentsRegex.cap(1));
@@ -140,7 +143,8 @@ getDate(const QString& str) {
 }
 
 ScRecord::Race
-getRace(const QString& str) {
+getRace(const QString& str)
+{
     if (str.startsWith(QStringLiteral("protoss"), Qt::CaseInsensitive)) {
         return ScRecord::RaceProtoss;
     }
@@ -158,7 +162,8 @@ getRace(const QString& str) {
 
 } // anon
 
-Sc2CastsDotCom::~Sc2CastsDotCom() {
+Sc2CastsDotCom::~Sc2CastsDotCom()
+{
     abort();
 }
 
@@ -174,9 +179,10 @@ Sc2CastsDotCom::Sc2CastsDotCom(QObject *parent)
 }
 
 void
-Sc2CastsDotCom::_fetch() {
+Sc2CastsDotCom::_fetch()
+{
     m_Vods.clear();
-    QNetworkReply* reply = makeRequest(makePageUrl(1));
+    QNetworkReply* reply = makeRequest(makePageUrl(1), baseUrl);
     m_PendingRequests.insert(reply, 0);
     m_UrlsToFetch = 1;
     m_UrlsFetched = 0;
@@ -187,14 +193,10 @@ Sc2CastsDotCom::_fetch() {
     qDebug("fetch started");
 }
 
-QNetworkReply*
-Sc2CastsDotCom::makeRequest(const QUrl& url) const {
-    return networkAccessManager()->get(Sc::makeRequest(url));
-}
 
 void
-Sc2CastsDotCom::requestFinished(QNetworkReply* reply) {
-
+Sc2CastsDotCom::requestFinished(QNetworkReply* reply)
+{
     reply->deleteLater();
     const int level = m_PendingRequests.value(reply, -1);
     m_PendingRequests.remove(reply);
@@ -231,7 +233,7 @@ Sc2CastsDotCom::requestFinished(QNetworkReply* reply) {
                 // we have to use the previous one to resolve it
                 newUrl = reply->url().resolved(newUrl);
 
-                auto newReply = makeRequest(newUrl);
+                auto newReply = makeRequest(newUrl, reply->url().toString());
                 m_PendingRequests.insert(newReply, level);
                 auto it = m_ReplyToRecordTable.find(reply);
                 if (it != m_ReplyToRecordTable.end()) {
@@ -255,8 +257,8 @@ Sc2CastsDotCom::requestFinished(QNetworkReply* reply) {
         if (m_PendingRequests.isEmpty()) {
             if (m_CurrentPage >= 1) {
                 ++m_UrlsToFetch;
-                QNetworkReply* reply = makeRequest(makePageUrl(m_CurrentPage));
-                m_PendingRequests.insert(reply, 0);
+                QNetworkReply* newReply = makeRequest(makePageUrl(m_CurrentPage), reply->url().toString());
+                m_PendingRequests.insert(newReply, 0);
                 //% "Fetching page %1"
                 setProgressDescription(qtTrId("Sc2CastsDotCom-fetching-page").arg(m_CurrentPage));
                 updateVodFetchingProgress();
@@ -283,12 +285,20 @@ Sc2CastsDotCom::requestFinished(QNetworkReply* reply) {
 }
 
 void
-Sc2CastsDotCom::parseLevel0(QNetworkReply* reply) {
-    QString soup = QString::fromUtf8(reply->readAll());
-
+Sc2CastsDotCom::parseLevel0(QNetworkReply* reply)
+{
     if (m_CurrentPage == -1) {
         return;
     }
+
+    auto response = Sc::decodeContent(reply);
+    if (response.isEmpty()) {
+        m_CurrentPage = -1;
+        return;
+    }
+
+    QString soup = QString::fromUtf8(response);
+
 
     auto index = pageNumberRegex.indexIn(soup);
     if (index == -1) {
@@ -379,7 +389,7 @@ Sc2CastsDotCom::parseLevel0(QNetworkReply* reply) {
 
                 m_Vods << record;
 
-                QNetworkReply* level1Reply = makeRequest(baseUrl + relativeUrl);
+                QNetworkReply* level1Reply = makeRequest(baseUrl + relativeUrl, reply->url().toString());
                 m_PendingRequests.insert(level1Reply, 1);
                 m_ReplyToRecordTable.insert(level1Reply, m_Vods.size()-1);
                 ++m_UrlsToFetch;
@@ -405,11 +415,16 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
     auto index = m_ReplyToRecordTable.value(reply, -1);
     m_ReplyToRecordTable.remove(reply);
 
+    auto response = Sc::decodeContent(reply);
+    if (response.isEmpty()) {
+        return;
+    }
+
+    QString soup = QString::fromUtf8(response);
+
 //    qDebug() << index;
     ScRecord& record = m_Vods[index];
 //    qDebug() << record;
-
-    QString soup = QString::fromUtf8(reply->readAll());
 
     // <div class="vslabel"><img src="//sc2casts.com/images/races/z_50.png" width="50" height="50" alt="Zerg" title="Zerg" style="padding-left:3px;padding-right:3px;"><h1><a href="/player452-Leenock"><b>Leenock</b></a> vs <a href="/player3246-Elazer"><b>Elazer</b></a></h1><img src="//sc2casts.com/images/races/z_50.png" width="50" height="50" alt="Zerg" title="Zerg" style="padding-left:3px;padding-right:3px;"></div><div class="videomenu"><div class="fn_buttons"><a href="javascript:void(0)" title="Hide YouTube controls to avoid duration spoilers" class="toggle_button_off" onclick="showSignUp()"><img src="/images/controls/duration_off.png" width="16" height="16" style="vertical-align:middle" >Hide duration</a></div></div><span class="games_links2"><div class="video_player_window"><iframe id="yytplayer" type="text/html" width="860" height="453" src="https://www.youtube.com/embed/SbIKVMf-qIM?start=0&showinfo=0" frameborder="0" allowfullscreen class="ytmargin"></iframe></div></span></div><div class="infolabel"><h2>BO3 <span class="nomobile">in 1 video</span></h2> from <h2><a href="/event986-2018-GSL-Season-2-Code-S"><span class="event_name">2018 GSL Season 2 Code S</span></a></h2>&nbsp;<h2><span class="round_name">Group Stage</span></h2><span class="nomobile">&nbsp;- </span><span class="onlymobile"></span>Caster: <h2><a href="/caster60-Artosis-&-tasteless"><span class="caster_name">Artosis & tasteless</span></a></h2><span class="nomobile">&nbsp;- </span><span class="onlymobile"></span>Posted on:&nbsp;<span>Apr 19, 2018</span></div><br/><div id="tt" style="padding-left: 10px;"><table style="font-size: 12px;"><tr><td align="center"><a href="javascript:void(0);" onclick="javascript:setrating('1',23339)"><img src="//sc2casts.com/images/thumbs_up.png" border=0 title="Yea" align="absmiddle"/></a><br/>0</td><td>&nbsp;</td><td align="center"><a href="javascript:void(0);" onclick="javascript:setrating('-1',23339)"><img src="//sc2casts.com/images/thumbs_down.png" border=0 title="Nah" align="absmiddle"/></a><br/>0</td><td valign="middle" style="font-size: 12px;margin-left: 10px;"><span style="display:inline-block; margin-left: 10px;">Enjoyed this series? Please vote and help others discover great <!-- google_ad_section_start -->Starcraft<!-- google_ad_section_end --> casts!</span></td></tr></table></div>
 
@@ -512,7 +527,9 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply) {
 //            record.matchDate = matchDate;
 //        }
 
-        if (!url.isEmpty()) {
+        if (url.isEmpty()) {
+            qDebug("%s\n", qPrintable(soup));
+        } else {
             QUrl u(url);
             if (u.isValid()) {
                 if (u.isRelative()) {

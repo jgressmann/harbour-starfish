@@ -54,7 +54,6 @@ private slots:
 private:
     void parseLevel0(QNetworkReply* reply);
     void parseLevel1(QNetworkReply* reply);
-    QNetworkReply* makeRequest(const QUrl& url) const;
     void updateVodFetchingProgress();
     QString makePageUrl(int page) const;
     void pruneInvalidVods();

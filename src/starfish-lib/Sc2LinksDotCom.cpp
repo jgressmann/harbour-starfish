@@ -200,7 +200,7 @@ Sc2LinksDotCom::Sc2LinksDotCom(QObject *parent)
 void
 Sc2LinksDotCom::_fetch() {
     m_Vods.clear();
-    QNetworkReply* reply = makeRequest(EntryUrl);
+    QNetworkReply* reply = makeRequest(EntryUrl, QStringLiteral("https://www.sc2links.com/"));
     m_PendingRequests.insert(reply, 0);
     m_TotalUrlsToFetched = 1;
     m_CurrentUrlsToFetched = 0;
@@ -222,11 +222,6 @@ Sc2LinksDotCom::_fetch() {
     setProgressDescription(qtTrId("fetching-list-of-events"));
     updateVodFetchingProgress();
     qDebug("fetch started");
-}
-
-QNetworkReply*
-Sc2LinksDotCom::makeRequest(const QUrl& url) const {
-    return networkAccessManager()->get(Sc::makeRequest(url));
 }
 
 void
@@ -270,7 +265,7 @@ Sc2LinksDotCom::requestFinished(QNetworkReply* reply) {
                 // we have to use the previous one to resolve it
                 newUrl = reply->url().resolved(newUrl);
 
-                m_PendingRequests.insert(makeRequest(newUrl), level);
+                m_PendingRequests.insert(makeRequest(newUrl, reply->url().toString()), level);
                 ++m_TotalUrlsToFetched;
             } else  {
                 qDebug() << "Http status code:" << v;
@@ -306,9 +301,9 @@ Sc2LinksDotCom::requestFinished(QNetworkReply* reply) {
                 m_CurrentEventName = event.fullName();
                 m_CurrentEventLastModified = event.data().lastModified;
 
-                QNetworkReply* reply = makeRequest(event.url());
-                m_RequestStage.insert(reply, event);
-                m_PendingRequests.insert(reply, 1);
+                QNetworkReply* newReply = makeRequest(event.url(), reply->url().toString());
+                m_RequestStage.insert(newReply, event);
+                m_PendingRequests.insert(newReply, 1);
                 ++m_TotalUrlsToFetched;
                 //% "Fetching %1"
                 setProgressDescription(qtTrId("Sc2LinksDotCom-fetching-event").arg(event.fullName()));
@@ -359,8 +354,14 @@ Sc2LinksDotCom::finish() {
 }
 
 void
-Sc2LinksDotCom::parseLevel0(QNetworkReply* reply) {
-    QString soup = QString::fromUtf8(reply->readAll());
+Sc2LinksDotCom::parseLevel0(QNetworkReply* reply)
+{
+    auto response = Sc::decodeContent(reply);
+    if (response.isEmpty()) {
+        return;
+    }
+
+    QString soup = QString::fromUtf8(response);
 
     bool any = false;
     ScRecord record;
@@ -471,7 +472,12 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
 
     ScEvent& event = it.value();
 
-    QString soup = QString::fromUtf8(reply->readAll());
+    auto response = Sc::decodeContent(reply);
+    if (response.isEmpty()) {
+        return;
+    }
+
+    QString soup = QString::fromUtf8(response);
 //    qDebug("%s\n", qPrintable(soup));
 
     QList< int > stageOffsets;
@@ -627,9 +633,9 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
 //                t->isShow = matchOrEpisode.compare(QStringLiteral("match"), Qt::CaseInsensitive) == 0;
                 stageData.matches << match;
 
-                QNetworkReply* reply = makeRequest(link);
-                m_RequestVod.insert(reply, match);
-                m_PendingRequests.insert(reply, 2);
+                QNetworkReply* newReply = makeRequest(link, reply->url().toString());
+                m_RequestVod.insert(newReply, match);
+                m_PendingRequests.insert(newReply, 2);
                 ++m_TotalUrlsToFetched;
                 qDebug() << "fetch match" << event.name() << event.year() << event.game() << event.season() << imatchNumber << qmatchDate << side1 << side2;
             }
@@ -647,7 +653,12 @@ Sc2LinksDotCom::parseLevel2(QNetworkReply* reply) {
         return;
     }
 
-    QString soup = QString::fromUtf8(reply->readAll());
+    auto response = Sc::decodeContent(reply);
+    if (response.isEmpty()) {
+        return;
+    }
+
+    QString soup = QString::fromUtf8(response);
     //qDebug() << soup;
     QString url;
 
@@ -687,7 +698,7 @@ Sc2LinksDotCom::parseLevel2(QNetworkReply* reply) {
             m_Vods << record;
         }
     } else {
-        qWarning() << "no vod url found in" << reply->request().url().toString() << soup;
+        qWarning() << "no vod url found in" << reply->url().toString() << soup;
     }
 }
 void

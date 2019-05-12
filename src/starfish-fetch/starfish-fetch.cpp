@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
                 "Print list of available scrapers");
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("Copyright (c) 2018 Jean Gressmann\nstarfish-fetch fetches VOD data from the internet and outputs it as xml");
+    parser.setApplicationDescription("Copyright (c) 2018, 2019 Jean Gressmann\nstarfish-fetch fetches VOD data from the internet and outputs it as xml");
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption(yearOption);
@@ -152,7 +152,8 @@ int main(int argc, char** argv) {
 }
 
 
-static void writeXml() {
+static void writeXml()
+{
     QDomDocument doc;
 
     QDomElement vods = doc.createElement(QStringLiteral("vods"));
@@ -164,58 +165,6 @@ static void writeXml() {
         vodsElement.appendChild(node);
     }
 
-//    QDomElement seriesElement = doc.createElement(QStringLiteral("series"));
-
-//    foreach (const auto& serie, sitePtr->vods()) {
-//        QDomElement serieElement = doc.createElement("serie");
-//        serieElement.setAttribute(QStringLiteral("name"), serie.name());
-//        serieElement.setAttribute(QStringLiteral("url"), serie.url());
-
-//        QDomElement eventsElement = doc.createElement(QStringLiteral("events"));
-
-//        foreach (const auto& event, serie.events()) {
-//            QDomElement eventElement = doc.createElement(QStringLiteral("event"));
-//            eventElement.setAttribute(QStringLiteral("name"), event.name());
-//            eventElement.setAttribute(QStringLiteral("url"), event.url());
-//            eventElement.setAttribute(QStringLiteral("fullName"), event.fullName());
-//            eventElement.setAttribute(QStringLiteral("year"), event.year());
-//            eventElement.setAttribute(QStringLiteral("season"), event.season());
-//            eventElement.setAttribute(QStringLiteral("game"), event.game() == ScEnums::Game_Broodwar ? QStringLiteral("Broodwar") : QStringLiteral("StarCraft II"));
-
-//            QDomElement stagesElement = doc.createElement(QStringLiteral("stages"));
-//            foreach (const auto& stage, event.stages()) {
-//                QDomElement stageElement = doc.createElement(QStringLiteral("stage"));
-//                stageElement.setAttribute(QStringLiteral("name"), stage.name());
-//                stageElement.setAttribute(QStringLiteral("url"), stage.url());
-
-//                QDomElement matchesElement = doc.createElement(QStringLiteral("matches"));
-//                foreach (const auto& match, stage.matches()) {
-//                    QDomElement matchElement = doc.createElement(QStringLiteral("match"));
-//                    matchElement.setAttribute(QStringLiteral("name"), match.name());
-//                    matchElement.setAttribute(QStringLiteral("url"), match.url());
-//                    matchElement.setAttribute(QStringLiteral("date"), match.matchDate().toString(QStringLiteral("yyyy-MM-dd")));
-//                    matchElement.setAttribute(QStringLiteral("side1"), match.side1());
-//                    matchElement.setAttribute(QStringLiteral("side2"), match.side2());
-//                    matchElement.setAttribute(QStringLiteral("side2"), match.side2());
-//                    matchElement.setAttribute(QStringLiteral("number"), match.matchNumber());
-
-//                    matchesElement.appendChild(matchElement);
-//                }
-
-//                stageElement.appendChild(matchesElement);
-//                stagesElement.appendChild(stageElement);
-//            }
-
-//            eventElement.appendChild(stagesElement);
-//            eventsElement.appendChild(eventElement);
-//        }
-
-//        serieElement.appendChild(eventsElement);
-//        seriesElement.appendChild(serieElement);
-//    }
-
-//    vods.appendChild(seriesElement);
-
     vods.appendChild(vodsElement);
 
     doc.appendChild(doc.createProcessingInstruction(QStringLiteral("xml"), QStringLiteral("version=\"1.0\" encoding=\"utf-8\"")));
@@ -226,7 +175,8 @@ static void writeXml() {
     doc.save(s, 1);
 }
 
-static void statusChanged() {
+static void statusChanged()
+{
     Q_ASSERT(scraperPtr);
 
     switch (scraperPtr->status()) {
@@ -250,7 +200,8 @@ static void statusChanged() {
     }
 }
 
-static ScVodScraper* makeScraper(const QString& name) {
+static ScVodScraper* makeScraper(const QString& name)
+{
     if ("sc2casts" == name.toLower()) {
         return new Sc2CastsDotCom();
     }
@@ -262,7 +213,8 @@ static ScVodScraper* makeScraper(const QString& name) {
     return Q_NULLPTR;
 }
 
-static void showProgress() {
+static void showProgress()
+{
     fprintf(stdout, "%02d%% %s\n", (int)(scraperPtr->progress() * 100), qPrintable(scraperPtr->progressDescription()));
 }
 

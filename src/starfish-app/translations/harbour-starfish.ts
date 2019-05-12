@@ -987,8 +987,8 @@
         <translation>go go go</translation>
     </message>
     <message id="Sc2CastsDotCom-fetching-page">
-        <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="185"/>
-        <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="261"/>
+        <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="191"/>
+        <location filename="../../starfish-lib/Sc2CastsDotCom.cpp" line="263"/>
         <source>Fetching page %1</source>
         <translation>Fetching page %1</translation>
     </message>
@@ -998,7 +998,7 @@
         <translation>Fetching list of events</translation>
     </message>
     <message id="Sc2LinksDotCom-fetching-event">
-        <location filename="../../starfish-lib/Sc2LinksDotCom.cpp" line="314"/>
+        <location filename="../../starfish-lib/Sc2LinksDotCom.cpp" line="309"/>
         <source>Fetching %1</source>
         <translation>Fetching %1</translation>
     </message>

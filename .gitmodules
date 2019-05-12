@@ -1,3 +1,9 @@
 [submodule "3rd-party/harbour-vodman"]
 	path = 3rd-party/harbour-vodman
 	url = git@github.com:jgressmann/harbour-vodman.git
+[submodule "brotli"]
+	path = brotli
+	url = https://github.com/google/brotli.git
+[submodule "3rd-party/brotli"]
+	path = 3rd-party/brotli
+	url = https://github.com/google/brotli.git

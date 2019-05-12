@@ -58,7 +58,6 @@ private:
     void parseLevel0(QNetworkReply* reply);
     void parseLevel1(QNetworkReply* reply);
     void parseLevel2(QNetworkReply* reply);
-    QNetworkReply* makeRequest(const QUrl& url) const;
     void updateVodFetchingProgress();
     void pruneInvalidSeries();
     void saveRecords();

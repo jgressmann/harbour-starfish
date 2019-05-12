@@ -22,6 +22,7 @@
  */
 
 #include "ScVodScraper.h"
+#include "Sc.h"
 
 #include <QDebug>
 #include <QNetworkAccessManager>
@@ -206,4 +207,15 @@ ScVodScraper::setStateFilePath(const QString& value)
         m_StateFilePath = value;
         emit stateFilePathChanged();
     }
+}
+
+QNetworkReply*
+ScVodScraper::makeRequest(const QUrl& url, const QString& referer) const
+{
+    auto req = Sc::makeRequest(url);
+    if (!referer.isEmpty()) {
+        req.setRawHeader("Referer", referer.toUtf8());
+    }
+
+    return m_Manager.get(req);
 }

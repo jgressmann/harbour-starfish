@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,25 +23,33 @@
 
 #include "Sc.h"
 
+#include <QNetworkReply>
+#include <QDebug>
 
 
+#include <brotli/decode.h>
 #include <zlib.h>
 #include <string.h>
 
-const QByteArray Sc::UserAgent(STARFISH_APP_NAME QT_STRINGIFY(STARFISH_VERSION_MAJOR) "." QT_STRINGIFY(STARFISH_VERSION_MINOR) "." QT_STRINGIFY(STARFISH_VERSION_PATCH));
-
 QNetworkRequest
-Sc::makeRequest(const QUrl& url) {
+Sc::makeRequest(const QUrl& url)
+{
     QNetworkRequest request;
     request.setUrl(url);
-    request.setRawHeader("User-Agent", UserAgent); // must be set else no reply
+    request.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0 " STARFISH_APP_NAME "/" QT_STRINGIFY(STARFISH_VERSION_MAJOR) "." QT_STRINGIFY(STARFISH_VERSION_MINOR) "." QT_STRINGIFY(STARFISH_VERSION_PATCH));
+    request.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+    request.setRawHeader("Accept-Language", "en-US,en;q=0.5");
+    request.setRawHeader("Accept-Encoding", "gzip, deflate, br");
+    request.setRawHeader("Connection", "keep-alive");
+    request.setRawHeader("Upgrade-Insecure-Requests", "1");
 
     return request;
 }
 
 
 QByteArray
-Sc::gzipDecompress(const QByteArray& data, bool* ok) {
+Sc::gzipDecompress(const QByteArray& data, bool* ok)
+{
     //https://stackoverflow.com/questions/2690328/qt-quncompress-gzip-data
     if (ok) *ok = false;
 
@@ -90,4 +98,65 @@ Sc::gzipDecompress(const QByteArray& data, bool* ok) {
 
     if (ok) *ok = true;
     return result;
+}
+
+QByteArray
+Sc::decodeContent(QNetworkReply* reply, bool* ok)
+{
+    Q_ASSERT(reply);
+
+    if (ok) *ok = false;
+
+    auto response = reply->readAll();
+    auto encoding = reply->rawHeader("Content-Encoding");
+    if (encoding.isEmpty()) {
+        if (ok) *ok = true;
+        return response;
+    }
+
+    if (encoding == "br") {
+        auto state = BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
+        if (state) {
+            BrotliDecoderSetParameter(state, BROTLI_DECODER_PARAM_LARGE_WINDOW, 1u);
+            QByteArray result;
+            result.resize(qMax<size_t>(4096, response.size()*16));
+            size_t availableOut = result.size();
+            size_t availableIn = response.size();
+            const quint8* inPtr = reinterpret_cast<const quint8*>(response.data());
+            quint8* outPtr = reinterpret_cast<quint8*>(result.data());
+            for (bool done = false; !done; ) {
+                auto error = BrotliDecoderDecompressStream(state, &availableIn, &inPtr, &availableOut, &outPtr, nullptr);
+                switch (error) {
+                case BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT: {
+                    size_t offset = result.size() - availableOut;
+                    availableOut += result.size();
+                    result.resize(result.size() * 2);
+                    outPtr = reinterpret_cast<quint8*>(result.data()) + offset;
+                } break;
+                case BROTLI_DECODER_RESULT_SUCCESS:
+                    if (ok) *ok = true;
+                    done = true;
+                    result.resize(result.size() - availableOut);
+                    break;
+                default:
+                    result.clear();
+                    done = true;
+                    break;
+                }
+            }
+
+
+            BrotliDecoderDestroyInstance(state);
+
+            return result;
+        }
+
+
+    } else if (encoding == "gzip") {
+        return gzipDecompress(response, ok);
+    } else if (encoding == "deflate") {
+        qWarning() << "deflate not implemented";
+    }
+
+    return QByteArray();
 }

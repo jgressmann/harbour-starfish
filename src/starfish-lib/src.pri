@@ -1,3 +1,4 @@
+include($$PWD/brotli.pri)
 
 SOURCES += $$PWD/ScVodScraper.cpp \
     $$PWD/Sc.cpp \

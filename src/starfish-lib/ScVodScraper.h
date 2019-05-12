@@ -29,6 +29,9 @@
 #include <QVector>
 #include <QNetworkAccessManager>
 
+class QNetworkReply;
+class QUrl;
+
 class ScClassifier;
 class ScVodScraper : public QObject
 {
@@ -121,6 +124,7 @@ protected:
     void setProgressDescription(const QString& value);
     void abort(); // called from derived dtor
     inline int yearToFetch() const { return m_Year; }
+    QNetworkReply* makeRequest(const QUrl& url, const QString& referer) const;
 
 private:
     mutable QNetworkAccessManager m_Manager;
