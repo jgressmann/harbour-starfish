@@ -143,23 +143,8 @@ Page {
                     x: Theme.horizontalPageMargin
                     width: parent.width - 2*x
 
-                    //% "Copyright (c) 2018, 2019 Jean Gressmann.<br/><br/>%1 is available under the <a href='https://opensource.org/licenses/MIT'>MIT</a> license.<br/><br/>This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I'll remove the offending data.<br/><br/>%1 uses icons downloaded from <a href='https://www.flaticon.com'>flaticon</a> created by <a href='https://www.flaticon.com/authors/gregor-cresnar'>Gregor Cresnar</a>, <a href='https://www.flaticon.com/authors/freepik'>Freepik</a>, and <a href='https://www.flaticon.com/authors/smashicons'>Smashicons</a>."
+                    //% "Copyright (c) 2018, 2019 Jean Gressmann.<br/><br/>%1 is distributed under the <a href='https://opensource.org/licenses/MIT'>MIT license</a> and available from <a href='https://github.com/jgressmann/harbour-starfish'>GitHub</a>.<br/><br/>%1 includes code from <a href='https://github.com/jgressmann/harbour-vodman'>Vodman</a> and <a href='https://github.com/google/brotli'>Brotli</a>.<br/><br/>This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I'll remove the offending data.<br/><br/>%1 uses icons downloaded from <a href='https://www.flaticon.com'>flaticon</a> created by <a href='https://www.flaticon.com/authors/gregor-cresnar'>Gregor Cresnar</a>, <a href='https://www.flaticon.com/authors/freepik'>Freepik</a>, and <a href='https://www.flaticon.com/authors/smashicons'>Smashicons</a>."
                     text: qsTrId("sf-about-licensing-text").arg(App.displayName)
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.secondaryHighlightColor
-                    linkColor: Theme.secondaryColor
-                }
-
-                SectionHeader {
-                    //% "Sources"
-                    text: qsTrId("sf-about-sources-header")
-                }
-
-                LinkedLabel {
-                    x: Theme.horizontalPageMargin
-                    width: parent.width - 2*x
-                    //% "The sources are available on <a href='https://github.com/jgressmann/harbour-starfish'>GitHub</a>."
-                    text: qsTrId("sf-about-sources-text")
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.secondaryHighlightColor
                     linkColor: Theme.secondaryColor

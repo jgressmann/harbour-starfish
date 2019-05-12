@@ -125,12 +125,16 @@ gzclassifier.commands = cat $$PWD/classifier.json | gzip --best > $$PWD/$$gzclas
 gzsqlpatches.target = sql_patches.json.gz
 gzsqlpatches.commands = cat $$PWD/sql_patches.json | gzip --best > $$PWD/$$gzsqlpatches.target
 
-QMAKE_EXTRA_TARGETS += gzicons gzclassifier gzsqlpatches
-PRE_TARGETDEPS += $$gzicons.target $$gzclassifier.target $$gzsqlpatches.target
+vodmanlicense.target = COPYING.vodman
+vodmanlicense.commands = $(COPY) $$shell_path($$PWD/../../3rd-party/harbour-vodman/COPYING) $$shell_path($$PWD/COPYING.vodman);
 
-misc.files = $$gzicons.target $$gzclassifier.target ../../COPYING
+
+QMAKE_EXTRA_TARGETS += gzicons gzclassifier gzsqlpatches vodmanlicense
+PRE_TARGETDEPS += $$gzicons.target $$gzclassifier.target $$gzsqlpatches.target $$vodmanlicense.target
+
+misc.files = $$gzicons.target $$gzclassifier.target $$PWD/../../COPYING $$PWD/../starfish-lib/brotli.bin $$PWD/../starfish-lib/COPYING.brotli $$vodmanlicense.target
 misc.path = /usr/share/$${TARGET}
-misc.depends = gzicons gzclassifier
+misc.depends = gzicons gzclassifier brotlifiles vodmanlicense
 INSTALLS += misc
 
 

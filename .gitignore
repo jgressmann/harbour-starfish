@@ -2,5 +2,8 @@
 src/starfish-app/media/*
 src/starfish-app/icons/*
 src/starfish-app/icons.json.gz
+src/starfish-app/COPYING.vodman
+src/starfish-lib/COPYING.brotli
+src/starfish-lib/brotli.bin
 *.user
 *.gz

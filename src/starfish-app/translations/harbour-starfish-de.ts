@@ -124,46 +124,34 @@
     </message>
     <message id="sf-about-licensing-text">
         <location filename="../qml/pages/AboutPage.qml" line="147"/>
-        <source>Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 is available under the &lt;a href=&apos;https://opensource.org/licenses/MIT&apos;&gt;MIT&lt;/a&gt; license.&lt;br/&gt;&lt;br/&gt;This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I&apos;ll remove the offending data.&lt;br/&gt;&lt;br/&gt;%1 uses icons downloaded from &lt;a href=&apos;https://www.flaticon.com&apos;&gt;flaticon&lt;/a&gt; created by &lt;a href=&apos;https://www.flaticon.com/authors/gregor-cresnar&apos;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&apos;https://www.flaticon.com/authors/freepik&apos;&gt;Freepik&lt;/a&gt;, and &lt;a href=&apos;https://www.flaticon.com/authors/smashicons&apos;&gt;Smashicons&lt;/a&gt;.</source>
-        <oldsource>Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 is available under the &lt;a href=&apos;https://opensource.org/licenses/MIT&apos;&gt;MIT&lt;/a&gt; license.&lt;br/&gt;&lt;br/&gt;This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I&apos;ll remove the offending data.&lt;br/&gt;&lt;br/&gt;%1 uses icons downloaded from &lt;a href=&apos;https://www.flaticon.com&apos;&gt;flaticon&lt;/a&gt; created by &lt;a href=&apos;https://www.flaticon.com/authors/gregor-cresnar&apos;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&apos;https://www.flaticon.com/authors/freepik&apos;&gt;Freepik&lt;/a&gt;, and &lt;a href=&apos;https://www.flaticon.com/authors/smashicons</oldsource>
-        <translation>Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 ist unter der &lt;a href=&apos;https://opensource.org/licenses/MIT&apos;&gt;MIT&lt;/a&gt; Lizenz verfügbar.&lt;br/&gt;&lt;br/&gt;%1 benutzt StarCraft (tm) bezogene Inhalte von verschiedenen Quellen aus dem Internet. Sollten Sie der Meinung sein, dass %1 Ihre Urheberrechte verletzt, nehmen Sie bitte Kontakt auf damit ich die relevanten Daten entfernen kann.&lt;br/&gt;&lt;br/&gt;%1 nutzt Icons von &lt;a href=&apos;https://www.flaticon.com&apos;&gt;flaticon&lt;/a&gt;, die von &lt;a href=&apos;https://www.flaticon.com/authors/gregor-cresnar&apos;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&apos;https://www.flaticon.com/authors/freepik&apos;&gt;Freepik&lt;/a&gt; und &lt;a href=&apos;https://www.flaticon.com/authors/smashicons&apos;&gt;Smashicons&lt;/a&gt; erstellt wurden.</translation>
-    </message>
-    <message id="sf-about-sources-header">
-        <location filename="../qml/pages/AboutPage.qml" line="155"/>
-        <source>Sources</source>
-        <translation>Quellen</translation>
-    </message>
-    <message id="sf-about-sources-text">
-        <location filename="../qml/pages/AboutPage.qml" line="162"/>
-        <source>The sources are available on &lt;a href=&apos;https://github.com/jgressmann/harbour-starfish&apos;&gt;GitHub&lt;/a&gt;.</source>
-        <oldsource>The sources are available on &lt;a href=\&quot;https://github.com/jgressmann/harbour-starfish\&quot;&gt;GitHub&lt;/a&gt;.</oldsource>
-        <translation>Die Quellen sind auf &lt;a href=&apos;https://github.com/jgressmann/harbour-starfish&apos;&gt;GitHub&lt;/a&gt; verfügbar.</translation>
+        <source>Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 is distributed under the &lt;a href=&apos;https://opensource.org/licenses/MIT&apos;&gt;MIT license&lt;/a&gt; and available from &lt;a href=&apos;https://github.com/jgressmann/harbour-starfish&apos;&gt;GitHub&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;%1 includes code from &lt;a href=&apos;https://github.com/jgressmann/harbour-vodman&apos;&gt;Vodman&lt;/a&gt; and &lt;a href=&apos;https://github.com/google/brotli&apos;&gt;Brotli&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;This application uses StarCraft (tm) related media from various sites on the internet. Should you feel you rights have been infringed please contact me and I&apos;ll remove the offending data.&lt;br/&gt;&lt;br/&gt;%1 uses icons downloaded from &lt;a href=&apos;https://www.flaticon.com&apos;&gt;flaticon&lt;/a&gt; created by &lt;a href=&apos;https://www.flaticon.com/authors/gregor-cresnar&apos;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&apos;https://www.flaticon.com/authors/freepik&apos;&gt;Freepik&lt;/a&gt;, and &lt;a href=&apos;https://www.flaticon.com/authors/smashicons&apos;&gt;Smashicons&lt;/a&gt;.</source>
+        <translation>Copyright (c) 2018, 2019 Jean Gressmann.&lt;br/&gt;&lt;br/&gt;%1 wird unter der &lt;a href=&apos;https://opensource.org/licenses/MIT&apos;&gt;MIT Lizenz&lt;/a&gt; verteilt und ist auf &lt;a href=&apos;https://github.com/jgressmann/harbour-starfish&apos;&gt;GitHub&lt;/a&gt; verfügbar.&lt;br/&gt;&lt;br/&gt;%1 enthält Code von &lt;a href=&apos;https://github.com/jgressmann/harbour-vodman&apos;&gt;Vodman&lt;/a&gt; und &lt;a href=&apos;https://github.com/google/brotli&apos;&gt;Brotli&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;%1 verwendet StarCraft (tm) bezogene Inhalte von verschiedenen Quellen aus dem Internet. Sollten Sie der Meinung sein, dass %1 Ihre Urheberrechte verletzt, nehmen Sie bitte Kontakt auf damit ich die relevanten Daten entfernen kann.&lt;br/&gt;&lt;br/&gt;%1 nutzt Icons von &lt;a href=&apos;https://www.flaticon.com&apos;&gt;flaticon&lt;/a&gt;, die von &lt;a href=&apos;https://www.flaticon.com/authors/gregor-cresnar&apos;&gt;Gregor Cresnar&lt;/a&gt;, &lt;a href=&apos;https://www.flaticon.com/authors/freepik&apos;&gt;Freepik&lt;/a&gt; und &lt;a href=&apos;https://www.flaticon.com/authors/smashicons&apos;&gt;Smashicons&lt;/a&gt; erstellt wurden.</translation>
     </message>
     <message id="sf-about-translations-header">
-        <location filename="../qml/pages/AboutPage.qml" line="170"/>
+        <location filename="../qml/pages/AboutPage.qml" line="155"/>
         <source>Translations</source>
         <translation>Übersetzungen</translation>
     </message>
     <message id="sf-about-translations-english-label">
-        <location filename="../qml/pages/AboutPage.qml" line="180"/>
+        <location filename="../qml/pages/AboutPage.qml" line="165"/>
         <source>English</source>
         <oldsource>names of translators</oldsource>
         <translation>englisch</translation>
     </message>
     <message id="sf-about-translations-english-value">
-        <location filename="../qml/pages/AboutPage.qml" line="182"/>
+        <location filename="../qml/pages/AboutPage.qml" line="167"/>
         <source>names of translators</source>
         <oldsource>English</oldsource>
         <translation>Jean Gressmann</translation>
     </message>
     <message id="sf-about-translations-german-label">
-        <location filename="../qml/pages/AboutPage.qml" line="187"/>
+        <location filename="../qml/pages/AboutPage.qml" line="172"/>
         <source>German</source>
         <oldsource>names of translators</oldsource>
         <translation>deutsch</translation>
     </message>
     <message id="sf-about-translations-german-value">
-        <location filename="../qml/pages/AboutPage.qml" line="189"/>
+        <location filename="../qml/pages/AboutPage.qml" line="174"/>
         <source>names of translators</source>
         <oldsource>German</oldsource>
         <translation>Jean Gressmann</translation>
