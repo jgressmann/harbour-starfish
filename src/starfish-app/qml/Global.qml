@@ -44,15 +44,15 @@ Item { // Components can't declare functions
     property var videoPlayerPage
     property Notification deleteVodNotification
     property var getNewVodsContstraints
-//    property bool _pausedPlayback: false
-//    property int _pausedCount: 0
-//    readonly property string autoUpdateLastTimestampKey: "/update_timestamp"
-//    property real lastUpdateTimeStamp: parseFloat(VodDataManager.getPersistedValue(autoUpdateLastTimestampKey, "0"))
 
-//    onLastUpdateTimeStampChanged: {
-//        console.debug("lastUpdateTimeStamp=" + lastUpdateTimeStamp)
-//        VodDataManager.setPersistedValue(autoUpdateLastTimestampKey, lastUpdateTimeStamp.toFixed(0))
-//    }
+
+    readonly property int matchItemHeaderModeDefault: 0
+    readonly property int matchItemHeaderModeMatchName: 1
+    readonly property int matchItemHeaderModeNone: 2
+
+    readonly property int matchItemBodyModeDefault: 0
+    readonly property int matchItemBodyModeMatchName: 1
+    readonly property int matchItemBodyModeNone: 2
 
     function values(sql) {
 //        console.debug(sql)

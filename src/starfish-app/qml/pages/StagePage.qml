@@ -34,6 +34,7 @@ ContentPage {
     property bool _sameDate: false
     property bool _sameSides: false
     property bool _hasTwoSides: false
+    property bool _goodMatchNumber: false
     property date _matchDate
     property string _side1
     property string _side2
@@ -41,6 +42,7 @@ ContentPage {
     property int _side2Race
     property int _videoId: -1
     readonly property bool _hasValidRaces: _side1Race >= 1 && _side2Race >= 1
+    property string matchNumberSortDirection: _hasTwoSides ? "asc" : "desc" // episodes
 
     SqlVodModel {
         id: sqlModel
@@ -51,7 +53,12 @@ ContentPage {
             x["id"] = "vod_id"
             return x
         }
-        select: "select distinct " + columns.join(",") + " from " + table + where + " order by match_date desc, match_number asc, match_name desc"
+        select: "select distinct " + columns.join(",") + " from " + table + where + " order by match_number " + matchNumberSortDirection +  ", match_date desc, match_name desc"
+        onModelReset: {
+            _side1Race = data(index(0, 1))
+            _side2Race = data(index(0, 2))
+        }
+
         Component.onCompleted: {
             _side1Race = data(index(0, 1))
             _side2Race = data(index(0, 2))
@@ -66,6 +73,16 @@ ContentPage {
 
         onModelReset: _updateSameMatchDate()
         Component.onCompleted: _updateSameMatchDate()
+    }
+
+    SqlVodModel {
+        id: matchNumberModel
+        database: VodDataManager.database
+        columns: ["match_number"]
+        select: "select distinct " + columns.join(",") + " from " + table + where + " and match_number>=1"
+
+        onModelReset: _updateGoodMatchNumber()
+        Component.onCompleted: _updateGoodMatchNumber()
     }
 
     SqlVodModel {
@@ -122,6 +139,12 @@ ContentPage {
                 imageWidth: Theme.iconSizeMedium
                 spacing: Theme.paddingSmall
                 color: Theme.highlightColor
+
+                onVisibleChanged: {
+                    console.debug("sidesBar.visible=" + visible)
+                }
+
+                Component.onCompleted: console.debug("sidesBar.visible=" + visible)
             }
 
             Label {
@@ -132,6 +155,12 @@ ContentPage {
                 truncationMode: TruncationMode.Fade
                 font.pixelSize: Theme.fontSizeExtraLarge
                 color: Theme.highlightColor
+
+                onVisibleChanged: {
+                    console.debug("sidesLabel.visible=" + visible)
+                }
+
+                Component.onCompleted: console.debug("sidesLabel.visible=" + visible)
             }
 
             Label {
@@ -159,19 +188,36 @@ ContentPage {
             model: sqlModel
             clip: true
 
-
-
             delegate: MatchItem {
                 width: listView.width
                 rowId: vod_id
                 showDate: !_sameDate
-                showSides: _hasTwoSides && !_sameSides
                 memory: matchItemConnections
+                headerMode: (sidesBar.visible || sidesLabel.visible)
+                            ? Global.matchItemHeaderModeNone
+                            : (_goodMatchNumber ? Global.matchItemHeaderModeMatchName : Global.matchItemHeaderModeDefault)
+                matchNameOverride: (bodyMode === Global.matchItemBodyModeMatchName || headerMode === Global.matchItemHeaderModeMatchName)
+                                   ? (_hasTwoSides
+                                      //% "Match"
+                                      ? qsTrId("sf-stage-page-match-name-match")
+                                        //% "Episode"
+                                      : qsTrId("sf-stage-page-match-name-episode"))
+                                   : ""
+                bodyMode: (sidesBar.visible || sidesLabel.visible)
+                          ? (_goodMatchNumber ? Global.matchItemBodyModeMatchName : Global.matchItemBodyModeDefault)
+                          : Global.matchItemBodyModeDefault
 
                 onPlayRequest: function (self) {
                     _videoId = vod_id
                     Global.playVideoHandler(updater, VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.seen)
                 }
+
+//                Component.onCompleted: {
+//                    console.debug("rowid=" + rowId + " show date=" + showDate + " showSides=" + showSides + " showTitle=" + showTitle + " headerMode=" + headerMode + " bodyMode=" + bodyMode + " matchNameOverride=" + matchNameOverride + " title=" + title)
+//                }
+
+//                onHeaderModeChanged: console.debug("rowid=" + rowId + " headerMode=" + headerMode)
+//                onBodyModeChanged: console.debug("rowid=" + rowId + " bodyMode=" + bodyMode)
             }
 
             ViewPlaceholder {
@@ -188,6 +234,11 @@ ContentPage {
         }
     }
 
+    function _updateGoodMatchNumber() {
+        _goodMatchNumber = matchNumberModel.rowCount() === sqlModel.rowCount()
+//        console.debug("good match number=" + _goodMatchNumber)
+    }
+
 
     function _updateSameSides() {
         var count = sidesModel.rowCount()
@@ -198,6 +249,14 @@ ContentPage {
             _side2 = sidesModel.data(sidesModel.index(0, 1))
         }
     }
+
+//    on_GoodMatchNumberChanged: console.debug("good match number=" + _goodMatchNumber)
+//    on_SameSidesChanged: console.debug("same sides=" + _sameSides)
+//    on_HasValidRacesChanged: console.debug("valid races=" + _hasValidRaces)
+//    on_Side1Changed: console.debug("side1=" + _side1)
+//    on_Side2Changed: console.debug("side2=" + _side2)
+//    on_Side1RaceChanged: console.debug("side1 race=" + _side1Race)
+//    on_Side2RaceChanged: console.debug("side2 race=" + _side2Race)
 
     onStatusChanged: {
         switch (status) {

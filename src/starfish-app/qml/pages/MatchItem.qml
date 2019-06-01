@@ -32,8 +32,8 @@ ListItem {
     contentHeight: requiredHeight
     readonly property int is_match_item: 1 // poor type check to call ownerGone()
     property bool showDate: true
-    property bool showSides: _c && ((_c.side1 && _c.side2) || (_c.side1 && !_c.urlShare.title))
-    property bool showTitle: _c && !_c.side2
+    readonly property bool showSides: _c && ((_c.side1 && _c.side2) || (_c.side1 && !_c.urlShare.title))
+    readonly property bool showTitle: _c && !_c.side2
     property int rowId: -1
     property var _playWhenPageTransitionIsDoneCallback: null
     property alias playlist: _playlist
@@ -53,6 +53,21 @@ ListItem {
         _c &&
         (_c.urlShare.vodFetchStatus === UrlShare.Available ||
         (_c.urlShare.vodFetchStatus === UrlShare.Fetching && _c.urlShare.downloadProgress > 0))
+    property int headerMode: Global.matchItemHeaderModeDefault
+    property int bodyMode: Global.matchItemBodyModeDefault
+    property string matchNameOverride
+    readonly property string matchName: {
+        var result = ""
+        if (_c) {
+            if (matchNameOverride) {
+                result = matchNameOverride + " " + _c.matchNumber
+            } else {
+                result = _c.matchName
+            }
+        }
+        return result
+    }
+
 
     signal playRequest(var self)
 
@@ -82,16 +97,28 @@ ListItem {
 
             Label {
                 width: parent.width
-                visible: !!_c.eventFullName || !!_c.stageName
+                visible: !!text
                 truncationMode: TruncationMode.Fade
                 font.pixelSize: Theme.fontSizeSmall
                 text: {
-                    var result = _c.eventFullName
-                    if (_c.stageName) {
-                        if (result) {
-                            result += " / " + _c.stageName
-                        } else {
-                            result = _c.stageName
+                    var result = ""
+                    if (_c) {
+                        switch (headerMode) {
+                        case Global.matchItemHeaderModeDefault:
+                            result = _c.eventFullName
+                            if (_c.stageName) {
+                                if (result) {
+                                    result += " / " + _c.stageName
+                                } else {
+                                    result = _c.stageName
+                                }
+                            }
+                            break
+                        case Global.matchItemHeaderModeMatchName:
+                            result = matchName
+                            break
+                        case Global.matchItemHeaderModeNone:
+                            break
                         }
                     }
 
@@ -197,25 +224,38 @@ ListItem {
                         truncationMode: TruncationMode.Fade
                         visible: !sidesWithRaceLogosGroup.visible
                         text: {
-                            if (showSides) {
-                                if (_c.side2) {
-                                    return _c.side1 + " - " + _c.side2
+                            if (_c) {
+                                switch (bodyMode) {
+                                case Global.matchItemBodyModeDefault:
+                                    if (showSides) {
+                                        if (_c.side2) {
+                                            return _c.side1 + " - " + _c.side2
+                                        }
+
+                                        return _c.side1
+                                    }
+
+                                    if (showTitle && _c.urlShare.title) {
+                                        return _c.urlShare.title
+                                    }
+
+                                    return matchName
+                                case Global.matchItemBodyModeMatchName:
+                                    return matchName
+                                case Global.matchItemBodyModeNone:
+                                    return ""
+                                default:
+                                    return "unhandled"
                                 }
-
-                                return _c.side1
                             }
 
-                            if (showTitle && _c.urlShare.title) {
-                                return _c.urlShare.title
-                            }
-
-                            return _c.matchName
+                            return ""
                         }
                     } // title/vs label
 
                     SidesBar {
                         id: sidesWithRaceLogosGroup
-                        visible: showSides && _hasValidRaces
+                        visible: bodyMode === Global.matchItemBodyModeDefault && _hasValidRaces
                         imageHeight: Theme.iconSizeSmall
                         imageWidth: Theme.iconSizeSmall
                         side1IconSource: VodDataManager.raceIcon(_c.race1)
@@ -225,56 +265,6 @@ ListItem {
                         fontSize: Theme.fontSizeMedium
                         spacing: Theme.paddingSmall * 0.68
                     }
-
-//                    Item {
-//                        id: sidesWithRaceLogosGroup
-//                        width: parent.width
-//                        height: Math.max(race1Icon.height, side1Name.height)
-//                        visible: showSides && _hasValidRaces
-//                        property real labelWidth: (width - 2 * race1Icon.width) * 0.5
-
-//                        Image {
-//                            id: race1Icon
-//                            anchors.left: parent.left
-//                            anchors.verticalCenter: parent.verticalCenter
-//                            width: Theme.iconSizeSmall
-//                            height: Theme.iconSizeSmall
-//                            sourceSize.width: width
-//                            sourceSize.height: height
-//                            source: VodDataManager.raceIcon(_c.race1)
-//                        }
-
-//                        Label {
-//                            id: side1Name
-//                            anchors.left: race1Icon.right
-//                            anchors.verticalCenter: parent.verticalCenter
-//                            width: parent.labelWidth
-//                            truncationMode: TruncationMode.Fade
-//                            text: " " + _c.side1
-//                            horizontalAlignment: Text.AlignLeft
-//                        }
-
-//                        Label {
-//                            id: side2Name
-//                            anchors.right: race2Icon.left
-//                            anchors.verticalCenter: parent.verticalCenter
-//                            width: parent.labelWidth
-//                            truncationMode: TruncationMode.Fade
-//                            text: _c.side2 + " "
-//                            horizontalAlignment: Text.AlignRight
-//                        }
-
-//                        Image {
-//                            id: race2Icon
-//                            anchors.right: parent.right
-//                            anchors.verticalCenter: parent.verticalCenter
-//                            width: Theme.iconSizeSmall
-//                            height: Theme.iconSizeSmall
-//                            sourceSize.width: width
-//                            sourceSize.height: height
-//                            source: VodDataManager.raceIcon(_c.race2)
-//                        }
-//                    } // vs label with race icons
 
                     Item {
                         height: dateLabel2.height
