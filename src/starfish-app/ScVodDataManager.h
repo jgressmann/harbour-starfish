@@ -83,6 +83,7 @@ class ScVodDataManager : public QObject {
     Q_OBJECT
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
     Q_PROPERTY(int maxConcurrentMetaDataDownloads READ maxConcurrentMetaDataDownloads WRITE setMaxConcurrentMetaDataDownloads NOTIFY maxConcurrentMetaDataDownloadsChanged)
+    Q_PROPERTY(int maxConcurrentVodFileDownloads READ maxConcurrentVodFileDownloads WRITE setMaxConcurrentVodFileDownloads NOTIFY maxConcurrentVodFileDownloadsChanged)
     Q_PROPERTY(QString downloadMarker READ downloadMarkerString NOTIFY downloadMarkerChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
@@ -198,6 +199,8 @@ public: //
     int sqlPatchLevel() const;
     inline int maxConcurrentMetaDataDownloads() const { return m_MaxConcurrentMetaDataDownloads; }
     void setMaxConcurrentMetaDataDownloads(int value);
+    inline int maxConcurrentVodFileDownloads() const { return m_MaxConcurrentVodFileDownloads; }
+    void setMaxConcurrentVodFileDownloads(int value);
     Q_INVOKABLE int fetchSeen(qint64 rowid, const QString& table, const QString& where);
     Q_INVOKABLE int fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS);
     // filter pages
@@ -230,6 +233,7 @@ signals:
     void startWorker();
     void stopThread();
     void maxConcurrentMetaDataDownloadsChanged(int value);
+    void maxConcurrentVodFileDownloadsChanged(int value);
     void startProcessDatabaseStoreQueue(int transactionId, QString sql, ScSqlParamList args);
     void processVodsToAdd();
     void ytdlPathChanged(QString path);
@@ -357,6 +361,7 @@ private:
     ScClassifier m_Classifier;
     int m_SuspendedVodsChangedEventCount;
     int m_MaxConcurrentMetaDataDownloads;
+    int m_MaxConcurrentVodFileDownloads;
     int m_AddCounter;
     unsigned m_AddFront;
     unsigned m_AddBack;

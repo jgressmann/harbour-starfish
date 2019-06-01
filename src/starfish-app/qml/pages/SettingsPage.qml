@@ -212,7 +212,11 @@ BasePage {
             label: qsTrId("sf-settings-page-network-max-meta-data-downloads")
             text: settingNetworkMaxConcurrentMetaDataDownloads.value.toFixed(0)
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
-            EnterKey.onClicked: focus = false
+            EnterKey.onClicked: {
+                focus = false
+                settingNetworkMaxConcurrentVodFileDownloadsField.focus = true
+            }
+
             enabled: _toolEnabled
             validator: IntValidator {
                 bottom: 1
@@ -225,6 +229,35 @@ BasePage {
                     console.debug("number: " + number)
                     if (typeof(number) === "number") {
                         settingNetworkMaxConcurrentMetaDataDownloads.value = number
+                    }
+                }
+            }
+        }
+
+        TextField {
+            id: settingNetworkMaxConcurrentVodFileDownloadsField
+            width: root.width
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
+            //% "Max concurrent VOD file downloads"
+            label: qsTrId("sf-settings-page-network-max-vod-file-downloads-label")
+            text: settingNetworkMaxConcurrentVodFileDownloads.value.toFixed(0)
+            //% "Set to zero to disable limit"
+            placeholderText: qsTrId("sf-settings-page-network-max-vod-file-downloads-placeholder")
+            EnterKey.iconSource: "image://theme/icon-m-enter-next"
+            EnterKey.onClicked: focus = false
+            enabled: _toolEnabled
+
+            validator: IntValidator {
+                bottom: 0
+            }
+
+            onTextChanged: {
+                console.debug("text: " + text)
+                if (acceptableInput) {
+                    var number = parseFloat(text)
+                    console.debug("number: " + number)
+                    if (typeof(number) === "number") {
+                        settingNetworkMaxConcurrentVodFileDownloads.value = number
                     }
                 }
             }

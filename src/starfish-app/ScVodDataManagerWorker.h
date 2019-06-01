@@ -114,6 +114,7 @@ signals:
 public slots:
     void process();
     void maxConcurrentMetaDataDownloadsChanged(int value);
+    void maxConcurrentVodFileDownloadsChanged(int value);
     void setYtdlPath(const QString& path);
 
 private:

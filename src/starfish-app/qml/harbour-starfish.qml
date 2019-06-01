@@ -137,6 +137,18 @@ ApplicationWindow {
         }
 
         ConfigurationValue {
+            id: settingNetworkMaxConcurrentVodFileDownloads
+            key: "/network/max_concurrent_vod_file_downloads"
+            defaultValue: 0
+
+            onValueChanged: {
+                VodDataManager.maxConcurrentVodFileDownloads = value
+            }
+        }
+
+
+
+        ConfigurationValue {
             id: settingNetworkScraper
             key: "/network/scraper"
             defaultValue: sc2CastsDotComScraper.id
@@ -418,8 +430,9 @@ ApplicationWindow {
         VodDataManager.recentlyWatched.count = settingPlaybackRecentVideosToKeep.value
         VodDataManager.vodsAdded.connect(_onVodsAdded)
         VodDataManager.busyChanged.connect(_busyChanged)
-        VodDataManager.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
         YTDLDownloader.isUpdateAvailableChanged.connect(_ytdlUpdateAvailableChanged)
+        VodDataManager.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
+        VodDataManager.maxConcurrentVodFileDownloads = settingNetworkMaxConcurrentVodFileDownloads.value
         _setMode()
         _setYtdlPath()
         _checkForYtdlUpate()

@@ -1017,6 +1017,11 @@ void ScVodDataManagerWorker::maxConcurrentMetaDataDownloadsChanged(int value)
     m_Vodman->setMaxConcurrentMetaDataDownloads(value);
 }
 
+void ScVodDataManagerWorker::maxConcurrentVodFileDownloadsChanged(int value)
+{
+    m_Vodman->setMaxConcurrentVodFileDownloads(value);
+}
+
 void
 ScVodDataManagerWorker::fetchTitle(qint64 urlShareId) {
     QSqlQuery q(m_Database);

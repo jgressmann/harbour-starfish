@@ -403,6 +403,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     m_Error = Error_None;
     m_SuspendedVodsChangedEventCount = 0;
     m_MaxConcurrentMetaDataDownloads = 4;
+    m_MaxConcurrentVodFileDownloads = 1;
     m_AddCounter = 0;
     m_AddFront = 0;
     m_AddBack = 0;
@@ -510,6 +511,7 @@ ScVodDataManager::ScVodDataManager(QObject *parent)
     connect(this, &ScVodDataManager::startWorker, m_WorkerInterface, &ScVodDataManagerWorker::process);
     connect(this, &ScVodDataManager::stopThread, m_WorkerInterface, &QObject::deleteLater);
     connect(this, &ScVodDataManager::maxConcurrentMetaDataDownloadsChanged, m_WorkerInterface, &ScVodDataManagerWorker::maxConcurrentMetaDataDownloadsChanged);
+    connect(this, &ScVodDataManager::maxConcurrentVodFileDownloadsChanged, m_WorkerInterface, &ScVodDataManagerWorker::maxConcurrentVodFileDownloadsChanged);
     connect(this, &ScVodDataManager::ytdlPathChanged, m_WorkerInterface, &ScVodDataManagerWorker::setYtdlPath);
 
     m_WorkerThread.start();
@@ -3130,6 +3132,14 @@ void ScVodDataManager::setMaxConcurrentMetaDataDownloads(int value)
     if (value != m_MaxConcurrentMetaDataDownloads) {
         m_MaxConcurrentMetaDataDownloads = value;
         emit maxConcurrentMetaDataDownloadsChanged(value);
+    }
+}
+
+void ScVodDataManager::setMaxConcurrentVodFileDownloads(int value)
+{
+    if (value != m_MaxConcurrentVodFileDownloads) {
+        m_MaxConcurrentVodFileDownloads = value;
+        emit maxConcurrentVodFileDownloadsChanged(value);
     }
 }
 

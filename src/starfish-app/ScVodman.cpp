@@ -171,7 +171,8 @@ ScVodman::cancel(qint64 token)
 }
 
 void
-ScVodman::scheduleNextFileRequest() {
+ScVodman::scheduleNextFileRequest()
+{
     if (!m_PendingFileRequests.isEmpty() &&
         (m_MaxFile <= 0 || m_CurrentFile < m_MaxFile)) {
         auto pair = m_PendingFileRequests.front();
@@ -205,6 +206,17 @@ ScVodman::setMaxConcurrentMetaDataDownloads(int value)
     if (m_MaxMeta != value) {
         m_MaxMeta = value;
         emit maxConcurrentMetaDataDownloadsChanged();
+        scheduleNextMetaDataRequest();
+    }
+}
+
+void
+ScVodman::setMaxConcurrentVodFileDownloads(int value)
+{
+    if (m_MaxFile != value) {
+        m_MaxFile = value;
+        emit maxConcurrentVodFileDownloadsChanged();
+        scheduleNextFileRequest();
     }
 }
 

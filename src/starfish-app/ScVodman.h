@@ -32,10 +32,9 @@ class VMMetaDataDownload;
 class ScVodman : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int maxConcurrentMetaDataDownloads READ maxConcurrentMetaDataDownloads WRITE setMaxConcurrentMetaDataDownloads NOTIFY maxConcurrentMetaDataDownloadsChanged)
 public:
     ~ScVodman();
-    explicit ScVodman(QObject* parent = Q_NULLPTR);
+    explicit ScVodman(QObject* parent = nullptr);
 
     qint64 newToken();
     void startFetchMetaData(qint64 token, const QString& url);
@@ -43,6 +42,8 @@ public:
     void cancel(qint64 token);
     int maxConcurrentMetaDataDownloads() const { return m_MaxMeta; }
     void setMaxConcurrentMetaDataDownloads(int value);
+    int maxConcurrentVodFileDownloads() const { return m_MaxFile; }
+    void setMaxConcurrentVodFileDownloads(int value);
     void setYtdlPath(const QString& path);
     void clearYtdlCache();
 
@@ -53,6 +54,7 @@ signals:
     void fileDownloadCompleted(qint64 token, const VMPlaylistDownload& download);
     void downloadFailed(qint64 token, VMVodEnums::Error serviceErrorCode);
     void maxConcurrentMetaDataDownloadsChanged();
+    void maxConcurrentVodFileDownloadsChanged();
 
 private slots:
     void onPlaylistDownloadCompleted(qint64 handle, const VMPlaylistDownload& download);

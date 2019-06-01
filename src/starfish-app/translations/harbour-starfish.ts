@@ -529,93 +529,98 @@
         <source>Max concurrent meta data downloads</source>
         <translation>Max. concurrent meta data downloads</translation>
     </message>
-    <message id="sf-settings-page-network-max-vod-file-downloads">
-        <location filename="../qml/pages/SettingsPage.qml" line="237"/>
+    <message id="sf-settings-page-network-max-vod-file-downloads-label">
+        <location filename="../qml/pages/SettingsPage.qml" line="242"/>
         <source>Max concurrent VOD file downloads</source>
         <translation>Max concurrent VOD file downloads</translation>
     </message>
+    <message id="sf-settings-page-network-max-vod-file-downloads-placeholder">
+        <location filename="../qml/pages/SettingsPage.qml" line="245"/>
+        <source>Set to zero to disable limit</source>
+        <translation>Set to zero to disable limit</translation>
+    </message>
     <message id="sf-settings-page-network-vod-site-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="258"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="269"/>
         <source>VOD site</source>
         <translation>VOD site</translation>
     </message>
     <message id="sf-settings-page-network-vod-site-desc">
-        <location filename="../qml/pages/SettingsPage.qml" line="260"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="271"/>
         <source>This site is used to check for new VODs.</source>
         <translation>This site is used to check for new VODs.</translation>
     </message>
     <message id="sf-settings-page-network-periodically-check-for-vods-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="290"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="301"/>
         <source>Periodically check for new VODs</source>
         <translation>Periodically check for new VODs</translation>
     </message>
     <message id="sf-settings-page-network-check-interval-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="304"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="315"/>
         <source>Minutes between checks</source>
         <translation>Minutes between checks</translation>
     </message>
     <message id="sf-settings-page-network-continue-download-on-page-destruction">
-        <location filename="../qml/pages/SettingsPage.qml" line="326"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="337"/>
         <source>Continue VOD file download when page closes</source>
         <translation>Continue VOD file download when page closes</translation>
     </message>
     <message id="sf-settings-page-format-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="338"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="349"/>
         <source>Format</source>
         <translation>Format</translation>
     </message>
     <message id="sf-settings-page-format-broadband-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="344"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="355"/>
         <source>Broadband</source>
         <translation>Broadband</translation>
     </message>
     <message id="sf-settings-page-format-mobile-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="357"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="368"/>
         <source>Mobile</source>
         <translation>Mobile</translation>
     </message>
     <message id="sf-settings-page-playback-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="369"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="380"/>
         <source>Playback</source>
         <translation>Playback</translation>
     </message>
     <message id="sf-settings-page-playback-external-media-player-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="374"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="385"/>
         <source>Use external media player</source>
         <translation>Use external media player</translation>
     </message>
     <message id="sf-settings-page-playback-no-videos-in-recently-watched">
-        <location filename="../qml/pages/SettingsPage.qml" line="387"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="398"/>
         <source>Number of recently watched videos to keep</source>
         <translation>Number of recently watched videos to keep</translation>
     </message>
     <message id="sf-settings-page-playback-pause-on-device-lock-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="410"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="421"/>
         <source>Pause playback on device lock</source>
         <translation>Pause playback on device lock</translation>
     </message>
     <message id="sf-settings-page-playback-pause-if-cover-page-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="421"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="432"/>
         <source>Pause playback when the cover page is shown</source>
         <translation>Pause playback when the cover page is shown</translation>
     </message>
     <message id="sf-settings-page-new-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="432"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="443"/>
         <source>New</source>
         <translation>New</translation>
     </message>
     <message id="sf-settings-page-new-no-days-to-keep-vods-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="439"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="450"/>
         <source>Number of days to keep a VOD in &apos;New&apos;</source>
         <translation>Number of days to keep a VOD in &apos;New&apos;</translation>
     </message>
     <message id="sf-settings-page-new-remove-seen-vods-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="462"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="473"/>
         <source>Remove watched VODs from &apos;New&apos;</source>
         <translation>Remove watched VODs from &apos;New&apos;</translation>
     </message>
     <message id="sf-settings-page-title">
-        <location filename="../qml/pages/SettingsPage.qml" line="489"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="500"/>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
@@ -696,7 +701,7 @@
         <translation>%1 is busy. Try again later.</translation>
     </message>
     <message id="sf-vods-added-notification-body" numerus="yes">
-        <location filename="../qml/harbour-starfish.qml" line="495"/>
+        <location filename="../qml/harbour-starfish.qml" line="496"/>
         <source>%1 VODs added</source>
         <translation>
             <numerusform>1 VOD added</numerusform>
