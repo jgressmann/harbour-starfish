@@ -28,32 +28,8 @@
 
 #include <QAbstractListModel>
 
-//class ScRecentlyWatchedVideoKey
-//{
-//    Q_GADGET
-//    Q_PROPERTY(QString filePath READ filePath CONSTANT)
-//    Q_PROPERTY(qint64 vodId READ vodId CONSTANT)
+#include <functional>
 
-//public:
-//    ~ScRecentlyWatchedVideoKey() noexcept = default;
-//    ScRecentlyWatchedVideoKey() noexcept : m_VodId(-1) {}
-//    ScRecentlyWatchedVideoKey(qint64 value) noexcept : m_VodId(value) {}
-//    ScRecentlyWatchedVideoKey(const QString& value) noexcept : m_FilePath(value), m_VodId(-1) {}
-//    ScRecentlyWatchedVideoKey(const ScRecentlyWatchedVideoKey& /*other*/) noexcept = default;
-//    ScRecentlyWatchedVideoKey& operator=(const ScRecentlyWatchedVideoKey& /*other*/) noexcept = default;
-//    QString filePath() const noexcept { return m_FilePath; }
-////    void setFilePath(const QString& value) noexcept { m_FilePath = value; }
-//    qint64 vodId() const noexcept { return m_VodId; }
-////    void setVodId(qint64 value) noexcept { m_VodId = value; }
-//    bool isValid() const { return m_VodId >= 0 || !m_FilePath.isEmpty(); }
-//    bool isVod() const { return m_VodId >= 0; }
-//    bool isFile() const { return !m_FilePath.isEmpty(); }
-//private:
-//    QString m_FilePath;
-//    qint64 m_VodId;
-//};
-
-//Q_DECLARE_METATYPE(ScRecentlyWatchedVideoKey)
 
 class ScVodDataManager;
 class ScRecentlyWatchedVideos : public QAbstractListModel
