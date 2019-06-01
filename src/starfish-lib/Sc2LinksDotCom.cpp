@@ -208,7 +208,7 @@ Sc2LinksDotCom::_fetch() {
 
     m_State.reset(new Sc2LinksDotComState);
     QFile f(stateFilePath());
-    if (f.open(QIODevice::ReadOnly))
+    if (!f.fileName().isEmpty() && f.open(QIODevice::ReadOnly))
     {
         QDataStream s(&f);
         s >> *m_State;
@@ -334,7 +334,8 @@ Sc2LinksDotCom::requestFinished(QNetworkReply* reply) {
 }
 
 void
-Sc2LinksDotCom::finish() {
+Sc2LinksDotCom::finish()
+{
     Q_ASSERT(m_RequestStage.empty());
     Q_ASSERT(m_RequestMatch.empty());
     Q_ASSERT(m_RequestVod.empty());
@@ -343,11 +344,13 @@ Sc2LinksDotCom::finish() {
     m_CurrentEventName.clear();
     m_CurrentEventLastModified = QDate();
 
-    QFile f(stateFilePath());
-    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate))
-    {
-        QDataStream s(&f);
-        s << *m_State;
+    auto filePath = stateFilePath();
+    if (!filePath.isEmpty()) {
+        QFile f(filePath);
+        if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            QDataStream s(&f);
+            s << *m_State;
+        }
     }
 
     m_State.reset();
