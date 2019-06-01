@@ -158,6 +158,11 @@
             "extension": ".jpg"
         },
         {
+            "regex": "(gsl )?off the record",
+            "url": "https://www.dropbox.com/s/3yzazizwz0c5n7o/gslotr.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "gsl super tournament",
             "url": "https://www.dropbox.com/s/uw8pukwin0i6svu/gslst.png?dl=1",
             "extension": ".png"
