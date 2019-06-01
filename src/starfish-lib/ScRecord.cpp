@@ -525,6 +525,14 @@ QDomNode ScRecord::toXml(QDomDocument& doc) const {
         element.setAttribute(QStringLiteral("match_name"), matchName);
     }
 
+    if (isValid(ValidMatchNumber)) {
+        element.setAttribute(QStringLiteral("match_number"), matchNumber);
+    }
+
+    if (isValid(ValidStageRank)) {
+        element.setAttribute(QStringLiteral("stage_rank"), stageRank);
+    }
+
     return element;
 }
 
@@ -601,6 +609,18 @@ ScRecord::fromXml(const QDomNode& node) {
         if (!str.isEmpty()) {
             record.matchName = str;
             record.valid |= ScRecord::ValidMatchName;
+        }
+
+        str = attrs.namedItem(QStringLiteral("match_number")).nodeValue();
+        if (!str.isEmpty()) {
+            record.matchNumber = str.toInt();
+            record.valid |= ScRecord::ValidMatchNumber;
+        }
+
+        str = attrs.namedItem(QStringLiteral("stage_rank")).nodeValue();
+        if (!str.isEmpty()) {
+            record.stageRank = str.toInt();
+            record.valid |= ScRecord::ValidStageRank;
         }
     }
 
