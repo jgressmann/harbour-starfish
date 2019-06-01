@@ -25,6 +25,7 @@
 #include <QCommandLineParser>
 #include <QDateTime>
 #include <QFile>
+#include <QDir>
 #include <QDomDocument>
 #include <QTextStream>
 #include <QTranslator>
@@ -58,10 +59,10 @@ int main(int argc, char** argv) {
                 "year",
                 QString::number(QDateTime::currentDateTime().date().year()));
 
-    QCommandLineOption fileOption(
-                QStringList() << "o" << "output-file",
-                "Name of the <file> to save the data in",
-                "file");
+    QCommandLineOption outputDirectoryOption(
+                QStringList() << "d" << "output-directory",
+                "Directory to store file in",
+                "directory");
 
     QCommandLineOption scraperOption(
                 QStringList() << "s" << "scaper",
@@ -83,7 +84,7 @@ int main(int argc, char** argv) {
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption(yearOption);
-    parser.addOption(fileOption);
+    parser.addOption(outputDirectoryOption);
     parser.addOption(scraperOption);
     parser.addOption(scrapersOption);
     parser.addOption(classifierFilePathOption);
@@ -97,27 +98,6 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    auto classifierFilePath = parser.value(classifierFilePathOption);
-    ScClassifier classifier;
-    if (!classifier.load(classifierFilePath)) {
-        fprintf(stderr, "Failed to load classifier from %s\n", qPrintable(classifierFilePath));
-        return -1;
-    }
-
-    auto outputFilePath = parser.value(fileOption);
-    if (outputFilePath.isEmpty()) {
-        outputFile.open(stdout, QIODevice::WriteOnly);
-        outputFilePath = "stdout";
-    } else {
-        outputFile.setFileName(outputFilePath);
-        outputFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    }
-
-    if (!outputFile.isOpen()) {
-        fprintf(stderr, "Failed to open %s for writing\n", qPrintable(outputFilePath));
-        return -1;
-    }
-
     {
         bool yearOk = false;
         auto yearValue = parser.value(yearOption);
@@ -127,6 +107,36 @@ int main(int argc, char** argv) {
             return -1;
         }
     }
+
+    auto classifierFilePath = parser.value(classifierFilePathOption);
+    ScClassifier classifier;
+    if (!classifier.load(classifierFilePath)) {
+        fprintf(stderr, "Failed to load classifier from %s\n", qPrintable(classifierFilePath));
+        return -1;
+    }
+
+    auto outputDirectory = parser.value(outputDirectoryOption);
+    if (outputDirectory.isEmpty()) {
+        outputFile.open(stdout, QIODevice::WriteOnly);
+    } else {
+        QDir dir;
+        if (!dir.mkpath(outputDirectory)) {
+            fprintf(stderr, "Failed to create directory %s\n", qPrintable(outputDirectory));
+            return -1;
+        }
+
+        dir.setPath(outputDirectory);
+        auto filePath = dir.filePath(QString::number(year) + QStringLiteral(".xml"));
+        outputFile.setFileName(filePath);
+        outputFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    }
+
+    if (!outputFile.isOpen()) {
+        fprintf(stderr, "Failed to open %s for writing\n", qPrintable(outputFile.fileName()));
+        return -1;
+    }
+
+
 
     QScopedPointer<ScVodScraper> scraper(makeScraper(parser.value(scraperOption)));
     if (!scraper) {
@@ -215,6 +225,6 @@ static ScVodScraper* makeScraper(const QString& name)
 
 static void showProgress()
 {
-    fprintf(stdout, "%02d%% %s\n", (int)(scraperPtr->progress() * 100), qPrintable(scraperPtr->progressDescription()));
+    fprintf(stdout, "%02d%% %s\n", static_cast<int>(scraperPtr->progress() * 100), qPrintable(scraperPtr->progressDescription()));
 }
 
