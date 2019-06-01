@@ -461,7 +461,7 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply)
                 if (u.host() == QStringLiteral("sc2casts.com") &&
                     u.path() == QStringLiteral("/twitch/embed2")) {
                     QUrlQuery q(u);
-                    int id;
+                    int id = 0;
                     QString start;
                     if (q.hasQueryItem(QStringLiteral("id"))) {
                         id = q.queryItemValue(QStringLiteral("id")).toInt();
@@ -596,7 +596,7 @@ Sc2CastsDotCom::parseLevel1(QNetworkReply* reply)
 
         if (urls.size() > 1) {
             record->valid |= ScRecord::ValidMatchNumber;
-            record->matchNumber = i + 1;
+            record->matchNumber = static_cast<qint8>(i + 1);
         }
 
         record->valid |= ScRecord::ValidUrl;
