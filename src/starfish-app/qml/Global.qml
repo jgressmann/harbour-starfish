@@ -43,6 +43,7 @@ Item { // Components can't declare functions
     property var playVideoHandler
     property var videoPlayerPage
     property Notification deleteVodNotification
+    property Notification deleteSeenVodFilesNotification
     property var getNewVodsContstraints
 
 
@@ -297,9 +298,9 @@ Item { // Components can't declare functions
         console.debug("delete seen vod files where: " + _where)
         var count = VodDataManager.deleteSeenVodFiles(_where)
         if (count) {
-            deleteVodNotification.itemCount = count
-            deleteVodNotification.body = deleteVodNotification.previewBody = count + " seen VOD file" + (count > 1 ? "s" : "") + " deleted"
-            deleteVodNotification.publish()
+            //% "%1 seen VOD files deleted"
+            deleteSeenVodFilesNotification.summary = qsTrId("sf-global-seen-vod-files-deleted-notification-summary", count).arg(count)
+            deleteSeenVodFilesNotification.publish()
         }
     }
 
@@ -311,8 +312,8 @@ Item { // Components can't declare functions
         console.debug("delete vods where: " + _where)
         var count = VodDataManager.deleteVods(_where)
         if (count) {
-            deleteVodNotification.itemCount = count
-            deleteVodNotification.body = deleteVodNotification.previewBody = count + " VOD" + (count > 1 ? "s" : "") + " deleted"
+            //% "%1 VODs deleted"
+            deleteVodNotification.summary = qsTrId("sf-global-vods-deleted-notification-summary", count).arg(count)
             deleteVodNotification.publish()
         }
     }

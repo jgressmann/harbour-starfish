@@ -277,7 +277,7 @@
         <location filename="../qml/cover/CoverPage.qml" line="178"/>
         <source>%1 active download</source>
         <oldsource>%1 VOD downloads</oldsource>
-        <translation">
+        <translation>
             <numerusform>%1 aktiver Download</numerusform>
             <numerusform>%1 aktive Downloads</numerusform>
         </translation>
@@ -681,38 +681,28 @@
         <source>Download failed</source>
         <translation>Download fehlgeschlagen</translation>
     </message>
-    <message id="sf-new-vods-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="251"/>
-        <source>VODs added</source>
-        <translation>Videos hinzugefügt</translation>
-    </message>
-    <message id="sf-seen-vods-deleted-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="271"/>
-        <source>Seen VODs deleted</source>
-        <translation>Gesehene Videos gelöscht</translation>
-    </message>
     <message id="sf-nofification-download-ytdl-update-available-summary">
-        <location filename="../qml/harbour-starfish.qml" line="283"/>
+        <location filename="../qml/harbour-starfish.qml" line="289"/>
         <source>youtube-dl update available</source>
         <translation>youtube-dl Update verfügbar</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-body">
-        <location filename="../qml/harbour-starfish.qml" line="286"/>
+        <location filename="../qml/harbour-starfish.qml" line="292"/>
         <source>youtube-dl version %1 available</source>
         <translation>youtube-dl Version %1 verfügbar</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-action">
-        <location filename="../qml/harbour-starfish.qml" line="291"/>
+        <location filename="../qml/harbour-starfish.qml" line="297"/>
         <source>Update youtube-dl</source>
         <translation>youtube-dl aktualisieren</translation>
     </message>
     <message id="sf-notification-busy">
-        <location filename="../qml/harbour-starfish.qml" line="318"/>
+        <location filename="../qml/harbour-starfish.qml" line="324"/>
         <source>%1 is busy. Try again later.</source>
         <translation>%ist beschäftigt. Versuche es später noch einmal.</translation>
     </message>
-    <message id="sf-vods-added-notification-body" numerus="yes">
-        <location filename="../qml/harbour-starfish.qml" line="496"/>
+    <message id="sf-vods-added-notification-summary" numerus="yes">
+        <location filename="../qml/harbour-starfish.qml" line="503"/>
         <source>%1 VODs added</source>
         <translation>
             <numerusform>Ein Video hinzugefügt</numerusform>
@@ -842,100 +832,100 @@
         <translation>Details findest du in der Logdatei im Verzeichnis %1</translation>
     </message>
     <message id="sf-match-item-copy-url-to-clipboard">
-        <location filename="../qml/pages/MatchItem.qml" line="500"/>
+        <location filename="../qml/pages/MatchItem.qml" line="493"/>
         <source>Copy URL to clipboard</source>
         <translation>URL kopieren</translation>
     </message>
     <message id="sf-match-item-download-meta-data">
-        <location filename="../qml/pages/MatchItem.qml" line="506"/>
+        <location filename="../qml/pages/MatchItem.qml" line="499"/>
         <source>Download meta data</source>
         <translation>Metadaten herunterladen</translation>
     </message>
     <message id="sf-match-item-download-vod">
-        <location filename="../qml/pages/MatchItem.qml" line="515"/>
+        <location filename="../qml/pages/MatchItem.qml" line="508"/>
         <source>Download VOD</source>
         <translation>Video heruntergeladen</translation>
     </message>
     <message id="sf-match-item-download-vod-with-format">
-        <location filename="../qml/pages/MatchItem.qml" line="528"/>
+        <location filename="../qml/pages/MatchItem.qml" line="521"/>
         <source>Download VOD with format...</source>
         <translation>Video herunterladen im Format ...</translation>
     </message>
     <message id="sf-match-item-cancel-vod-download">
-        <location filename="../qml/pages/MatchItem.qml" line="538"/>
+        <location filename="../qml/pages/MatchItem.qml" line="531"/>
         <source>Cancel VOD download</source>
         <translation>Herunterladen abbrechen</translation>
     </message>
     <message id="sf-match-item-play-stream">
-        <location filename="../qml/pages/MatchItem.qml" line="545"/>
+        <location filename="../qml/pages/MatchItem.qml" line="538"/>
         <source>Play stream</source>
         <translation>Stream abspielen</translation>
     </message>
     <message id="sf-match-item-play-stream-with-format">
-        <location filename="../qml/pages/MatchItem.qml" line="552"/>
+        <location filename="../qml/pages/MatchItem.qml" line="545"/>
         <source>Play stream with format...</source>
         <translation>Stream abspielen im Format ...</translation>
     </message>
     <message id="sf-match-item-delete-meta-data">
-        <location filename="../qml/pages/MatchItem.qml" line="559"/>
+        <location filename="../qml/pages/MatchItem.qml" line="552"/>
         <source>Delete meta data</source>
         <translation>Metadaten löschen</translation>
     </message>
     <message id="sf-match-item-delete-vod-file">
-        <location filename="../qml/pages/MatchItem.qml" line="566"/>
+        <location filename="../qml/pages/MatchItem.qml" line="559"/>
         <source>Delete VOD file</source>
         <translation>Videodateien löschen</translation>
     </message>
     <message id="sf-match-item-deleting-shared-vod-files">
-        <location filename="../qml/pages/MatchItem.qml" line="583"/>
+        <location filename="../qml/pages/MatchItem.qml" line="576"/>
         <source>Deleting files for %1 VODs</source>
         <translation>Lösche Dateien für %1 Videos</translation>
     </message>
     <message id="sf-match-item-deleting-vod-files-for-title">
-        <location filename="../qml/pages/MatchItem.qml" line="590"/>
+        <location filename="../qml/pages/MatchItem.qml" line="583"/>
         <source>Deleting files for %1</source>
         <translation>Lösche Dateien für %1</translation>
     </message>
     <message id="sf-match-item-copy-vod-file-path-to-clipboard">
-        <location filename="../qml/pages/MatchItem.qml" line="617"/>
+        <location filename="../qml/pages/MatchItem.qml" line="610"/>
         <source>Copy VOD file path to clipboard</source>
         <translation>Videodateipfad kopieren</translation>
     </message>
     <message id="sf-match-item-delete-thumbnail">
-        <location filename="../qml/pages/MatchItem.qml" line="624"/>
+        <location filename="../qml/pages/MatchItem.qml" line="617"/>
         <source>Delete thumbnail</source>
         <translation>Thumbnail löschen</translation>
     </message>
     <message id="sf-match-item-vod-from-database">
-        <location filename="../qml/pages/MatchItem.qml" line="630"/>
+        <location filename="../qml/pages/MatchItem.qml" line="623"/>
         <source>Delete VOD from database</source>
         <translation>Video aus Datenbank löschen</translation>
     </message>
     <message id="sf-select-av-format-dialog-title">
-        <location filename="../qml/pages/MatchItem.qml" line="934"/>
+        <location filename="../qml/pages/MatchItem.qml" line="932"/>
         <source>Select a format</source>
         <translation>Wähle ein Format aus</translation>
     </message>
     <message id="sf-recently-watched-video-view-remove-from-list">
         <location filename="../qml/RecentlyWatchedVideoView.qml" line="67"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="225"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="227"/>
         <source>Remove from list</source>
         <translation>Entfernen</translation>
     </message>
     <message id="sf-recently-watched-video-view-removing">
         <location filename="../qml/RecentlyWatchedVideoView.qml" line="74"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="233"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="235"/>
         <source>Removing %1</source>
         <translation>Entferne %1</translation>
     </message>
     <message id="sf-recently-watched-video-view-no-content">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="248"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="250"/>
         <source>No recent videos</source>
         <oldsource>No recent videos.</oldsource>
         <translation>Keine zuletzt gesehenen Videos</translation>
     </message>
     <message id="sf-recently-watched-video-view-no-content-hint">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="250"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="252"/>
         <source>This list will fill with the videos you have watched</source>
         <oldsource>This list will fill with the videos you have watched.</oldsource>
         <translation>Diese Liste wird sich mit Videos anfüllen, die du gesehen hast</translation>
@@ -1065,6 +1055,22 @@
         <location filename="../qml/pages/StagePage.qml" line="204"/>
         <source>Episode</source>
         <translation>Folge</translation>
+    </message>
+    <message id="sf-global-seen-vod-files-deleted-notification-summary" numerus="yes">
+        <location filename="../qml/Global.qml" line="302"/>
+        <source>%1 seen VOD files deleted</source>
+        <translation>
+            <numerusform>%1 gesehene Videodatei gelöscht</numerusform>
+            <numerusform>%1 gesehene Videodateien gelöscht</numerusform>
+        </translation>
+    </message>
+    <message id="sf-global-vods-deleted-notification-summary" numerus="yes">
+        <location filename="../qml/Global.qml" line="316"/>
+        <source>%1 VODs deleted</source>
+        <translation>
+            <numerusform>%1 Video gelöscht</numerusform>
+            <numerusform>%1 Videos gelöscht</numerusform>
+        </translation>
     </message>
 </context>
 <context>

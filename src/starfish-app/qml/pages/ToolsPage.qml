@@ -161,7 +161,7 @@ BasePage {
                     onClicked: {
                         console.debug("sending new vods notification")
                         newVodNotification.itemCount = 42
-                        newVodNotification.body = newVodNotification.previewBody = "debug notification"
+                        newVodNotification.summary = "debug notification"
                         newVodNotification.publish()
                     }
                 }

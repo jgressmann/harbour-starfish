@@ -246,12 +246,10 @@ ApplicationWindow {
     Notification {
         id: newVodNotification
         appName: App.displayName
+        previewSummary: summary
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
-        //% "VODs added"
-        summary: qsTrId("sf-new-vods-notification-summary")
-//        icon: "icon-lock-application-update"
         icon: appIcon
-//        icon: "icon-lock-information"
+
         remoteActions: [ {
              "name": "default",
              "displayName": "Show new VODs",
@@ -265,13 +263,21 @@ ApplicationWindow {
     }
 
     Notification {
+        id: deleteSeenVodFilesNotification
+        appName: App.displayName
+        previewSummary: summary
+        appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+        icon: appIcon
+        isTransient: true
+    }
+
+    Notification {
         id: deleteVodNotification
         appName: App.displayName
-        //% "Seen VODs deleted"
-        summary: qsTrId("sf-seen-vods-deleted-notification-summary")
+        previewSummary: summary
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
-//        icon: "icon-lock-information"
         icon: appIcon
+        isTransient: true
     }
 
     Notification {
@@ -457,6 +463,7 @@ ApplicationWindow {
         }
 
         Global.deleteVodNotification = deleteVodNotification
+        Global.deleteSeenVodFilesNotification = deleteSeenVodFilesNotification
         Global.getNewVodsContstraints = function () {
             return "match_date>=date('now', '-" + settingNewWindowDays.value.toFixed(0) + " days')" +
                                     (settingNewRemoveSeen.value ? " and seen=0" : "")
@@ -493,7 +500,7 @@ ApplicationWindow {
             if (!VodDataManager.busy && _vodsAdded) {
                 newVodNotification.itemCount = 1
                 //% "%1 VODs added"
-                newVodNotification.body = newVodNotification.previewBody = qsTrId("sf-vods-added-notification-body", _vodsAdded).arg(_vodsAdded)
+                newVodNotification.summary = qsTrId("sf-vods-added-notification-summary", _vodsAdded).arg(_vodsAdded)
                 newVodNotification.publish()
                 _vodsAdded = 0
             }
