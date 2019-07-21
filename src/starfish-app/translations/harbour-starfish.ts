@@ -272,33 +272,42 @@
             <numerusform>VODs</numerusform>
         </translation>
     </message>
+    <message id="sf-cover-label-active-vod-downloads" numerus="yes">
+        <location filename="../qml/cover/CoverPage.qml" line="178"/>
+        <source>%1 active download</source>
+        <oldsource>%1 VOD downloads</oldsource>
+        <translation>
+            <numerusform>%1 active download</numerusform>
+            <numerusform>%1 active downloads</numerusform>
+        </translation>
+    </message>
     <message id="sf-cover-update-status-updating">
-        <location filename="../qml/cover/CoverPage.qml" line="236"/>
+        <location filename="../qml/cover/CoverPage.qml" line="274"/>
         <source>Updating</source>
         <translation>Updating</translation>
     </message>
     <message id="sf-cover-update-status-just-now">
-        <location filename="../qml/cover/CoverPage.qml" line="244"/>
+        <location filename="../qml/cover/CoverPage.qml" line="282"/>
         <source>Updated just now</source>
         <translation>Updated just now</translation>
     </message>
     <message id="sf-cover-update-status-just-seconds-ago">
-        <location filename="../qml/cover/CoverPage.qml" line="247"/>
+        <location filename="../qml/cover/CoverPage.qml" line="285"/>
         <source>Updated seconds ago</source>
         <translation>Updated seconds ago</translation>
     </message>
     <message id="sf-cover-update-status-minutes-ago">
-        <location filename="../qml/cover/CoverPage.qml" line="250"/>
+        <location filename="../qml/cover/CoverPage.qml" line="288"/>
         <source>Updated minutes ago</source>
         <translation>Updated minutes ago</translation>
     </message>
     <message id="sf-cover-update-status-hours-ago">
-        <location filename="../qml/cover/CoverPage.qml" line="253"/>
+        <location filename="../qml/cover/CoverPage.qml" line="291"/>
         <source>Updated hours ago</source>
         <translation>Updated hours ago</translation>
     </message>
     <message id="sf-cover-update-status-more">
-        <location filename="../qml/cover/CoverPage.qml" line="256"/>
+        <location filename="../qml/cover/CoverPage.qml" line="294"/>
         <source>Updated a really long time ago</source>
         <translation>Updated a really long time ago</translation>
     </message>

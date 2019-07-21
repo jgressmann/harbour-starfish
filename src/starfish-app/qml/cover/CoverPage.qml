@@ -123,16 +123,12 @@ CoverBackground {
             visible: settingLastUpdateTimestamp.value > 0
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.bottom: parent.bottom
+//            anchors.bottom: parent.bottom
             anchors.top: spacer.bottom
             font.pixelSize: Theme.fontSizeLarge
 //            font.bold: true
             color: Theme.highlightColor
             wrapMode: Text.Wrap
-
-//            onOpacityChanged: {
-//                console.debug("opacity=" + opacity)
-//            }
 
             SequentialAnimation on opacity {
                 loops: Animation.Infinite
@@ -141,13 +137,13 @@ CoverBackground {
                 NumberAnimation {
                    from: 1
                    to: 0.2
-                   duration: 1000
+                   duration: 750
                 }
 
                 NumberAnimation {
                    from: 0.2
                    to: 1
-                   duration: 1000
+                   duration: 750
                 }
 
                 onRunningChanged: {
@@ -155,6 +151,48 @@ CoverBackground {
                     if (!running) {
                         updateLabel.opacity = 1
                     }
+                }
+            }
+        }
+
+        Item {
+            id: spacer2
+            height: Theme.paddingSmall
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: updateLabel.bottom
+        }
+
+        Label {
+            id: activeDownloadsLabel
+            visible: VodDataManager.vodDownloads > 0
+            anchors.left: parent.left
+            anchors.right: parent.right
+//            anchors.bottom: parent.bottom
+            anchors.top: spacer2.bottom
+            font.pixelSize: Theme.fontSizeLarge
+//            font.bold: true
+            color: Theme.highlightColor
+            wrapMode: Text.Wrap
+            //% "%1 active download"
+            text: qsTrId("sf-cover-label-active-vod-downloads", VodDataManager.vodDownloads).arg(VodDataManager.vodDownloads)
+
+            onVisibleChanged: opacity = 1
+
+            SequentialAnimation on opacity {
+                loops: Animation.Infinite
+                running: activeDownloadsLabel.visible
+
+                NumberAnimation {
+                   from: 1
+                   to: 0.2
+                   duration: 750
+                }
+
+                NumberAnimation {
+                   from: 0.2
+                   to: 1
+                   duration: 750
                 }
             }
         }
