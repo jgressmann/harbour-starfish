@@ -53,7 +53,7 @@ ContentPage {
         id: updater
 
         onDataSaved: function (key, offset, thumbnailFilePath) {
-            matchItemConnections.updateStartOffset(_videoId)
+            matchItemConnections.updatePlaybackOffset(_videoId)
         }
     }
 

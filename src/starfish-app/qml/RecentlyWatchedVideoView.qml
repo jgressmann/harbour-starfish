@@ -196,7 +196,9 @@ SilicaListView {
                         console.debug("index=" + index + " offset=" + offset + " url=" + url)
                         playlist.setUrl(0, url)
                         playlist.setDuration(0, -1)
-                        playlist.startOffset = offset
+                        playlist.startOffset = 0
+                        playlist.endOffset = -1;
+                        playlist.playbackOffset = offset
                     }
 
 

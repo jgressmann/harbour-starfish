@@ -37,7 +37,7 @@ ListItem {
     property int rowId: -1
     property var _playWhenPageTransitionIsDoneCallback: null
     property alias playlist: _playlist
-    property alias startOffset: _playlist.startOffset
+    property alias playbackOffset: _playlist.playbackOffset
     readonly property int baseOffset: _c ? _c.videoStartOffset : 0
     property bool _validRange: _c && baseOffset >= 0 && baseOffset < _c.videoEndOffset
     readonly property bool _hasValidRaces: _c && _c.race1 >= 1 && _c.race2 >= 1
@@ -305,13 +305,6 @@ ListItem {
                                     result += _c.urlShare.urlShareId
                                 }
 
-//                                if (startOffset > 0) {
-//                                    if (result) {
-//                                        result += ", "
-//                                    }
-
-//                                    result += Global.secondsToTimeString(startOffset)
-//                                }
 
                                 return result
                             }
@@ -442,9 +435,9 @@ ListItem {
             width: parent.width * _range
             visible: !seen && _validRange
             readonly property real _range:
-                startOffset < baseOffset
+                playbackOffset < baseOffset
                 ? 0
-                : (startOffset > _c.videoEndOffset ? 1 : (startOffset-baseOffset)/(_c.videoEndOffset-baseOffset))
+                : (playbackOffset > _c.videoEndOffset ? 1 : (playbackOffset-baseOffset)/(_c.videoEndOffset-baseOffset))
             height: 4
             anchors.top: content.bottom
 //            onVisibleChanged: {
@@ -475,7 +468,7 @@ ListItem {
 
         memory.addMatchItem(root)
 
-        updateStartOffset()
+        updatePlaybackOffset()
 
         if (requiredHeight > height) {
             console.warn("rowid " + rowId + " match item height is " + height + " which is less than required height " + requiredHeight)
@@ -775,7 +768,10 @@ ListItem {
     }
 
     function _playFiles() {
-        playlist.startOffset = startOffset
+        playlist.startOffset = _c.videoStartOffset
+        playlist.endOffset = _c.videoEndOffset
+        playlist.playbackOffset = playbackOffset
+
         playlist.parts = _c.urlShare.files
         for (var i = 0; i < _c.urlShare.files; ++i) {
             var file = _c.urlShare.file(i)
@@ -806,7 +802,9 @@ ListItem {
     function _playStreamWithFormat(vmFormatId) {
         var metaData = _c.urlShare.metaData
 
-        playlist.startOffset = startOffset
+        playlist.startOffset = _c.videoStartOffset
+        playlist.endOffset = _c.videoEndOffset
+        playlist.playbackOffset = playbackOffset
         playlist.parts = metaData.vods
 
         if (VM.VM_Any === vmFormatId) {
@@ -909,12 +907,12 @@ ListItem {
     }
 
 
-    function updateStartOffset() {
+    function updatePlaybackOffset() {
         var offset = VodDataManager.recentlyWatched.offset(VodDataManager.recentlyWatched.vodKey(rowId));
         if (offset >= 0) {
-            startOffset = offset
+            playbackOffset = offset
         } else {
-            startOffset = baseOffset // base offset into multi match video
+            playbackOffset = baseOffset // base offset into multi match video
         }
     }
 

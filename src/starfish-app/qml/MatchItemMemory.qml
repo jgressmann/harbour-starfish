@@ -36,10 +36,10 @@ Item {
         delete _items[item.rowId]
     }
 
-    function updateStartOffset(rowid) {
+    function updatePlaybackOffset(rowid) {
         var item = _items[rowid]
         if (item) {
-            item.updateStartOffset()
+            item.updatePlaybackOffset()
         }
     }
 

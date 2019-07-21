@@ -449,11 +449,11 @@ ApplicationWindow {
             if (playlist && playlist.isValid) {
                 console.debug("playlist=" + playlist)
                 VodDataManager.recentlyWatched.add(key, seen)
-                VodDataManager.recentlyWatched.setOffset(key, playlist.startOffset)
+                VodDataManager.recentlyWatched.setOffset(key, playlist.playbackOffset)
                 if (settingExternalMediaPlayer.value && playlist.url(0).indexOf("http") !== 0) {
                     Qt.openUrlExternally(playlist.url(0))
                 } else {
-                    console.debug("offset=" + playlist.startOffset)
+                    console.debug("offset=" + playlist.playbackOffset)
                     var playerPage = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
                     playerPage.playPlaylist(playlist)
                     updater.playerPage = playerPage

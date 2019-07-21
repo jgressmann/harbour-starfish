@@ -30,7 +30,6 @@ import ".."
 
 Page {
     id: page
-    readonly property int startOffset: _playlist ? _playlist.startOffset : 0
     property int _seekFixup: 0
     property int _seekPositionMs: 0
     property int _currentUrlIndex: -1
@@ -180,22 +179,6 @@ Page {
             _preventBlanking(playbackState === MediaPlayer.PlayingState)
         }
 
-//        onVolumeChanged: {
-//            console.debug("media player volume=" + volume)
-//        }
-
-//        onPositionChanged: {
-//            // If the start offset seek ended up short of the target position,
-//            // correct iteratively
-//            var startOffsetMs = _playlist.startOffset * 1000
-//            if (_startSeek && _streamPositionMs - startOffsetMs < -1000) {
-//                _seekFixup += 1000
-//                console.debug("reseek from " + _streamPositionMs + " to start offset " + startOffsetMs + " + " + _seekFixup)
-//                if (startOffsetMs + _seekFixup < _streamDurationS * 1000) {
-//                    _seek(startOffsetMs + _seekFixup)
-//                }
-//            }
-//        }
 
 
 
@@ -559,7 +542,7 @@ Page {
                                             if (_playlist.isValid && _currentUrlIndex >= 0 && _currentUrlIndex + 1 == _playlist.parts) {
                                                 closeControlPanel()
                                                 _startSeek = true
-                                                _seek(_playlist.startOffset * 1000)
+                                                _seek(_playlist.startOffset * 1000) // seek to start of vod
                                                 mediaplayer.play()
                                             }
                                             break
@@ -697,6 +680,8 @@ Page {
 
     function playUrl(url, startOffset, saveScreenShot) {
         _playlist.startOffset = (startOffset && startOffset > 0) ? startOffset : 0
+        _playlist.playbackOffset = _playlist.startOffset
+        _playlist.endOffset = -1
         _playlist.parts = 1
         _playlist.setDuration(0, -1)
         _playlist.setUrl(0, url)
@@ -707,7 +692,7 @@ Page {
     }
 
     function _play(saveScreenShot) {
-        console.debug("playlist offset=" + _playlist.startOffset + " parts=" + _playlist.parts + " save screen shot=" + saveScreenShot)
+        console.debug("playlist offset=" + _playlist.playbackOffset + " parts=" + _playlist.parts + " save screen shot=" + saveScreenShot)
         _reseekOnDurationChange = false
         _seekPositionMs = 0
         _currentUrlIndex = 0;
@@ -720,10 +705,10 @@ Page {
         _streamDurationS = _computeStreamDuration()
         _streamBasePositionS = _computeStreamBasePosition()
         _volume = mediaplayer.volume
-        if (_playlist.startOffset > 0) {
-            console.debug("seek to " + _playlist.startOffset)
+        if (_playlist.playbackOffset > 0) {
+            console.debug("seek to " + _playlist.playbackOffset)
             _startSeek = true
-            _seek(_playlist.startOffset * 1000)
+            _seek(_playlist.playbackOffset * 1000)
         } else {
             mediaplayer.source = _playlist.url(_currentUrlIndex)
         }
