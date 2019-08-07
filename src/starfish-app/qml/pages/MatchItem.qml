@@ -37,7 +37,6 @@ ListItem {
     property int rowId: -1
     property var _playWhenPageTransitionIsDoneCallback: null
     property alias playlist: _playlist
-    property alias playbackOffset: _playlist.playbackOffset
     readonly property int baseOffset: _c ? _c.videoStartOffset : 0
     property bool _validRange: _c && baseOffset >= 0 && baseOffset < _c.videoEndOffset
     readonly property bool _hasValidRaces: _c && _c.race1 >= 1 && _c.race2 >= 1
@@ -251,6 +250,10 @@ ListItem {
 
                             return ""
                         }
+
+                        onTextChanged: {
+                            console.debug("rowid=" + rowId + " title=" + text)
+                        }
                     } // title/vs label
 
                     SidesBar {
@@ -308,6 +311,8 @@ ListItem {
 
                                 return result
                             }
+
+
                         }
 
                         Row {
@@ -435,9 +440,9 @@ ListItem {
             width: parent.width * _range
             visible: !seen && _validRange
             readonly property real _range:
-                playbackOffset < baseOffset
+                _c.videoPlaybackOffset < baseOffset
                 ? 0
-                : (playbackOffset > _c.videoEndOffset ? 1 : (playbackOffset-baseOffset)/(_c.videoEndOffset-baseOffset))
+                : (_c.videoPlaybackOffset > _c.videoEndOffset ? 1 : (_c.videoPlaybackOffset-baseOffset)/(_c.videoEndOffset-baseOffset))
             height: 4
             anchors.top: content.bottom
 //            onVisibleChanged: {
@@ -466,9 +471,9 @@ ListItem {
     Component.onCompleted: {
         _c = VodDataManager.acquireMatchItem(rowId)
 
-        memory.addMatchItem(root)
+        playlist.mediaKey = VodDataManager.recentlyWatched.vodKey(rowId)
 
-        updatePlaybackOffset()
+        memory.addMatchItem(root)
 
         if (requiredHeight > height) {
             console.warn("rowid " + rowId + " match item height is " + height + " which is less than required height " + requiredHeight)
@@ -770,7 +775,7 @@ ListItem {
     function _playFiles() {
         playlist.startOffset = _c.videoStartOffset
         playlist.endOffset = _c.videoEndOffset
-        playlist.playbackOffset = playbackOffset
+        playlist.playbackOffset = _c.videoPlaybackOffset
 
         playlist.parts = _c.urlShare.files
         for (var i = 0; i < _c.urlShare.files; ++i) {
@@ -804,7 +809,7 @@ ListItem {
 
         playlist.startOffset = _c.videoStartOffset
         playlist.endOffset = _c.videoEndOffset
-        playlist.playbackOffset = playbackOffset
+        playlist.playbackOffset = _c.videoPlaybackOffset
         playlist.parts = metaData.vods
 
         if (VM.VM_Any === vmFormatId) {
@@ -834,7 +839,7 @@ ListItem {
                 playlist.setUrl(i, format.streamUrl)
             }
 
-            console.debug("playlist=" + playlist)
+            console.debug("playlist parts=" + playlist.parts + " playback_offset=" + playlist.playbackOffset)
             playRequest(root)
         }
     }
@@ -903,16 +908,6 @@ ListItem {
             return 2160
         default:
             return 2160
-        }
-    }
-
-
-    function updatePlaybackOffset() {
-        var offset = VodDataManager.recentlyWatched.offset(VodDataManager.recentlyWatched.vodKey(rowId));
-        if (offset >= 0) {
-            playbackOffset = offset
-        } else {
-            playbackOffset = baseOffset // base offset into multi match video
         }
     }
 

@@ -216,6 +216,7 @@ public: //
     bool isOnline() const;
     Q_INVOKABLE void clearYtdlCache();
     QString getUrl(int type, const QString& videoId);
+    Q_INVOKABLE void setPlaybackOffset(const QVariant& key, int offset);
 
 signals:
     void readyChanged();
@@ -338,6 +339,7 @@ private:
     void updateSql5(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
     void updateSql6(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
     void updateSql7(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
+    void updateSql8(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
 
 
 private:

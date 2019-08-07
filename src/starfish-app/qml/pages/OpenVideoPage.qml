@@ -32,7 +32,7 @@ import ".."
 Page {
     id: root
 
-    signal videoSelected(var key, string playbackUrl, int offset, bool saveScreenShot)
+    signal videoSelected(var key, var playlist, int offset, bool saveScreenShot)
 
     PageHeader {
         id: header

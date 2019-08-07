@@ -76,7 +76,7 @@ Item {
                 VodDataManager.recentlyWatched.setThumbnailPath(k, thumbnailFilePath)
             }
 
-            VodDataManager.recentlyWatched.setOffset(k, _playbackOffset)
+//            VodDataManager.recentlyWatched.setOffset(k, _playbackOffset)
 
             dataSaved(k, _playbackOffset, thumbnailFilePath)
 

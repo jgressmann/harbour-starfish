@@ -97,10 +97,6 @@ ContentPage {
 
     RecentlyWatchedVideoUpdater {
         id: updater
-
-        onDataSaved: function (key, offset, thumbnailFilePath) {
-            matchItemConnections.updatePlaybackOffset(_videoId)
-        }
     }
 
     MatchItemMemory {

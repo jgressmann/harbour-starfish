@@ -852,6 +852,7 @@ ScVodDataManager::setupDatabase() {
         "    seen INTEGER DEFAULT 0,\n"
         "    match_number INTEGER NOT NULL,\n"
         "    stage_rank INTEGER NOT NULL,\n"
+        "    playback_offset DEFAULT 0,\n"
         "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
         "    UNIQUE (game, year, event_name, season, stage_name, match_date, match_name, match_number) ON CONFLICT REPLACE\n"
         ")\n",
@@ -974,11 +975,17 @@ ScVodDataManager::setupDatabase() {
         "       UPDATE recently_watched SET seen=new.seen WHERE vod_id=new.id;\n"
         "   END\n"
         "\n",
+
+        "CREATE TRIGGER IF NOT EXISTS recently_watched_update_playback_offset UPDATE OF playback_offset ON vods\n"
+        "   BEGIN\n"
+        "       UPDATE recently_watched SET playback_offset=new.playback_offset WHERE vod_id=new.id;\n"
+        "   END\n"
+        "\n",
     };
 
 
 
-    const int Version = 8;
+    const int Version = 9;
 
     if (!scSetupWriteableConnection(m_Database)) {
         setError(Error_CouldntCreateSqlTables);
@@ -1019,6 +1026,8 @@ ScVodDataManager::setupDatabase() {
                 updateSql6(q, CreateSql, _countof(CreateSql));
             case 7:
                 updateSql7(q, CreateSql, _countof(CreateSql));
+            case 8:
+                updateSql8(q, CreateSql, _countof(CreateSql));
             default:
                 break;
             }
@@ -2975,6 +2984,57 @@ Error:
     goto Exit;
 }
 
+
+void
+ScVodDataManager::updateSql8(QSqlQuery& q, const char*const* createSql, size_t createSqlCount)
+{
+    qInfo("Begin update of database v8 to v9\n");
+
+    static char const* const Sql1[] = {
+        "SAVEPOINT master",
+        "PRAGMA user_version=9",
+        "ALTER TABLE vods ADD COLUMN playback_offset INTEGER DEFAULT 0",
+        "DROP VIEW offline_vods",
+        "DROP VIEW url_share_vods",
+    };
+
+    for (size_t i = 0; i < _countof(Sql1); ++i) {
+        qDebug() << Sql1[i];
+        if (!q.exec(Sql1[i])) {
+            goto Error;
+        }
+    }
+
+    for (size_t i = 0; i < createSqlCount; ++i) {
+        qDebug() << createSql[i];
+        if (!q.exec(createSql[i])) {
+            goto Error;
+        }
+    }
+
+    static char const* const Sql2[] = {
+        "RELEASE master",
+        "VACUUM",
+    };
+
+    for (size_t i = 0; i < _countof(Sql2); ++i) {
+        qDebug() << Sql2[i];
+        if (!q.exec(Sql2[i])) {
+            goto Error;
+        }
+    }
+
+    qInfo("Update of database v8 to v9 completed successfully\n");
+
+Exit:
+    return;
+Error:
+    qCritical() << "Failed to update database from v8 to v9" << q.lastError();
+    q.exec("ROLLBACK master");
+    setError(Error_CouldntCreateSqlTables);
+    goto Exit;
+}
+
 int
 ScVodDataManager::sqlPatchLevel() const
 {
@@ -3197,6 +3257,41 @@ ScVodDataManager::fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS)
         emit startWorker();
     }
     return result;
+}
+
+void
+ScVodDataManager::setPlaybackOffset(const QVariant& key, int offset)
+{
+    switch (key.type()) {
+    case QVariant::String:
+        return; // not a vod
+    case QVariant::Invalid:
+        qWarning("invalid key\n");
+        return;
+    default:
+        break;
+    }
+
+    auto rowid = qvariant_cast<qint64>(key);
+
+    QString sql = QStringLiteral("UPDATE vods SET playback_offset=? WHERE id=?");
+    auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
+
+    m_PendingDatabaseStores.insert(tid, [=] (qint64 /*urlShareId*/, bool error) {
+        if (!error) {
+            auto data = m_ActiveMatchItems.value(rowid, nullptr);
+            if (!data) {
+                data = m_ExpiredMatchItems.value(rowid, nullptr);
+            }
+
+            if (data) {
+                data->matchItem()->setVideoPlaybackOffset(offset);
+            }
+        }
+    });
+
+    emit startProcessDatabaseStoreQueue(tid, sql, {offset, rowid});
+    emit startProcessDatabaseStoreQueue(tid, {}, {});
 }
 
 void

@@ -47,6 +47,7 @@ Page {
     readonly property int playbackOffset: _streamPositionS
     readonly property int _streamPositionMs: _streamBasePositionS * 1000 + mediaplayer.position
     readonly property int _streamPositionS: Math.floor(_streamPositionMs * 1e-3)
+    readonly property int _streamMaxPositionS: Math.max(_streamBasePositionS, _streamPositionS)
     property int _streamBasePositionS: 0
     property int _streamDurationS: 0
 
@@ -614,6 +615,8 @@ Page {
     }
 
     Component.onDestruction: {
+        _savePlaybackProgress()
+
         console.debug("destruction")
         _preventBlanking(false)
         _closed = true
@@ -670,6 +673,8 @@ Page {
     }
 
     function playPlaylist(playlistArg) {
+        _savePlaybackProgress()
+
         if (playlistArg.isValid) {
             _playlist.copyFrom(playlistArg)
             _play(false)
@@ -679,12 +684,15 @@ Page {
     }
 
     function playUrl(url, startOffset, saveScreenShot) {
+        _savePlaybackProgress()
+
         _playlist.startOffset = (startOffset && startOffset > 0) ? startOffset : 0
         _playlist.playbackOffset = _playlist.startOffset
         _playlist.endOffset = -1
         _playlist.parts = 1
         _playlist.setDuration(0, -1)
         _playlist.setUrl(0, url)
+        _playlist.mediaKey = url
 
         if (_playlist.isValid) {
             _play(saveScreenShot)
@@ -711,6 +719,13 @@ Page {
             _seek(_playlist.playbackOffset * 1000)
         } else {
             mediaplayer.source = _playlist.url(_currentUrlIndex)
+        }
+    }
+
+    function _savePlaybackProgress() {
+        if (_playlist.isValid) {
+            VodDataManager.setPlaybackOffset(_playlist.mediaKey, _streamPositionS)
+            _playlist.invalidate()
         }
     }
 

@@ -25,6 +25,7 @@
 
 #include <QObject>
 #include <QVector>
+#include <QVariant>
 
 class ScVodPlaylist : public QObject
 {
@@ -34,6 +35,7 @@ class ScVodPlaylist : public QObject
     Q_PROPERTY(int endOffset READ endOffset WRITE setEndOffset NOTIFY endOffsetChanged)
     Q_PROPERTY(int playbackOffset READ playbackOffset WRITE setPlaybackOffset NOTIFY playbackOffsetChanged)
     Q_PROPERTY(bool isValid READ isValid NOTIFY isValidChanged)
+    Q_PROPERTY(QVariant mediaKey READ mediaKey WRITE setMediaKey NOTIFY mediaKeyChanged)
 public:
     explicit ScVodPlaylist(QObject *parent = nullptr);
 
@@ -46,11 +48,14 @@ public:
     int parts() const { return m_Urls.size(); }
     void setParts(int value);
     bool isValid() const;
+    QVariant mediaKey() const { return m_MediaKey; }
+    void setMediaKey(const QVariant& value);
     Q_INVOKABLE QString url(int index) const;
     Q_INVOKABLE void setUrl(int index, const QString& url);
     Q_INVOKABLE int duration(int index) const;
     Q_INVOKABLE void setDuration(int index, int value);
     Q_INVOKABLE void copyFrom(const QVariant& other);
+    Q_INVOKABLE void invalidate();
 
 
 signals:
@@ -58,6 +63,7 @@ signals:
     void startOffsetChanged();
     void endOffsetChanged();
     void playbackOffsetChanged();
+    void mediaKeyChanged();
     void isValidChanged();
 
 private:
@@ -66,6 +72,7 @@ private:
 private:
     QVector<QString> m_Urls;
     QVector<int> m_Durations;
+    QVariant m_MediaKey;
     int m_StartOffset, m_EndOffset, m_PlaybackOffset;
 };
 

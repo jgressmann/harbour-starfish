@@ -21,6 +21,7 @@ ScMatchItem::ScMatchItem(qint64 rowid, ScVodDataManager *parent, QSharedPointer<
     m_race2 = -1;
     m_VideoStartOffset = -1;
     m_VideoEndOffset = -1;
+    m_VideoPlaybackOffset = -1;
     m_season = -1;
     m_year = -1;
     m_match_number = -1;
@@ -94,6 +95,11 @@ ScMatchItem::manager() const
 
 bool ScMatchItem::fetch(Data* data) const
 {
+    return fetchSeen(data) && fetchVideoPlaybackOffset(data);
+}
+
+bool ScMatchItem::fetchSeen(Data* data) const
+{
     Q_ASSERT(data);
     QSqlQuery q(manager()->database());
     auto sql = QStringLiteral("SELECT seen FROM vods WHERE id=?");
@@ -106,6 +112,30 @@ bool ScMatchItem::fetch(Data* data) const
             } else {
                 qDebug() << "no data for rowid" << m_RowId;
             }
+        } else {
+            qDebug() << "failed to exec, error:" << q.lastError();
+        }
+    } else {
+        qDebug() << "failed to prepare, error:" << q.lastError();
+    }
+
+    return false;
+}
+
+bool ScMatchItem::fetchVideoPlaybackOffset(Data* data) const
+{
+    Q_ASSERT(data);
+    QSqlQuery q(manager()->database());
+    auto sql = QStringLiteral("SELECT playback_offset FROM recently_watched WHERE vod_id=?");
+    if (q.prepare(sql)) {
+        q.addBindValue(m_RowId);
+        if (q.exec()) {
+            if (q.next()) {
+                data->playbackOffset = q.value(0).toInt();
+            } else {
+                data->playbackOffset = -1;
+            }
+            return true;
         } else {
             qDebug() << "failed to exec, error:" << q.lastError();
         }
@@ -149,6 +179,15 @@ void ScMatchItem::onVodEndAvailable(int endOffsetS)
     if (m_VideoEndOffset != endOffsetS) {
         m_VideoEndOffset = endOffsetS;
         emit videoEndOffsetChanged();
+        emit videoPlaybackOffsetChanged();
+    }
+}
+
+void ScMatchItem::setVideoPlaybackOffset(int value)
+{
+    if (value != m_VideoPlaybackOffset) {
+        m_VideoPlaybackOffset = value;
+        emit videoPlaybackOffsetChanged();
     }
 }
 
@@ -157,6 +196,7 @@ void ScMatchItem::reset()
     Data data;
     if (fetch(&data)) {
         setSeenMember(data.seen);
+        setVideoPlaybackOffset(data.playbackOffset);
     }
 
     onLengthChanged();
@@ -167,26 +207,6 @@ void ScMatchItem::onLengthChanged()
     manager()->fetchVodEnd(m_RowId, m_VideoStartOffset, m_UrlShareItem->vodLength());
 }
 
-//void ScMatchItem::onSeenAvailable(qint64 rowid, qreal seen)
-//{
-//    if (rowid == m_RowId) {
-//        auto s = seen != 0;
-//        if (m_seen != s) {
-//            m_seen = s;
-//            emit seenChanged();
-//        }
-//    }
-//}
-
-//void ScMatchItem::onVodEndAvailable(qint64 rowid, int endOffsetS)
-//{
-//    if (rowid == m_RowId) {
-//        if (m_VideoEndOffset != endOffsetS) {
-//            m_VideoEndOffset = endOffsetS;
-//            emit videoEndOffsetChanged();
-//        }
-//    }
-//}
 
 
 void

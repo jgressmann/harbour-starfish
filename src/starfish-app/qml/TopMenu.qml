@@ -92,7 +92,7 @@ PullDownMenu {
 
         function _openVideoPage(callback) {
             var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
-            openPage.videoSelected.connect(function (key, url, offset, saveScreenShot) {
+            openPage.videoSelected.connect(function (key, playlist, offset, saveScreenShot) {
                 VodDataManager.recentlyWatched.add(key, false)
                 offset = Math.max(offset, VodDataManager.recentlyWatched.offset(key))
                 VodDataManager.recentlyWatched.setOffset(key, offset)

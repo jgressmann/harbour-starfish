@@ -51,6 +51,7 @@ class ScMatchItem : public QObject
     Q_PROPERTY(QDate matchDate READ matchDate CONSTANT)
     Q_PROPERTY(int videoStartOffset READ videoStartOffset CONSTANT)
     Q_PROPERTY(int videoEndOffset READ videoEndOffset NOTIFY videoEndOffsetChanged)
+    Q_PROPERTY(int videoPlaybackOffset READ videoPlaybackOffset NOTIFY videoPlaybackOffsetChanged)
     Q_PROPERTY(int season READ season CONSTANT)
     Q_PROPERTY(int year READ year CONSTANT)
     Q_PROPERTY(int matchNumber READ matchNumber CONSTANT)
@@ -72,6 +73,8 @@ public:
     QDate matchDate() const { return m_matchDate; }
     int videoStartOffset() const { return m_VideoStartOffset; }
     int videoEndOffset() const { return m_VideoEndOffset; }
+    int videoPlaybackOffset() const { return qMax(m_VideoStartOffset, qMin(m_VideoPlaybackOffset, m_VideoEndOffset)); }
+    void setVideoPlaybackOffset(int value);
     int season() const { return m_season; }
     int year() const { return m_year; }
     QString matchName() const { return m_matchName; }
@@ -82,12 +85,14 @@ public:
 signals:
     void seenChanged();
     void videoEndOffsetChanged();
+    void videoPlaybackOffsetChanged();
     void startProcessDatabaseStoreQueue(int transactionId, QString sql, ScSqlParamList args);
 
 private:
     struct Data
     {
         bool seen;
+        int playbackOffset;
 
         Data();
     };
@@ -96,16 +101,17 @@ private:
 
 private slots:
     void reset();
-//    void onSeenAvailable(qint64 rowid, qreal seen);
     void databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription);
     void onLengthChanged();
-//    void onVodEndAvailable(qint64 rowid, int endOffsetS);
 
 private:
     ScVodDataManager* manager() const;
     bool fetch(Data* data) const;
+    bool fetchSeen(Data* data) const;
+    bool fetchVideoPlaybackOffset(Data* data) const;
     void setSeen(bool seen);
     void setSeenMember(bool value);
+
 
 private:
     QHash<int, DatabaseCallback> m_PendingDatabaseStores;
@@ -122,6 +128,7 @@ private:
     int m_race2;
     int m_VideoStartOffset;
     int m_VideoEndOffset;
+    int m_VideoPlaybackOffset;
     int m_season;
     int m_year;
     int m_match_number;

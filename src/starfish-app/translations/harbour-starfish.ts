@@ -312,12 +312,12 @@
         <translation>Updated a really long time ago</translation>
     </message>
     <message id="sf-active-downloads-title">
-        <location filename="../qml/pages/ActiveDownloadPage.qml" line="74"/>
+        <location filename="../qml/pages/ActiveDownloadPage.qml" line="71"/>
         <source>Active downloads</source>
         <translation>Active downloads</translation>
     </message>
     <message id="sf-active-downloads-no-downloads">
-        <location filename="../qml/pages/ActiveDownloadPage.qml" line="100"/>
+        <location filename="../qml/pages/ActiveDownloadPage.qml" line="97"/>
         <source>There are no active downloads.</source>
         <translation>There are no active downloads.</translation>
     </message>
@@ -414,17 +414,17 @@
         <translation>There is no space left on the device.</translation>
     </message>
     <message id="sf-new-page-title">
-        <location filename="../qml/pages/NewPage.qml" line="81"/>
+        <location filename="../qml/pages/NewPage.qml" line="77"/>
         <source>New</source>
         <translation>New</translation>
     </message>
     <message id="sf-new-page-no-content-text">
-        <location filename="../qml/pages/NewPage.qml" line="107"/>
+        <location filename="../qml/pages/NewPage.qml" line="103"/>
         <source>There are no new VODs available.</source>
         <translation>There are no new VODs available.</translation>
     </message>
     <message id="sf-new-page-no-content-hint-text">
-        <location filename="../qml/pages/NewPage.qml" line="109"/>
+        <location filename="../qml/pages/NewPage.qml" line="105"/>
         <source>Pull down to fetch new VODs.</source>
         <translation>Pull down to fetch new VODs.</translation>
     </message>
@@ -830,77 +830,77 @@
         <translation>For details check the log file located in %1</translation>
     </message>
     <message id="sf-match-item-copy-url-to-clipboard">
-        <location filename="../qml/pages/MatchItem.qml" line="493"/>
+        <location filename="../qml/pages/MatchItem.qml" line="498"/>
         <source>Copy URL to clipboard</source>
         <translation>Copy URL to clipboard</translation>
     </message>
     <message id="sf-match-item-download-meta-data">
-        <location filename="../qml/pages/MatchItem.qml" line="499"/>
+        <location filename="../qml/pages/MatchItem.qml" line="504"/>
         <source>Download meta data</source>
         <translation>Download meta data</translation>
     </message>
     <message id="sf-match-item-download-vod">
-        <location filename="../qml/pages/MatchItem.qml" line="508"/>
+        <location filename="../qml/pages/MatchItem.qml" line="513"/>
         <source>Download VOD</source>
         <translation>Download VOD</translation>
     </message>
     <message id="sf-match-item-download-vod-with-format">
-        <location filename="../qml/pages/MatchItem.qml" line="521"/>
+        <location filename="../qml/pages/MatchItem.qml" line="526"/>
         <source>Download VOD with format...</source>
         <translation>Download VOD with format...</translation>
     </message>
     <message id="sf-match-item-cancel-vod-download">
-        <location filename="../qml/pages/MatchItem.qml" line="531"/>
+        <location filename="../qml/pages/MatchItem.qml" line="536"/>
         <source>Cancel VOD download</source>
         <translation>Cancel VOD download</translation>
     </message>
     <message id="sf-match-item-play-stream">
-        <location filename="../qml/pages/MatchItem.qml" line="538"/>
+        <location filename="../qml/pages/MatchItem.qml" line="543"/>
         <source>Play stream</source>
         <translation>Play stream</translation>
     </message>
     <message id="sf-match-item-play-stream-with-format">
-        <location filename="../qml/pages/MatchItem.qml" line="545"/>
+        <location filename="../qml/pages/MatchItem.qml" line="550"/>
         <source>Play stream with format...</source>
         <translation>Play stream with format...</translation>
     </message>
     <message id="sf-match-item-delete-meta-data">
-        <location filename="../qml/pages/MatchItem.qml" line="552"/>
+        <location filename="../qml/pages/MatchItem.qml" line="557"/>
         <source>Delete meta data</source>
         <translation>Delete meta data</translation>
     </message>
     <message id="sf-match-item-delete-vod-file">
-        <location filename="../qml/pages/MatchItem.qml" line="559"/>
+        <location filename="../qml/pages/MatchItem.qml" line="564"/>
         <source>Delete VOD file</source>
         <translation>Delete VOD file</translation>
     </message>
     <message id="sf-match-item-deleting-shared-vod-files">
-        <location filename="../qml/pages/MatchItem.qml" line="576"/>
+        <location filename="../qml/pages/MatchItem.qml" line="581"/>
         <source>Deleting files for %1 VODs</source>
         <translation>Deleting files for %1 VODs</translation>
     </message>
     <message id="sf-match-item-deleting-vod-files-for-title">
-        <location filename="../qml/pages/MatchItem.qml" line="583"/>
+        <location filename="../qml/pages/MatchItem.qml" line="588"/>
         <source>Deleting files for %1</source>
         <translation>Deleting files for %1</translation>
     </message>
     <message id="sf-match-item-copy-vod-file-path-to-clipboard">
-        <location filename="../qml/pages/MatchItem.qml" line="610"/>
+        <location filename="../qml/pages/MatchItem.qml" line="615"/>
         <source>Copy VOD file path to clipboard</source>
         <translation>Copy VOD file path to clipboard</translation>
     </message>
     <message id="sf-match-item-delete-thumbnail">
-        <location filename="../qml/pages/MatchItem.qml" line="617"/>
+        <location filename="../qml/pages/MatchItem.qml" line="622"/>
         <source>Delete thumbnail</source>
         <translation>Delete thumbnail</translation>
     </message>
     <message id="sf-match-item-vod-from-database">
-        <location filename="../qml/pages/MatchItem.qml" line="623"/>
+        <location filename="../qml/pages/MatchItem.qml" line="628"/>
         <source>Delete VOD from database</source>
         <translation>Delete VOD from database</translation>
     </message>
     <message id="sf-select-av-format-dialog-title">
-        <location filename="../qml/pages/MatchItem.qml" line="932"/>
+        <location filename="../qml/pages/MatchItem.qml" line="927"/>
         <source>Select a format</source>
         <translation>Select a format</translation>
     </message>
@@ -1024,32 +1024,32 @@
         <translation>Adding VODs</translation>
     </message>
     <message id="ScVodDataManager-misc-label">
-        <location filename="../ScVodDataManager.cpp" line="1078"/>
+        <location filename="../ScVodDataManager.cpp" line="1087"/>
         <source>Misc</source>
         <translation>Misc</translation>
     </message>
     <message id="ScVodDataManager-game-label">
-        <location filename="../ScVodDataManager.cpp" line="1087"/>
+        <location filename="../ScVodDataManager.cpp" line="1096"/>
         <source>game</source>
         <translation>game</translation>
     </message>
     <message id="ScVodDataManager-year-label">
-        <location filename="../ScVodDataManager.cpp" line="1092"/>
+        <location filename="../ScVodDataManager.cpp" line="1101"/>
         <source>year</source>
         <translation>year</translation>
     </message>
     <message id="ScVodDataManager-event-label">
-        <location filename="../ScVodDataManager.cpp" line="1097"/>
+        <location filename="../ScVodDataManager.cpp" line="1106"/>
         <source>event</source>
         <translation>event</translation>
     </message>
     <message id="sf-stage-page-match-name-match">
-        <location filename="../qml/pages/StagePage.qml" line="202"/>
+        <location filename="../qml/pages/StagePage.qml" line="198"/>
         <source>Match</source>
         <translation>Match</translation>
     </message>
     <message id="sf-stage-page-match-name-episode">
-        <location filename="../qml/pages/StagePage.qml" line="204"/>
+        <location filename="../qml/pages/StagePage.qml" line="200"/>
         <source>Episode</source>
         <translation>Episode</translation>
     </message>

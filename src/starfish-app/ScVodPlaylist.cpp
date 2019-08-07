@@ -120,10 +120,24 @@ ScVodPlaylist::setParts(int value)
     }
 }
 
+void
+ScVodPlaylist::setMediaKey(const QVariant& value)
+{
+    if (value != m_MediaKey) {
+        m_MediaKey = value;
+        emit mediaKeyChanged();
+        emit isValidChanged();
+    }
+}
+
 bool
 ScVodPlaylist::isValid() const
 {
     if (m_StartOffset < 0) {
+        return false;
+    }
+
+    if (!m_MediaKey.isValid()) {
         return false;
     }
 
@@ -159,11 +173,20 @@ ScVodPlaylist::copyFrom(const ScVodPlaylist& other)
     m_StartOffset = other.m_StartOffset;
     m_EndOffset = other.m_EndOffset;
     m_PlaybackOffset = other.m_PlaybackOffset;
+    m_MediaKey = other.m_MediaKey;
 
+    emit partsChanged();
     emit startOffsetChanged();
     emit endOffsetChanged();
     emit playbackOffsetChanged();
+    emit mediaKeyChanged();
     emit isValidChanged();
+}
+
+void
+ScVodPlaylist::invalidate()
+{
+    m_Urls.clear();
 }
 
 QDebug operator<<(QDebug debug, const ScVodPlaylist& value)
@@ -173,6 +196,7 @@ QDebug operator<<(QDebug debug, const ScVodPlaylist& value)
                     << "startOffset=" << value.startOffset()
                     << "endOffset=" << value.endOffset()
                     << "playbackOffset=" << value.playbackOffset()
+                    << "mediaKey=" << value.mediaKey()
                     << ", parts=" << value.parts()
                     << ", valid=" << value.isValid()
                     << ")";

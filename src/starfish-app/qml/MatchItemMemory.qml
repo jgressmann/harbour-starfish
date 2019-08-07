@@ -36,13 +36,6 @@ Item {
         delete _items[item.rowId]
     }
 
-    function updatePlaybackOffset(rowid) {
-        var item = _items[rowid]
-        if (item) {
-            item.updatePlaybackOffset()
-        }
-    }
-
     function cancelImplicitVodFileFetch(rowid) {
         var item = _items[rowid]
         if (item) {
