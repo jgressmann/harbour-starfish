@@ -1086,10 +1086,10 @@ ScVodDataManagerWorker::fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengt
 "SELECT\n"
 "   MIN(offset)\n"
 "FROM\n"
-"   offline_vods\n"
+"   url_share_vods\n"
 "WHERE\n"
 "   offset>?\n"
-"   AND vod_url_share_id IN (SELECT vod_url_share_id FROM offline_vods WHERE id=?)\n");
+"   AND vod_url_share_id IN (SELECT vod_url_share_id FROM url_share_vods WHERE id=?)\n");
 
     QSqlQuery q(m_Database);
     if (!q.prepare(sql)) {
