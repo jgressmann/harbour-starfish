@@ -37,7 +37,7 @@ SilicaListView {
     model: VodDataManager.recentlyWatched
     property real _matchItemContentHeight: 0
 
-    signal clicked(var key, var playlist, bool seen)
+    signal clicked(var playlist, bool seen)
 
     MatchItemMemory {
         id: matchItemConnections
@@ -177,12 +177,7 @@ SilicaListView {
                     }
 
 
-                    onClicked: {
-                        console.debug("playlist=" + playlist)
-                        listView.clicked(VodDataManager.recentlyWatched.urlKey(url),
-                                         playlist,
-                                         false)
-                    }
+                    onClicked: listView.clicked(playlist, false)
 
 
 //                    property date modififedChangedListener: modified
@@ -199,6 +194,7 @@ SilicaListView {
                         playlist.startOffset = 0
                         playlist.endOffset = -1;
                         playlist.playbackOffset = offset
+                        playlist.mediaKey = VodDataManager.recentlyWatched.urlKey(url)
                     }
 
 
@@ -217,7 +213,7 @@ SilicaListView {
 
 
                     onPlayRequest: function (self) {
-                        listView.clicked(VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.seen)
+                        listView.clicked(self.playlist, self.seen)
                     }
 
                     menu: Component {

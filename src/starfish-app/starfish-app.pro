@@ -45,6 +45,7 @@ HEADERS += \
     ScVodFileItem.h \
     ScVodPlaylist.h
 
+
 #../../rpm/harbour-starfish.changes.run.in \
 #../../rpm/harbour-starfish.yaml \
 #    ../../rpm/harbour-starfish.changes.in \
@@ -94,7 +95,6 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/HighlightingListView.qml \
     qml/VodDataManagerBusyIndicator.qml \
     qml/RecentlyWatchedVideoView.qml \
-    qml/RecentlyWatchedVideoUpdater.qml \
     qml/ContentPageHeader.qml \
     qml/pages/VodDetailPage.qml \
     qml/pages/MoveDataDirectoryPage.qml \

@@ -360,6 +360,33 @@ ScRecentlyWatchedVideos::offset(const QVariant& k) const
     return -1;
 }
 
+QString
+ScRecentlyWatchedVideos::getThumbnailPath(const QVariant& k) const
+{
+    KeyType t;
+    if (!keyType(k, &t)) {
+        qWarning().nospace().noquote() << "invalid key";
+        return QString();
+    }
+
+    QSqlQuery q(manager()->database());
+    auto sql = QStringLiteral("SELECT thumbnail_path FROM recently_watched WHERE %1=?").arg(Vod == t ? s_VodId : s_Url);
+    if (q.prepare(sql)) {
+        q.addBindValue(k);
+        if (q.exec()) {
+            if (q.next()) {
+                return q.value(0).toString();
+            }
+        } else {
+            qWarning().nospace().noquote() << "failed exec sql: " << sql << ", error: " << q.lastError();
+        }
+    } else {
+        qWarning().nospace().noquote() << "failed prepare sql: " << sql << ", error: " << q.lastError();
+    }
+
+    return QString();
+}
+
 bool
 ScRecentlyWatchedVideos::keyType(const QVariant& v, KeyType* keytype)
 {

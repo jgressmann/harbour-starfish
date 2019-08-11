@@ -312,12 +312,12 @@
         <translation>Updated a really long time ago</translation>
     </message>
     <message id="sf-active-downloads-title">
-        <location filename="../qml/pages/ActiveDownloadPage.qml" line="71"/>
+        <location filename="../qml/pages/ActiveDownloadPage.qml" line="67"/>
         <source>Active downloads</source>
         <translation>Active downloads</translation>
     </message>
     <message id="sf-active-downloads-no-downloads">
-        <location filename="../qml/pages/ActiveDownloadPage.qml" line="97"/>
+        <location filename="../qml/pages/ActiveDownloadPage.qml" line="93"/>
         <source>There are no active downloads.</source>
         <translation>There are no active downloads.</translation>
     </message>
@@ -414,32 +414,32 @@
         <translation>There is no space left on the device.</translation>
     </message>
     <message id="sf-new-page-title">
-        <location filename="../qml/pages/NewPage.qml" line="77"/>
+        <location filename="../qml/pages/NewPage.qml" line="73"/>
         <source>New</source>
         <translation>New</translation>
     </message>
     <message id="sf-new-page-no-content-text">
-        <location filename="../qml/pages/NewPage.qml" line="103"/>
+        <location filename="../qml/pages/NewPage.qml" line="99"/>
         <source>There are no new VODs available.</source>
         <translation>There are no new VODs available.</translation>
     </message>
     <message id="sf-new-page-no-content-hint-text">
-        <location filename="../qml/pages/NewPage.qml" line="105"/>
+        <location filename="../qml/pages/NewPage.qml" line="101"/>
         <source>Pull down to fetch new VODs.</source>
         <translation>Pull down to fetch new VODs.</translation>
     </message>
     <message id="sf-open-video-page-open-from-clipboard">
-        <location filename="../qml/pages/OpenVideoPage.qml" line="54"/>
+        <location filename="../qml/pages/OpenVideoPage.qml" line="59"/>
         <source>From clipboard</source>
         <translation>From clipboard</translation>
     </message>
     <message id="sf-open-video-page-open-from-file">
-        <location filename="../qml/pages/OpenVideoPage.qml" line="66"/>
+        <location filename="../qml/pages/OpenVideoPage.qml" line="70"/>
         <source>From file</source>
         <translation>From file</translation>
     </message>
     <message id="sf-open-video-page-recently-watched-section-header">
-        <location filename="../qml/pages/OpenVideoPage.qml" line="90"/>
+        <location filename="../qml/pages/OpenVideoPage.qml" line="93"/>
         <source>Recently watched</source>
         <translation>Recently watched</translation>
     </message>
@@ -654,53 +654,53 @@
         <translation>ask every time</translation>
     </message>
     <message id="sf-database-error-network-failure">
-        <location filename="../qml/harbour-starfish.qml" line="86"/>
+        <location filename="../qml/harbour-starfish.qml" line="90"/>
         <source>Network down</source>
         <translation>Network down</translation>
     </message>
     <message id="sf-database-error-invalid-data">
-        <location filename="../qml/harbour-starfish.qml" line="91"/>
+        <location filename="../qml/harbour-starfish.qml" line="95"/>
         <source>Data downloaded is invalid</source>
         <translation>Data downloaded is invalid</translation>
     </message>
     <message id="sf-database-error-decompression-failed">
-        <location filename="../qml/harbour-starfish.qml" line="96"/>
+        <location filename="../qml/harbour-starfish.qml" line="100"/>
         <source>Data decompression failed</source>
         <translation>Data decompression failed</translation>
     </message>
     <message id="sf-database-error-unknown">
-        <location filename="../qml/harbour-starfish.qml" line="101"/>
+        <location filename="../qml/harbour-starfish.qml" line="105"/>
         <source>Yikes! An unknown error has occurred</source>
         <translation>Yikes! An unknown error has occurred :/</translation>
     </message>
     <message id="sf-vod-download-failed-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="238"/>
-        <location filename="../qml/harbour-starfish.qml" line="239"/>
+        <location filename="../qml/harbour-starfish.qml" line="242"/>
+        <location filename="../qml/harbour-starfish.qml" line="243"/>
         <source>Download failed</source>
         <translation>Download failed</translation>
     </message>
     <message id="sf-nofification-download-ytdl-update-available-summary">
-        <location filename="../qml/harbour-starfish.qml" line="289"/>
+        <location filename="../qml/harbour-starfish.qml" line="293"/>
         <source>youtube-dl update available</source>
         <translation>youtube-dl update available</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-body">
-        <location filename="../qml/harbour-starfish.qml" line="292"/>
+        <location filename="../qml/harbour-starfish.qml" line="296"/>
         <source>youtube-dl version %1 available</source>
         <translation>youtube-dl version %1 available</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-action">
-        <location filename="../qml/harbour-starfish.qml" line="297"/>
+        <location filename="../qml/harbour-starfish.qml" line="301"/>
         <source>Update youtube-dl</source>
         <translation>Update youtube-dl</translation>
     </message>
     <message id="sf-notification-busy">
-        <location filename="../qml/harbour-starfish.qml" line="324"/>
+        <location filename="../qml/harbour-starfish.qml" line="328"/>
         <source>%1 is busy. Try again later.</source>
         <translation>%1 is busy. Try again later.</translation>
     </message>
     <message id="sf-vods-added-notification-summary" numerus="yes">
-        <location filename="../qml/harbour-starfish.qml" line="503"/>
+        <location filename="../qml/harbour-starfish.qml" line="507"/>
         <source>%1 VODs added</source>
         <translation>
             <numerusform>%1 VOD added</numerusform>
@@ -779,31 +779,6 @@
         <source>Deleting VODs for %1</source>
         <translation>Deleting VODs for %1</translation>
     </message>
-    <message id="sf-topmenu-about">
-        <location filename="../qml/TopMenu.qml" line="32"/>
-        <source>About %1</source>
-        <translation>About %1</translation>
-    </message>
-    <message id="sf-topmenu-settings">
-        <location filename="../qml/TopMenu.qml" line="38"/>
-        <source>Settings</source>
-        <translation>Settings</translation>
-    </message>
-    <message id="sf-topmenu-tools">
-        <location filename="../qml/TopMenu.qml" line="44"/>
-        <source>Tools</source>
-        <translation>Tools</translation>
-    </message>
-    <message id="sf-topmenu-open-video">
-        <location filename="../qml/TopMenu.qml" line="57"/>
-        <source>Open video</source>
-        <translation>Open video</translation>
-    </message>
-    <message id="sf-topmenu-fetch">
-        <location filename="../qml/TopMenu.qml" line="107"/>
-        <source>Fetch new VODs</source>
-        <translation>Fetch new VODs</translation>
-    </message>
     <message id="sf-start-page-no-content-hint-pull-down-online">
         <location filename="../qml/pages/StartPage.qml" line="87"/>
         <source>Pull down to fetch new VODs</source>
@@ -830,100 +805,105 @@
         <translation>For details check the log file located in %1</translation>
     </message>
     <message id="sf-match-item-copy-url-to-clipboard">
-        <location filename="../qml/pages/MatchItem.qml" line="498"/>
+        <location filename="../qml/pages/MatchItem.qml" line="501"/>
         <source>Copy URL to clipboard</source>
         <translation>Copy URL to clipboard</translation>
     </message>
     <message id="sf-match-item-download-meta-data">
-        <location filename="../qml/pages/MatchItem.qml" line="504"/>
+        <location filename="../qml/pages/MatchItem.qml" line="507"/>
         <source>Download meta data</source>
         <translation>Download meta data</translation>
     </message>
     <message id="sf-match-item-download-vod">
-        <location filename="../qml/pages/MatchItem.qml" line="513"/>
+        <location filename="../qml/pages/MatchItem.qml" line="516"/>
         <source>Download VOD</source>
         <translation>Download VOD</translation>
     </message>
     <message id="sf-match-item-download-vod-with-format">
-        <location filename="../qml/pages/MatchItem.qml" line="526"/>
+        <location filename="../qml/pages/MatchItem.qml" line="529"/>
         <source>Download VOD with format...</source>
         <translation>Download VOD with format...</translation>
     </message>
     <message id="sf-match-item-cancel-vod-download">
-        <location filename="../qml/pages/MatchItem.qml" line="536"/>
+        <location filename="../qml/pages/MatchItem.qml" line="539"/>
         <source>Cancel VOD download</source>
         <translation>Cancel VOD download</translation>
     </message>
     <message id="sf-match-item-play-stream">
-        <location filename="../qml/pages/MatchItem.qml" line="543"/>
+        <location filename="../qml/pages/MatchItem.qml" line="546"/>
         <source>Play stream</source>
         <translation>Play stream</translation>
     </message>
     <message id="sf-match-item-play-stream-with-format">
-        <location filename="../qml/pages/MatchItem.qml" line="550"/>
+        <location filename="../qml/pages/MatchItem.qml" line="553"/>
         <source>Play stream with format...</source>
         <translation>Play stream with format...</translation>
     </message>
+    <message id="sf-match-item-reset-watch-progress">
+        <location filename="../qml/pages/MatchItem.qml" line="560"/>
+        <source>Reset watch progress</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message id="sf-match-item-delete-meta-data">
-        <location filename="../qml/pages/MatchItem.qml" line="557"/>
+        <location filename="../qml/pages/MatchItem.qml" line="566"/>
         <source>Delete meta data</source>
         <translation>Delete meta data</translation>
     </message>
     <message id="sf-match-item-delete-vod-file">
-        <location filename="../qml/pages/MatchItem.qml" line="564"/>
+        <location filename="../qml/pages/MatchItem.qml" line="573"/>
         <source>Delete VOD file</source>
         <translation>Delete VOD file</translation>
     </message>
     <message id="sf-match-item-deleting-shared-vod-files">
-        <location filename="../qml/pages/MatchItem.qml" line="581"/>
+        <location filename="../qml/pages/MatchItem.qml" line="590"/>
         <source>Deleting files for %1 VODs</source>
         <translation>Deleting files for %1 VODs</translation>
     </message>
     <message id="sf-match-item-deleting-vod-files-for-title">
-        <location filename="../qml/pages/MatchItem.qml" line="588"/>
+        <location filename="../qml/pages/MatchItem.qml" line="597"/>
         <source>Deleting files for %1</source>
         <translation>Deleting files for %1</translation>
     </message>
     <message id="sf-match-item-copy-vod-file-path-to-clipboard">
-        <location filename="../qml/pages/MatchItem.qml" line="615"/>
+        <location filename="../qml/pages/MatchItem.qml" line="624"/>
         <source>Copy VOD file path to clipboard</source>
         <translation>Copy VOD file path to clipboard</translation>
     </message>
     <message id="sf-match-item-delete-thumbnail">
-        <location filename="../qml/pages/MatchItem.qml" line="622"/>
+        <location filename="../qml/pages/MatchItem.qml" line="631"/>
         <source>Delete thumbnail</source>
         <translation>Delete thumbnail</translation>
     </message>
     <message id="sf-match-item-vod-from-database">
-        <location filename="../qml/pages/MatchItem.qml" line="628"/>
+        <location filename="../qml/pages/MatchItem.qml" line="637"/>
         <source>Delete VOD from database</source>
         <translation>Delete VOD from database</translation>
     </message>
     <message id="sf-select-av-format-dialog-title">
-        <location filename="../qml/pages/MatchItem.qml" line="927"/>
+        <location filename="../qml/pages/MatchItem.qml" line="928"/>
         <source>Select a format</source>
         <translation>Select a format</translation>
     </message>
     <message id="sf-recently-watched-video-view-remove-from-list">
         <location filename="../qml/RecentlyWatchedVideoView.qml" line="67"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="227"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="223"/>
         <source>Remove from list</source>
         <translation>Remove from list</translation>
     </message>
     <message id="sf-recently-watched-video-view-removing">
         <location filename="../qml/RecentlyWatchedVideoView.qml" line="74"/>
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="235"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="231"/>
         <source>Removing %1</source>
         <translation>Removing %1</translation>
     </message>
     <message id="sf-recently-watched-video-view-no-content">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="250"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="246"/>
         <source>No recent videos</source>
         <oldsource>No recent videos.</oldsource>
         <translation>No recent videos</translation>
     </message>
     <message id="sf-recently-watched-video-view-no-content-hint">
-        <location filename="../qml/RecentlyWatchedVideoView.qml" line="252"/>
+        <location filename="../qml/RecentlyWatchedVideoView.qml" line="248"/>
         <source>This list will fill with the videos you have watched</source>
         <translation>This list will fill with the videos you have watched</translation>
     </message>
@@ -978,7 +958,7 @@
         <translation>Continue watching</translation>
     </message>
     <message id="sf-entry-page-title">
-        <location filename="../qml/pages/EntryPage.qml" line="311"/>
+        <location filename="../qml/pages/EntryPage.qml" line="307"/>
         <source>go go go</source>
         <translation>go go go</translation>
     </message>
@@ -1044,12 +1024,12 @@
         <translation>event</translation>
     </message>
     <message id="sf-stage-page-match-name-match">
-        <location filename="../qml/pages/StagePage.qml" line="198"/>
+        <location filename="../qml/pages/StagePage.qml" line="194"/>
         <source>Match</source>
         <translation>Match</translation>
     </message>
     <message id="sf-stage-page-match-name-episode">
-        <location filename="../qml/pages/StagePage.qml" line="200"/>
+        <location filename="../qml/pages/StagePage.qml" line="196"/>
         <source>Episode</source>
         <translation>Episode</translation>
     </message>
@@ -1068,6 +1048,31 @@
             <numerusform>%1 VOD deleted</numerusform>
             <numerusform>%1 VODs deleted</numerusform>
         </translation>
+    </message>
+    <message id="sf-topmenu-about">
+        <location filename="../qml/TopMenu.qml" line="32"/>
+        <source>About %1</source>
+        <translation type="unfinished">About %1</translation>
+    </message>
+    <message id="sf-topmenu-settings">
+        <location filename="../qml/TopMenu.qml" line="38"/>
+        <source>Settings</source>
+        <translation type="unfinished">Settings</translation>
+    </message>
+    <message id="sf-topmenu-tools">
+        <location filename="../qml/TopMenu.qml" line="44"/>
+        <source>Tools</source>
+        <translation type="unfinished">Tools</translation>
+    </message>
+    <message id="sf-topmenu-open-video">
+        <location filename="../qml/TopMenu.qml" line="57"/>
+        <source>Open video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message id="sf-topmenu-fetch">
+        <location filename="../qml/TopMenu.qml" line="73"/>
+        <source>Fetch new VODs</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

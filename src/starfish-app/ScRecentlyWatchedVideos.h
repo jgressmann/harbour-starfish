@@ -61,6 +61,7 @@ public:
     Q_INVOKABLE void setOffset(const QVariant& key, int offset);
     Q_INVOKABLE int offset(const QVariant& key) const;
     Q_INVOKABLE void setThumbnailPath(const QVariant& key, const QString& thumbnailPath);
+    Q_INVOKABLE QString getThumbnailPath(const QVariant& key) const;
     Q_INVOKABLE void clear();
 
 public slots:

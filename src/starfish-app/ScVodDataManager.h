@@ -91,6 +91,7 @@ class ScVodDataManager : public QObject {
     Q_PROPERTY(int vodDownloads READ vodDownloads NOTIFY vodDownloadsChanged)
     Q_PROPERTY(int sqlPatchLevel READ sqlPatchLevel NOTIFY sqlPatchLevelChanged)
     Q_PROPERTY(QString dataDirectory READ dataDirectory NOTIFY dataDirectoryChanged)
+    Q_PROPERTY(QString thumbnailDirectory READ thumbnailDirectory NOTIFY thumbnailDirectoryChanged)
     Q_PROPERTY(ScRecentlyWatchedVideos* recentlyWatched READ recentlyWatched CONSTANT)
     Q_PROPERTY(bool isOnline READ isOnline NOTIFY isOnlineChanged)
 
@@ -217,6 +218,7 @@ public: //
     Q_INVOKABLE void clearYtdlCache();
     QString getUrl(int type, const QString& videoId);
     Q_INVOKABLE void setPlaybackOffset(const QVariant& key, int offset);
+    QString thumbnailDirectory() const;
 
 signals:
     void readyChanged();
@@ -231,6 +233,7 @@ signals:
     void sqlPatchLevelChanged();
     void dataDirectoryChanged();
     void dataDirectoryChanging(int changeType, QString path, float progress, int error, QString errorDescription);
+    void thumbnailDirectoryChanged();
     void startWorker();
     void stopThread();
     void maxConcurrentMetaDataDownloadsChanged(int value);
@@ -330,6 +333,8 @@ private:
     void setDataDirectory(const QString& value);
     void setDirectories();
     void pruneExpiredMatchItems();
+    void setPlaybackOffsetVod(qint64 rowid, int offset);
+    void setPlaybackOffsetUrl(const QString& url, int offset);
 
 
     void updateSql1(QSqlQuery& q);

@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@
 #include <QFile>
 #include <QDir>
 #include <QDebug>
+#include <QTemporaryFile>
 
 
 
@@ -134,4 +135,47 @@ bool ScApp::move(const QString& srcFilePath, const QString& dstFilePath) const {
 bool ScApp::isDir(const QString& str) const {
     QDir d(str);
     return d.exists();
+}
+
+bool ScApp::isVodKey(const QVariant& var) const
+{
+    return IsVodKey(var);
+}
+
+bool ScApp::IsVodKey(const QVariant& var)
+{
+    return var.canConvert(QVariant::LongLong);
+}
+
+bool ScApp::isUrlKey(const QVariant& var) const
+{
+    return IsUrlKey(var);
+}
+
+bool ScApp::IsUrlKey(const QVariant& var)
+{
+    return var.type() == QVariant::String;
+}
+
+QString ScApp::filename(const QString& value) const
+{
+    return QFileInfo(value).fileName();
+}
+
+QString ScApp::makeTemporaryFile(const QString& pathTemplate) const
+{
+    return MakeTemporaryFile(pathTemplate);
+}
+
+QString ScApp::MakeTemporaryFile(const QString& pathTemplate)
+{
+    QTemporaryFile f(pathTemplate);
+    if (f.open()) {
+        f.setAutoRemove(false);
+        auto path = f.fileName();
+        f.close();
+        return path;
+    }
+
+    return QString();
 }

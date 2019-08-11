@@ -49,10 +49,6 @@ ContentPage {
                 + " order by match_date desc, event_full_name asc, match_name asc"
     }
 
-    RecentlyWatchedVideoUpdater {
-        id: updater
-    }
-
     MatchItemMemory {
         id: matchItemConnections
     }
@@ -90,9 +86,9 @@ ContentPage {
                         ListView.view.currentIndex = index
                     }
 
-                    onPlayRequest: function (self, callback) {
+                    onPlayRequest: function (self) {
                         _videoId = vod_id
-                        Global.playVideoHandler(updater, VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.seen)
+                        window.playPlaylist(self.playlist, self.seen)
                     }
                 }
             }

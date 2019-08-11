@@ -45,10 +45,6 @@ ContentPage {
     }
 
 
-    RecentlyWatchedVideoUpdater {
-        id: updater
-    }
-
     MatchItemMemory {
         id: matchItemConnections
     }
@@ -83,10 +79,10 @@ ContentPage {
                         ListView.view.currentIndex = index
                     }
 
-                    onPlayRequest: function (self, callback) {
+                    onPlayRequest: function (self) {
 //                        itemPlaying = self
                         _videoId = vod_id
-                        Global.playVideoHandler(updater, VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.seen)
+                        window.playPlaylist(self.playlist, self.seen)
                     }
                 }
             }

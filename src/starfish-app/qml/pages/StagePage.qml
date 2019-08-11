@@ -95,10 +95,6 @@ ContentPage {
         Component.onCompleted: _updateSameSides()
     }
 
-    RecentlyWatchedVideoUpdater {
-        id: updater
-    }
-
     MatchItemMemory {
         id: matchItemConnections
     }
@@ -205,7 +201,7 @@ ContentPage {
 
                 onPlayRequest: function (self) {
                     _videoId = vod_id
-                    Global.playVideoHandler(updater, VodDataManager.recentlyWatched.vodKey(self.rowId), self.playlist, self.seen)
+                    window.playPlaylist(self.playlist, self.seen)
                 }
 
 //                Component.onCompleted: {

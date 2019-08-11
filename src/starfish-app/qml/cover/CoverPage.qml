@@ -218,9 +218,9 @@ CoverBackground {
 
                 // FIX ME this is actually buggy b/c it doesn't
                 // handle the 'returning from device lock' case correctly
-                if (Global.videoPlayerPage &&
-                    Global.videoPlayerPage.isPlaying) {
-                    Global.videoPlayerPage.pause()
+                if (window.videoPlayer &&
+                    window.videoPlayer.isPlaying) {
+                    window.videoPlayer.pause()
                 }
             }
             break

@@ -78,6 +78,9 @@ ListItem {
 
     VodPlaylist {
         id: _playlist
+        startOffset: _c ? _c.videoStartOffset : 0
+        endOffset: _c ? _c.videoEndOffset : -1
+        playbackOffset: _c ? _c.videoPlaybackOffset : -1
     }
 
     RemorsePopup { id: remorse }
@@ -553,6 +556,12 @@ ListItem {
             }
 
             MenuItem {
+                //% "Reset watch progress"
+                text: qsTrId("sf-match-item-reset-watch-progress")
+                onClicked: VodDataManager.setPlaybackOffset(_playlist.mediaKey, _playlist.startOffset)
+            }
+
+            MenuItem {
                 //% "Delete meta data"
                 text: qsTrId("sf-match-item-delete-meta-data")
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available
@@ -773,10 +782,6 @@ ListItem {
     }
 
     function _playFiles() {
-        playlist.startOffset = _c.videoStartOffset
-        playlist.endOffset = _c.videoEndOffset
-        playlist.playbackOffset = _c.videoPlaybackOffset
-
         playlist.parts = _c.urlShare.files
         for (var i = 0; i < _c.urlShare.files; ++i) {
             var file = _c.urlShare.file(i)
@@ -806,10 +811,6 @@ ListItem {
 
     function _playStreamWithFormat(vmFormatId) {
         var metaData = _c.urlShare.metaData
-
-        playlist.startOffset = _c.videoStartOffset
-        playlist.endOffset = _c.videoEndOffset
-        playlist.playbackOffset = _c.videoPlaybackOffset
         playlist.parts = metaData.vods
 
         if (VM.VM_Any === vmFormatId) {

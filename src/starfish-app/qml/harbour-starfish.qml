@@ -28,7 +28,9 @@ import Nemo.DBus 2.0
 import Nemo.Notifications 1.0
 import Vodman 2.1
 import org.duckdns.jgressmann 1.0
+import "pages"
 import "."
+
 
 
 ApplicationWindow {
@@ -47,6 +49,8 @@ ApplicationWindow {
         App.isOnline &&
         vodDatabaseDownloader.status !== VodDatabaseDownloader.Status_Downloading
     property bool _hasCheckedForYtdlUpdate: false
+    property VideoPlayerPage _videoPlayer
+    readonly property VideoPlayerPage videoPlayer: _videoPlayer
 
     Sc2LinksDotComScraper {
         id: sc2LinksDotComScraper
@@ -341,15 +345,15 @@ ApplicationWindow {
             console.debug("tklock_mode_ind=" + arg)
             switch (arg) {
             case "locked":
-                if (settingPlaybackPauseOnDeviceLock.value && Global.videoPlayerPage) {
-                    Global.videoPlayerPage.pause()
+                if (settingPlaybackPauseOnDeviceLock.value && videoPlayer) {
+                    videoPlayer.pause()
                 }
 
 //                Global.addPlaybackPause()
                 break;
             case "unlocked":
-                if (settingPlaybackPauseOnDeviceLock.value && Global.videoPlayerPage) {
-                    Global.videoPlayerPage.resume()
+                if (settingPlaybackPauseOnDeviceLock.value && videoPlayer) {
+                    videoPlayer.resume()
                 }
 //                Global.removePlaybackPause()
                 break;
@@ -370,8 +374,8 @@ ApplicationWindow {
 //                function (result) {
 //                    console.debug("initial value of tklock_mode=" + result)
 //                    if ("locked" === result) {
-//                        if (settingPlaybackPauseOnDeviceLock.value &&  && Global.videoPlayerPage) {
-//                            Global.videoPlayerPage.pause()
+//                        if (settingPlaybackPauseOnDeviceLock.value &&  && window.videoPlayer) {
+//                            window.videoPlayer.pause()
 //                        }
 ////                        Global.addPlaybackPause()
 //                    }
@@ -554,6 +558,40 @@ ApplicationWindow {
             YTDLDownloader.updateStatus === YTDLDownloader.StatusUnavailable) {
             _hasCheckedForYtdlUpdate = true
             YTDLDownloader.checkForUpdate()
+        }
+    }
+
+    function playPlaylist(playlist, seen) {
+        if (playlist && playlist.isValid) {
+            console.debug("playlist parts=" + playlist.parts + " start=" + playlist.startOffset + " end=" + playlist.endOffset + " playback=" + playlist.playbackOffset)
+            VodDataManager.recentlyWatched.add(playlist.mediaKey, seen)
+            if (settingExternalMediaPlayer.value && playlist.parts === 1) {
+                Qt.openUrlExternally(playlist.url(0))
+            } else {
+                if (!_videoPlayer) {
+                    _videoPlayer = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
+                    _videoPlayer.bye.connect(function () {
+                        _videoPlayer = null
+                    })
+
+                    _videoPlayer.coverFilePath = Global.videoCoverPath
+                }
+
+                if (App.isUrlKey(playlist.mediaKey)) {
+                    _videoPlayer.thumbnailFilePath = VodDataManager.recentlyWatched.getThumbnailPath(playlist.mediaKey)
+                    if (!_videoPlayer.thumbnailFilePath) {
+                        _videoPlayer.thumbnailFilePath = App.makeTemporaryFile(VodDataManager.thumbnailDirectory + "XXXXXX.png")
+                        if (_videoPlayer.thumbnailFilePath) {
+                            console.debug("created thumbnail file path " + _videoPlayer.thumbnailFilePath + " for use with media key " + playlist.mediaKey)
+                            VodDataManager.recentlyWatched.setThumbnailPath(playlist.mediaKey, _videoPlayer.thumbnailFilePath)
+                        }
+                    }
+                } else {
+                    _videoPlayer.thumbnailFilePath = ""
+                }
+
+                _videoPlayer.playPlaylist(playlist, !!_videoPlayer.thumbnailFilePath)
+            }
         }
     }
 }

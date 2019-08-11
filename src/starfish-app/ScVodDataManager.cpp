@@ -3095,7 +3095,8 @@ QString ScVodDataManager::dataDirectory() const
 
 void ScVodDataManager::setDataDirectory(const QString& value)
 {
-    return setPersistedValue(QStringLiteral(DATA_DIR_KEY), value);
+    setPersistedValue(QStringLiteral(DATA_DIR_KEY), value);
+    emit dataDirectoryChanged();
 }
 
 void ScVodDataManager::setDirectories()
@@ -3105,6 +3106,7 @@ void ScVodDataManager::setDirectories()
     m_SharedState->m_ThumbnailDir = dataDir + QStringLiteral("/thumbnails/");
     m_SharedState->m_VodDir = dataDir + QStringLiteral("/vods/");
     m_SharedState->m_IconDir = dataDir + QStringLiteral("/icons/");
+    emit thumbnailDirectoryChanged();
 }
 
 void ScVodDataManager::moveDataDirectory(const QString& _targetDirectory)
@@ -3264,16 +3266,19 @@ ScVodDataManager::setPlaybackOffset(const QVariant& key, int offset)
 {
     switch (key.type()) {
     case QVariant::String:
-        return; // not a vod
+        setPlaybackOffsetUrl(key.toString(), offset);
     case QVariant::Invalid:
         qWarning("invalid key\n");
         return;
     default:
+        setPlaybackOffsetVod(qvariant_cast<qint64>(key), offset);
         break;
     }
+}
 
-    auto rowid = qvariant_cast<qint64>(key);
-
+void
+ScVodDataManager::setPlaybackOffsetVod(qint64 rowid, int offset)
+{
     QString sql = QStringLiteral("UPDATE vods SET playback_offset=? WHERE id=?");
     auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
 
@@ -3292,6 +3297,12 @@ ScVodDataManager::setPlaybackOffset(const QVariant& key, int offset)
 
     emit startProcessDatabaseStoreQueue(tid, sql, {offset, rowid});
     emit startProcessDatabaseStoreQueue(tid, {}, {});
+}
+
+void
+ScVodDataManager::setPlaybackOffsetUrl(const QString& url, int offset)
+{
+    m_RecentlyWatchedVideos->setOffset(url, offset);
 }
 
 void
@@ -3808,4 +3819,10 @@ ScVodDataManager::getUrl(int type, const QString& videoId)
     default:
         return QString();
     }
+}
+
+QString
+ScVodDataManager::thumbnailDirectory() const
+{
+    return m_SharedState->m_ThumbnailDir;
 }

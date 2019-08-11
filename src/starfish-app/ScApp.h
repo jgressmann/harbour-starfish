@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2018, 2019 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,7 +57,14 @@ public:
     Q_INVOKABLE bool copy(const QString& srcFilePath, const QString& dstFilePath) const;
     Q_INVOKABLE bool move(const QString& srcFilePath, const QString& dstFilePath) const;
     Q_INVOKABLE bool isDir(const QString& str) const;
+    Q_INVOKABLE bool isVodKey(const QVariant& var) const;
+    Q_INVOKABLE bool isUrlKey(const QVariant& var) const;
+    Q_INVOKABLE QString filename(const QString& value) const;
+    Q_INVOKABLE QString makeTemporaryFile(const QString& pathTemplate) const;
     static QString staticLogDir();
+    static bool IsVodKey(const QVariant& var);
+    static bool IsUrlKey(const QVariant& var);
+    static QString MakeTemporaryFile(const QString& pathTemplate);
 
 
 signals:

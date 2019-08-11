@@ -32,11 +32,16 @@ import ".."
 Page {
     id: root
 
-    signal videoSelected(var key, var playlist, int offset, bool saveScreenShot)
+    signal videoSelected(var playlist, bool seen)
 
     PageHeader {
         id: header
         title: "Open video"
+    }
+
+    VodPlaylist {
+        id: playlist
+        parts: 1
     }
 
     Column {
@@ -54,11 +59,10 @@ Page {
                 text: qsTrId("sf-open-video-page-open-from-clipboard")
                 enabled: Clipboard.hasText && App.isUrl(Clipboard.text)
                 onClicked: {
-                    videoSelected(
-                                VodDataManager.recentlyWatched.urlKey(Clipboard.text),
-                                Clipboard.text,
-                                0,
-                                true)
+                    playlist.mediaKey = VodDataManager.recentlyWatched.urlKey(Clipboard.text)
+                    playlist.setUrl(0, Clipboard.text)
+                    playlist.playbackOffset = VodDataManager.recentlyWatched.g
+                    videoSelected(playlist, false)
                 }
             }
             Button {
@@ -74,10 +78,9 @@ Page {
                     FilePickerPage {
                         popOnSelection: false
                         onSelectedContentPropertiesChanged: {
-                            videoSelected(VodDataManager.recentlyWatched.urlKey(selectedContentProperties.url),
-                                          selectedContentProperties.url,
-                                          0,
-                                          true)
+                            playlist.mediaKey = VodDataManager.recentlyWatched.urlKey(selectedContentProperties.url)
+                            playlist.setUrl(0, selectedContentProperties.url)
+                            videoSelected(playlist, false)
                         }
                     }
                 }
@@ -104,8 +107,8 @@ Page {
             id: recentlyWatchedVideoView
             anchors.fill: parent
             clip: true
-            onClicked: function (a, b, c) {
-                videoSelected(a, b, c, false)
+            onClicked: function (playlist, seen) {
+                videoSelected(playlist, seen)
             }
         }
     }

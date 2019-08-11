@@ -60,14 +60,16 @@ Page {
     property bool _pauseDueToStall: false
     property bool _clickedToOpen: false
     property var openHandler
-    readonly property bool closed: _closed
-    property bool _closed: false
     property bool _grabFrameWhenReady: false
+    property int _grabFrameControlPanelOpens: 0
     readonly property bool isPlaying: mediaplayer.playbackState === MediaPlayer.PlayingState
+    property string thumbnailFilePath
+    property string coverFilePath
 
     signal videoFrameCaptured(string filepath)
     signal videoCoverCaptured(string filepath)
     signal videoThumbnailCaptured(string filepath)
+    signal bye()
 
     on_StreamPositionMsChanged: {
         console.debug("stream position ms=" + _streamPositionMs)
@@ -129,6 +131,9 @@ Page {
                 if (_grabFrameWhenReady) {
                     _grabFrameWhenReady = false
                     _grabFrame()
+
+//                    _clickedToOpen = true
+//                    openControlPanel() // otherwise video hangs
                 }
                 if (_pauseDueToStall) {
                     _pauseDueToStall = false
@@ -610,39 +615,16 @@ Page {
         }
     }
 
-    Component.onCompleted: {
-        Global.videoPlayerPage = page
-    }
-
     Component.onDestruction: {
         _savePlaybackProgress()
 
         console.debug("destruction")
         _preventBlanking(false)
-        _closed = true
-        Global.videoPlayerPage = null
-        // save current frame
+
         mediaplayer.pause()
-//        if (mediaplayer.playbackState === MediaPlayer.PausedState) {
-//            _grabFrame()
-//        }
+
+        bye()
     }
-
-//    Timer {
-//        id: frameCapturedSignalTimer
-//        interval: 1
-//        repeat: false
-//        onRunningChanged: {
-//            console.debug("frame capture timer running=" + running)
-//        }
-
-//        onTriggered: {
-//            console.debug("frame capture timer triggered begin")
-//            videoFrameCaptured(Global.videoFramePath)
-//            console.debug("frame capture timer triggered end")
-//        }
-//    }
-
 
     Timer {
         id: busyTimer
@@ -672,30 +654,14 @@ Page {
         }
     }
 
-    function playPlaylist(playlistArg) {
+    function playPlaylist(playlistArg, saveScreenShot) {
         _savePlaybackProgress()
 
         if (playlistArg.isValid) {
             _playlist.copyFrom(playlistArg)
-            _play(false)
+            _play(saveScreenShot)
         } else {
             console.debug("invalid playlist")
-        }
-    }
-
-    function playUrl(url, startOffset, saveScreenShot) {
-        _savePlaybackProgress()
-
-        _playlist.startOffset = (startOffset && startOffset > 0) ? startOffset : 0
-        _playlist.playbackOffset = _playlist.startOffset
-        _playlist.endOffset = -1
-        _playlist.parts = 1
-        _playlist.setDuration(0, -1)
-        _playlist.setUrl(0, url)
-        _playlist.mediaKey = url
-
-        if (_playlist.isValid) {
-            _play(saveScreenShot)
         }
     }
 
@@ -705,7 +671,7 @@ Page {
         _seekPositionMs = 0
         _currentUrlIndex = 0;
         controlPanel.open = false
-        _grabFrameWhenReady = !!saveScreenShot
+        _grabFrameWhenReady = saveScreenShot
         _startSeek = false
         _seekFixup = 0
         _pauseCount = 0;
@@ -754,9 +720,13 @@ Page {
             mediaplayer.play()
             // toggle item visibility to to unfreeze video
             // after coming out of device lock
-            videoOutputRectangle.visible = false
-            videoOutputRectangle.visible = true
+            _unfreezeVideo()
         }
+    }
+
+    function _unfreezeVideo() {
+        videoOutputRectangle.visible = false
+        videoOutputRectangle.visible = true
     }
 
     function openControlPanel() {
@@ -779,18 +749,6 @@ Page {
 
     function _stopPlayback() {
         pause()
-
-
-//        if (mediaplayer.playbackState === MediaPlayer.PlayingState) {
-//            mediaplayer.pause()
-//            _paused = true
-//        } else {
-//            _paused = false
-//        }
-
-//        if (mediaplayer.playbackState === MediaPlayer.PausedState) {
-//            _grabFrame()
-//        }
     }
 
     function _toTime(n) {
@@ -839,15 +797,31 @@ Page {
     }
 
     function _grabFrame() {
-        thumbnailOutput.grabToImage(function (a) {
-            a.saveToFile(Global.videoThumbnailPath)
-            videoThumbnailCaptured(Global.videoThumbnailPath)
-        })
+        if (thumbnailFilePath) {
+            ++_grabFrameControlPanelOpens
+            openControlPanel()
+            thumbnailOutput.grabToImage(function (a) {
+                a.saveToFile(thumbnailFilePath)
+                videoThumbnailCaptured(thumbnailFilePath)
+                if (_grabFrameControlPanelOpens > 0) {
+                    --_grabFrameControlPanelOpens
+                    closeControlPanel()
+                }
+            })
+        }
 
-        coverOutput.grabToImage(function (a) {
-            a.saveToFile(Global.videoCoverPath)
-            videoCoverCaptured(Global.videoCoverPath)
-        })
+        if (coverFilePath) {
+            ++_grabFrameControlPanelOpens
+            openControlPanel()
+            coverOutput.grabToImage(function (a) {
+                a.saveToFile(coverFilePath)
+                videoCoverCaptured(coverFilePath)
+                if (_grabFrameControlPanelOpens > 0) {
+                    --_grabFrameControlPanelOpens
+                    closeControlPanel()
+                }
+            })
+        }
     }
 
     function _preventBlanking(b) {

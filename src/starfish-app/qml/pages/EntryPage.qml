@@ -274,12 +274,8 @@ BasePage {
                     height: 0
                     width: parent.width
 
-                    RecentlyWatchedVideoUpdater {
-                        id: updater
-                    }
-
-                    onClicked: function (key, playlist, seen) {
-                        Global.playVideoHandler(updater, key, playlist, seen)
+                    onClicked: function (playlist, seen) {
+                        window.playPlaylist(playlist, seen)
                     }
 
                     onCountChanged: {

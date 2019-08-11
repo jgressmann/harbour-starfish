@@ -56,49 +56,15 @@ PullDownMenu {
         //% "Open video"
         text: qsTrId("sf-topmenu-open-video")
 
-        RecentlyWatchedVideoUpdater {
-            id: updater
-        }
-
         onClicked: {
             var topPage = pageStack.currentPage
-            _openVideoPage(function (url, offset, saveScreenShot) {
+            var callback = function (playlist, seen) {
                 pageStack.pop(topPage, PageStackAction.Immediate)
+                window.playPlaylist(playlist, seen)
+            }
 
-                if (settingExternalMediaPlayer.value && url.indexOf("http") !== 0) {
-                    Qt.openUrlExternally(url)
-                } else {
-                    var playerPage = pageStack.push(
-                                Qt.resolvedUrl("pages/VideoPlayerPage.qml"),
-                                null,
-                                PageStackAction.Immediate)
-
-                    var callback = function () {
-                        _openVideoPage(function(a, b) {
-                            playerPage.play(a, b)
-                            pageStack.pop(playerPage)
-                        })
-                    }
-                    playerPage.openHandler = callback
-
-                    playerPage.playUrl(url, offset, saveScreenShot)
-
-                    updater.playerPage = playerPage
-
-                }
-            })
-        }
-
-
-        function _openVideoPage(callback) {
             var openPage = pageStack.push(Qt.resolvedUrl("pages/OpenVideoPage.qml"))
-            openPage.videoSelected.connect(function (key, playlist, offset, saveScreenShot) {
-                VodDataManager.recentlyWatched.add(key, false)
-                offset = Math.max(offset, VodDataManager.recentlyWatched.offset(key))
-                VodDataManager.recentlyWatched.setOffset(key, offset)
-                updater.setKey(key)
-                callback(url, offset, saveScreenShot)
-            })
+            openPage.videoSelected.connect(callback)
         }
     }
 
