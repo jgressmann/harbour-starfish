@@ -31,6 +31,7 @@ Requires:   pyotherside-qml-plugin-python3-qt5
 Requires:   nemo-qml-plugin-notifications-qt5
 Requires:   nemo-qml-plugin-dbus-qt5
 Requires:   nemo-qml-plugin-configuration-qt5
+Requires:   libkeepalive
 
 
 %description

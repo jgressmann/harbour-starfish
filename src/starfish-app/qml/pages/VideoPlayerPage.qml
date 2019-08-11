@@ -25,6 +25,7 @@ import QtQuick 2.0
 import QtGraphicalEffects 1.0
 import QtMultimedia 5.0
 import Sailfish.Silica 1.0
+import Nemo.KeepAlive 1.2
 import org.duckdns.jgressmann 1.0
 import ".."
 
@@ -69,6 +70,7 @@ Page {
     signal videoFrameCaptured(string filepath)
     signal videoCoverCaptured(string filepath)
     signal videoThumbnailCaptured(string filepath)
+    signal videoStreamLengthAvailable(int seconds)
     signal bye()
 
     on_StreamPositionMsChanged: {
@@ -109,6 +111,9 @@ Page {
         }
     }
 
+    DisplayBlanking {
+        id: displayBlanking
+    }
 
     MediaPlayer {
         id: mediaplayer
@@ -825,12 +830,7 @@ Page {
     }
 
     function _preventBlanking(b) {
-        try {
-            KeepAlive.preventBlanking = b
-            console.debug("prevent blank="+KeepAlive.preventBlanking)
-        } catch (e) {
-            console.debug("prevent blanking not available")
-        }
+        displayBlanking.preventBlanking = b
     }
 
     function _trySetDuration() {
