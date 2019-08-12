@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
 
     QCommandLineOption scraperOption(
                 QStringList() << "s" << "scaper",
-                "Name of the <scaper> to use",
+                "Name of the <scraper> to use",
                 "scraper",
                 "sc2casts");
 
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
                 "classifier");
 
     QCommandLineOption scrapersOption(
-                QStringList() << "scapers",
+                QStringList() << "scrapers",
                 "Print list of available scrapers");
 
     QCommandLineParser parser;
