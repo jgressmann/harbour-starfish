@@ -428,18 +428,23 @@
         <source>Pull down to fetch new VODs.</source>
         <translation>Pull down to fetch new VODs.</translation>
     </message>
+    <message id="sf-open-video-page-header">
+        <location filename="../qml/pages/OpenVideoPage.qml" line="40"/>
+        <source>Open video</source>
+        <translation></translation>
+    </message>
     <message id="sf-open-video-page-open-from-clipboard">
-        <location filename="../qml/pages/OpenVideoPage.qml" line="59"/>
+        <location filename="../qml/pages/OpenVideoPage.qml" line="60"/>
         <source>From clipboard</source>
         <translation>From clipboard</translation>
     </message>
     <message id="sf-open-video-page-open-from-file">
-        <location filename="../qml/pages/OpenVideoPage.qml" line="70"/>
+        <location filename="../qml/pages/OpenVideoPage.qml" line="71"/>
         <source>From file</source>
         <translation>From file</translation>
     </message>
     <message id="sf-open-video-page-recently-watched-section-header">
-        <location filename="../qml/pages/OpenVideoPage.qml" line="93"/>
+        <location filename="../qml/pages/OpenVideoPage.qml" line="94"/>
         <source>Recently watched</source>
         <translation>Recently watched</translation>
     </message>
@@ -680,76 +685,93 @@
         <translation>Download failed</translation>
     </message>
     <message id="sf-nofification-download-ytdl-update-available-summary">
-        <location filename="../qml/harbour-starfish.qml" line="293"/>
+        <location filename="../qml/harbour-starfish.qml" line="294"/>
         <source>youtube-dl update available</source>
         <translation>youtube-dl update available</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-body">
-        <location filename="../qml/harbour-starfish.qml" line="296"/>
+        <location filename="../qml/harbour-starfish.qml" line="297"/>
         <source>youtube-dl version %1 available</source>
         <translation>youtube-dl version %1 available</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-action">
-        <location filename="../qml/harbour-starfish.qml" line="301"/>
+        <location filename="../qml/harbour-starfish.qml" line="302"/>
         <source>Update youtube-dl</source>
         <translation>Update youtube-dl</translation>
     </message>
     <message id="sf-notification-busy">
-        <location filename="../qml/harbour-starfish.qml" line="328"/>
+        <location filename="../qml/harbour-starfish.qml" line="329"/>
         <source>%1 is busy. Try again later.</source>
         <translation>%1 is busy. Try again later.</translation>
     </message>
     <message id="sf-vods-added-notification-summary" numerus="yes">
-        <location filename="../qml/harbour-starfish.qml" line="507"/>
+        <location filename="../qml/harbour-starfish.qml" line="508"/>
         <source>%1 VODs added</source>
         <translation>
             <numerusform>%1 VOD added</numerusform>
             <numerusform>%1 VODs added</numerusform>
         </translation>
     </message>
-    <message id="sf-vod-details-page-id">
-        <location filename="../qml/pages/VodDetailPage.qml" line="45"/>
-        <source>ID</source>
-        <translation>ID</translation>
-    </message>
     <message id="sf-vod-details-page-path">
-        <location filename="../qml/pages/VodDetailPage.qml" line="51"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="103"/>
         <source>Path</source>
         <translation>Path</translation>
     </message>
     <message id="sf-vod-details-page-size">
-        <location filename="../qml/pages/VodDetailPage.qml" line="58"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="116"/>
         <source>Size</source>
         <translation>Size</translation>
     </message>
     <message id="sf-vod-details-page-size-gb">
-        <location filename="../qml/pages/VodDetailPage.qml" line="67"/>
-        <location filename="../qml/pages/VodDetailPage.qml" line="71"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="125"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="129"/>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
     <message id="sf-vod-details-page-size-mb">
-        <location filename="../qml/pages/VodDetailPage.qml" line="75"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="133"/>
         <source>%1 MB</source>
         <translation>%1 MB</translation>
     </message>
     <message id="sf-vod-details-page-download-progress">
-        <location filename="../qml/pages/VodDetailPage.qml" line="81"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="65"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="109"/>
         <source>Download progress</source>
         <translation>Download progress</translation>
     </message>
+    <message id="sf-vod-details-page-vod-id">
+        <location filename="../qml/pages/VodDetailPage.qml" line="53"/>
+        <source>Vod id</source>
+        <translation>Vod id</translation>
+    </message>
+    <message id="sf-vod-details-page-url-share-id">
+        <location filename="../qml/pages/VodDetailPage.qml" line="59"/>
+        <source>Url share id</source>
+        <translation>Url share id</translation>
+    </message>
     <message id="sf-vod-details-page-resolution">
-        <location filename="../qml/pages/VodDetailPage.qml" line="87"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="72"/>
         <source>Resolution</source>
         <translation>Resolution</translation>
     </message>
+    <message id="sf-vod-details-page-files-section-header">
+        <location filename="../qml/pages/VodDetailPage.qml" line="78"/>
+        <source>Files</source>
+        <translation>Files</translation>
+    </message>
+    <message id="sf-vod-details-page-files-section-file-number">
+        <location filename="../qml/pages/VodDetailPage.qml" line="96"/>
+        <source>File #%1</source>
+        <oldsource>File number %1</oldsource>
+        <translation type="unfinished">File #%1</translation>
+    </message>
     <message id="sf-vod-details-page-copy file path to clipboard">
-        <location filename="../qml/pages/VodDetailPage.qml" line="97"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="143"/>
         <source>Copy file path to clipboard</source>
         <translation>Copy file path to clipboard</translation>
     </message>
     <message id="sf-vod-details-page-title">
-        <location filename="../qml/pages/VodDetailPage.qml" line="115"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="48"/>
         <source>VOD details</source>
         <translation>VOD details</translation>
     </message>
@@ -842,7 +864,7 @@
     <message id="sf-match-item-reset-watch-progress">
         <location filename="../qml/pages/MatchItem.qml" line="560"/>
         <source>Reset watch progress</source>
-        <translation type="unfinished"></translation>
+        <translation>Reset watch progress</translation>
     </message>
     <message id="sf-match-item-delete-meta-data">
         <location filename="../qml/pages/MatchItem.qml" line="566"/>
@@ -865,22 +887,22 @@
         <translation>Deleting files for %1</translation>
     </message>
     <message id="sf-match-item-copy-vod-file-path-to-clipboard">
-        <location filename="../qml/pages/MatchItem.qml" line="624"/>
+        <location filename="../qml/pages/MatchItem.qml" line="617"/>
         <source>Copy VOD file path to clipboard</source>
         <translation>Copy VOD file path to clipboard</translation>
     </message>
     <message id="sf-match-item-delete-thumbnail">
-        <location filename="../qml/pages/MatchItem.qml" line="631"/>
+        <location filename="../qml/pages/MatchItem.qml" line="624"/>
         <source>Delete thumbnail</source>
         <translation>Delete thumbnail</translation>
     </message>
     <message id="sf-match-item-vod-from-database">
-        <location filename="../qml/pages/MatchItem.qml" line="637"/>
+        <location filename="../qml/pages/MatchItem.qml" line="630"/>
         <source>Delete VOD from database</source>
         <translation>Delete VOD from database</translation>
     </message>
     <message id="sf-select-av-format-dialog-title">
-        <location filename="../qml/pages/MatchItem.qml" line="928"/>
+        <location filename="../qml/pages/MatchItem.qml" line="921"/>
         <source>Select a format</source>
         <translation>Select a format</translation>
     </message>
@@ -1052,27 +1074,27 @@
     <message id="sf-topmenu-about">
         <location filename="../qml/TopMenu.qml" line="32"/>
         <source>About %1</source>
-        <translation type="unfinished">About %1</translation>
+        <translation>About %1</translation>
     </message>
     <message id="sf-topmenu-settings">
         <location filename="../qml/TopMenu.qml" line="38"/>
         <source>Settings</source>
-        <translation type="unfinished">Settings</translation>
+        <translation>Settings</translation>
     </message>
     <message id="sf-topmenu-tools">
         <location filename="../qml/TopMenu.qml" line="44"/>
         <source>Tools</source>
-        <translation type="unfinished">Tools</translation>
+        <translation>Tools</translation>
     </message>
     <message id="sf-topmenu-open-video">
         <location filename="../qml/TopMenu.qml" line="57"/>
         <source>Open video</source>
-        <translation type="unfinished"></translation>
+        <translation>Open video</translation>
     </message>
     <message id="sf-topmenu-fetch">
         <location filename="../qml/TopMenu.qml" line="73"/>
         <source>Fetch new VODs</source>
-        <translation type="unfinished"></translation>
+        <translation>Fetch new VODs</translation>
     </message>
 </context>
 <context>
@@ -1080,27 +1102,27 @@
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="160"/>
         <source>Fetching list of tournaments</source>
-        <translation></translation>
+        <translation>Fetching list of tournaments</translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="275"/>
         <source>Fetching data for </source>
-        <translation></translation>
+        <translation>Fetching data for </translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="647"/>
         <source>network failure</source>
-        <translation></translation>
+        <translation>network failure</translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="649"/>
         <source>dunno what happened TT</source>
-        <translation></translation>
+        <translation>dunno what happened TT</translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="711"/>
         <source>Cancelling VOD fetching</source>
-        <translation></translation>
+        <translation>Cancelling VOD fetching</translation>
     </message>
 </context>
 </TS>

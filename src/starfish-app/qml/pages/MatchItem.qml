@@ -602,28 +602,21 @@ ListItem {
                 }
             }
 
-            // FIX ME
-//            MenuItem {
-//                text: "VOD details"
-//                visible: tangibleDownloadProgress
-//                onClicked: pageStack.push(
-//                               Qt.resolvedUrl("VodDetailPage.qml"),
-//                               {
-//                                   vodTitle: titleLabel.text,
-//                                   vodFilePath: _c.urlShare.vodFilePath,
-//                                   vodFileSize: _c.urlShare.vodFileSize,
-//                                   vodWidth: _c.urlShare.vodResolution.width,
-//                                   vodHeight: _c.urlShare.vodResolution.height,
-//                                   vodRowId: rowId,
-//                                   vodProgress: _c.urlShare.downloadProgress
-//                               })
-//            }
+            MenuItem {
+                text: "VOD details"
+                visible: tangibleDownloadProgress
+                onClicked: pageStack.push(
+                               Qt.resolvedUrl("VodDetailPage.qml"),
+                               {
+                                   match: _c
+                               })
+            }
 
             MenuItem {
                 //% "Copy VOD file path to clipboard"
                 text: qsTrId("sf-match-item-copy-vod-file-path-to-clipboard")
-                visible: tangibleDownloadProgress
-                onClicked: Clipboard.text = _c.urlShare.vodFilePath
+                visible: tangibleDownloadProgress && _c.urlShare.files === 1
+                onClicked: Clipboard.text = _c.urlShare.file(0).vodFilePath
             }
 
             MenuItem {

@@ -29,90 +29,133 @@ import ".."
 
 BasePage {
     id: page
-    property string vodFilePath
-    property int vodFileSize: -1
-    property int vodWidth: -1
-    property int vodHeight: -1
-    property int vodRowId: -1
-    property real vodProgress: 0
-
-
-    VisualItemModel {
-        id: model
-
-        DetailItem {
-            //% "ID"
-            label: qsTrId("sf-vod-details-page-id")
-            value: vodRowId
-        }
-
-        DetailItem {
-            //% "Path"
-            label: qsTrId("sf-vod-details-page-path")
-            value: vodFilePath
-        }
-
-
-        DetailItem {
-            //% "Size"
-            label: qsTrId("sf-vod-details-page-size")
-            value: makeSizeString(vodFileSize)
-
-            function makeSizeString(size) {
-                var oneGb = 1000000000
-                var oneMb = 1000000
-
-                if (size >= 10*oneGb) { // 10GB
-                    //% "%1 GB"
-                    return qsTrId("sf-vod-details-page-size-gb").arg((size/oneGb).toFixed(1))
-                }
-
-                if (size >= oneGb) { // 1GB
-                    return qsTrId("sf-vod-details-page-size-gb").arg((size/oneGb).toFixed(2))
-                }
-
-                //% "%1 MB"
-                return qsTrId("sf-vod-details-page-size-mb").arg((size/oneMb).toFixed(0))
-            }
-        }
-
-        DetailItem {
-            //% "Download progress"
-            label: qsTrId("sf-vod-details-page-download-progress")
-            value: (vodProgress * 100).toFixed(0) + " %"
-        }
-
-        DetailItem {
-            //% "Resolution"
-            label: qsTrId("sf-vod-details-page-resolution")
-            value: vodWidth + "x" + vodHeight
-        }
-
-
-        ButtonLayout {
-            width: parent.width
-
-            Button {
-                //% "Copy file path to clipboard"
-                text: qsTrId("sf-vod-details-page-copy file path to clipboard")
-                onClicked: Clipboard.text = vodFilePath
-            }
-        }
-    }
+    property QtObject match
 
     contentItem: SilicaFlickable {
         anchors.fill: parent
-        contentWidth: parent.width
+        contentWidth: width
+        contentHeight: column.height
 
         VerticalScrollDecorator {}
 
-        SilicaListView {
-            id: listView
-            anchors.fill: parent
-            model: model
-            header: PageHeader {
+        Column {
+            id: column
+            width: parent.width
+
+            PageHeader {
+
                 //% "VOD details"
                 title: qsTrId("sf-vod-details-page-title")
+            }
+
+            DetailItem {
+                //% "Vod id"
+                label: qsTrId("sf-vod-details-page-vod-id")
+                value: match.rowId
+            }
+
+            DetailItem {
+                //% "Url share id"
+                label: qsTrId("sf-vod-details-page-url-share-id")
+                value: match.urlShare.urlShareId
+            }
+
+            DetailItem {
+                //% "Download progress"
+                label: qsTrId("sf-vod-details-page-download-progress")
+                value: (match.urlShare.downloadProgress * 100).toFixed(0) + " %"
+            }
+
+            DetailItem {
+                visible: match.urlShare.vodResolution.width > 0 && match.urlShare.vodResolution.height > 0
+                //% "Resolution"
+                label: qsTrId("sf-vod-details-page-resolution")
+                value: match.urlShare.vodResolution.width + "x" + match.urlShare.vodResolution.height
+            }
+
+            SectionHeader {
+                //% "Files"
+                text: qsTrId("sf-vod-details-page-files-section-header")
+            }
+
+            Repeater {
+                id: filesView
+                width: parent.width
+                model: match.urlShare.files
+                delegate: Component {
+
+
+                    Column {
+                        property QtObject file
+                        width: filesView.width
+
+                        Label {
+                            x: Theme.horizontalPageMargin
+                            width: parent.width - 2*x
+                            //% "File #%1"
+                            text: qsTrId("sf-vod-details-page-files-section-file-number").arg(index+1)
+                            color: Theme.highlightColor
+                            font.pixelSize: Theme.fontSizeSmall
+                        }
+
+                        DetailItem {
+                            //% "Path"
+                            label: qsTrId("sf-vod-details-page-path")
+                            value: file.vodFilePath
+                        }
+
+                        DetailItem {
+                            //% "Download progress"
+                            label: qsTrId("sf-vod-details-page-download-progress")
+                            value: (file.downloadProgress * 100).toFixed(0) + " %"
+                        }
+
+
+                        DetailItem {
+                            //% "Size"
+                            label: qsTrId("sf-vod-details-page-size")
+                            value: makeSizeString(file.vodFileSize)
+
+                            function makeSizeString(size) {
+                                var oneGb = 1000000000
+                                var oneMb = 1000000
+
+                                if (size >= 10*oneGb) { // 10GB
+                                    //% "%1 GB"
+                                    return qsTrId("sf-vod-details-page-size-gb").arg((size/oneGb).toFixed(1))
+                                }
+
+                                if (size >= oneGb) { // 1GB
+                                    return qsTrId("sf-vod-details-page-size-gb").arg((size/oneGb).toFixed(2))
+                                }
+
+                                //% "%1 MB"
+                                return qsTrId("sf-vod-details-page-size-mb").arg((size/oneMb).toFixed(0))
+                            }
+                        }
+
+
+                        ButtonLayout {
+                            width: parent.width
+
+                            Button {
+                                //% "Copy file path to clipboard"
+                                text: qsTrId("sf-vod-details-page-copy file path to clipboard")
+                                onClicked: Clipboard.text = file.vodFilePath
+                            }
+                        }
+
+                        Item {
+                            width: parent.width
+                            height: Theme.paddingLarge
+                        }
+
+                        Component.onCompleted: {
+                            file = match.urlShare.file(index)
+                            console.debug("vod file index " + index)
+                        }
+                    }
+                }
             }
         }
     }
