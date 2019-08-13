@@ -36,7 +36,8 @@ Page {
 
     PageHeader {
         id: header
-        title: "Open video"
+        //% "Open video"
+        title: qsTrId("sf-open-video-page-header")
     }
 
     VodPlaylist {
@@ -61,7 +62,7 @@ Page {
                 onClicked: {
                     playlist.mediaKey = VodDataManager.recentlyWatched.urlKey(Clipboard.text)
                     playlist.setUrl(0, Clipboard.text)
-                    playlist.playbackOffset = VodDataManager.recentlyWatched.g
+                    playlist.playbackOffset = VodDataManager.recentlyWatched.offset(playlist.mediaKey)
                     videoSelected(playlist, false)
                 }
             }
