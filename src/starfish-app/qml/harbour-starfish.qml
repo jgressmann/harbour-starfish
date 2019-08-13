@@ -245,6 +245,7 @@ ApplicationWindow {
          appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
 //         icon: "icon-lock-transfer"
          icon: appIcon
+         isTransient: true
     }
 
     Notification {

@@ -161,6 +161,7 @@ Page {
          id: notification
          appName: App.displayName
          appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+         isTransient: true
     }
 
     Connections {
