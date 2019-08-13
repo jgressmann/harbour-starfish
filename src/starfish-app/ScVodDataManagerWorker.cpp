@@ -727,13 +727,17 @@ void ScVodDataManagerWorker::onFileDownloadChanged(qint64 token, const VMPlaylis
         {
             (void)insertId;
             if (!error) {
-                // guard against reset to zero at restart of canceled download
-                if (download.data().files[0].progress() > 0) {
-                    VodmanFileRequest& r = it.value();
-                    r.progress.progress = download.data().files[0].progress();
-                    r.progress.fileSize = download.data().files[0].fileSize();
+                // download could be cancelled in the meantime
+                auto it = m_VodmanFileRequests.find(token);
+                if (it != m_VodmanFileRequests.end()) {
+                    // guard against reset to zero at restart of canceled download
+                    if (download.data().files[0].progress() > 0) {
+                        VodmanFileRequest& r = it.value();
+                        r.progress.progress = download.data().files[0].progress();
+                        r.progress.fileSize = download.data().files[0].fileSize();
 
-                    emit fetchingVod(r.progress);
+                        emit fetchingVod(r.progress);
+                    }
                 }
             }
         };
