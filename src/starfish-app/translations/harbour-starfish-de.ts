@@ -765,7 +765,7 @@
         <location filename="../qml/pages/VodDetailPage.qml" line="96"/>
         <source>File #%1</source>
         <oldsource>File number %1</oldsource>
-        <translation type="unfinished">%1. Datei</translation>
+        <translation>%1. Datei</translation>
     </message>
     <message id="sf-vod-details-page-copy file path to clipboard">
         <location filename="../qml/pages/VodDetailPage.qml" line="143"/>

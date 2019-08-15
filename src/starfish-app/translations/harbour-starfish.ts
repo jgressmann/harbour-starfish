@@ -431,7 +431,7 @@
     <message id="sf-open-video-page-header">
         <location filename="../qml/pages/OpenVideoPage.qml" line="40"/>
         <source>Open video</source>
-        <translation></translation>
+        <translation>Open video</translation>
     </message>
     <message id="sf-open-video-page-open-from-clipboard">
         <location filename="../qml/pages/OpenVideoPage.qml" line="60"/>
@@ -763,7 +763,7 @@
         <location filename="../qml/pages/VodDetailPage.qml" line="96"/>
         <source>File #%1</source>
         <oldsource>File number %1</oldsource>
-        <translation type="unfinished">File #%1</translation>
+        <translation>File #%1</translation>
     </message>
     <message id="sf-vod-details-page-copy file path to clipboard">
         <location filename="../qml/pages/VodDetailPage.qml" line="143"/>
