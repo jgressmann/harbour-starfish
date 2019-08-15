@@ -152,14 +152,12 @@ ScRecentlyWatchedVideos::add(const QVariant& k, bool seen)
 
     auto transactionId = manager()->databaseStoreQueue()->newTransactionId();
 
-    // save one model reset as setOffset currently always follows add (see QML)
-
-//    m_PendingDatabaseStores.insert(transactionId, [=] (qint64 rows, bool error)
-//    {
-//        if (!error && rows) {
-//            reset();
-//        }
-//    });
+    m_PendingDatabaseStores.insert(transactionId, [=] (qint64 rows, bool error)
+    {
+        if (!error && rows) {
+            reset();
+        }
+    });
 
     auto query = QStringLiteral("INSERT INTO recently_watched (%1, modified, playback_offset, seen) VALUES (?, ?, ?, ?)").arg(Vod == t ? s_VodId : s_Url);
     emit startProcessDatabaseStoreQueue(transactionId, query, {k, QDateTime::currentDateTime(), 0, seen});
