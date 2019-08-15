@@ -518,7 +518,7 @@ Sc2LinksDotCom::parseLevel1(QNetworkReply* reply) {
 
         ScStage& stage = stages[i];
         ScStageData& stageData = stage.data();
-        stageData.stageNumber = count - 1;
+        stageData.stageNumber = count - i;
 
         if (stageExclude[i]) {
             qDebug() << "exclude stage" << stageData.name;
