@@ -3282,7 +3282,7 @@ ScVodDataManager::setPlaybackOffsetVod(qint64 rowid, int offset)
     QString sql = QStringLiteral("UPDATE vods SET playback_offset=? WHERE id=?");
     auto tid = m_SharedState->DatabaseStoreQueue->newTransactionId();
 
-    m_PendingDatabaseStores.insert(tid, [=] (qint64 /*urlShareId*/, bool error) {
+    m_PendingDatabaseStores.insert(tid, [=] (qint64, bool error) {
         if (!error) {
             auto data = m_ActiveMatchItems.value(rowid, nullptr);
             if (!data) {
@@ -3292,6 +3292,8 @@ ScVodDataManager::setPlaybackOffsetVod(qint64 rowid, int offset)
             if (data) {
                 data->matchItem()->setVideoPlaybackOffset(offset);
             }
+
+            m_RecentlyWatchedVideos->setOffset(rowid, offset); // update modified field, reset model
         }
     });
 
