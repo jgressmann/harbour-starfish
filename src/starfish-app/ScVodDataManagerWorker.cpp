@@ -689,8 +689,11 @@ void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMP
                     }
                     emit startProcessDatabaseStoreQueue(tid, {}, {});
                 } else {
-                    qDebug() << "failed to write meta data file" << metaDataFilePath;
-                    emit metaDataDownloadFailed(r.vod_url_share_id, VMVodEnums::VM_ErrorIo);
+                    VMVodEnums::Error e;
+                    if (!getVodErrorFromFileError(file, &e)) {
+                        e = VMVodEnums::VM_ErrorIo;
+                    }
+                    emit metaDataDownloadFailed(r.vod_url_share_id, e);
                 }
             } else {
                 // error
@@ -978,7 +981,11 @@ ScVodDataManagerWorker::addThumbnail(ThumbnailRequest& r, const QByteArray& byte
             emit startProcessDatabaseStoreQueue(tid, {}, {});
         } else {
             qDebug() << "failed to create thumbnail file";
-            emit thumbnailDownloadFailed(r.url_share_id, VMVodEnums::VM_ErrorAccess, QString());
+            VMVodEnums::Error e;
+            if (!getVodErrorFromFileError(tempFile, &e)) {
+                e = VMVodEnums::VM_ErrorAccess;
+            }
+            emit thumbnailDownloadFailed(r.url_share_id, e, QString());
             return;
         }
     } else {
@@ -1014,11 +1021,19 @@ ScVodDataManagerWorker::addThumbnail(ThumbnailRequest& r, const QByteArray& byte
             emit thumbnailAvailable(r.url_share_id, thumbnailFilePath);
         } else {
             qDebug() << "no space left on device";
-            emit thumbnailDownloadFailed(r.url_share_id, VMVodEnums::VM_ErrorNoSpaceLeftOnDevice, QString());
+            VMVodEnums::Error e;
+            if (!getVodErrorFromFileError(file, &e)) {
+                e = VMVodEnums::VM_ErrorIo;
+            }
+            emit thumbnailDownloadFailed(r.url_share_id, e, QString());
         }
     } else {
         qDebug() << "failed to open" << thumbnailFilePath << "for writing";
-        emit thumbnailDownloadFailed(r.url_share_id, VMVodEnums::VM_ErrorAccess, QString());
+        VMVodEnums::Error e;
+        if (!getVodErrorFromFileError(file, &e)) {
+            e = VMVodEnums::VM_ErrorAccess;
+        }
+        emit thumbnailDownloadFailed(r.url_share_id, e, QString());
     }
 }
 
@@ -1260,4 +1275,18 @@ ScVodDataManagerWorker::tryParseExpirationDateFromUrl(const VMVideoFormat& forma
     }
 
     return false;
+}
+
+bool
+ScVodDataManagerWorker::getVodErrorFromFileError(const QFile& file, VMVodEnums::Error* error) const
+{
+    Q_ASSERT(error);
+    qDebug() << "file path" << file.fileName() << "error" << file.error() << file.errorString();
+    switch (file.error()) {
+    case QFile::ResourceError:
+        *error = VMVodEnums::VM_ErrorNoSpaceLeftOnDevice;
+        return true;
+    default:
+        return false;
+    }
 }

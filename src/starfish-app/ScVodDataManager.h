@@ -243,6 +243,7 @@ signals:
     void ytdlPathChanged(QString path);
     void seenChanged();
     void isOnlineChanged();
+    void errorNotification(Error error);
 
 
 public slots:

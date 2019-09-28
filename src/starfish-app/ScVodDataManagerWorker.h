@@ -33,6 +33,7 @@
 #include "conq.h"
 #include <functional>
 
+class QFile;
 class QSqlQuery;
 class QNetworkReply;
 class QNetworkAccessManager;
@@ -153,6 +154,7 @@ private:
     void notifyVodDownloadsChanged();
     QDateTime getExpirationDate(const VMPlaylist& playlist, const QDateTime& metaDataFileCreated) const;
     bool tryParseExpirationDateFromUrl(const VMVideoFormat& format, QDateTime* expirationDate) const;
+    bool getVodErrorFromFileError(const QFile& file, VMVodEnums::Error* error) const;
 
 private:
     QSharedPointer<ScVodDataManagerState> m_SharedState;

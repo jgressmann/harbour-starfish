@@ -244,6 +244,18 @@ ApplicationWindow {
     }
 
     Notification {
+         id: noSpaceLeftOnDeviceNotification
+         category: "x-nemo.transfer.error"
+         //% "No space left on device"
+         summary: qsTrId("sf-no-space-left-on-device-notification-summary")
+         previewSummary: qsTrId("sf-no-space-left-on-device-notification-summary")
+         appName: App.displayName
+         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+         icon: appIcon
+         isTransient: true
+    }
+
+    Notification {
         id: newVodNotification
         appName: App.displayName
         previewSummary: summary
@@ -436,6 +448,7 @@ ApplicationWindow {
         VodDataManager.recentlyWatched.count = settingPlaybackRecentVideosToKeep.value
         VodDataManager.vodsAdded.connect(_onVodsAdded)
         VodDataManager.busyChanged.connect(_busyChanged)
+        VodDataManager.errorNotification.connect(_onErrorNotification)
         YTDLDownloader.isUpdateAvailableChanged.connect(_ytdlUpdateAvailableChanged)
         VodDataManager.maxConcurrentMetaDataDownloads = settingNetworkMaxConcurrentMetaDataDownloads.value
         VodDataManager.maxConcurrentVodFileDownloads = settingNetworkMaxConcurrentVodFileDownloads.value
@@ -588,6 +601,14 @@ ApplicationWindow {
 
                 _videoPlayer.playPlaylist(playlist, !!_videoPlayer.thumbnailFilePath)
             }
+        }
+    }
+
+    function _onErrorNotification(error) {
+        switch (error) {
+        case VodDataManager.Error_NoSpaceLeftOnDevice:
+            noSpaceLeftOnDeviceNotification.publish()
+            break
         }
     }
 }

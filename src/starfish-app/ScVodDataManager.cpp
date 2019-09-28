@@ -3694,6 +3694,16 @@ ScVodDataManager::onMetaDataUnavailable(qint64 urlShareId)
 void
 ScVodDataManager::onMetaDataDownloadFailed(qint64 urlShareId, VMVodEnums::Error error)
 {
+    switch (error) {
+    case VMVodEnums::VM_ErrorNone:
+        break;
+    case VMVodEnums::VM_ErrorNoSpaceLeftOnDevice:
+        emit errorNotification(Error_NoSpaceLeftOnDevice);
+        break;
+    default:
+        break;
+    }
+
     auto it = m_UrlShareItems.find(urlShareId);
     if (it != m_UrlShareItems.end()) {
         it.value().toStrongRef()->onMetaDataDownloadFailed(error);
@@ -3761,6 +3771,16 @@ ScVodDataManager::onTitleAvailable(qint64 urlShareId, QString title)
 void
 ScVodDataManager::onVodDownloadFailed(qint64 urlShareId, VMVodEnums::Error error)
 {
+    switch (error) {
+    case VMVodEnums::VM_ErrorNone:
+        break;
+    case VMVodEnums::VM_ErrorNoSpaceLeftOnDevice:
+        emit errorNotification(Error_NoSpaceLeftOnDevice);
+        break;
+    default:
+        break;
+    }
+
     auto it = m_UrlShareItems.find(urlShareId);
     if (it != m_UrlShareItems.end()) {
         it.value().toStrongRef()->onVodDownloadFailed(error);
