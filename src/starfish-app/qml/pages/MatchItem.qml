@@ -603,8 +603,9 @@ ListItem {
             }
 
             MenuItem {
-                text: "VOD details"
-                visible: tangibleDownloadProgress
+                //% "VOD details"
+                text: qsTrId("sf-match-item-vod-details")
+//                visible: tangibleDownloadProgress
                 onClicked: pageStack.push(
                                Qt.resolvedUrl("VodDetailPage.qml"),
                                {
@@ -612,12 +613,12 @@ ListItem {
                                })
             }
 
-            MenuItem {
-                //% "Copy VOD file path to clipboard"
-                text: qsTrId("sf-match-item-copy-vod-file-path-to-clipboard")
-                visible: tangibleDownloadProgress && _c.urlShare.files === 1
-                onClicked: Clipboard.text = _c.urlShare.file(0).vodFilePath
-            }
+//            MenuItem {
+//                //% "Copy VOD file path to clipboard"
+//                text: qsTrId("sf-match-item-copy-vod-file-path-to-clipboard")
+//                visible: tangibleDownloadProgress && _c.urlShare.files === 1
+//                onClicked: Clipboard.text = _c.urlShare.file(0).vodFilePath
+//            }
 
             MenuItem {
                 //% "Delete thumbnail"

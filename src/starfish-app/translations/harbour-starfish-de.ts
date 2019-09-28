@@ -721,29 +721,29 @@
         </translation>
     </message>
     <message id="sf-vod-details-page-path">
-        <location filename="../qml/pages/VodDetailPage.qml" line="103"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="120"/>
         <source>Path</source>
         <translation>Pfad</translation>
     </message>
     <message id="sf-vod-details-page-size">
-        <location filename="../qml/pages/VodDetailPage.qml" line="116"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="133"/>
         <source>Size</source>
         <translation>Größe</translation>
     </message>
     <message id="sf-vod-details-page-size-gb">
-        <location filename="../qml/pages/VodDetailPage.qml" line="125"/>
-        <location filename="../qml/pages/VodDetailPage.qml" line="129"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="142"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="146"/>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
     <message id="sf-vod-details-page-size-mb">
-        <location filename="../qml/pages/VodDetailPage.qml" line="133"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="150"/>
         <source>%1 MB</source>
         <translation>%1 GB</translation>
     </message>
     <message id="sf-vod-details-page-download-progress">
         <location filename="../qml/pages/VodDetailPage.qml" line="65"/>
-        <location filename="../qml/pages/VodDetailPage.qml" line="109"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="126"/>
         <source>Download progress</source>
         <translation>%1 MB</translation>
     </message>
@@ -762,19 +762,29 @@
         <source>Resolution</source>
         <translation>Auflösung</translation>
     </message>
-    <message id="sf-vod-details-page-files-section-header">
+    <message id="sf-vod-details-page-url">
         <location filename="../qml/pages/VodDetailPage.qml" line="78"/>
+        <source>Url</source>
+        <translation>Url</translation>
+    </message>
+    <message id="sf-vod-details-page-copy-url-clipboard">
+        <location filename="../qml/pages/VodDetailPage.qml" line="87"/>
+        <source>Copy url to clipboard</source>
+        <translation>Url kopieren</translation>
+    </message>
+    <message id="sf-vod-details-page-files-section-header">
+        <location filename="../qml/pages/VodDetailPage.qml" line="94"/>
         <source>Files</source>
         <translation>Dateien</translation>
     </message>
     <message id="sf-vod-details-page-files-section-file-number">
-        <location filename="../qml/pages/VodDetailPage.qml" line="96"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="113"/>
         <source>File #%1</source>
         <oldsource>File number %1</oldsource>
         <translation>%1. Datei</translation>
     </message>
-    <message id="sf-vod-details-page-copy file path to clipboard">
-        <location filename="../qml/pages/VodDetailPage.qml" line="143"/>
+    <message id="sf-vod-details-page-copy-file-path-to-clipboard">
+        <location filename="../qml/pages/VodDetailPage.qml" line="160"/>
         <source>Copy file path to clipboard</source>
         <translation>Dateipfad kopieren</translation>
     </message>
@@ -894,23 +904,23 @@
         <source>Deleting files for %1</source>
         <translation>Lösche Dateien für %1</translation>
     </message>
-    <message id="sf-match-item-copy-vod-file-path-to-clipboard">
-        <location filename="../qml/pages/MatchItem.qml" line="617"/>
-        <source>Copy VOD file path to clipboard</source>
-        <translation>Videodateipfad kopieren</translation>
+    <message id="sf-match-item-vod-details">
+        <location filename="../qml/pages/MatchItem.qml" line="607"/>
+        <source>VOD details</source>
+        <translation>Video Details</translation>
     </message>
     <message id="sf-match-item-delete-thumbnail">
-        <location filename="../qml/pages/MatchItem.qml" line="624"/>
+        <location filename="../qml/pages/MatchItem.qml" line="625"/>
         <source>Delete thumbnail</source>
         <translation>Thumbnail löschen</translation>
     </message>
     <message id="sf-match-item-vod-from-database">
-        <location filename="../qml/pages/MatchItem.qml" line="630"/>
+        <location filename="../qml/pages/MatchItem.qml" line="631"/>
         <source>Delete VOD from database</source>
         <translation>Video aus Datenbank löschen</translation>
     </message>
     <message id="sf-select-av-format-dialog-title">
-        <location filename="../qml/pages/MatchItem.qml" line="921"/>
+        <location filename="../qml/pages/MatchItem.qml" line="922"/>
         <source>Select a format</source>
         <translation>Wähle ein Format aus</translation>
     </message>

@@ -73,9 +73,26 @@ BasePage {
                 value: match.urlShare.vodResolution.width + "x" + match.urlShare.vodResolution.height
             }
 
+            DetailItem {
+                //% "Url"
+                label: qsTrId("sf-vod-details-page-url")
+                value: match.urlShare.url
+            }
+
+            ButtonLayout {
+                width: parent.width
+
+                Button {
+                    //% "Copy url to clipboard"
+                    text: qsTrId("sf-vod-details-page-copy-url-clipboard")
+                    onClicked: Clipboard.text = match.urlShare.url
+                }
+            }
+
             SectionHeader {
                 //% "Files"
                 text: qsTrId("sf-vod-details-page-files-section-header")
+                visible: match.urlShare.files > 0
             }
 
             Repeater {
@@ -140,7 +157,7 @@ BasePage {
 
                             Button {
                                 //% "Copy file path to clipboard"
-                                text: qsTrId("sf-vod-details-page-copy file path to clipboard")
+                                text: qsTrId("sf-vod-details-page-copy-file-path-to-clipboard")
                                 onClicked: Clipboard.text = file.vodFilePath
                             }
                         }
@@ -152,7 +169,7 @@ BasePage {
 
                         Component.onCompleted: {
                             file = match.urlShare.file(index)
-                            console.debug("vod file index " + index)
+//                            console.debug("vod file index " + index)
                         }
                     }
                 }
