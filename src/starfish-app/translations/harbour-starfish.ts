@@ -688,7 +688,7 @@
         <location filename="../qml/harbour-starfish.qml" line="250"/>
         <location filename="../qml/harbour-starfish.qml" line="251"/>
         <source>No space left on device</source>
-        <translation type="unfinished">No space left on device</translation>
+        <translation>No space left on device</translation>
     </message>
     <message id="sf-nofification-download-ytdl-update-available-summary">
         <location filename="../qml/harbour-starfish.qml" line="301"/>

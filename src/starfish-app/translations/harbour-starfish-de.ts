@@ -690,7 +690,7 @@
         <location filename="../qml/harbour-starfish.qml" line="250"/>
         <location filename="../qml/harbour-starfish.qml" line="251"/>
         <source>No space left on device</source>
-        <translation type="unfinished">Unzureichender Speicherplatz</translation>
+        <translation>Unzureichender Speicherplatz</translation>
     </message>
     <message id="sf-nofification-download-ytdl-update-available-summary">
         <location filename="../qml/harbour-starfish.qml" line="301"/>
@@ -1116,22 +1116,22 @@
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="275"/>
         <source>Fetching data for </source>
-        <translation></translation>
+        <translation>Lade Daten für </translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="647"/>
         <source>network failure</source>
-        <translation></translation>
+        <translation>Verbindungsfehler</translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="649"/>
         <source>dunno what happened TT</source>
-        <translation></translation>
+        <translation>O_o</translation>
     </message>
     <message>
         <location filename="../../starfish-lib/save/Sc2LinksDotCom.cpp" line="711"/>
         <source>Cancelling VOD fetching</source>
-        <translation></translation>
+        <translation>Herunterladen von Videos wird abgebrochen</translation>
     </message>
 </context>
 </TS>
