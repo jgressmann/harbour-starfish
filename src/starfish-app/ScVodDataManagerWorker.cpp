@@ -39,7 +39,7 @@
 
 namespace
 {
-bool selectIdFromVodsWhereUrlShareIdEquals(QSqlQuery& q, qint64 urlShareId) {
+inline bool selectIdFromVodsWhereUrlShareIdEquals(QSqlQuery& q, qint64 urlShareId) {
     static const QString s_SelectIdFromVodsWhereVodUrlShareId = QStringLiteral("SELECT id FROM vods WHERE vod_url_share_id=?");
     if (!q.prepare(s_SelectIdFromVodsWhereVodUrlShareId)) {
         qCritical() << "failed to prepare query" << q.lastError();
@@ -56,7 +56,7 @@ bool selectIdFromVodsWhereUrlShareIdEquals(QSqlQuery& q, qint64 urlShareId) {
     return true;
 }
 
-bool selectUrlShareIdFromVodsWhereIdEquals(QSqlQuery& q, qint64 vodId) {
+inline bool selectUrlShareIdFromVodsWhereIdEquals(QSqlQuery& q, qint64 vodId) {
     static const QString sql = QStringLiteral("SELECT vod_url_share_id FROM vods WHERE id=?");
     if (!q.prepare(sql)) {
         qCritical() << "failed to prepare query" << q.lastError();
