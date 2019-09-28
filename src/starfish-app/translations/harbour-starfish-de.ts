@@ -461,182 +461,182 @@
         <translation>Format</translation>
     </message>
     <message id="sf-settings-page-confirm-data-dir-move-dialog-title">
-        <location filename="../qml/pages/SettingsPage.qml" line="63"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="59"/>
         <source>Confirm data directory move</source>
         <translation>Verschieben bestätigen</translation>
     </message>
     <message id="sf-settings-page-confirm-data-dir-move-dialog-accept-text">
-        <location filename="../qml/pages/SettingsPage.qml" line="65"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="61"/>
         <source>Move</source>
         <translation>Verschieben</translation>
     </message>
     <message id="sf-settings-page-confirm-data-dir-move-dialog-text">
-        <location filename="../qml/pages/SettingsPage.qml" line="76"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="72"/>
         <source>The application&apos;s data will be moved to %1.&lt;br/&gt;&lt;br/&gt;This operation could take a good long while. During this time you will not be able to use the application.&lt;br/&gt;&lt;br/&gt;Do you want to continue?</source>
         <translation>Das Datenverzeichnis wird nach %1 verschoben werden.&lt;br/&gt;&lt;br/&gt;Dieser Vorgang könnte eine Weile andauern. Während dieser Zeit wirst du die Anwendung nicht nutzen können.&lt;br/&gt;&lt;br/&gt;Möchtest du fortfahren?</translation>
     </message>
     <message id="sf-settings-page-data-dir-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="116"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="112"/>
         <source>Data</source>
         <translation>Daten</translation>
     </message>
     <message id="sf-settings-page-data-dir-move-combobox-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="124"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="120"/>
         <source>Directory</source>
         <translation>Verzeichnis</translation>
     </message>
     <message id="sf-settings-page-data-dir-move-choice-cache">
-        <location filename="../qml/pages/SettingsPage.qml" line="129"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="125"/>
         <source>Cache</source>
         <translation>Cache</translation>
     </message>
     <message id="sf-settings-page-data-dir-move-choice-custom">
-        <location filename="../qml/pages/SettingsPage.qml" line="133"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="129"/>
         <source>Custom</source>
         <translation>Eigene</translation>
     </message>
     <message id="sf-settings-page-data-dir-text-field-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="143"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="139"/>
         <source>Directory for VOD and meta data</source>
         <translation>Verzeichnis für Video und Metadaten</translation>
     </message>
     <message id="sf-settings-page-data-dir-text-field-placeholder">
-        <location filename="../qml/pages/SettingsPage.qml" line="145"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="141"/>
         <source>Data directory</source>
         <translation>Datenverzeichnis</translation>
     </message>
     <message id="sf-settings-page-data-dir-pick-directory">
-        <location filename="../qml/pages/SettingsPage.qml" line="161"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="157"/>
         <source>Pick directory</source>
         <translation>Verzeichnis wählen</translation>
     </message>
     <message id="sf-settings-page-data-dir-apply-change">
-        <location filename="../qml/pages/SettingsPage.qml" line="170"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="166"/>
         <source>Apply change</source>
         <translation>Änderung anwenden</translation>
     </message>
     <message id="sf-settings-page-network-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="177"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="173"/>
         <source>Network</source>
         <translation>Netzwerk</translation>
     </message>
     <message id="sf-settings-page-network-connection-type-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="184"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="180"/>
         <source>Network connection type</source>
         <translation>Typ der Netzwerkverbindung</translation>
     </message>
     <message id="sf-settings-page-network-connection-choice-autodetect">
-        <location filename="../qml/pages/SettingsPage.qml" line="188"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="184"/>
         <source>Autodetect</source>
         <translation>Automatisch erkennen</translation>
     </message>
     <message id="sf-settings-page-network-connection-choice-broadband">
-        <location filename="../qml/pages/SettingsPage.qml" line="192"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="188"/>
         <source>Broadband</source>
         <translation>Breitband</translation>
     </message>
     <message id="sf-settings-page-network-connection-choice-mobile">
-        <location filename="../qml/pages/SettingsPage.qml" line="196"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="192"/>
         <source>Mobile</source>
         <translation>Mobilfunk</translation>
     </message>
     <message id="sf-settings-page-network-max-meta-data-downloads">
-        <location filename="../qml/pages/SettingsPage.qml" line="212"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="208"/>
         <source>Max concurrent meta data downloads</source>
         <translation>Anzahl gleichzeitiger Metadaten Downloads</translation>
     </message>
     <message id="sf-settings-page-network-max-vod-file-downloads-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="242"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="238"/>
         <source>Max concurrent VOD file downloads</source>
         <translation>Anzahl gleichzeitiger Video Downloads</translation>
     </message>
     <message id="sf-settings-page-network-max-vod-file-downloads-placeholder">
-        <location filename="../qml/pages/SettingsPage.qml" line="245"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="241"/>
         <source>Set to zero to disable limit</source>
         <translation>Der Wert 0 hebt die Beschränkung auf</translation>
     </message>
     <message id="sf-settings-page-network-vod-site-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="269"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="265"/>
         <source>VOD site</source>
         <translation>Website</translation>
     </message>
     <message id="sf-settings-page-network-vod-site-desc">
-        <location filename="../qml/pages/SettingsPage.qml" line="271"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="267"/>
         <source>This site is used to check for new VODs.</source>
         <translation>Diese Webseite wird genutzt um nach neuen Videos zu suchen.</translation>
     </message>
     <message id="sf-settings-page-network-periodically-check-for-vods-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="301"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="297"/>
         <source>Periodically check for new VODs</source>
         <translation>Regelmäßig nach neuen Videos suchen</translation>
     </message>
     <message id="sf-settings-page-network-check-interval-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="315"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="311"/>
         <source>Minutes between checks</source>
         <translation>Interval zwischen zwei Suchvorgängen</translation>
     </message>
     <message id="sf-settings-page-network-continue-download-on-page-destruction">
-        <location filename="../qml/pages/SettingsPage.qml" line="337"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="333"/>
         <source>Continue VOD file download when page closes</source>
         <translation>Video weiter herunterladen wenn Seite geschlossen wird</translation>
     </message>
     <message id="sf-settings-page-format-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="349"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="345"/>
         <source>Format</source>
         <translation>Format</translation>
     </message>
     <message id="sf-settings-page-format-broadband-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="355"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="351"/>
         <source>Broadband</source>
         <translation>Breitband</translation>
     </message>
     <message id="sf-settings-page-format-mobile-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="368"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="364"/>
         <source>Mobile</source>
         <translation>Mobilfunk</translation>
     </message>
     <message id="sf-settings-page-playback-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="380"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="376"/>
         <source>Playback</source>
         <translation>Wiedergabe</translation>
     </message>
     <message id="sf-settings-page-playback-external-media-player-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="385"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="381"/>
         <source>Use external media player</source>
         <translation>Externe Anwendung benutzen</translation>
     </message>
     <message id="sf-settings-page-playback-no-videos-in-recently-watched">
-        <location filename="../qml/pages/SettingsPage.qml" line="398"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="394"/>
         <source>Number of recently watched videos to keep</source>
         <translation>Größe der zuletzt gesehene Videos Liste</translation>
     </message>
     <message id="sf-settings-page-playback-pause-on-device-lock-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="421"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="417"/>
         <source>Pause playback on device lock</source>
         <translation>Wiedergabe pausieren wenn dass Gerät gesperrt wird</translation>
     </message>
     <message id="sf-settings-page-playback-pause-if-cover-page-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="432"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="428"/>
         <source>Pause playback when the cover page is shown</source>
         <translation>Wiedergabe pausieren wenn das Cover angezeigt wird</translation>
     </message>
     <message id="sf-settings-page-new-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="443"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="439"/>
         <source>New</source>
         <translation>Neu</translation>
     </message>
     <message id="sf-settings-page-new-no-days-to-keep-vods-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="450"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="446"/>
         <source>Number of days to keep a VOD in &apos;New&apos;</source>
         <translation>Tage, die ein Video als &apos;neu&apos; gilt</translation>
     </message>
     <message id="sf-settings-page-new-remove-seen-vods-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="473"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="469"/>
         <source>Remove watched VODs from &apos;New&apos;</source>
         <translation>Gesehene Videos aus &apos;Neu&apos; entfernen</translation>
     </message>
     <message id="sf-settings-page-title">
-        <location filename="../qml/pages/SettingsPage.qml" line="500"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
         <source>Settings</source>
         <translation>Einstellungen</translation>
     </message>
@@ -661,53 +661,59 @@
         <translation>jedes Mal nachfragen</translation>
     </message>
     <message id="sf-database-error-network-failure">
-        <location filename="../qml/harbour-starfish.qml" line="90"/>
+        <location filename="../qml/harbour-starfish.qml" line="89"/>
         <source>Network down</source>
         <translation>Keine Netzwerkverbindung</translation>
     </message>
     <message id="sf-database-error-invalid-data">
-        <location filename="../qml/harbour-starfish.qml" line="95"/>
+        <location filename="../qml/harbour-starfish.qml" line="94"/>
         <source>Data downloaded is invalid</source>
         <translation>Die heruntergeladene Daten sind ungültig</translation>
     </message>
     <message id="sf-database-error-decompression-failed">
-        <location filename="../qml/harbour-starfish.qml" line="100"/>
+        <location filename="../qml/harbour-starfish.qml" line="99"/>
         <source>Data decompression failed</source>
         <translation>Das Extrahieren der Daten ist fehlgeschlagen</translation>
     </message>
     <message id="sf-database-error-unknown">
-        <location filename="../qml/harbour-starfish.qml" line="105"/>
+        <location filename="../qml/harbour-starfish.qml" line="104"/>
         <source>Yikes! An unknown error has occurred</source>
         <translation>O_o! Ein ungekannter Fehler ist aufgetreten :/</translation>
     </message>
     <message id="sf-vod-download-failed-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="242"/>
-        <location filename="../qml/harbour-starfish.qml" line="243"/>
+        <location filename="../qml/harbour-starfish.qml" line="237"/>
+        <location filename="../qml/harbour-starfish.qml" line="238"/>
         <source>Download failed</source>
         <translation>Download fehlgeschlagen</translation>
     </message>
+    <message id="sf-no-space-left-on-device-notification-summary">
+        <location filename="../qml/harbour-starfish.qml" line="250"/>
+        <location filename="../qml/harbour-starfish.qml" line="251"/>
+        <source>No space left on device</source>
+        <translation type="unfinished">Unzureichender Speicherplatz</translation>
+    </message>
     <message id="sf-nofification-download-ytdl-update-available-summary">
-        <location filename="../qml/harbour-starfish.qml" line="294"/>
+        <location filename="../qml/harbour-starfish.qml" line="301"/>
         <source>youtube-dl update available</source>
         <translation>youtube-dl Update verfügbar</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-body">
-        <location filename="../qml/harbour-starfish.qml" line="297"/>
+        <location filename="../qml/harbour-starfish.qml" line="304"/>
         <source>youtube-dl version %1 available</source>
         <translation>youtube-dl Version %1 verfügbar</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-action">
-        <location filename="../qml/harbour-starfish.qml" line="302"/>
+        <location filename="../qml/harbour-starfish.qml" line="309"/>
         <source>Update youtube-dl</source>
         <translation>youtube-dl aktualisieren</translation>
     </message>
     <message id="sf-notification-busy">
-        <location filename="../qml/harbour-starfish.qml" line="329"/>
+        <location filename="../qml/harbour-starfish.qml" line="336"/>
         <source>%1 is busy. Try again later.</source>
         <translation>%ist beschäftigt. Versuche es später noch einmal.</translation>
     </message>
     <message id="sf-vods-added-notification-summary" numerus="yes">
-        <location filename="../qml/harbour-starfish.qml" line="508"/>
+        <location filename="../qml/harbour-starfish.qml" line="516"/>
         <source>%1 VODs added</source>
         <translation>
             <numerusform>Ein Video hinzugefügt</numerusform>

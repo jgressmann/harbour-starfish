@@ -36,10 +36,6 @@ BasePage {
     property string _targetdataDirectory
     readonly property bool _toolEnabled: !VodDataManager.busy
 
-    Component.onDestruction: {
-        settings.sync()
-    }
-
     Component.onCompleted: {
         _currentdataDirectory = VodDataManager.dataDirectory
         _targetdataDirectory = _currentdataDirectory

@@ -22,7 +22,8 @@ SOURCES += harbour-starfish.cpp \
     ScMatchItem.cpp \
     ScUrlShareItem.cpp \
     ScVodFileItem.cpp \
-    ScVodPlaylist.cpp
+    ScVodPlaylist.cpp  \
+    ScConfigValue.cpp
 
 
 
@@ -43,7 +44,8 @@ HEADERS += \
     ScMatchItem.h \
     ScUrlShareItem.h \
     ScVodFileItem.h \
-    ScVodPlaylist.h
+    ScVodPlaylist.h \
+    ScConfigValue.h
 
 
 #../../rpm/harbour-starfish.changes.run.in \

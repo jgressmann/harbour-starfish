@@ -21,15 +21,17 @@
  * THE SOFTWARE.
  */
 
+#include <QDir>
 #include <QGuiApplication>
+#include <QMetaObject>
+#include <qqml.h>
+#include <QQmlContext>
+#include <QQmlEngine>
+#include <QQuickItem>
 #include <QQuickView>
 #include <QStandardPaths>
-#include <QMetaObject>
-#include <QQuickItem>
-#include <QQmlEngine>
-#include <QQmlContext>
-#include <QDir>
-#include <qqml.h>
+#include <QSettings>
+
 
 #include "Sc2LinksDotCom.h"
 #include "Sc2CastsDotCom.h"
@@ -43,6 +45,7 @@
 #include "ScMatchItem.h"
 #include "ScVodFileItem.h"
 #include "ScVodPlaylist.h"
+#include "ScConfigValue.h"
 
 #include <sailfishapp.h>
 
@@ -83,6 +86,9 @@ main(int argc, char *argv[]) {
         QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
         setupLogging(); // need to have the app paths
 
+        QSettings settings;
+        ScConfigValue::SetSettings(&settings);
+
         // Vodman
         qmlRegisterUncreatableType<VMVodEnums>(VODMAN_LIB_NAMESPACE, VODMAN_LIB_VERSION_MAJOR, VODMAN_LIB_VERSION_MINOR, "VM", QStringLiteral("wrapper around C++ enums"));
         qmlRegisterSingletonType<VMQuickYTDLDownloader>(VODMAN_LIB_NAMESPACE, VODMAN_LIB_VERSION_MAJOR, VODMAN_LIB_VERSION_MINOR, "YTDLDownloader", vmQuickYTDLDownloader);
@@ -97,6 +103,7 @@ main(int argc, char *argv[]) {
         qmlRegisterType<Sc2LinksDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2LinksDotComScraper");
         qmlRegisterType<Sc2CastsDotCom>(STARFISH_NAMESPACE, 1, 0, "Sc2CastsDotComScraper");
         qmlRegisterType<ScVodPlaylist>(STARFISH_NAMESPACE, 1, 0, "VodPlaylist");
+        qmlRegisterType<ScConfigValue>(STARFISH_NAMESPACE, 1, 0, "ConfigValue");
 
         qmlRegisterUncreatableType<ScVodScraper>(STARFISH_NAMESPACE, 1, 0, "VodScraper", "VodScraper");
         qmlRegisterUncreatableType<ScVodman>(STARFISH_NAMESPACE, 1, 0, "Vodman", "Vodman");

@@ -23,7 +23,6 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import Nemo.Configuration 1.0
 import Nemo.DBus 2.0
 import Nemo.Notifications 1.0
 import Vodman 2.1
@@ -109,130 +108,126 @@ ApplicationWindow {
         }
     }
 
-    ConfigurationGroup {
-        id: settings
 
-        ConfigurationValue {
-            id: settingBroadbandDefaultFormat
-            defaultValue: VM.VM_Largest
-            key: "/format/broadband"
+
+    ConfigValue {
+        id: settingBroadbandDefaultFormat
+        defaultValue: VM.VM_Largest
+        key: "/format/broadband"
+    }
+
+    ConfigValue {
+        id: settingMobileDefaultFormat
+        defaultValue: VM.VM_Smallest
+        key: "/format/mobile"
+    }
+
+    ConfigValue {
+        id: settingBearerMode
+        defaultValue: Global.bearerModeAutoDetect
+        key: "/bearer/mode"
+    }
+
+    ConfigValue {
+        id: settingNetworkMaxConcurrentMetaDataDownloads
+        key: "/network/max_concurrent_meta_data_downloads"
+        defaultValue: 4
+
+        onValueChanged: {
+            VodDataManager.maxConcurrentMetaDataDownloads = value
         }
+    }
 
-        ConfigurationValue {
-            id: settingMobileDefaultFormat
-            defaultValue: VM.VM_Smallest
-            key: "/format/mobile"
+    ConfigValue {
+        id: settingNetworkMaxConcurrentVodFileDownloads
+        key: "/network/max_concurrent_vod_file_downloads"
+        defaultValue: 0
+
+        onValueChanged: {
+            VodDataManager.maxConcurrentVodFileDownloads = value
         }
+    }
 
-        ConfigurationValue {
-            id: settingBearerMode
-            defaultValue: Global.bearerModeAutoDetect
-            key: "/bearer/mode"
-        }
+    ConfigValue {
+        id: settingNetworkScraper
+        key: "/network/scraper"
+        defaultValue: sc2CastsDotComScraper.id
 
-        ConfigurationValue {
-            id: settingNetworkMaxConcurrentMetaDataDownloads
-            key: "/network/max_concurrent_meta_data_downloads"
-            defaultValue: 4
+        onValueChanged: _setScraper()
+    }
 
-            onValueChanged: {
-                VodDataManager.maxConcurrentMetaDataDownloads = value
-            }
-        }
+    ConfigValue {
+        id: settingNetworkContinueDownload
+        key: "/network/continue_download"
+        defaultValue: true
+    }
 
-        ConfigurationValue {
-            id: settingNetworkMaxConcurrentVodFileDownloads
-            key: "/network/max_concurrent_vod_file_downloads"
-            defaultValue: 0
+    ConfigValue {
+        id: settingNetworkAutoUpdate
+        key: "/network/auto_update"
+        defaultValue: true
+    }
 
-            onValueChanged: {
-                VodDataManager.maxConcurrentVodFileDownloads = value
-            }
-        }
+    ConfigValue {
+        id: settingNetworkAutoUpdateIntervalM
+        key: "/network/auto_update_interval_m"
+        defaultValue: 60
+    }
 
+    ConfigValue {
+        id: settingExternalMediaPlayer
+        key: "/playback/use_external_player"
+        defaultValue: false
+    }
 
+    ConfigValue {
+        id: settingPlaybackRecentVideosToKeep
+        key: "/playback/recent_videos_to_keep"
+        defaultValue: 10
+        onValueChanged: VodDataManager.recentlyWatched.count = value
+    }
 
-        ConfigurationValue {
-            id: settingNetworkScraper
-            key: "/network/scraper"
-            defaultValue: sc2CastsDotComScraper.id
+    ConfigValue {
+        id: settingPlaybackPauseInCoverMode
+        key: "/playback/pause_in_cover_mode"
+        defaultValue: false
+    }
 
-            onValueChanged: _setScraper()
-        }
+    ConfigValue {
+        id: settingPlaybackPauseOnDeviceLock
+        key: "/playback/pause_on_device_lock"
+        defaultValue: true
+    }
 
-        ConfigurationValue {
-            id: settingNetworkContinueDownload
-            key: "/network/continue_download"
-            defaultValue: true
-        }
+    ConfigValue {
+        id: debugApp
+        key: "/debug"
+        defaultValue: false
+        onValueChanged: _setMode()
+    }
 
-        ConfigurationValue {
-            id: settingNetworkAutoUpdate
-            key: "/network/auto_update"
-            defaultValue: true
-        }
+    ConfigValue {
+        id: settingLastUpdateTimestamp
+        key: "/last_update_timestamp"
+        defaultValue: 0
+    }
 
-        ConfigurationValue {
-            id: settingNetworkAutoUpdateIntervalM
-            key: "/network/auto_update_interval_m"
-            defaultValue: 60
-        }
+    ConfigValue {
+        id: settingNumberOfUpdates
+        key: "/stats/no_updates"
+        defaultValue: 0
+    }
 
-        ConfigurationValue {
-            id: settingExternalMediaPlayer
-            key: "/playback/use_external_player"
-            defaultValue: false
-        }
+    ConfigValue {
+        id: settingNewWindowDays
+        key: "/new/window_days"
+        defaultValue: 30
+    }
 
-        ConfigurationValue {
-            id: settingPlaybackRecentVideosToKeep
-            key: "/playback/recent_videos_to_keep"
-            defaultValue: 10
-            onValueChanged: VodDataManager.recentlyWatched.count = value
-        }
-
-        ConfigurationValue {
-            id: settingPlaybackPauseInCoverMode
-            key: "/playback/pause_in_cover_mode"
-            defaultValue: false
-        }
-
-        ConfigurationValue {
-            id: settingPlaybackPauseOnDeviceLock
-            key: "/playback/pause_on_device_lock"
-            defaultValue: true
-        }
-
-        ConfigurationValue {
-            id: debugApp
-            key: "/debug"
-            defaultValue: false
-            onValueChanged: _setMode()
-        }
-
-        ConfigurationValue {
-            id: settingLastUpdateTimestamp
-            key: "/last_update_timestamp"
-            defaultValue: 0
-        }
-
-        ConfigurationValue {
-            id: settingNumberOfUpdates
-            key: "/stats/no_updates"
-            defaultValue: 0
-        }
-
-        ConfigurationValue {
-            id: settingNewWindowDays
-            key: "/new/window_days"
-            defaultValue: 30
-        }
-
-        ConfigurationValue {
-            id: settingNewRemoveSeen
-            key: "/new/remove_seen"
-            defaultValue: true
-        }
+    ConfigValue {
+        id: settingNewRemoveSeen
+        key: "/new/remove_seen"
+        defaultValue: true
     }
 
     Notification {
