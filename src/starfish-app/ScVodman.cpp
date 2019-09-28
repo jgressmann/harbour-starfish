@@ -57,6 +57,7 @@ ScVodman::ScVodman(QObject *parent)
     m_CurrentMeta = 0;
 
 //    m_Ytdl.setYtdlVerbose(true);
+    m_Ytdl.setMetaDataCacheCapacity(0); // disable all caching
 
     connect(&m_Ytdl, &VMYTDL::playlistDownloadCompleted, this, &ScVodman::onPlaylistDownloadCompleted);
     connect(&m_Ytdl, &VMYTDL::playlistDownloadChanged, this, &ScVodman::onPlaylistDownloadChanged);

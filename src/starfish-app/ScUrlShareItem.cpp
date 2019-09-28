@@ -19,6 +19,7 @@ ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
     connect(parent, &ScVodDataManager::vodsChanged, this, &ScUrlShareItem::reset);
     connect(parent, &ScVodDataManager::ytdlPathChanged, this, &ScUrlShareItem::reset);
     connect(parent, &ScVodDataManager::isOnlineChanged, this, &ScUrlShareItem::onIsOnlineChanged);
+    connect(&m_MetaDataExpirationTimer, &QTimer::timeout, this, &ScUrlShareItem::onMetaDataExpired);
 
     QSqlQuery q(manager()->database());
     static const QString sql = QStringLiteral("SELECT url, video_id, type FROM vod_url_share WHERE id=?");
@@ -41,6 +42,9 @@ ScUrlShareItem::ScUrlShareItem(qint64 urlShareId, ScVodDataManager *parent)
     }
 
     reload();
+
+    m_MetaDataExpirationTimer.setTimerType(Qt::CoarseTimer);
+    m_MetaDataExpirationTimer.setSingleShot(true);
 }
 
 ScVodDataManager*
@@ -171,19 +175,25 @@ ScUrlShareItem::setVodFetchStatus(FetchStatus value)
 }
 
 void
-ScUrlShareItem::onMetaDataAvailable(const VMPlaylist& playlist)
+ScUrlShareItem::onMetaDataAvailable(const VMPlaylist& playlist, const QDateTime expirationDate)
 {
     switch (m_MetaDataFetchStatus) {
     case Gone:
         break;
-    default:
-        setMetaData(playlist);
-        setMetaDataFetchStatus(Available);
-        updateUrlShareData(); // now that meta data is available try again for title, length, ...
-        if (m_ThumbnailIsWaitingForMetaData) {
-            fetchThumbnail();
+    default: {
+        auto millis = QDateTime::currentDateTime().msecsTo(expirationDate);
+        if (millis <= 0) { // meta data expired
+            onMetaDataUnavailable();
+        } else {
+            m_MetaDataExpirationTimer.start(millis);
+            setMetaData(playlist);
+            setMetaDataFetchStatus(Available);
+            updateUrlShareData(); // now that meta data is available try again for title, length, ...
+            if (m_ThumbnailIsWaitingForMetaData) {
+                fetchThumbnail();
+            }
         }
-        break;
+    } break;
     }
 }
 
@@ -543,6 +553,7 @@ ScUrlShareItem::deleteMetaData()
         manager()->deleteMetaData(m_UrlShareId);
 //        setMetaData(VMVod());
         setMetaDataFetchStatus(Unavailable);
+        m_MetaDataExpirationTimer.stop();
         break;
     }
 }
@@ -667,5 +678,13 @@ ScUrlShareItem::setDownloadProgress(qreal value)
     if (value == value && value != m_Progress) {
         m_Progress = value;
         emit downloadProgressChanged();
+    }
+}
+
+void
+ScUrlShareItem::onMetaDataExpired()
+{
+    if (Available == m_MetaDataFetchStatus) {
+        setMetaDataFetchStatus(Unavailable);
     }
 }

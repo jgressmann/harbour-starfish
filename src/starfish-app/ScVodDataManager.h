@@ -284,7 +284,7 @@ private slots:
     void onUrlShareItemDestroyed(QObject* obj);
     void onFetchingMetaData(qint64 urlShareId);
     void onFetchingThumbnail(qint64 urlShareId);
-    void onMetaDataAvailable(qint64 urlShareId, VMPlaylist playlist);
+    void onMetaDataAvailable(qint64 urlShareId, VMPlaylist playlist, QDateTime expirationDate);
     void onMetaDataUnavailable(qint64 urlShareId);
     void onMetaDataDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
     void onVodAvailable(const ScVodFileFetchProgress& progress);

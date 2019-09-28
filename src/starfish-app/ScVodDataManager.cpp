@@ -3676,11 +3676,11 @@ ScVodDataManager::onFetchingThumbnail(qint64 urlShareId)
     }
 }
 void
-ScVodDataManager::onMetaDataAvailable(qint64 urlShareId, VMPlaylist playlist)
+ScVodDataManager::onMetaDataAvailable(qint64 urlShareId, VMPlaylist playlist, QDateTime expirationDate)
 {
     auto it = m_UrlShareItems.find(urlShareId);
     if (it != m_UrlShareItems.end()) {
-        it.value().toStrongRef()->onMetaDataAvailable(playlist);
+        it.value().toStrongRef()->onMetaDataAvailable(playlist, expirationDate);
     }
 }
 void

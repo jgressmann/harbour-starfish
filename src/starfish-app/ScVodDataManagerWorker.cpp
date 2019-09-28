@@ -35,6 +35,10 @@
 #include <QDataStream>
 #include <QTemporaryFile>
 #include <QMimeDatabase>
+#include <QUrl>
+#include <QUrlQuery>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 
 namespace
@@ -188,19 +192,18 @@ ScVodDataManagerWorker::fetchMetaData(qint64 urlShareId, const QString& url, boo
     QFileInfo fi(metaDataFilePath);
     if (fi.exists()) {
         QFile file(metaDataFilePath);
-        if (fi.created().addSecs(3600) >= QDateTime::currentDateTime()) {
-            if (file.open(QIODevice::ReadOnly)) {
-                VMPlaylist playlist;
-                {
-                    QDataStream s(&file);
-                    s >> playlist;
-                }
+        if (file.open(QIODevice::ReadOnly)) {
+            VMPlaylist playlist;
+            {
+                QDataStream s(&file);
+                s >> playlist;
+            }
 
-                if (playlist.isValid()) {
-                    emit metaDataAvailable(urlShareId, playlist);
-                } else {
-                    // read invalid vod, try again
-                    file.close();
+            file.close();
+
+            if (playlist.isValid()) {
+                auto expirationDate = getExpirationDate(playlist, fi.created());
+                if (expirationDate <= QDateTime::currentDateTime()) {
                     file.remove();
                     if (download) {
                         emit fetchingMetaData(urlShareId);
@@ -208,8 +211,11 @@ ScVodDataManagerWorker::fetchMetaData(qint64 urlShareId, const QString& url, boo
                     } else {
                         emit metaDataUnavailable(urlShareId);
                     }
+                } else {
+                    emit metaDataAvailable(urlShareId, playlist, expirationDate);
                 }
             } else {
+                // read invalid playlist, try again
                 file.remove();
                 if (download) {
                     emit fetchingMetaData(urlShareId);
@@ -219,7 +225,6 @@ ScVodDataManagerWorker::fetchMetaData(qint64 urlShareId, const QString& url, boo
                 }
             }
         } else {
-            // vod links probably expired
             file.remove();
             if (download) {
                 emit fetchingMetaData(urlShareId);
@@ -672,7 +677,8 @@ void ScVodDataManagerWorker::onMetaDataDownloadCompleted(qint64 token, const VMP
                         if (error) {
                             emit metaDataDownloadFailed(vodUrlShareId, VMVodEnums::VM_ErrorUnknown);
                         } else {
-                            emit metaDataAvailable(vodUrlShareId, playlist);
+                            auto expirationTime = getExpirationDate(playlist, QDateTime::currentDateTime());
+                            emit metaDataAvailable(vodUrlShareId, playlist, expirationTime);
                         }
                     };
                     m_PendingDatabaseStores.insert(tid, postUpdate);
@@ -1175,4 +1181,83 @@ void
 ScVodDataManagerWorker::clearYtdlCache()
 {
     m_Vodman->clearYtdlCache();
+}
+
+QDateTime
+ScVodDataManagerWorker::getExpirationDate(const VMPlaylist& playlist, const QDateTime& metaDataFileCreated) const
+{
+//    QDateTime expirationTime;
+    foreach (const auto& vod, playlist._vods()) {
+        foreach (const auto& format, vod._avFormats()) {
+            QDateTime expirationDate;
+            if (tryParseExpirationDateFromUrl(format, &expirationDate)) {
+                qDebug() << "expires" << expirationDate.toMSecsSinceEpoch() << expirationDate;
+                return expirationDate;
+//                if (expirationTime.isValid()) {
+//                    expirationTime = qMin(expirationDate, expirationTime);
+//                } else {
+//                    expirationTime = expirationDate;
+//                }
+            }
+        }
+
+        foreach (const auto& format, vod._videoFormats()) {
+            QDateTime expirationDate;
+            if (tryParseExpirationDateFromUrl(format, &expirationDate)) {
+                qDebug() << "expires" << expirationDate.toMSecsSinceEpoch() << expirationDate;
+                return expirationDate;
+//                if (expirationTime.isValid()) {
+//                    expirationTime = qMin(expirationDate, expirationTime);
+//                } else {
+//                    expirationTime = expirationDate;
+//                }
+            }
+        }
+    }
+
+    return metaDataFileCreated.addSecs(3600); // best guess
+
+//    if (!expirationTime.isValid()) {
+//        expirationTime = metaDataFileCreated.addSecs(3600); // best guess
+//    }
+
+//    return expirationTime;
+}
+
+bool
+ScVodDataManagerWorker::tryParseExpirationDateFromUrl(const VMVideoFormat& format, QDateTime* expirationDate) const
+{
+    Q_ASSERT(expirationDate);
+
+    if (format.streamUrl().indexOf(QStringLiteral(".googlevideo.com/")) > 0) {
+        // Google
+        // https://r7---sn-8xgn5uxa-i5hl.googlevideo.com/videoplayback?expire=1569676378&ei=-gePXdvEM9ah-gbR0bu4Dw&ip=87.123.201.8&id=o-AKagqf4QO0dT38GZomuqJ5XzKLDiRseTWuz26jkf1nCd&itag=22&source=youtube&requiressl=yes&mm=31%2C29&mn=sn-8xgn5uxa-i5hl%2Csn-i5heen7s&ms=au%2Crdu&mv=m&mvi=6&pl=24&initcwndbps=1741250&mime=video%2Fmp4&ratebypass=yes&dur=3466.530&lmt=1569552472636649&mt=1569654699&fvip=4&fexp=23842630&c=WEB&txp=5535432&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cmime%2Cratebypass%2Cdur%2Clmt&sig=ALgxI2wwRQIhAK0YMaNUMB3PJV8iFdzVSdx0pDdqARH3SjPFTidRZIwzAiBLI5N-zPuIkIECVjbGUtkspFBrl44zNItTNQQJV01WZA%3D%3D&lsparams=mm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Cinitcwndbps&lsig=AHylml4wRQIgf6jZvh3oBSrh7J9UHbWO2fDmdAsJ7TgkKCvT_dyp154CIQDCMMlTNYR0hfdK0Kmj6ZOSJmZW9w2hGof5OwJfMibyJQ%3D%3D
+
+        QUrl u(format.streamUrl());
+        QUrlQuery q(u);
+        bool ok = false;
+        auto expires = q.queryItemValue(QStringLiteral("expire")).toLongLong(&ok);
+        if (ok) {
+            *expirationDate = QDateTime::fromMSecsSinceEpoch(expires * 1000);
+            return true;
+        }
+    } else if (format.manifestUrl().indexOf(QStringLiteral(".ttvnw.net/")) > 0) {
+        // Twitch
+        // https://usher.ttvnw.net/vod/464669022.m3u8?allow_audio_only=true&allow_source=true&allow_spectre=true&nauthsig=df59d9b3c5401a904c2d3d477836c89111d56d3b&player=twitchweb&nauth=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22chansub%22%3A%7B%22restricted_bitrates%22%3A%5B%5D%7D%2C%22device_id%22%3Anull%2C%22expires%22%3A1569729068%2C%22https_required%22%3Afalse%2C%22privileged%22%3Afalse%2C%22user_id%22%3Anull%2C%22version%22%3A2%2C%22vod_id%22%3A464669022%7D
+        QUrl u(format.manifestUrl());
+        QUrlQuery q(u);
+        auto authJson = q.queryItemValue(QStringLiteral("nauth"), QUrl::FullyDecoded);
+        QJsonDocument doc = QJsonDocument::fromJson(authJson.toUtf8());
+        if (doc.isObject()) {
+            auto auth = doc.object();
+            bool ok = false;
+            auto expires = auth[QStringLiteral("expires")].toVariant().toLongLong(&ok);
+            if (ok) {
+                *expirationDate = QDateTime::fromMSecsSinceEpoch(expires * 1000);
+                return true;
+            }
+        }
+    }
+
+    return false;
 }

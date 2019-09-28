@@ -25,6 +25,7 @@
 
 #include <QObject>
 #include <QSize>
+#include <QTimer>
 
 #include "VMPlaylist.h"
 #include "ScVodDataManagerWorker.h"
@@ -120,7 +121,7 @@ private:
 
 public:
     void onTitleAvailable(const QString& title);
-    void onMetaDataAvailable(const VMPlaylist& playlist);
+    void onMetaDataAvailable(const VMPlaylist& playlist, const QDateTime expirationDate);
     void onMetaDataUnavailable();
     void onFetchingMetaData();
     void onMetaDataDownloadFailed(VMVodEnums::Error error);
@@ -137,6 +138,7 @@ public:
 private slots:
     void reset();
     void onIsOnlineChanged();
+    void onMetaDataExpired();
 
 private:
     ScVodDataManager* manager() const;
@@ -159,6 +161,7 @@ private:
     void setDownloadProgress(qreal value);
 
 private:
+    QTimer m_MetaDataExpirationTimer;
     QVector<ScVodFileItem*> m_Files;
     VMPlaylist m_MetaData;
     QString m_ThumbnailPath;

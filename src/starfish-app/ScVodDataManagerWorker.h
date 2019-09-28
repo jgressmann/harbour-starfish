@@ -26,6 +26,7 @@
 
 #include <QSqlDatabase>
 #include <QSharedPointer>
+#include <QDateTime>
 #include "VMPlaylist.h"
 #include "ScVodman.h"
 #include "ScDatabaseStoreQueueTypes.h"
@@ -94,7 +95,7 @@ public:
 signals:
     void fetchingMetaData(qint64 urlShareId);
     void fetchingThumbnail(qint64 urlShareId);
-    void metaDataAvailable(qint64 urlShareId, VMPlaylist playlist);
+    void metaDataAvailable(qint64 urlShareId, VMPlaylist playlist, QDateTime expirationDate);
     void metaDataUnavailable(qint64 urlShareId);
     void metaDataDownloadFailed(qint64 urlShareId, VMVodEnums::Error error);
     void vodAvailable(ScVodFileFetchProgress progress);
@@ -150,6 +151,8 @@ private:
     void fetchThumbnailFromUrl(qint64 urlShareId, const QString& url);
     void addThumbnail(ThumbnailRequest& r, const QByteArray& bytes);
     void notifyVodDownloadsChanged();
+    QDateTime getExpirationDate(const VMPlaylist& playlist, const QDateTime& metaDataFileCreated) const;
+    bool tryParseExpirationDateFromUrl(const VMVideoFormat& format, QDateTime* expirationDate) const;
 
 private:
     QSharedPointer<ScVodDataManagerState> m_SharedState;
