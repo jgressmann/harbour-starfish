@@ -852,7 +852,7 @@ ScVodDataManager::setupDatabase() {
         "    seen INTEGER DEFAULT 0,\n"
         "    match_number INTEGER NOT NULL,\n"
         "    stage_rank INTEGER NOT NULL,\n"
-        "    playback_offset DEFAULT 0,\n"
+        "    playback_offset INTEGER DEFAULT 0,\n"
         "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
         "    UNIQUE (game, year, event_name, season, stage_name, match_date, match_name, match_number) ON CONFLICT REPLACE\n"
         ")\n",
