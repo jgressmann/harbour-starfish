@@ -30,6 +30,12 @@ import "."
 ListItem {
     id: root
     property var /*FilterPage*/ page
+    readonly property var props: page.props
+    readonly property string table: props[Global.propTable]
+    readonly property string where: props[Global.propWhere]
+    readonly property string key: props[Global.propKey]
+    readonly property int hidden: props[Global.propHiddenFlags]
+    readonly property var breadCrumbs: props[Global.propBreadcrumbs]
     property var value: undefined
     property bool showImage: _showImage
     property bool _showImage
@@ -42,6 +48,7 @@ ListItem {
 
     menu: ContextMenu {
         MenuItem {
+            visible: (hidden & VodDataManager.HT_Deleted) === 0
             text: Strings.deleteSeenVodFiles
             enabled: _toolEnabled
             onClicked: {
@@ -52,11 +59,23 @@ ListItem {
         }
 
         MenuItem {
+            visible: (hidden & VodDataManager.HT_Deleted) === 0
             text: Strings.deleteVods
             enabled: _toolEnabled
             onClicked: {
                 root.remorseAction(Strings.deleteVodsRemorse(title), function() {
                     Global.deleteVods(_where)
+                })
+            }
+        }
+
+        MenuItem {
+            visible: (hidden & VodDataManager.HT_Deleted) !== 0
+            text: Strings.undeleteVods
+            enabled: _toolEnabled
+            onClicked: {
+                root.remorseAction(Strings.undeleteVodsRemorse(title), function() {
+                    Global.undeleteVods(_where)
                 })
             }
         }
@@ -117,12 +136,12 @@ ListItem {
                             progress = 0
                         }
 
-                        VodDataManager.setSeen(page.table, _where, newValue)
+                        VodDataManager.setSeen(table, _where, newValue)
                     }
 
                     Component.onCompleted: {
                         root.updateSeen = function () {
-                            progress = VodDataManager.seen(page.table, _where)
+                            progress = VodDataManager.seen(table, _where)
                         }
                     }
                 }
@@ -164,9 +183,12 @@ ListItem {
 
     onClicked: {
         //console.debug("filter item click " + key + "=" + value)
-        var newBreadCrumbs = Global.clone(page.breadCrumbs)
+        var newBreadCrumbs = Global.clone(breadCrumbs)
         newBreadCrumbs.push(title)
-        var result = Global.performNext(page.table, _where, newBreadCrumbs)
+        var newProps = Global.clone(props)
+        newProps[Global.propBreadcrumbs] = newBreadCrumbs
+        newProps[Global.propWhere] = _where
+        var result = Global.performNext(newProps)
         pageStack.push(result[0], result[1])
     }
 
@@ -182,15 +204,15 @@ ListItem {
             return
         }
 
-        _title = VodDataManager.label(page.key, value)
-        _showImage = Global.showIcon(page.key)
+        _title = VodDataManager.label(key, value)
+        _showImage = Global.showIcon(key)
         if (_showImage) {
-            _icon = VodDataManager.icon(page.key, value)
+            _icon = VodDataManager.icon(key, value)
         }
 
-        var myFilter = page.key + "='" + VodDataManager.sqlEscapeLiteral(value) + "'"
-        if (page.where.length > 0) {
-            _where = page.where + " and " + myFilter
+        var myFilter = key + "='" + VodDataManager.sqlEscapeLiteral(value) + "'"
+        if (where.length > 0) {
+            _where = where + " and " + myFilter
         } else {
             _where = " where " + myFilter
         }

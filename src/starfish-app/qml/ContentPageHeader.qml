@@ -63,13 +63,14 @@ PageHeader {
     function _onBreadCrumbsChanged() {
 //        console.debug("bread crumbs changed")
         var s = ""
-        if (page && page.breadCrumbs) {
-            for (var i = 0; i < page.breadCrumbs.length; ++i) {
+        if (page && page.props) {
+            var breadCrumbs = page.props[Global.propBreadcrumbs]
+            for (var i = 0; i < breadCrumbs.length; ++i) {
                 if (s.length) {
                     s += " / "
                 }
 
-                s += page.breadCrumbs[i]
+                s += breadCrumbs[i]
             }
         }
 

@@ -29,8 +29,9 @@ import ".."
 ContentPage {
     id: root
 
-    property string table
-    property string where
+    property var props: undefined
+    readonly property string table: props[Global.propTable]
+    readonly property string where: props[Global.propWhere]
     readonly property int __type_TournamentPage: 1
 
     SqlVodModel {
@@ -48,7 +49,6 @@ ContentPage {
 
         VerticalScrollDecorator {}
         TopMenu {}
-//        BottomMenu {}
 
         HighlightingListView {
             id: listView
@@ -88,5 +88,10 @@ ContentPage {
             }
         }
     }
+
+//    Component.onCompleted: {
+//        console.debug("tournament page props")
+//        Global.dump(props)
+//    }
 }
 

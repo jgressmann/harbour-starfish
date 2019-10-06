@@ -63,7 +63,6 @@ DISTFILES += qml/harbour-starfish.qml \
     sql_patches.json \
     harbour-starfish.desktop \
     media/* \
-    icons/* \
     icons.json \
     qml/pages/StartPage.qml \
     qml/pages/FilterItem.qml \

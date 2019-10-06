@@ -29,10 +29,11 @@ import ".."
 ContentPage {
     id: root
 
-    property string title
-    property string table
-    property string where
-    property string key: undefined
+    property var props: undefined
+    readonly property string title: props[Global.propTitle]
+    readonly property string table: props[Global.propTable]
+    readonly property string where: props[Global.propWhere]
+    readonly property string key: props[Global.propKey]
     property bool ascending: Global.sortKey(key) === 1
     property bool grid: false
     property bool _grid: grid && Global.hasIcon(key)
@@ -46,7 +47,7 @@ ContentPage {
         select: {
             var sql = "select distinct "+ key +" from " + table + where
             sql += " order by " + key + " " + (ascending ? "asc" : "desc")
-            console.debug(title + ": " + sql)
+//            console.debug(title + ": " + sql)
             return sql
         }
     }
@@ -61,8 +62,6 @@ ContentPage {
 
         VerticalScrollDecorator {}
         TopMenu {}
-
-
 
 
         Component {
@@ -89,10 +88,6 @@ ContentPage {
                         onClicked: {
                             ListView.view.currentIndex = index
                         }
-
-        //                Component.onCompleted: {
-        //                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
-        //                }
                     }
 
 
@@ -140,10 +135,6 @@ ContentPage {
                         onClicked: {
                             GridView.view.currentIndex = index
                         }
-
-        //                Component.onCompleted: {
-        //                    console.debug("filter page key: "+key+" index: " + index + " value: " + value)
-        //                }
                     }
 
 
@@ -173,5 +164,10 @@ ContentPage {
             }
         }
     }
+
+//    Component.onCompleted: {
+//        console.debug("filter page props")
+//        Global.dump(props)
+//    }
 }
 

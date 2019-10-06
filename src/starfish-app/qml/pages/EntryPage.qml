@@ -106,16 +106,21 @@ BasePage {
             }
 
             onClicked: {
+                var props = {}
+                //% "Unwatched"
+                props[Global.propBreadcrumbs] = [qsTrId("sf-entry-page-unwatched-breadcrumb")]
+                props[Global.propHiddenFlags] = 0
+                props[Global.propKey] = "game"
+                props[Global.propTable] = Global.defaultTable
+                props[Global.propTitle] = VodDataManager.label("game")
+                props[Global.propWhere] = " where hidden=0 and seen=0"
+
+
                 pageStack.push(
                             Qt.resolvedUrl("FilterPage.qml"),
                             {
-                                title: VodDataManager.label("game"),
-                                table: Global.defaultTable,
-                                where: " where seen=0",
-                                key: "game",
+                                props: props,
                                 grid: true,
-                                //% "Unwatched"
-                                breadCrumbs: [qsTrId("sf-entry-page-unwatched-breadcrumb")]
                             })
             }
 
@@ -123,7 +128,7 @@ BasePage {
                 id: unseenModel
                 database: VodDataManager.database
                 columns: ["count"]
-                select: "select count(*) from vods where seen=0"
+                select: "select count(*) from vods where hidden=0 and seen=0"
             }
 
             function update() {
@@ -158,14 +163,19 @@ BasePage {
             }
 
             onClicked: {
+                var props = {}
+                props[Global.propBreadcrumbs] = [browseVodsTitleLabel.text]
+                props[Global.propHiddenFlags] = 0
+                props[Global.propKey] = "game"
+                props[Global.propTable] = Global.defaultTable
+                props[Global.propTitle] = VodDataManager.label("game")
+                props[Global.propWhere] = " where hidden=0"
+
                 pageStack.push(
                             Qt.resolvedUrl("FilterPage.qml"),
                             {
-                                title: VodDataManager.label("game"),
-                                table: Global.defaultTable,
-                                key: "game",
+                                props: props,
                                 grid: true,
-                                breadCrumbs: [browseVodsTitleLabel.text]
                             })
             }
         }
@@ -186,16 +196,20 @@ BasePage {
             }
 
             onClicked: {
+                var props = {}
+                //% "Offline"
+                props[Global.propBreadcrumbs] = [qsTrId("sf-entry-page-offline-breadcrumb")]
+                props[Global.propHiddenFlags] = 0
+                props[Global.propKey] = "game"
+                props[Global.propTable] = "offline_vods"
+                props[Global.propTitle] = VodDataManager.label("game")
+                props[Global.propWhere] = " where hidden=0 and progress>0"
+
                 pageStack.push(
                             Qt.resolvedUrl("FilterPage.qml"),
                             {
-                                title: VodDataManager.label("game"),
-                                table: "offline_vods",
-                                where: " where progress>0",
-                                key: "game",
+                                props: props,
                                 grid: true,
-                                //% "Offline"
-                                breadCrumbs: [qsTrId("sf-entry-page-offline-breadcrump")]
                             })
             }
 
@@ -203,12 +217,65 @@ BasePage {
                 id: offlineModel
                 database: VodDataManager.database
                 columns: ["count"]
-                select: "select count(*) from offline_vods where progress>0"
+                select: "select count(*) from offline_vods where hidden=0 and progress>0"
             }
 
             function update() {
                 offlineModel.reload()
                 visible = offlineModel.data(offlineModel.index(0, 0)) > 0
+            }
+
+            Component.onCompleted: {
+                VodDataManager.vodsChanged.connect(update)
+                update()
+            }
+
+            Component.onDestruction: {
+                VodDataManager.vodsChanged.disconnect(update)
+            }
+        }
+
+        ListItem {
+            id: hiddenVodsItem
+            contentHeight: visible ? Global.itemHeight : 0
+
+            Label {
+                id: hiddenVodsTitleLabel
+                x: Theme.horizontalPageMargin
+                width: page.width - 2*x
+                //% "Hidden"
+                text: qsTrId("sf-entry-page-hidden")
+
+                font.pixelSize: Global.labelFontSize
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            onClicked: {
+                var props = {}
+                props[Global.propBreadcrumbs] = [hiddenVodsTitleLabel.text]
+                props[Global.propHiddenFlags] = VodDataManager.HT_Deleted
+                props[Global.propKey] = "game"
+                props[Global.propTable] =Global.defaultTable
+                props[Global.propTitle] = VodDataManager.label("game")
+                props[Global.propWhere] = " where hidden!=0"
+                pageStack.push(
+                            Qt.resolvedUrl("FilterPage.qml"),
+                            {
+                                props: props,
+                                grid: true,
+                            })
+            }
+
+            SqlVodModel {
+                id: hiddenModel
+                database: VodDataManager.database
+                columns: ["count"]
+                select: "select count(*) from " + Global.defaultTable + " where hidden!=0"
+            }
+
+            function update() {
+                hiddenModel.reload()
+                visible = hiddenModel.data(hiddenModel.index(0, 0)) > 0
             }
 
             Component.onCompleted: {

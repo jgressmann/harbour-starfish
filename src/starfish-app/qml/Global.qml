@@ -40,9 +40,16 @@ Item { // Components can't declare functions
     readonly property string videoCoverPath: App.dataDir + "/cover.png"
     readonly property real pathTraceOpacity: 0.25
     readonly property string defaultTable: "url_share_vods"
+    readonly property string propTitle: "title"
+    readonly property string propTable: "table"
+    readonly property string propWhere: "where"
+    readonly property string propKey: "key"
+    readonly property string propBreadcrumbs: "breadcrumbs"
+    readonly property string propHiddenFlags: "hiddenFlags"
     property var playVideoHandler
     property var videoPlayerPage
     property Notification deleteVodNotification
+    property Notification undeleteVodNotification
     property Notification deleteSeenVodFilesNotification
     property var getNewVodsContstraints
 
@@ -153,10 +160,12 @@ Item { // Components can't declare functions
         }[key] || 1
     }
 
-    function performNext(_table, _where, _breadCrumbs) {
+    function performNext(props) {
+        var _table = props[propTable]
+        var _where = props[propWhere]
         var rem = remainingKeys(_where)
 
-        var breadCrumbs = _breadCrumbs || []
+        var breadCrumbs = props[propBreadcrumbs]
 
         // we need to figure out if there is only as single value for any of the subkeys
         for (var change = true; change; ) {
@@ -202,22 +211,19 @@ Item { // Components can't declare functions
             rem = newRem
         }
 
+        props[propWhere] = _where
+
         if (0 === rem.length) {
             // exhausted all filter keys, show tournament
-            return [Qt.resolvedUrl("pages/TournamentPage.qml"), {
-                table: _table,
-                where: _where,
-                breadCrumbs: breadCrumbs
-            },
-                    rem]
+
+
+            return [Qt.resolvedUrl("pages/TournamentPage.qml"),
+                    {props: props}, rem]
         } else {
-            return [Qt.resolvedUrl("pages/FilterPage.qml"), {
-                                title: VodDataManager.label(rem[0]),
-                                table: _table,
-                                where: _where,
-                                key: rem[0],
-                                breadCrumbs: breadCrumbs,
-                            },rem]
+            props[propTitle] = VodDataManager.label(rem[0])
+            props[propKey] = rem[0]
+            return [Qt.resolvedUrl("pages/FilterPage.qml"),
+                    {props: props}, rem]
         }
     }
 
@@ -318,6 +324,20 @@ Item { // Components can't declare functions
         }
     }
 
+    function undeleteVods(_where) {
+        if (!_where) {
+            _where = ""
+        }
+
+        console.debug("undelete vods where: " + _where)
+        var count = VodDataManager.undeleteVods(_where)
+        if (count) {
+            //% "%1 VODs undeleted"
+            undeleteVodNotification.summary = qsTrId("sf-global-vods-undeleted-notification-summary", count).arg(count)
+            undeleteVodNotification.publish()
+        }
+    }
+
     function openNewVodPage(pageStack) {
         pageStack.push(
                     Qt.resolvedUrl("pages/NewPage.qml"),
@@ -327,9 +347,28 @@ Item { // Components can't declare functions
                     })
     }
 
+    function dump(obj, prefix) {
+        if (!prefix) {
+            prefix = ""
+        }
+
+        if (null === obj) {
+            console.debug(prefix + "null")
+        } else if ("object" === typeof obj) {
+            for (var key in obj) {
+                console.debug(prefix + key + ":")
+                dump(obj[key], "\t" + prefix)
+            }
+        } else {
+            console.debug(prefix + obj)
+        }
+    }
+
     SqlVodModel {
         id: _model
 //        columns: ["count"]
         database: VodDataManager.database
     }
+
+
 }

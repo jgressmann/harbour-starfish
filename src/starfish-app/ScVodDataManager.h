@@ -147,6 +147,12 @@ public:
     };
     Q_ENUM(DataDirectoryChangeType)
 
+    enum HiddenType {
+        HT_Deleted = 1,
+
+    };
+    Q_ENUM(HiddenType)
+
 
 public:
     ~ScVodDataManager();
@@ -205,8 +211,8 @@ public: //
     Q_INVOKABLE int fetchSeen(qint64 rowid, const QString& table, const QString& where);
     Q_INVOKABLE int fetchVodEnd(qint64 rowid, int startOffsetS, int vodLengthS);
     // filter pages
-    Q_INVOKABLE void deleteVod(qint64 rowid);
     Q_INVOKABLE int deleteVods(const QString& where);
+    Q_INVOKABLE int undeleteVods(const QString& where);
     void deleteThumbnail(qint64 urlShareId);
     Q_INVOKABLE void setYtdlPath(const QString&  path);
     Q_INVOKABLE QString sqlEscapeLiteral(QString value);
@@ -346,6 +352,7 @@ private:
     void updateSql6(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
     void updateSql7(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
     void updateSql8(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
+    void updateSql9(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
 
 
 private:

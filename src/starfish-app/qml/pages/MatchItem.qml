@@ -422,6 +422,7 @@ ListItem {
                 IconButton {
                     id: seenButton
                     anchors.right: parent.right
+                    enabled: !_c.deleted
 
                     //icon.source: seen ? "image://theme/icon-m-favorite-selected" : "image://theme/icon-m-favorite"
                     icon.source: _c.seen ? "image://theme/icon-m-favorite-selected" : "image://theme/icon-m-favorite"
@@ -507,7 +508,8 @@ ListItem {
                 text: qsTrId("sf-match-item-download-meta-data")
                 visible: _c.urlShare.metaDataFetchStatus !== UrlShare.Fetching &&
                          _c.urlShare.metaDataFetchStatus !== UrlShare.Available &&
-                         App.isOnline
+                         App.isOnline &&
+                         !_c.deleted
                 onClicked: _c.urlShare.fetchMetaData()
             }
 
@@ -517,7 +519,8 @@ ListItem {
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available &&
                          _c.urlShare.vodFetchStatus !== UrlShare.Fetching &&
                          _c.urlShare.downloadProgress < 1 &&
-                         App.isOnline
+                         App.isOnline &&
+                         !_c.deleted
                 onClicked: {
                     var format = _getVideoFormatFromBearerMode()
                     _download(false, format)
@@ -530,41 +533,43 @@ ListItem {
                 visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available &&
                          _c.urlShare.vodFetchStatus !== UrlShare.Fetching &&
                          _c.urlShare.downloadProgress < 1 &&
-                         App.isOnline
+                         App.isOnline &&
+                         !_c.deleted
                 onClicked: _download(false, VM.VM_Any)
             }
 
             MenuItem {
                 //% "Cancel VOD download"
                 text: qsTrId("sf-match-item-cancel-vod-download")
-                visible: _c.urlShare.vodFetchStatus === UrlShare.Fetching && _c.urlShare.downloadProgress < 1
+                visible: _c.urlShare.vodFetchStatus === UrlShare.Fetching && _c.urlShare.downloadProgress < 1 && !_c.deleted
                 onClicked: _cancelDownload()
             }
 
             MenuItem {
                 //% "Play stream"
                 text: qsTrId("sf-match-item-play-stream")
-                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available && App.isOnline
+                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available && App.isOnline && !_c.deleted
                 onClicked: _playStream()
             }
 
             MenuItem {
                 //% "Play stream with format..."
                 text: qsTrId("sf-match-item-play-stream-with-format")
-                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available && App.isOnline
+                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available && App.isOnline && !_c.deleted
                 onClicked: _playStreamWithFormat(VM.VM_Any)
             }
 
             MenuItem {
                 //% "Reset watch progress"
                 text: qsTrId("sf-match-item-reset-watch-progress")
+                visible: !_c.deleted
                 onClicked: VodDataManager.setPlaybackOffset(_playlist.mediaKey, _playlist.startOffset)
             }
 
             MenuItem {
                 //% "Delete meta data"
                 text: qsTrId("sf-match-item-delete-meta-data")
-                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available
+                visible: _c.urlShare.metaDataFetchStatus === UrlShare.Available && !_c.deleted
                 onClicked: _c.urlShare.deleteMetaData()
             }
 
@@ -572,7 +577,7 @@ ListItem {
                 //% "Delete VOD file"
                 text: qsTrId("sf-match-item-delete-vod-file")
                 enabled: _toolEnabled
-                visible: _c.urlShare.vodFetchStatus === UrlShare.Available
+                visible: _c.urlShare.vodFetchStatus === UrlShare.Available && !_c.deleted
 
                 onClicked: {
                     // still not sure why local vars are needed but they are!!!!
@@ -621,6 +626,7 @@ ListItem {
 //            }
 
             MenuItem {
+                visible: !_c.deleted
                 //% "Delete thumbnail"
                 text: qsTrId("sf-match-item-delete-thumbnail")
                 onClicked: _c.urlShare.deleteThumbnail()
@@ -628,15 +634,33 @@ ListItem {
 
             MenuItem {
                 //% "Delete VOD from database"
-                text: qsTrId("sf-match-item-vod-from-database")
+                text: qsTrId("sf-match-item-delete-vod-from-database")
+                visible: !_c.deleted
                 enabled: _toolEnabled
                 onClicked: {
                     // still not sure why local vars are needed but they are!!!!
                     var item = root
                     var g = Global
-                    item.remorseAction("Deleting " + _c.urlShare.title, function() {
+                    //% "Deleting %1"
+                    item.remorseAction(qsTrId("sf-match-item-deleting-vod-from-database-remorse").arg(_c.urlShare.title), function() {
                         item._cancelDownload()
                         g.deleteVods("where id=" + item.rowId)
+                    })
+                }
+            }
+
+            MenuItem {
+                //% "Undelete VOD from database"
+                text: qsTrId("sf-match-item-vod-undelete-from-database")
+                visible: _c.deleted
+                enabled: _toolEnabled
+                onClicked: {
+                    // still not sure why local vars are needed but they are!!!!
+                    var item = root
+                    var g = Global
+                    //% "Undeleting %1"
+                    item.remorseAction(qsTrId("sf-match-item-undeleting-vod-from-database-remorse").arg(_c.urlShare.title), function() {
+                        g.undeleteVods("where id=" + item.rowId)
                     })
                 }
             }
@@ -751,6 +775,10 @@ ListItem {
     }
 
     function _tryPlay() {
+        if (_c.deleted) {
+            return
+        }
+
         if (_c.urlShare.vodFetchStatus === UrlShare.Fetching) {
             _playFiles()
         } else if (_c.urlShare.vodFetchStatus === UrlShare.Available) {

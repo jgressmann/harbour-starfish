@@ -40,6 +40,7 @@ class ScMatchItem : public QObject
     Q_PROPERTY(qint64 rowId READ rowId CONSTANT)
     Q_PROPERTY(ScUrlShareItem* urlShare READ urlShare CONSTANT)
     Q_PROPERTY(bool seen READ seen WRITE setSeen NOTIFY seenChanged)
+//    Q_PROPERTY(bool deleted READ deleted WRITE setDeleted NOTIFY deletedChanged)
     Q_PROPERTY(QString eventFullName READ eventFullName CONSTANT)
     Q_PROPERTY(QString eventName READ eventName CONSTANT)
     Q_PROPERTY(QString stageName READ stageName CONSTANT)
@@ -55,6 +56,7 @@ class ScMatchItem : public QObject
     Q_PROPERTY(int season READ season CONSTANT)
     Q_PROPERTY(int year READ year CONSTANT)
     Q_PROPERTY(int matchNumber READ matchNumber CONSTANT)
+    Q_PROPERTY(bool deleted READ deleted CONSTANT)
 
 public:
     explicit ScMatchItem(qint64 rowid, ScVodDataManager *parent, QSharedPointer<ScUrlShareItem>&& urlShareItem);
@@ -63,6 +65,7 @@ public:
     qint64 rowId() const { return m_RowId; }
     ScUrlShareItem* urlShare() const { return m_UrlShareItem.data(); }
     bool seen() const { return m_seen; }
+    bool deleted() const { return m_Deleted; }
     QString eventFullName() const { return m_EventFullName; }
     QString eventName() const { return m_EventName; }
     QString stageName() const { return m_stageName; }
@@ -79,11 +82,13 @@ public:
     int year() const { return m_year; }
     QString matchName() const { return m_matchName; }
     int matchNumber() const { return m_match_number; }
-    void onSeenAvailable(bool seen);
+    void onSeenAvailable(bool value);
+//    void onDeletedAvailable(bool value);
     void onVodEndAvailable(int endOffsetS);
 
 signals:
     void seenChanged();
+//    void deletedChanged();
     void videoEndOffsetChanged();
     void videoPlaybackOffsetChanged();
     void startProcessDatabaseStoreQueue(int transactionId, QString sql, ScSqlParamList args);
@@ -91,8 +96,9 @@ signals:
 private:
     struct Data
     {
-        bool seen;
         int playbackOffset;
+        bool seen;
+//        bool deleted;
 
         Data();
     };
@@ -111,6 +117,8 @@ private:
     bool fetchVideoPlaybackOffset(Data* data) const;
     void setSeen(bool seen);
     void setSeenMember(bool value);
+//    void setDeleted(bool seen);
+//    void setDeletedMember(bool value);
 
 
 private:
@@ -134,4 +142,5 @@ private:
     int m_match_number;
     int m_stage_rank;
     bool m_seen;
+    bool m_Deleted;
 };

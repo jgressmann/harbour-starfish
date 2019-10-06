@@ -10,6 +10,8 @@
 ScMatchItem::Data::Data()
 {
     seen = false;
+//    deleted = false;
+    playbackOffset = 0;
 }
 
 ScMatchItem::ScMatchItem(qint64 rowid, ScVodDataManager *parent, QSharedPointer<ScUrlShareItem>&& urlShareItem)
@@ -27,6 +29,7 @@ ScMatchItem::ScMatchItem(qint64 rowid, ScVodDataManager *parent, QSharedPointer<
     m_match_number = -1;
     m_stage_rank = -1;
     m_seen = false;
+    m_Deleted = false;
 
     connect(parent, &ScVodDataManager::vodsChanged, this, &ScMatchItem::reset);
     connect(parent, &ScVodDataManager::seenChanged, this, &ScMatchItem::reset);
@@ -54,7 +57,8 @@ ScMatchItem::ScMatchItem(qint64 rowid, ScVodDataManager *parent, QSharedPointer<
 "   year,\n"
 "   offset,\n"
 "   match_number,\n"
-"   stage_rank\n"
+"   stage_rank,\n"
+"   hidden\n"
 "FROM vods WHERE id=?");
     if (q.prepare(sql)) {
         q.addBindValue(rowid);
@@ -74,6 +78,7 @@ ScMatchItem::ScMatchItem(qint64 rowid, ScVodDataManager *parent, QSharedPointer<
                 m_VideoStartOffset = q.value(11).toInt();
                 m_match_number = q.value(12).toInt();
                 m_stage_rank = q.value(13).toInt();
+                m_Deleted = (q.value(14).toInt() & ScVodDataManager::HT_Deleted) != 0;
             } else {
                 qDebug() << "no data for rowid" << m_RowId;
             }
@@ -95,47 +100,22 @@ ScMatchItem::manager() const
 
 bool ScMatchItem::fetch(Data* data) const
 {
-    return fetchSeen(data) && fetchVideoPlaybackOffset(data);
-}
-
-bool ScMatchItem::fetchSeen(Data* data) const
-{
     Q_ASSERT(data);
     QSqlQuery q(manager()->database());
-    auto sql = QStringLiteral("SELECT seen FROM vods WHERE id=?");
+//    auto sql = QStringLiteral("SELECT seen, hidden, playback_offset FROM vods WHERE id=?");
+    auto sql = QStringLiteral("SELECT seen, playback_offset FROM vods WHERE id=?");
     if (q.prepare(sql)) {
         q.addBindValue(m_RowId);
         if (q.exec()) {
             if (q.next()) {
                 data->seen = q.value(0).toInt() != 0;
+//                data->deleted = (q.value(1).toInt() & ScVodDataManager::HT_Deleted) != 0;
+//                data->playbackOffset = q.value(2).toInt();
+                data->playbackOffset = q.value(1).toInt();
                 return true;
             } else {
                 qDebug() << "no data for rowid" << m_RowId;
             }
-        } else {
-            qDebug() << "failed to exec, error:" << q.lastError();
-        }
-    } else {
-        qDebug() << "failed to prepare, error:" << q.lastError();
-    }
-
-    return false;
-}
-
-bool ScMatchItem::fetchVideoPlaybackOffset(Data* data) const
-{
-    Q_ASSERT(data);
-    QSqlQuery q(manager()->database());
-    auto sql = QStringLiteral("SELECT playback_offset FROM recently_watched WHERE vod_id=?");
-    if (q.prepare(sql)) {
-        q.addBindValue(m_RowId);
-        if (q.exec()) {
-            if (q.next()) {
-                data->playbackOffset = q.value(0).toInt();
-            } else {
-                data->playbackOffset = -1;
-            }
-            return true;
         } else {
             qDebug() << "failed to exec, error:" << q.lastError();
         }
@@ -174,6 +154,41 @@ void ScMatchItem::onSeenAvailable(bool seen)
     setSeenMember(seen);
 }
 
+
+//void ScMatchItem::setDeleted(bool value)
+//{
+//    auto transactionId = manager()->databaseStoreQueue()->newTransactionId();
+//    m_PendingDatabaseStores.insert(transactionId, [=] (qint64 rows, bool error)
+//    {
+//        if (!error && rows) {
+//            setDeletedMember(value);
+//        }
+//    });
+
+//    if (value) {
+//        auto sql = QStringLiteral("UPDATE vods SET hidden=(hidden|?) WHERE id=?");
+//        emit startProcessDatabaseStoreQueue(transactionId, sql, {value, static_cast<unsigned>(ScVodDataManager::HT_Deleted), m_RowId});
+//    } else {
+//        auto sql = QStringLiteral("UPDATE vods SET hidden=(hidden&~?) WHERE id=?");
+//        emit startProcessDatabaseStoreQueue(transactionId, sql, {value, static_cast<unsigned>(ScVodDataManager::HT_Deleted), m_RowId});
+//    }
+
+//    emit startProcessDatabaseStoreQueue(transactionId, {}, {});
+//}
+
+//void ScMatchItem::setDeletedMember(bool value)
+//{
+//    if (value != m_Deleted) {
+//        m_Deleted = value;
+//        emit deletedChanged();
+//    }
+//}
+
+//void ScMatchItem::onDeletedAvailable(bool value)
+//{
+//    setDeletedMember(value);
+//}
+
 void ScMatchItem::onVodEndAvailable(int endOffsetS)
 {
     if (m_VideoEndOffset != endOffsetS) {
@@ -196,6 +211,7 @@ void ScMatchItem::reset()
     Data data;
     if (fetch(&data)) {
         setSeenMember(data.seen);
+//        setDeletedMember(data.seen);
         setVideoPlaybackOffset(data.playbackOffset);
     }
 
@@ -206,8 +222,6 @@ void ScMatchItem::onLengthChanged()
 {
     manager()->fetchVodEnd(m_RowId, m_VideoStartOffset, m_UrlShareItem->vodLength());
 }
-
-
 
 void
 ScMatchItem::databaseStoreCompleted(int token, qint64 insertIdOrNumRowsAffected, int error, QString errorDescription)

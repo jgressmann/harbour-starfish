@@ -853,6 +853,7 @@ ScVodDataManager::setupDatabase() {
         "    match_number INTEGER NOT NULL,\n"
         "    stage_rank INTEGER NOT NULL,\n"
         "    playback_offset INTEGER DEFAULT 0,\n"
+        "    hidden INTEGER DEFAULT 0,\n"
         "    FOREIGN KEY(vod_url_share_id) REFERENCES vod_url_share(id) ON DELETE CASCADE,\n"
         "    UNIQUE (game, year, event_name, season, stage_name, match_date, match_name, match_number) ON CONFLICT REPLACE\n"
         ")\n",
@@ -887,6 +888,7 @@ ScVodDataManager::setupDatabase() {
 //        "CREATE INDEX IF NOT EXISTS vods_season ON vods (season)\n",
 //        "CREATE INDEX IF NOT EXISTS vods_event_name ON vods (event_name)\n",
         "CREATE INDEX IF NOT EXISTS vods_seen ON vods (seen)\n",
+        "CREATE INDEX IF NOT EXISTS vods_hidden ON vods (hidden)\n",
 
         // https://www.sqlite.org/foreignkeys.html#fk_indexes
         // suggested foreign key indices
@@ -934,7 +936,8 @@ ScVodDataManager::setupDatabase() {
         "       thumbnail_file_name,\n"
         "       file_index,\n"
         "       duration,\n"
-        "       stage_rank\n"
+        "       stage_rank,\n"
+        "       hidden\n"
         "   FROM vods v\n"
         "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
         "   INNER JOIN vod_files f ON f.vod_url_share_id=u.id\n"
@@ -965,7 +968,8 @@ ScVodDataManager::setupDatabase() {
         "       seen,\n"
         "       match_number,\n"
         "       thumbnail_file_name,\n"
-        "       stage_rank\n"
+        "       stage_rank,\n"
+        "       hidden\n"
         "   FROM vods v\n"
         "   INNER JOIN vod_url_share u ON v.vod_url_share_id=u.id\n"
         "\n",
@@ -981,11 +985,18 @@ ScVodDataManager::setupDatabase() {
         "       UPDATE recently_watched SET playback_offset=new.playback_offset WHERE vod_id=new.id;\n"
         "   END\n"
         "\n",
+
+        "CREATE TRIGGER IF NOT EXISTS recently_watched_update_hidden UPDATE OF hidden ON vods\n"
+        "   WHEN new.hidden != 0\n"
+        "   BEGIN\n"
+        "       DELETE FROM recently_watched WHERE vod_id=new.id;\n"
+        "   END\n"
+        "\n",
     };
 
 
 
-    const int Version = 9;
+    const int Version = 10;
 
     if (!scSetupWriteableConnection(m_Database)) {
         setError(Error_CouldntCreateSqlTables);
@@ -1028,6 +1039,8 @@ ScVodDataManager::setupDatabase() {
                 updateSql7(q, CreateSql, _countof(CreateSql));
             case 8:
                 updateSql8(q, CreateSql, _countof(CreateSql));
+            case 9:
+                updateSql9(q, CreateSql, _countof(CreateSql));
             default:
                 break;
             }
@@ -3035,6 +3048,56 @@ Error:
     goto Exit;
 }
 
+void
+ScVodDataManager::updateSql9(QSqlQuery& q, const char*const* createSql, size_t createSqlCount)
+{
+    qInfo("Begin update of database v9 to v10\n");
+
+    static char const* const Sql1[] = {
+        "SAVEPOINT master",
+        "PRAGMA user_version=10",
+        "ALTER TABLE vods ADD COLUMN hidden INTEGER DEFAULT 0",
+        "DROP VIEW offline_vods",
+        "DROP VIEW url_share_vods",
+    };
+
+    for (size_t i = 0; i < _countof(Sql1); ++i) {
+        qDebug() << Sql1[i];
+        if (!q.exec(Sql1[i])) {
+            goto Error;
+        }
+    }
+
+    for (size_t i = 0; i < createSqlCount; ++i) {
+        qDebug() << createSql[i];
+        if (!q.exec(createSql[i])) {
+            goto Error;
+        }
+    }
+
+    static char const* const Sql2[] = {
+        "RELEASE master",
+        "VACUUM",
+    };
+
+    for (size_t i = 0; i < _countof(Sql2); ++i) {
+        qDebug() << Sql2[i];
+        if (!q.exec(Sql2[i])) {
+            goto Error;
+        }
+    }
+
+    qInfo("Update of database v9 to v10 completed successfully\n");
+
+Exit:
+    return;
+Error:
+    qCritical() << "Failed to update database from v9 to v10" << q.lastError();
+    q.exec("ROLLBACK master");
+    setError(Error_CouldntCreateSqlTables);
+    goto Exit;
+}
+
 int
 ScVodDataManager::sqlPatchLevel() const
 {
@@ -3320,24 +3383,17 @@ ScVodDataManager::onVodDownloadsChanged(ScVodIdList ids)
     emit vodDownloadsChanged();
 }
 
-void
-ScVodDataManager::deleteVod(qint64 rowid)
-{
-    deleteVods(QStringLiteral("WHERE id=%1").arg(rowid));
-}
-
 int
 ScVodDataManager::deleteVods(const QString& where)
 {
     RETURN_IF_ERROR;
 
     // To delete vod entries without leaks we need to
-    // * delete the entries from the vods table
+    // * hide the entries from the vods table
     // * if all vods are included from a given url share id
     //  - delete the thumbnail
     //  - delete the vod file
     //  - delete the meta data file
-    //  - delete the vod_url_share table entry
 
     int rowsAffected = 0;
 
@@ -3398,31 +3454,15 @@ ScVodDataManager::deleteVods(const QString& where)
 
     auto transactionId = m_SharedState->DatabaseStoreQueue->newTransactionId();
 
-    static const QString DeleteSql = QStringLiteral("DELETE from vod_url_share WHERE id=?");
-    static const QString SqlTemplate = QStringLiteral("WHERE vod_url_share_id=%1");
+    const QString SqlTemplate = QStringLiteral("WHERE vod_url_share_id=%1");
     foreach (quint64 urlShareId, urlShareIdsToDelete) {
-        qDebug() << "delete for vod_url_share_id" << urlShareId;
         auto whereClause = SqlTemplate.arg(urlShareId);
         auto vodFilesDeleted = deleteVodFilesWhere(transactionId, whereClause, false);
         qDebug() << "deleted" << vodFilesDeleted << "vod files";
         auto thumbnailsDeleted = deleteThumbnailsWhere(transactionId, whereClause);
         qDebug() << "deleted" << thumbnailsDeleted << "thumbnail entries";
 
-        ScSqlParamList args = { urlShareId };
-        emit startProcessDatabaseStoreQueue(transactionId, DeleteSql, args);
-//        if (!q.prepare(deleteSql)) {
-//            qCritical() << "failed to prepare query" << q.lastError();
-//            goto Error;
-//        }
 
-//        q.addBindValue(urlShareId);
-
-//        if (!q.exec()) {
-//            qCritical() << "failed to exec query" << q.lastError();
-//            goto Error;
-//        }
-
-//        qDebug() << "deleted vod_url_share entry";
 
         // delete meta data file
         auto metaDataFilePath = m_SharedState->m_MetaDataDir + QString::number(urlShareId);
@@ -3431,8 +3471,8 @@ ScVodDataManager::deleteVods(const QString& where)
         }
     }
 
-    // in case the url_share_id persists still remove affected vods
-    emit startProcessDatabaseStoreQueue(transactionId, QStringLiteral("DELETE FROM vods %1").arg(where), {});
+    // hide vods
+    emit startProcessDatabaseStoreQueue(transactionId, QStringLiteral("UPDATE vods SET hidden=(hidden | %1) %2").arg(QString::number(HT_Deleted), where), {});
 
 
     m_PendingDatabaseStores.insert(transactionId, [=] (qint64, bool error) {
@@ -3449,6 +3489,37 @@ ScVodDataManager::deleteVods(const QString& where)
     return rowsAffected;
 }
 
+int
+ScVodDataManager::undeleteVods(const QString& where)
+{
+    RETURN_IF_ERROR;
+
+    QSqlQuery q(m_Database);
+
+    if (!q.exec(QStringLiteral("SELECT COUNT(*) FROM vods %1").arg(where))) {
+        qCritical() << "failed to exec query" << q.lastError();
+        return 0;
+    }
+
+    if (!q.next()) {
+        qCritical() << "no result value for count" << q.lastError();
+        return 0;
+    }
+
+    auto result = q.value(0).toInt();
+
+    // unhide vods
+    auto transactionId = m_SharedState->DatabaseStoreQueue->newTransactionId();
+    emit startProcessDatabaseStoreQueue(transactionId, QStringLiteral("UPDATE vods SET hidden=(hidden&~%1) %2").arg(QString::number(HT_Deleted), where), {});
+    m_PendingDatabaseStores.insert(transactionId, [=] (qint64, bool error) {
+        if (!error) {
+            emit vodsChanged();
+        }
+    });
+    emit startProcessDatabaseStoreQueue(transactionId, {}, {});
+
+    return result;
+}
 
 void
 ScVodDataManager::deleteThumbnail(qint64 urlShareId)

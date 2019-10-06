@@ -293,6 +293,15 @@ ApplicationWindow {
     }
 
     Notification {
+        id: undeleteVodNotification
+        appName: App.displayName
+        previewSummary: summary
+        appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
+        icon: appIcon
+        isTransient: true
+    }
+
+    Notification {
         id: updateNotification
         appName: App.displayName
         appIcon: "/usr/share/icons/hicolor/86x86/apps/harbour-starfish.png"
@@ -476,9 +485,10 @@ ApplicationWindow {
         }
 
         Global.deleteVodNotification = deleteVodNotification
+        Global.undeleteVodNotification = undeleteVodNotification
         Global.deleteSeenVodFilesNotification = deleteSeenVodFilesNotification
         Global.getNewVodsContstraints = function () {
-            return "match_date>=date('now', '-" + settingNewWindowDays.value.toFixed(0) + " days')" +
+            return "hidden=0 AND match_date>=date('now', '-" + settingNewWindowDays.value.toFixed(0) + " days')" +
                                     (settingNewRemoveSeen.value ? " and seen=0" : "")
         }
     }

@@ -29,13 +29,17 @@ import ".."
 ListItem {
     id: root
 
-    property alias stageName: label.text
     property var page
+    readonly property var props: page.props
+    readonly property var breadCrumbs: props[Global.propBreadcrumbs]
+    readonly property int hidden: props[Global.propHiddenFlags]
+    property alias stageName: label.text
     property string _where
     readonly property bool _toolEnabled: !VodDataManager.busy
 
     menu: ContextMenu {
         MenuItem {
+            visible: (hidden & VodDataManager.HT_Deleted) === 0
             text: Strings.deleteSeenVodFiles
             enabled: _toolEnabled
             onClicked: {
@@ -46,11 +50,23 @@ ListItem {
         }
 
         MenuItem {
+            visible: (hidden & VodDataManager.HT_Deleted) === 0
             text: Strings.deleteVods
             enabled: _toolEnabled
             onClicked: {
                 root.remorseAction(Strings.deleteVodsRemorse(stageName), function() {
                     Global.deleteVods(_where)
+                })
+            }
+        }
+
+        MenuItem {
+            visible: (hidden & VodDataManager.HT_Deleted) !== 0
+            text: Strings.undeleteVods
+            enabled: _toolEnabled
+            onClicked: {
+                root.remorseAction(Strings.undeleteVodsRemorse(stageName), function() {
+                    Global.undeleteVods(_where)
                 })
             }
         }
@@ -87,13 +103,14 @@ ListItem {
     }
 
     onClicked: {
-        var breadCrumbs = Global.clone(page.breadCrumbs)
-        breadCrumbs.push(stageName)
+        var newBreadCrumbs = Global.clone(breadCrumbs)
+        newBreadCrumbs.push(stageName)
+        var newProps = Global.clone(props)
+        newProps[Global.propBreadcrumbs] = newBreadCrumbs
+        newProps[Global.propWhere] = _where
         pageStack.push(Qt.resolvedUrl("StagePage.qml"), {
-            table: page.table,
-            where: _where,
-            stage: stageName,
-            breadCrumbs: breadCrumbs
+            props: newProps,
+            stage: stageName
         })
     }
 

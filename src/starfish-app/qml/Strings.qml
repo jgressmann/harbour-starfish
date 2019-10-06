@@ -31,6 +31,8 @@ Item { // Components can't declare functions
     readonly property string deleteSeenVodFiles: qsTrId("sf-strings-delete-seen-vod-files")
     //% "Delete VODs"
     readonly property string deleteVods: qsTrId("sf-strings-delete-vods")
+    //% "Undelete VODs"
+    readonly property string undeleteVods: qsTrId("sf-strings-undelete-vods")
 
     function deleteSeenVodFileRemorse(name) {
         //% "Deleting seen VOD files for %1"
@@ -40,5 +42,10 @@ Item { // Components can't declare functions
     function deleteVodsRemorse(name) {
         //% "Deleting VODs for %1"
         return qsTrId("sf-strings-deleting-vods").arg(name)
+    }
+
+    function undeleteVodsRemorse(name) {
+        //% "Undeleting VODs for %1"
+        return qsTrId("sf-strings-undeleting-vods").arg(name)
     }
 }

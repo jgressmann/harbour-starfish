@@ -53,7 +53,6 @@ Page {
     }
 
     property bool wasActive: false
-    property var breadCrumbs: []
     property Item contentItem
 
     Item {

@@ -28,8 +28,9 @@ import ".."
 
 ContentPage {
     id: page
-    property string table
-    property string where
+    property var props: undefined
+    readonly property string table: props[Global.propTable]
+    readonly property string where: props[Global.propWhere]
     property alias stage: pageHeader.title
     property bool _sameDate: false
     property bool _sameSides: false
