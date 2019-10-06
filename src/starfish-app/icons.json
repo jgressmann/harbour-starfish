@@ -22,6 +22,11 @@
             "extension": ".png"
         },
         {
+            "regex": "^afreeca world",
+            "url": "https://www.dropbox.com/s/mh1pw1xm6vb5bit/awi.jpeg?dl=1",
+            "extension": ".jpeg"
+        },
+        {
             "regex": "afreeca world invitational",
             "url": "https://www.dropbox.com/s/mh1pw1xm6vb5bit/awi.jpeg?dl=1",
             "extension": ".jpeg"
