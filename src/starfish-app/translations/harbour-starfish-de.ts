@@ -661,59 +661,59 @@
         <translation>jedes Mal nachfragen</translation>
     </message>
     <message id="sf-database-error-network-failure">
-        <location filename="../qml/harbour-starfish.qml" line="89"/>
+        <location filename="../qml/harbour-starfish.qml" line="96"/>
         <source>Network down</source>
         <translation>Keine Netzwerkverbindung</translation>
     </message>
     <message id="sf-database-error-invalid-data">
-        <location filename="../qml/harbour-starfish.qml" line="94"/>
+        <location filename="../qml/harbour-starfish.qml" line="101"/>
         <source>Data downloaded is invalid</source>
         <translation>Die heruntergeladene Daten sind ungültig</translation>
     </message>
     <message id="sf-database-error-decompression-failed">
-        <location filename="../qml/harbour-starfish.qml" line="99"/>
+        <location filename="../qml/harbour-starfish.qml" line="106"/>
         <source>Data decompression failed</source>
         <translation>Das Extrahieren der Daten ist fehlgeschlagen</translation>
     </message>
     <message id="sf-database-error-unknown">
-        <location filename="../qml/harbour-starfish.qml" line="104"/>
+        <location filename="../qml/harbour-starfish.qml" line="111"/>
         <source>Yikes! An unknown error has occurred</source>
         <translation>O_o! Ein ungekannter Fehler ist aufgetreten :/</translation>
     </message>
     <message id="sf-vod-download-failed-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="237"/>
-        <location filename="../qml/harbour-starfish.qml" line="238"/>
+        <location filename="../qml/harbour-starfish.qml" line="244"/>
+        <location filename="../qml/harbour-starfish.qml" line="245"/>
         <source>Download failed</source>
         <translation>Download fehlgeschlagen</translation>
     </message>
     <message id="sf-no-space-left-on-device-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="250"/>
-        <location filename="../qml/harbour-starfish.qml" line="251"/>
+        <location filename="../qml/harbour-starfish.qml" line="257"/>
+        <location filename="../qml/harbour-starfish.qml" line="258"/>
         <source>No space left on device</source>
         <translation>Unzureichender Speicherplatz</translation>
     </message>
     <message id="sf-nofification-download-ytdl-update-available-summary">
-        <location filename="../qml/harbour-starfish.qml" line="310"/>
+        <location filename="../qml/harbour-starfish.qml" line="317"/>
         <source>youtube-dl update available</source>
         <translation>youtube-dl Update verfügbar</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-body">
-        <location filename="../qml/harbour-starfish.qml" line="313"/>
+        <location filename="../qml/harbour-starfish.qml" line="320"/>
         <source>youtube-dl version %1 available</source>
         <translation>youtube-dl Version %1 verfügbar</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-action">
-        <location filename="../qml/harbour-starfish.qml" line="318"/>
+        <location filename="../qml/harbour-starfish.qml" line="325"/>
         <source>Update youtube-dl</source>
         <translation>youtube-dl aktualisieren</translation>
     </message>
     <message id="sf-notification-busy">
-        <location filename="../qml/harbour-starfish.qml" line="345"/>
+        <location filename="../qml/harbour-starfish.qml" line="352"/>
         <source>%1 is busy. Try again later.</source>
         <translation>%ist beschäftigt. Versuche es später noch einmal.</translation>
     </message>
     <message id="sf-vods-added-notification-summary" numerus="yes">
-        <location filename="../qml/harbour-starfish.qml" line="526"/>
+        <location filename="../qml/harbour-starfish.qml" line="533"/>
         <source>%1 VODs added</source>
         <translation>
             <numerusform>Ein Video hinzugefügt</numerusform>

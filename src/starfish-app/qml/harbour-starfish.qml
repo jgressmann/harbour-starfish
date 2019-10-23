@@ -51,6 +51,13 @@ ApplicationWindow {
     property VideoPlayerPage _videoPlayer
     readonly property VideoPlayerPage videoPlayer: _videoPlayer
 
+    onVisibleChanged: {
+        console.debug("window visible=" + visible)
+        if (videoPlayer) {
+            videoPlayer.enableFrameGrabbing = visible
+        }
+    }
+
     Sc2LinksDotComScraper {
         id: sc2LinksDotComScraper
         stateFilePath: App.dataDir + "/sc2links.com.state"

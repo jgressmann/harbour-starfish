@@ -66,6 +66,7 @@ Page {
     readonly property bool isPlaying: mediaplayer.playbackState === MediaPlayer.PlayingState
     property string thumbnailFilePath
     property string coverFilePath
+    property bool enableFrameGrabbing: true
 
     signal videoFrameCaptured(string filepath)
     signal videoCoverCaptured(string filepath)
@@ -74,7 +75,7 @@ Page {
     signal bye()
 
     on_StreamPositionMsChanged: {
-        console.debug("stream position ms=" + _streamPositionMs)
+//        console.debug("stream position ms=" + _streamPositionMs)
         positionSlider.setPosition(_streamPositionMs)
     }
 
@@ -133,7 +134,7 @@ Page {
             case MediaPlayer.Buffered:
                 console.debug("buffered")
                 stallTimer.stop()
-                if (_grabFrameWhenReady) {
+                if (enableFrameGrabbing && _grabFrameWhenReady) {
                     _grabFrameWhenReady = false
                     _grabFrame()
 
@@ -440,9 +441,9 @@ Page {
                             console.debug("position slider max=" + maximumValue)
                         }
 
-                        onValueChanged: {
-                            console.debug("position value=" + value)
-                        }
+//                        onValueChanged: {
+//                            console.debug("position value=" + value)
+//                        }
 
                         onDownChanged: {
                             console.debug("slider down=" + down)
@@ -458,7 +459,7 @@ Page {
                         }
 
                         function setPosition(newValue) {
-                            console.debug("target position=" + newValue)
+//                            console.debug("target position=" + newValue)
                             if (!positionSlider.down && !seekTimer.running) {
                                 value = newValue
                             }
@@ -647,7 +648,7 @@ Page {
             console.debug("page status=deactivating")
             // moved here from panel open/close, seems to be less disruptive to
             // user experience
-            if (_hasSource && mediaplayer.status === MediaPlayer.Buffered) {
+            if (enableFrameGrabbing && _hasSource && mediaplayer.status === MediaPlayer.Buffered) {
                 _grabFrame()
             }
             //pause()
@@ -711,7 +712,7 @@ Page {
             mediaplayer.pause()
         }
 
-        if (mediaplayer.playbackState === MediaPlayer.PausedState) {
+        if (enableFrameGrabbing && mediaplayer.playbackState === MediaPlayer.PausedState) {
             _grabFrame()
         }
     }
@@ -806,11 +807,14 @@ Page {
             ++_grabFrameControlPanelOpens
             openControlPanel()
             thumbnailOutput.grabToImage(function (a) {
-                a.saveToFile(thumbnailFilePath)
-                videoThumbnailCaptured(thumbnailFilePath)
-                if (_grabFrameControlPanelOpens > 0) {
-                    --_grabFrameControlPanelOpens
-                    closeControlPanel()
+                try {
+                    a.saveToFile(thumbnailFilePath)
+                    videoThumbnailCaptured(thumbnailFilePath)
+                } catch (e) {
+                    if (_grabFrameControlPanelOpens > 0) {
+                        --_grabFrameControlPanelOpens
+                        closeControlPanel()
+                    }
                 }
             })
         }
@@ -819,11 +823,14 @@ Page {
             ++_grabFrameControlPanelOpens
             openControlPanel()
             coverOutput.grabToImage(function (a) {
-                a.saveToFile(coverFilePath)
-                videoCoverCaptured(coverFilePath)
-                if (_grabFrameControlPanelOpens > 0) {
-                    --_grabFrameControlPanelOpens
-                    closeControlPanel()
+                try {
+                    a.saveToFile(coverFilePath)
+                    videoCoverCaptured(coverFilePath)
+                } catch (e) {
+                    if (_grabFrameControlPanelOpens > 0) {
+                        --_grabFrameControlPanelOpens
+                        closeControlPanel()
+                    }
                 }
             })
         }
