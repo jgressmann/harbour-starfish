@@ -12,6 +12,11 @@
             "extension": ".jpg"
         },
         {
+            "regex": "^alpha (pro|x pro) series",
+            "url": "https://www.dropbox.com/s/zyavpnjrq6v3hmd/alphaproseries.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "^asl|afreeca(tv)? starleague",
             "url": "https://www.dropbox.com/s/l0ctttcufkum7ve/asl.png?dl=1",
             "extension": ".png"
@@ -52,6 +57,11 @@
             "extension": ".png"
         },
         {
+            "regex": "^bj destruction",
+            "url": "https://www.dropbox.com/s/67cdk5mo2e7zs41/bjdestructionmatchs2.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "blizz?con|blizzard",
             "url": "https://www.dropbox.com/s/63xg197jzdu4a7n/blizzard.png?dl=1",
             "extension": ".png"
@@ -76,6 +86,11 @@
             "regex": "code s",
             "url": "https://www.dropbox.com/s/1v9lmxurko6rtgw/codes.png?dl=1",
             "extension": ".png"
+        },
+        {
+            "regex": "^corrupted cup",
+            "url": "https://www.dropbox.com/s/tzhe5rjncjxect3/corruptedcup.jpg?dl=1",
+            "extension": ".jpg"
         },
         {
             "regex": "corsair cup",
@@ -316,6 +331,11 @@
             "regex": "mlg|major league gaming",
             "url": "https://www.dropbox.com/s/36j7pjy1v1qmqam/mlg.png?dl=1",
             "extension": ".png"
+        },
+        {
+            "regex": "momentum cup",
+            "url": "https://www.dropbox.com/s/02xbeghawjibhw6/momentumcup.jpg?dl=1",
+            "extension": ".jpg"
         },
         {
             "regex": "moo proleague",
