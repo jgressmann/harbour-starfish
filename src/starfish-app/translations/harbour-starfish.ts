@@ -719,29 +719,29 @@
         </translation>
     </message>
     <message id="sf-vod-details-page-path">
-        <location filename="../qml/pages/VodDetailPage.qml" line="120"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="135"/>
         <source>Path</source>
         <translation>Path</translation>
     </message>
     <message id="sf-vod-details-page-size">
-        <location filename="../qml/pages/VodDetailPage.qml" line="133"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="149"/>
         <source>Size</source>
         <translation>Size</translation>
     </message>
     <message id="sf-vod-details-page-size-gb">
-        <location filename="../qml/pages/VodDetailPage.qml" line="142"/>
-        <location filename="../qml/pages/VodDetailPage.qml" line="146"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="158"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="162"/>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
     <message id="sf-vod-details-page-size-mb">
-        <location filename="../qml/pages/VodDetailPage.qml" line="150"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="166"/>
         <source>%1 MB</source>
         <translation>%1 MB</translation>
     </message>
     <message id="sf-vod-details-page-download-progress">
         <location filename="../qml/pages/VodDetailPage.qml" line="65"/>
-        <location filename="../qml/pages/VodDetailPage.qml" line="126"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="142"/>
         <source>Download progress</source>
         <translation>Download progress</translation>
     </message>
@@ -761,28 +761,28 @@
         <translation>Resolution</translation>
     </message>
     <message id="sf-vod-details-page-url">
-        <location filename="../qml/pages/VodDetailPage.qml" line="78"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="90"/>
         <source>Url</source>
         <translation>Url</translation>
     </message>
     <message id="sf-vod-details-page-copy-url-clipboard">
-        <location filename="../qml/pages/VodDetailPage.qml" line="87"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="82"/>
         <source>Copy url to clipboard</source>
         <translation>Copy url to clipboard</translation>
     </message>
     <message id="sf-vod-details-page-files-section-header">
-        <location filename="../qml/pages/VodDetailPage.qml" line="94"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="97"/>
         <source>Files</source>
         <translation>Files</translation>
     </message>
     <message id="sf-vod-details-page-files-section-file-number">
-        <location filename="../qml/pages/VodDetailPage.qml" line="113"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="116"/>
         <source>File #%1</source>
         <oldsource>File number %1</oldsource>
         <translation>File #%1</translation>
     </message>
     <message id="sf-vod-details-page-copy-file-path-to-clipboard">
-        <location filename="../qml/pages/VodDetailPage.qml" line="160"/>
+        <location filename="../qml/pages/VodDetailPage.qml" line="127"/>
         <source>Copy file path to clipboard</source>
         <translation>Copy file path to clipboard</translation>
     </message>

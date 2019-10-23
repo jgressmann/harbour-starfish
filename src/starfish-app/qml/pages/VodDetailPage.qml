@@ -73,19 +73,22 @@ BasePage {
                 value: match.urlShare.vodResolution.width + "x" + match.urlShare.vodResolution.height
             }
 
-            DetailItem {
-                //% "Url"
-                label: qsTrId("sf-vod-details-page-url")
-                value: match.urlShare.url
-            }
-
-            ButtonLayout {
+            ListItem {
                 width: parent.width
+                contentHeight: urlDetailItem.height
+                menu: ContextMenu {
+                    MenuItem {
+                        //% "Copy url to clipboard"
+                        text: qsTrId("sf-vod-details-page-copy-url-clipboard")
+                        onClicked: Clipboard.text = match.urlShare.url
+                    }
+                }
 
-                Button {
-                    //% "Copy url to clipboard"
-                    text: qsTrId("sf-vod-details-page-copy-url-clipboard")
-                    onClicked: Clipboard.text = match.urlShare.url
+                DetailItem {
+                    id: urlDetailItem
+                    //% "Url"
+                    label: qsTrId("sf-vod-details-page-url")
+                    value: match.urlShare.url
                 }
             }
 
@@ -115,10 +118,23 @@ BasePage {
                             font.pixelSize: Theme.fontSizeSmall
                         }
 
-                        DetailItem {
-                            //% "Path"
-                            label: qsTrId("sf-vod-details-page-path")
-                            value: file.vodFilePath
+                        ListItem {
+                            width: parent.width
+                            contentHeight: filePathDetailItem.height
+                            menu: ContextMenu {
+                                MenuItem {
+                                    //% "Copy file path to clipboard"
+                                    text: qsTrId("sf-vod-details-page-copy-file-path-to-clipboard")
+                                    onClicked: Clipboard.text = file.vodFilePath
+                                }
+                            }
+
+                            DetailItem {
+                                id: filePathDetailItem
+                                //% "Path"
+                                label: qsTrId("sf-vod-details-page-path")
+                                value: file.vodFilePath
+                            }
                         }
 
                         DetailItem {
@@ -148,17 +164,6 @@ BasePage {
 
                                 //% "%1 MB"
                                 return qsTrId("sf-vod-details-page-size-mb").arg((size/oneMb).toFixed(0))
-                            }
-                        }
-
-
-                        ButtonLayout {
-                            width: parent.width
-
-                            Button {
-                                //% "Copy file path to clipboard"
-                                text: qsTrId("sf-vod-details-page-copy-file-path-to-clipboard")
-                                onClicked: Clipboard.text = file.vodFilePath
                             }
                         }
 
