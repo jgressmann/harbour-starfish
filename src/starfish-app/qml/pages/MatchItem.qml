@@ -338,7 +338,7 @@ ListItem {
                                 }
                             }
 
-                            Image {
+                            Icon {
                                 width: Theme.iconSizeSmall
                                 height: Theme.iconSizeSmall
                                 sourceSize.width: width
@@ -398,7 +398,7 @@ ListItem {
                                     visible: _c.urlShare.vodFetchStatus === UrlShare.Available && _c.urlShare.downloadProgress >= 1
                                 }
 
-                                Image {
+                                Icon {
                                     width: Theme.iconSizeSmall
                                     height: Theme.iconSizeSmall
                                     sourceSize.width: width
