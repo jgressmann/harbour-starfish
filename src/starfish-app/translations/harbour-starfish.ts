@@ -598,43 +598,38 @@
         <source>Playback</source>
         <translation>Playback</translation>
     </message>
-    <message id="sf-settings-page-playback-external-media-player-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="381"/>
-        <source>Use external media player</source>
-        <translation>Use external media player</translation>
-    </message>
     <message id="sf-settings-page-playback-no-videos-in-recently-watched">
-        <location filename="../qml/pages/SettingsPage.qml" line="394"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="383"/>
         <source>Number of recently watched videos to keep</source>
         <translation>Number of recently watched videos to keep</translation>
     </message>
     <message id="sf-settings-page-playback-pause-on-device-lock-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="417"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="406"/>
         <source>Pause playback on device lock</source>
         <translation>Pause playback on device lock</translation>
     </message>
     <message id="sf-settings-page-playback-pause-if-cover-page-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="428"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="417"/>
         <source>Pause playback when the cover page is shown</source>
         <translation>Pause playback when the cover page is shown</translation>
     </message>
     <message id="sf-settings-page-new-section-header">
-        <location filename="../qml/pages/SettingsPage.qml" line="439"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="428"/>
         <source>New</source>
         <translation>New</translation>
     </message>
     <message id="sf-settings-page-new-no-days-to-keep-vods-label">
-        <location filename="../qml/pages/SettingsPage.qml" line="446"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="435"/>
         <source>Number of days to keep a VOD in &apos;New&apos;</source>
         <translation>Number of days to keep a VOD in &apos;New&apos;</translation>
     </message>
     <message id="sf-settings-page-new-remove-seen-vods-switch">
-        <location filename="../qml/pages/SettingsPage.qml" line="469"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="458"/>
         <source>Remove watched VODs from &apos;New&apos;</source>
         <translation>Remove watched VODs from &apos;New&apos;</translation>
     </message>
     <message id="sf-settings-page-title">
-        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="485"/>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
@@ -679,39 +674,39 @@
         <translation>Yikes! An unknown error has occurred :/</translation>
     </message>
     <message id="sf-vod-download-failed-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="244"/>
-        <location filename="../qml/harbour-starfish.qml" line="245"/>
+        <location filename="../qml/harbour-starfish.qml" line="238"/>
+        <location filename="../qml/harbour-starfish.qml" line="239"/>
         <source>Download failed</source>
         <translation>Download failed</translation>
     </message>
     <message id="sf-no-space-left-on-device-notification-summary">
-        <location filename="../qml/harbour-starfish.qml" line="257"/>
-        <location filename="../qml/harbour-starfish.qml" line="258"/>
+        <location filename="../qml/harbour-starfish.qml" line="251"/>
+        <location filename="../qml/harbour-starfish.qml" line="252"/>
         <source>No space left on device</source>
         <translation>No space left on device</translation>
     </message>
     <message id="sf-nofification-download-ytdl-update-available-summary">
-        <location filename="../qml/harbour-starfish.qml" line="317"/>
+        <location filename="../qml/harbour-starfish.qml" line="311"/>
         <source>youtube-dl update available</source>
         <translation>youtube-dl update available</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-body">
-        <location filename="../qml/harbour-starfish.qml" line="320"/>
+        <location filename="../qml/harbour-starfish.qml" line="314"/>
         <source>youtube-dl version %1 available</source>
         <translation>youtube-dl version %1 available</translation>
     </message>
     <message id="sf-nofification-ytdl-update-available-action">
-        <location filename="../qml/harbour-starfish.qml" line="325"/>
+        <location filename="../qml/harbour-starfish.qml" line="319"/>
         <source>Update youtube-dl</source>
         <translation>Update youtube-dl</translation>
     </message>
     <message id="sf-notification-busy">
-        <location filename="../qml/harbour-starfish.qml" line="352"/>
+        <location filename="../qml/harbour-starfish.qml" line="346"/>
         <source>%1 is busy. Try again later.</source>
         <translation>%1 is busy. Try again later.</translation>
     </message>
     <message id="sf-vods-added-notification-summary" numerus="yes">
-        <location filename="../qml/harbour-starfish.qml" line="533"/>
+        <location filename="../qml/harbour-starfish.qml" line="523"/>
         <source>%1 VODs added</source>
         <translation>
             <numerusform>%1 VOD added</numerusform>

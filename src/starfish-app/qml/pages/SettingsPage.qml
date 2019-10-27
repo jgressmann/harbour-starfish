@@ -376,17 +376,6 @@ BasePage {
             text: qsTrId("sf-settings-page-playback-section-header")
         }
 
-        TextSwitch {
-            //% "Use external media player"
-            text: qsTrId("sf-settings-page-playback-external-media-player-switch")
-            checked: settingExternalMediaPlayer.value
-            enabled: _toolEnabled
-            onCheckedChanged: {
-                console.debug("external media player=" + checked)
-                settingExternalMediaPlayer.value = checked
-            }
-        }
-
         TextField {
             width: root.width
             inputMethodHints: Qt.ImhFormattedNumbersOnly

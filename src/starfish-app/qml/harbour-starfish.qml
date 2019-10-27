@@ -182,12 +182,6 @@ ApplicationWindow {
     }
 
     ConfigValue {
-        id: settingExternalMediaPlayer
-        key: "/playback/use_external_player"
-        defaultValue: false
-    }
-
-    ConfigValue {
         id: settingPlaybackRecentVideosToKeep
         key: "/playback/recent_videos_to_keep"
         defaultValue: 10
@@ -479,15 +473,11 @@ ApplicationWindow {
                 console.debug("playlist=" + playlist)
                 VodDataManager.recentlyWatched.add(key, seen)
                 VodDataManager.recentlyWatched.setOffset(key, playlist.playbackOffset)
-                if (settingExternalMediaPlayer.value && playlist.url(0).indexOf("http") !== 0) {
-                    Qt.openUrlExternally(playlist.url(0))
-                } else {
-                    console.debug("offset=" + playlist.playbackOffset)
-                    var playerPage = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
-                    playerPage.playPlaylist(playlist)
-                    updater.playerPage = playerPage
-                    updater.setKey(key)
-                }
+                console.debug("offset=" + playlist.playbackOffset)
+                var playerPage = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
+                playerPage.playPlaylist(playlist)
+                updater.playerPage = playerPage
+                updater.setKey(key)
             }
         }
 
@@ -591,33 +581,30 @@ ApplicationWindow {
         if (playlist && playlist.isValid) {
             console.debug("playlist parts=" + playlist.parts + " start=" + playlist.startOffset + " end=" + playlist.endOffset + " playback=" + playlist.playbackOffset)
             VodDataManager.recentlyWatched.add(playlist.mediaKey, seen)
-            if (settingExternalMediaPlayer.value && playlist.parts === 1) {
-                Qt.openUrlExternally(playlist.url(0))
-            } else {
-                if (!_videoPlayer) {
-                    _videoPlayer = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
-                    _videoPlayer.bye.connect(function () {
-                        _videoPlayer = null
-                    })
 
-                    _videoPlayer.coverFilePath = Global.videoCoverPath
-                }
+            if (!_videoPlayer) {
+                _videoPlayer = pageStack.push(Qt.resolvedUrl("pages/VideoPlayerPage.qml"))
+                _videoPlayer.bye.connect(function () {
+                    _videoPlayer = null
+                })
 
-                if (App.isUrlKey(playlist.mediaKey)) {
-                    _videoPlayer.thumbnailFilePath = VodDataManager.recentlyWatched.getThumbnailPath(playlist.mediaKey)
-                    if (!_videoPlayer.thumbnailFilePath) {
-                        _videoPlayer.thumbnailFilePath = App.makeTemporaryFile(VodDataManager.thumbnailDirectory + "XXXXXX.png")
-                        if (_videoPlayer.thumbnailFilePath) {
-                            console.debug("created thumbnail file path " + _videoPlayer.thumbnailFilePath + " for use with media key " + playlist.mediaKey)
-                            VodDataManager.recentlyWatched.setThumbnailPath(playlist.mediaKey, _videoPlayer.thumbnailFilePath)
-                        }
-                    }
-                } else {
-                    _videoPlayer.thumbnailFilePath = ""
-                }
-
-                _videoPlayer.playPlaylist(playlist, !!_videoPlayer.thumbnailFilePath)
+                _videoPlayer.coverFilePath = Global.videoCoverPath
             }
+
+            if (App.isUrlKey(playlist.mediaKey)) {
+                _videoPlayer.thumbnailFilePath = VodDataManager.recentlyWatched.getThumbnailPath(playlist.mediaKey)
+                if (!_videoPlayer.thumbnailFilePath) {
+                    _videoPlayer.thumbnailFilePath = App.makeTemporaryFile(VodDataManager.thumbnailDirectory + "XXXXXX.png")
+                    if (_videoPlayer.thumbnailFilePath) {
+                        console.debug("created thumbnail file path " + _videoPlayer.thumbnailFilePath + " for use with media key " + playlist.mediaKey)
+                        VodDataManager.recentlyWatched.setThumbnailPath(playlist.mediaKey, _videoPlayer.thumbnailFilePath)
+                    }
+                }
+            } else {
+                _videoPlayer.thumbnailFilePath = ""
+            }
+
+            _videoPlayer.playPlaylist(playlist, !!_videoPlayer.thumbnailFilePath)
         }
     }
 
