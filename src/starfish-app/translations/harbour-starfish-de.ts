@@ -1075,22 +1075,22 @@
         <translation>Füge Videos hinzu</translation>
     </message>
     <message id="ScVodDataManager-misc-label">
-        <location filename="../ScVodDataManager.cpp" line="1100"/>
+        <location filename="../ScVodDataManager.cpp" line="1102"/>
         <source>Misc</source>
         <translation>Verschiedene</translation>
     </message>
     <message id="ScVodDataManager-game-label">
-        <location filename="../ScVodDataManager.cpp" line="1109"/>
+        <location filename="../ScVodDataManager.cpp" line="1111"/>
         <source>game</source>
         <translation>Spiel</translation>
     </message>
     <message id="ScVodDataManager-year-label">
-        <location filename="../ScVodDataManager.cpp" line="1114"/>
+        <location filename="../ScVodDataManager.cpp" line="1116"/>
         <source>year</source>
         <translation>Jahr</translation>
     </message>
     <message id="ScVodDataManager-event-label">
-        <location filename="../ScVodDataManager.cpp" line="1119"/>
+        <location filename="../ScVodDataManager.cpp" line="1121"/>
         <source>event</source>
         <translation>Event</translation>
     </message>

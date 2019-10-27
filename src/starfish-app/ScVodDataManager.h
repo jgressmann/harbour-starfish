@@ -353,6 +353,7 @@ private:
     void updateSql7(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
     void updateSql8(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
     void updateSql9(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
+    void updateSql10(QSqlQuery& q, const char*const* createSql, size_t createSqlCount);
 
 
 private:

@@ -830,7 +830,7 @@ ScVodDataManager::setupDatabase() {
         "    video_id TEXT,\n"
         "    title TEXT,\n"
         "    thumbnail_file_name TEXT,\n"
-        "    UNIQUE(type, video_id, url)\n"
+        "    UNIQUE(type, video_id)\n"
         ")\n",
 
         "CREATE TABLE IF NOT EXISTS vods (\n"
@@ -900,7 +900,7 @@ ScVodDataManager::setupDatabase() {
 
         // unique performance
         "CREATE INDEX IF NOT EXISTS vod_files_unique ON vod_files (vod_url_share_id, file_index)\n",
-        "CREATE INDEX IF NOT EXISTS vod_url_share_unique ON vod_url_share (type, video_id, url)\n",
+        "CREATE INDEX IF NOT EXISTS vod_url_share_unique ON vod_url_share (type, video_id)\n",
         "CREATE INDEX IF NOT EXISTS vods_unique ON vods (game, year, event_name, season, stage_name, match_date, match_name, match_number)\n",
 
 
@@ -996,7 +996,7 @@ ScVodDataManager::setupDatabase() {
 
 
 
-    const int Version = 10;
+    const int Version = 11;
 
     if (!scSetupWriteableConnection(m_Database)) {
         setError(Error_CouldntCreateSqlTables);
@@ -1041,6 +1041,8 @@ ScVodDataManager::setupDatabase() {
                 updateSql8(q, CreateSql, _countof(CreateSql));
             case 9:
                 updateSql9(q, CreateSql, _countof(CreateSql));
+            case 10:
+                updateSql10(q, CreateSql, _countof(CreateSql));
             default:
                 break;
             }
@@ -3098,6 +3100,210 @@ Error:
     goto Exit;
 }
 
+
+void
+ScVodDataManager::updateSql10(QSqlQuery& q, const char*const* createSql, size_t createSqlCount)
+{
+    QSqlQuery q2(m_Database);
+
+    // have thumbnail dir, vod dir
+    setDirectories();
+
+    qInfo("Begin update of database v10 to v11\n");
+
+    static char const* const Sql1[] = {
+        "PRAGMA foreign_keys=OFF",
+        "SAVEPOINT master",
+        "PRAGMA user_version=11",
+
+        "SAVEPOINT url_share",
+
+        "CREATE TABLE IF NOT EXISTS vod_url_share2 (\n"
+        "    id INTEGER PRIMARY KEY,\n"
+        "    type INTEGER NOT NULL,\n"
+        "    length INTEGER NOT NULL DEFAULT 0,\n" // seconds
+        "    url TEXT,\n"
+        "    video_id TEXT,\n"
+        "    title TEXT,\n"
+        "    thumbnail_file_name TEXT,\n"
+        "    UNIQUE(type, video_id)\n"
+        ")\n",
+
+        "INSERT OR IGNORE INTO vod_url_share2 SELECT * FROM vod_url_share",
+    };
+
+    for (size_t i = 0; i < _countof(Sql1); ++i) {
+        qDebug() << Sql1[i];
+        if (!q.exec(Sql1[i])) {
+            goto Error;
+        }
+    }
+
+    // now fix up vod_url_share_id in vods for those entries with stale references
+    if (!q2.exec("SELECT\n"
+           "    u1.id,\n"
+           "    u1.type,\n"
+           "    u1.video_id,\n"
+           "    u1.thumbnail_file_name\n"
+           "FROM vod_url_share u1\n"
+           "LEFT JOIN vod_url_share2 u2\n"
+           "ON u1.id=u2.id\n"
+           "WHERE u2.id IS NULL")) {
+        goto Error;
+    }
+
+    while (q2.next()) {
+        const auto oldUrlShareId = qvariant_cast<qint64>(q2.value(0));
+        const auto type = q2.value(1).toInt();
+        const auto videoId = q2.value(2);
+        const auto thumbnailFileName = q2.value(3).toString();
+        if (type == UT_Unknown) {
+            qCritical() << "expected only typed urls to have duplicates\n";
+            goto Error;
+        }
+
+        // delete thumbnail file if it exists
+        if (!thumbnailFileName.isEmpty()) {
+            auto filePath = m_SharedState->m_ThumbnailDir + thumbnailFileName;
+            if (QFile::remove(filePath)) {
+                qDebug() << "removed" << filePath;
+            }
+        }
+
+        // delete meta data file if it exists
+        const auto metaDataFilePath = m_SharedState->m_MetaDataDir + QString::number(oldUrlShareId);
+        if (QFile::remove(metaDataFilePath)) {
+            qDebug() << "removed" << metaDataFilePath;
+        }
+
+        // remove vod files
+        if (!q.prepare("SELECT vod_file_name FROM vod_files WHERE vod_url_share_id=?")) {
+            goto Error;
+        }
+
+        q.addBindValue(oldUrlShareId);
+
+        if (!q.exec()) {
+            goto Error;
+        }
+
+        while (q.next()) {
+            auto filePath = m_SharedState->m_VodDir + q.value(0).toString();
+            if (QFile::remove(filePath)) {
+                qDebug() << "removed" << filePath;
+            }
+        }
+
+        // remove vod file entries
+        if (!q.prepare("DELETE FROM vod_files WHERE vod_url_share_id=?")) {
+            goto Error;
+        }
+
+        q.addBindValue(oldUrlShareId);
+
+        if (!q.exec()) {
+            goto Error;
+        }
+
+        // update vod_url_share_id in vods which new one
+        if (!q.prepare("SELECT id FROM vod_url_share2 WHERE type=? AND video_id=?")) {
+            goto Error;
+        }
+
+        q.addBindValue(type);
+        q.addBindValue(videoId);
+
+        if (!q.exec()) {
+            goto Error;
+        }
+
+        if (!q.next()) {
+            goto Error;
+        }
+
+        auto newUrlShareId = q.value(0);
+
+        if (!q.prepare("UPDATE vods SET vod_url_share_id=? WHERE vod_url_share_id=?")) {
+            goto Error;
+        }
+
+        q.addBindValue(newUrlShareId);
+        q.addBindValue(oldUrlShareId);
+
+        if (!q.exec()) {
+            goto Error;
+        }
+    }
+
+    static char const* const Sql2[] = {
+        "DROP INDEX vod_url_share_unique",
+        "DROP TABLE vod_url_share",
+        "ALTER TABLE vod_url_share2 RENAME TO vod_url_share",
+
+    };
+
+    for (size_t i = 0; i < _countof(Sql2); ++i) {
+        qDebug() << Sql2[i];
+        if (!q.exec(Sql2[i])) {
+            goto Error;
+        }
+    }
+
+    if (!q.exec("PRAGMA foreign_key_check")) {
+        goto Error;
+    }
+
+    if (q.next()) {
+        qCritical() << "foreign key check failed";
+        do {
+            qCritical() << q.value(0).toString() << q.value(1).toString() << q.value(2).toString() << q.value(3).toString();
+        } while (q.next());
+
+        goto Error;
+    }
+
+    static char const* const Sql3[] = {
+        "RELEASE url_share",
+    };
+
+    for (size_t i = 0; i < _countof(Sql3); ++i) {
+        qDebug() << Sql3[i];
+        if (!q.exec(Sql3[i])) {
+            goto Error;
+        }
+    }
+
+    for (size_t i = 0; i < createSqlCount; ++i) {
+        qDebug() << createSql[i];
+        if (!q.exec(createSql[i])) {
+            goto Error;
+        }
+    }
+
+    static char const* const Sql4[] = {
+        "RELEASE master",
+        "VACUUM",
+    };
+
+    for (size_t i = 0; i < _countof(Sql4); ++i) {
+        qDebug() << Sql4[i];
+        if (!q.exec(Sql4[i])) {
+            goto Error;
+        }
+    }
+
+    qInfo("Update of database v10 to v11 completed successfully\n");
+
+Exit:
+    q.exec("PRAGMA foreign_keys=ON");
+    return;
+Error:
+    qCritical() << "Failed to update database from v10 to v11" << q.lastError();
+    q.exec("ROLLBACK master");
+    setError(Error_CouldntCreateSqlTables);
+    goto Exit;
+}
+
 int
 ScVodDataManager::sqlPatchLevel() const
 {
@@ -3559,7 +3765,7 @@ ScVodDataManager::deleteThumbnailsWhere(int transactionId, const QString& where)
     while (q.next()) {
         auto fileName = q.value(0).toString();
         if (!fileName.isEmpty()) {
-            auto filePath = m_SharedState->m_ThumbnailDir + q.value(0).toString();
+            auto filePath = m_SharedState->m_ThumbnailDir + fileName;
             if (QFile::remove(filePath)) {
                 ++filesDeleted;
                 qDebug() << "removed" << filePath;
