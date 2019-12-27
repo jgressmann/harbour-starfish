@@ -62,6 +62,11 @@
             "extension": ".jpg"
         },
         {
+            "regex": "big gabe invitational",
+            "url": "https://www.dropbox.com/s/ihnqot1mpb88nvy/heromarine.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "blizz?con|blizzard",
             "url": "https://www.dropbox.com/s/63xg197jzdu4a7n/blizzard.png?dl=1",
             "extension": ".png"
