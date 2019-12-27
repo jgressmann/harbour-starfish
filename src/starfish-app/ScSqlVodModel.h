@@ -54,6 +54,7 @@ public:
     void setDatabase(const QVariant& newValue);
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
     QHash<int,QByteArray> roleNames() const Q_DECL_OVERRIDE { return m_RoleNames; }
+    virtual void clear();
 
 signals:
     void selectChanged();

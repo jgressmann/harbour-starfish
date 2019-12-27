@@ -143,3 +143,14 @@ ScSqlVodModel::setQuery()
         qDebug() << "model error" << lastError() << "select" << m_Select;
     }
 }
+
+void
+ScSqlVodModel::clear()
+{
+    m_Dirty = true;
+    m_Columns.clear();
+    m_Select.clear();
+    m_ColumnAliases.clear();
+    m_RoleNames.clear();
+    update();
+}
