@@ -128,9 +128,8 @@ ListItem {
                 }
             }
 
-            Rectangle {
+            Item {
                 id: body
-                color: "transparent"
                 width: parent.width
                 height: thumbnailGroup.height
 
