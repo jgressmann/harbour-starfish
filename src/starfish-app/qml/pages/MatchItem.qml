@@ -224,6 +224,9 @@ ListItem {
                         width: parent.width
                         truncationMode: TruncationMode.Fade
                         visible: !sidesWithRaceLogosGroup.visible
+                        // for some reason there is a binding loop on _elideText with the default Label property bindings
+                        _fadeText: contentWidth > Math.ceil(width)
+                        _elideText: _fadeText
                         text: {
                             if (_c) {
                                 switch (bodyMode) {
