@@ -850,97 +850,97 @@
         <translation>Details findest du in der Logdatei im Verzeichnis %1</translation>
     </message>
     <message id="sf-match-item-copy-url-to-clipboard">
-        <location filename="../qml/pages/MatchItem.qml" line="502"/>
+        <location filename="../qml/pages/MatchItem.qml" line="504"/>
         <source>Copy URL to clipboard</source>
         <translation>URL kopieren</translation>
     </message>
     <message id="sf-match-item-download-meta-data">
-        <location filename="../qml/pages/MatchItem.qml" line="508"/>
+        <location filename="../qml/pages/MatchItem.qml" line="510"/>
         <source>Download meta data</source>
         <translation>Metadaten herunterladen</translation>
     </message>
     <message id="sf-match-item-download-vod">
-        <location filename="../qml/pages/MatchItem.qml" line="518"/>
+        <location filename="../qml/pages/MatchItem.qml" line="520"/>
         <source>Download VOD</source>
         <translation>Video heruntergeladen</translation>
     </message>
     <message id="sf-match-item-download-vod-with-format">
-        <location filename="../qml/pages/MatchItem.qml" line="532"/>
+        <location filename="../qml/pages/MatchItem.qml" line="534"/>
         <source>Download VOD with format...</source>
         <translation>Video herunterladen im Format ...</translation>
     </message>
     <message id="sf-match-item-cancel-vod-download">
-        <location filename="../qml/pages/MatchItem.qml" line="543"/>
+        <location filename="../qml/pages/MatchItem.qml" line="545"/>
         <source>Cancel VOD download</source>
         <translation>Herunterladen abbrechen</translation>
     </message>
     <message id="sf-match-item-play-stream">
-        <location filename="../qml/pages/MatchItem.qml" line="550"/>
+        <location filename="../qml/pages/MatchItem.qml" line="552"/>
         <source>Play stream</source>
         <translation>Stream abspielen</translation>
     </message>
     <message id="sf-match-item-play-stream-with-format">
-        <location filename="../qml/pages/MatchItem.qml" line="557"/>
+        <location filename="../qml/pages/MatchItem.qml" line="559"/>
         <source>Play stream with format...</source>
         <translation>Stream abspielen im Format ...</translation>
     </message>
     <message id="sf-match-item-reset-watch-progress">
-        <location filename="../qml/pages/MatchItem.qml" line="564"/>
+        <location filename="../qml/pages/MatchItem.qml" line="566"/>
         <source>Reset watch progress</source>
         <translation>Abspielzustand zurücksetzen</translation>
     </message>
     <message id="sf-match-item-delete-meta-data">
-        <location filename="../qml/pages/MatchItem.qml" line="571"/>
+        <location filename="../qml/pages/MatchItem.qml" line="573"/>
         <source>Delete meta data</source>
         <translation>Metadaten löschen</translation>
     </message>
     <message id="sf-match-item-delete-vod-file">
-        <location filename="../qml/pages/MatchItem.qml" line="578"/>
+        <location filename="../qml/pages/MatchItem.qml" line="580"/>
         <source>Delete VOD file</source>
         <translation>Videodateien löschen</translation>
     </message>
     <message id="sf-match-item-deleting-shared-vod-files">
-        <location filename="../qml/pages/MatchItem.qml" line="595"/>
+        <location filename="../qml/pages/MatchItem.qml" line="597"/>
         <source>Deleting files for %1 VODs</source>
         <translation>Lösche Dateien für %1 Videos</translation>
     </message>
     <message id="sf-match-item-deleting-vod-files-for-title">
-        <location filename="../qml/pages/MatchItem.qml" line="602"/>
+        <location filename="../qml/pages/MatchItem.qml" line="604"/>
         <source>Deleting files for %1</source>
         <translation>Lösche Dateien für %1</translation>
     </message>
     <message id="sf-match-item-vod-details">
-        <location filename="../qml/pages/MatchItem.qml" line="612"/>
+        <location filename="../qml/pages/MatchItem.qml" line="614"/>
         <source>VOD details</source>
         <translation>Video Details</translation>
     </message>
     <message id="sf-match-item-delete-thumbnail">
-        <location filename="../qml/pages/MatchItem.qml" line="631"/>
+        <location filename="../qml/pages/MatchItem.qml" line="633"/>
         <source>Delete thumbnail</source>
         <translation>Thumbnail löschen</translation>
     </message>
     <message id="sf-match-item-delete-vod-from-database">
-        <location filename="../qml/pages/MatchItem.qml" line="637"/>
+        <location filename="../qml/pages/MatchItem.qml" line="639"/>
         <source>Delete VOD from database</source>
         <translation>Video aus Datenbank löschen</translation>
     </message>
     <message id="sf-match-item-deleting-vod-from-database-remorse">
-        <location filename="../qml/pages/MatchItem.qml" line="645"/>
+        <location filename="../qml/pages/MatchItem.qml" line="647"/>
         <source>Deleting %1</source>
         <translation>Lösche %1</translation>
     </message>
     <message id="sf-match-item-vod-undelete-from-database">
-        <location filename="../qml/pages/MatchItem.qml" line="654"/>
+        <location filename="../qml/pages/MatchItem.qml" line="656"/>
         <source>Undelete VOD from database</source>
         <translation>Stelle Video wieder her</translation>
     </message>
     <message id="sf-match-item-undeleting-vod-from-database-remorse">
-        <location filename="../qml/pages/MatchItem.qml" line="662"/>
+        <location filename="../qml/pages/MatchItem.qml" line="664"/>
         <source>Undeleting %1</source>
         <translation>Stelle %1 wieder her</translation>
     </message>
     <message id="sf-select-av-format-dialog-title">
-        <location filename="../qml/pages/MatchItem.qml" line="950"/>
+        <location filename="../qml/pages/MatchItem.qml" line="952"/>
         <source>Select a format</source>
         <translation>Wähle ein Format aus</translation>
     </message>
