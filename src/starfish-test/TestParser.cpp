@@ -375,6 +375,11 @@ TestParser::autocompleteFromEvent_data() {
     record.year = 2019;
     record.season = 3;
     QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
+
+    record.valid = ScRecord::ValidGame;
+    record.eventName = "TEN Invitational";
+    record.eventFullName = "TEN Invitational";
+    QTest::newRow(record.eventFullName.toLocal8Bit()) << record;
 }
 
 

@@ -5,7 +5,7 @@
         "event": {
             "+": [
                 {
-                    "regex": "afreeca(?:tv)? starleague|^\\s*asl|bombastic starleague|\\(bw\\)|brood\\s*war|danjjing|have at you!|moo proleague|ssl\\s+classic|starcraft 1|starleague\\s+classic"
+                    "regex": "afreeca(?:tv)? starleague|^\\s*asl|bombastic starleague|\\(bw\\)|brood\\s*war|danjjing|have at you!|moo proleague|ssl\\s+classic|starcraft 1|starleague\\s+classic|ten invitational"
                 }
             ],
             "-": [
