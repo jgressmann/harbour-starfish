@@ -37,6 +37,11 @@
             "extension": ".jpeg"
         },
         {
+            "regex": "artosistv",
+            "url": "https://www.dropbox.com/s/h3jkji9pare5s5x/artosistv.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
             "regex": "asus rog",
             "url": "https://www.dropbox.com/s/txfgdlyfekva2i5/asusrog.jpg?dl=1",
             "extension": ".jpg"
@@ -103,9 +108,14 @@
             "extension": ".png"
         },
         {
-            "regex": "crank",
+            "regex": "^crank$",
             "url": "https://www.dropbox.com/s/75zt2hfrn2p337c/cranksc2.jpg?dl=1",
             "extension": ".jpg"
+        },
+        {
+            "regex": "^cranky ducklings$",
+            "url": "https://www.dropbox.com/s/svtqh5bkf2c7b1x/crankyducklings.png?dl=1",
+            "extension": ".png"
         },
         {
             "regex": "danjjing",
@@ -198,7 +208,12 @@
             "extension": ".png"
         },
         {
-            "regex": "happy",
+            "regex": "^harstem",
+            "url": "https://www.dropbox.com/s/avtzzcnzdvji3si/harstem.jpg?dl=1",
+            "extension": ".jpg"
+        },
+        {
+            "regex": "^happy",
             "url": "https://www.dropbox.com/s/bwmd1jeor5rjg20/happysc2.jpg?dl=1",
             "extension": ".jpg"
         },
