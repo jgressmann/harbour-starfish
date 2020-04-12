@@ -1,7 +1,7 @@
 {
     "version": 1,
     "year_min": 2010,
-    "year_max": 2018,
+    "year_max": 2019,
     "year_urls": [
         "https://www.dropbox.com/s/t3lzwysa73e1v2l/2010.xml.gz?dl=1",
         "https://www.dropbox.com/s/pcu1yo0it5gw04l/2011.xml.gz?dl=1",
@@ -11,6 +11,6 @@
         "https://www.dropbox.com/s/grckyvdcjath7ro/2015.xml.gz?dl=1",
         "https://www.dropbox.com/s/i9lml6x0jcpq88v/2016.xml.gz?dl=1",
         "https://www.dropbox.com/s/f7hzzhjttqm2to6/2017.xml.gz?dl=1",
-        "https://www.dropbox.com/s/iuw8rmp0yxotgmk/2018.xml.gz?dl=1"
+        "https://www.dropbox.com/s/kq7fwqaoqd30s71/2019.xml.gz?dl=1"
     ]
 }
