@@ -1,0 +1,9 @@
+[main]
+host = https://www.transifex.com
+
+[harbour-starfish.translations]
+type = QT
+source_file = translations/harbour-starfish.ts
+source_lang = en
+trans.de = translations/harbour-starfish-de.ts
+

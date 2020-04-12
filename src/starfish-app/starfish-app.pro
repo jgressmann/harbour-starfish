@@ -103,7 +103,8 @@ DISTFILES += qml/harbour-starfish.qml \
     qml/Strings.qml \
     qml/SidesBar.qml \
     translations/harbour-starfish.ts \
-    translations/harbour-starfish-de.ts
+    translations/harbour-starfish-de.ts \
+    .tx/config
 
 DEFINES += SAILFISH_DATADIR="/usr/share/$${TARGET}"
 DEFINES += BROTLI_DIC_PATH="/usr/share/$${TARGET}/brotli.bin"
