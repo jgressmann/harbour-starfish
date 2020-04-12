@@ -118,6 +118,11 @@
             "extension": ".png"
         },
         {
+            "regex": "^creighton olsen$",
+            "url": "https://www.dropbox.com/s/5l9hprzul1rsrdd/creightonolsen.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "danjjing",
             "url": "https://www.dropbox.com/s/4p9jc08uolrsubb/danjjing.jpg?dl=1",
             "extension": ".jpg"
