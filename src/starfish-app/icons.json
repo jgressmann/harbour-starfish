@@ -153,6 +153,11 @@
             "extension": ".png"
         },
         {
+            "regex": "dh sc2 masters|dhmasters",
+            "url": "https://www.dropbox.com/s/vrnz63cpjheg6uo/dhsc2masters.png?dl=1",
+            "extension": ".png"
+        },
+        {
             "regex": "dreamhack",
             "url": "https://www.dropbox.com/s/n2lqxsuy0tgqkt7/dreamhack.png?dl=1",
             "extension": ".png"
